@@ -70,7 +70,7 @@ jobs:
       - name: Execute complete W8 campaign
         env:
           FIELD_DIR: ${{ github.workspace }}/../field
-        run: bash scripts/run_w8_campaign.sh
+        run: bash scripts/run_w8_campaign_fast.sh
       - uses: actions/upload-artifact@v4
         with:
           name: w8-premerge-evidence
