@@ -3,7 +3,8 @@ set -euo pipefail
 
 ROOT="${GITHUB_WORKSPACE:-$(pwd)}"
 FIELD_DIR="${FIELD_DIR:-$ROOT/../field}"
-DSN="${DSN:-postgresql://resonance:resonance@localhost:5432/resonance}"
+DISCOVERY_DSN="${DSN:-postgresql://resonance:resonance@localhost:5432/resonance}"
+REPLICATION_DSN="${DISCOVERY_DSN%/*}/resonance_replication"
 FIELD_SHA="${FIELD_SHA:-0914a21249261fe61e02c5191f4a36df416c672f}"
 OUT="$ROOT/output/w5b"
 
@@ -12,6 +13,7 @@ mkdir -p "$OUT"
 run_source_campaign() {
   local config="$1"
   local step_dir="$2"
+  local campaign_dsn="$3"
   mkdir -p "$step_dir"
   (
     cd "$FIELD_DIR"
@@ -19,7 +21,7 @@ run_source_campaign() {
       --config "$ROOT/$config" \
       --experiment 63 \
       --code-sha "$FIELD_SHA" \
-      --dsn "$DSN" \
+      --dsn "$campaign_dsn" \
       --output-dir "$step_dir"
   )
 }
@@ -27,9 +29,10 @@ run_source_campaign() {
 export_campaign() {
   local campaign="$1"
   local raw_dir="$2"
+  local campaign_dsn="$3"
   mkdir -p "$raw_dir"
 
-  psql "$DSN" --csv -c "
+  psql "$campaign_dsn" --csv -c "
     SELECT run_id::text, seed, arm_label, environment::text, metrics::text, completed_at
     FROM integration_campaign_runs
     WHERE campaign_name = '$campaign'
@@ -38,7 +41,7 @@ export_campaign() {
     ORDER BY seed
   " > "$raw_dir/runs.csv"
 
-  psql "$DSN" --csv -c "
+  psql "$campaign_dsn" --csv -c "
     SELECT o.run_id::text, o.cycle, o.task_id::text, o.task_domain,
            o.required_skill, o.winner_agent_id::text, o.winner_slot,
            o.success, o.winning_price, o.task_budget, o.created_at
@@ -50,7 +53,7 @@ export_campaign() {
     ORDER BY r.seed, o.cycle
   " > "$raw_dir/outcomes.csv"
 
-  psql "$DSN" --csv -c "
+  psql "$campaign_dsn" --csv -c "
     SELECT o.run_id::text, t.task_id::text, t.requester_agent_id::text
     FROM integration_campaign_outcomes o
     JOIN integration_campaign_runs r ON r.run_id = o.run_id
@@ -61,7 +64,7 @@ export_campaign() {
     ORDER BY r.seed, t.task_id
   " > "$raw_dir/tasks.csv"
 
-  psql "$DSN" --csv -c "
+  psql "$campaign_dsn" --csv -c "
     SELECT o.run_id::text, b.task_id::text, b.bidder_agent_id::text,
            b.price, b.confidence, b.status
     FROM integration_campaign_outcomes o
@@ -80,10 +83,12 @@ DISCOVERY_RESULTS="$OUT/discovery"
 
 run_source_campaign \
   "configs/w5b/source-development-discovery.json" \
-  "$OUT/discovery-source-step"
+  "$OUT/discovery-source-step" \
+  "$DISCOVERY_DSN"
 export_campaign \
   "w5b-stateful-source-development-discovery-v0.1" \
-  "$DISCOVERY_RAW"
+  "$DISCOVERY_RAW" \
+  "$DISCOVERY_DSN"
 
 python -m resonance_world.w4_source_export \
   "$DISCOVERY_RAW/runs.csv" \
@@ -109,16 +114,23 @@ python -m resonance_world.w5b_modules discover \
   "$ROOT/configs/w5b/module-campaign.json" \
   "$DISCOVERY_RESULTS"
 
+# Field migrations are intentionally replayable only against a fresh evidence store.
+# Use a second database so the post-discovery replication population cannot inherit
+# rows, constraints, or state from the discovery source campaign.
+psql "$DISCOVERY_DSN" -v ON_ERROR_STOP=1 -c "CREATE DATABASE resonance_replication"
+
 REPLICATION_RAW="$OUT/replication-raw"
 REPLICATION_SOURCE="$OUT/replication-source"
 REPLICATION_RESULTS="$OUT/replication"
 
 run_source_campaign \
   "configs/w5b/source-development-replication.json" \
-  "$OUT/replication-source-step"
+  "$OUT/replication-source-step" \
+  "$REPLICATION_DSN"
 export_campaign \
   "w5b-stateful-source-development-replication-v0.1" \
-  "$REPLICATION_RAW"
+  "$REPLICATION_RAW" \
+  "$REPLICATION_DSN"
 
 python -m resonance_world.w4_source_export \
   "$REPLICATION_RAW/runs.csv" \
