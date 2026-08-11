@@ -6,6 +6,7 @@
   "offer_count": 8,
   "bid_base": 30,
   "bid_span": 60,
+  "withholding_side": "support",
   "public_selector": {
     "home_success_rate": 0.30,
     "bid_win_rate": 0.20,
