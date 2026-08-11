@@ -30,3 +30,6 @@ target-version = "py312"
 
 [tool.ruff.lint]
 select = ["E", "F", "I", "UP", "B"]
+
+[tool.ruff.lint.per-file-ignores]
+"src/resonance_world/w4_relationship.py" = ["E501"]
