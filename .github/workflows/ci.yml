@@ -26,7 +26,7 @@ jobs:
         run: pytest -q
 
   w5b-campaign:
-    if: github.head_ref == 'w5b/modular-social-capital' || github.ref == 'refs/heads/main'
+    if: ${{ github.head_ref == 'w5b/modular-social-capital' || github.ref == 'refs/heads/main' }}
     runs-on: ubuntu-latest
     timeout-minutes: 60
     services:
@@ -53,7 +53,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Announce authoritative W5B CI run
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: >-
@@ -86,35 +86,30 @@ jobs:
           if-no-files-found: error
           retention-days: 90
       - name: Publish authoritative W5B result
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        if: ${{ github.event_name == 'push' && github.ref == 'refs/heads/main' }}
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
-          python - <<'PY'
-          import json
-          import os
-          from pathlib import Path
-          data = json.loads(Path('output/w5b/w5b-synthesis.json').read_text())
-          discovery = data['discovery']
-          replication = data['replication']
-          body = f'''## W5B Modular Social Capital — AUTHORITATIVE MAIN
+          STATUS=$(jq -r '.status' output/w5b/w5b-synthesis.json)
+          D1=$(jq -r '.discovery.w5b_01.effect' output/w5b/w5b-synthesis.json)
+          D2=$(jq -r '.discovery.w5b_02.effect' output/w5b/w5b-synthesis.json)
+          D3=$(jq -r '.discovery.w5b_03.effect' output/w5b/w5b-synthesis.json)
+          D4=$(jq -r '.discovery.w5b_04.effect' output/w5b/w5b-synthesis.json)
+          R1=$(jq -r '.replication.w5b_01.effect' output/w5b/w5b-synthesis.json)
+          R2=$(jq -r '.replication.w5b_02.effect' output/w5b/w5b-synthesis.json)
+          R3=$(jq -r '.replication.w5b_03.effect' output/w5b/w5b-synthesis.json)
+          R4=$(jq -r '.replication.w5b_04.effect' output/w5b/w5b-synthesis.json)
+          GATE=$(jq -r '.replication_gate' output/w5b/w5b-synthesis.json)
+          gh issue comment 37 --repo ElephantRock/Resonance-World --body "## W5B Modular Social Capital — AUTHORITATIVE MAIN
 
-- Status: **{data['status']}**
-- W5B-01 discovery: **{discovery['w5b_01']['effect']:.4%} / {discovery['w5b_01']['classification']}**
-- W5B-02 discovery: **{discovery['w5b_02']['effect']:.4%} / {discovery['w5b_02']['classification']}**
-- W5B-03 discovery: **{discovery['w5b_03']['effect']:.4%} / {discovery['w5b_03']['classification']}**
-- W5B-04 discovery: **{discovery['w5b_04']['effect']:.4%} / {discovery['w5b_04']['classification']}**
-- W5B-01 replication: **{replication['w5b_01']['effect']:.4%} / {replication['w5b_01']['classification']}**
-- W5B-02 replication: **{replication['w5b_02']['effect']:.4%} / {replication['w5b_02']['classification']}**
-- W5B-03 replication: **{replication['w5b_03']['effect']:.4%} / {replication['w5b_03']['classification']}**
-- W5B-04 replication: **{replication['w5b_04']['effect']:.4%} / {replication['w5b_04']['classification']}**
-- Replication gate: **{data['replication_gate']}**
-- Head SHA: **{os.environ['GITHUB_SHA']}**
-- Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/{os.environ['GITHUB_RUN_ID']}
+- Status: **$STATUS**
+- W5B-01 discovery/replication: **$D1 / $R1**
+- W5B-02 discovery/replication: **$D2 / $R2**
+- W5B-03 discovery/replication: **$D3 / $R3**
+- W5B-04 discovery/replication: **$D4 / $R4**
+- Replication gate: **$GATE**
+- Head SHA: **$GITHUB_SHA**
+- Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/$GITHUB_RUN_ID
 
-Interpretation boundary: PairModule transports existing W4 state only. The outcome law does not read module identity/history, and no generic procedure interpreter is present.
-'''
-          Path('w5b-authoritative-comment.md').write_text(body)
-          PY
-          gh issue comment 37 --repo ElephantRock/Resonance-World --body-file w5b-authoritative-comment.md
+PairModule transports existing W4 state only. The outcome law does not read module identity/history, and no generic procedure interpreter is present."
           gh issue close 37 --repo ElephantRock/Resonance-World --reason completed
