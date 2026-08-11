@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import itertools
 import json
 import math
 import statistics
@@ -286,7 +285,7 @@ def _feature_matrix(
     ]
     means = [statistics.mean(column) for column in zip(*raw, strict=True)]
     scales = []
-    for index, mean in enumerate(means):
+    for index, _mean in enumerate(means):
         values = [row[index] for row in raw]
         scale = statistics.pstdev(values)
         scales.append(scale if scale > 1e-12 else 1.0)
@@ -432,7 +431,10 @@ def run_training(
         selected_per_field=int(config["selected_per_field"]),
         salt="w1-03-random-control",
     )
-    targets = [float(result_by_key[_candidate_key(row)]["sampled_success_rate"]) for row in training]
+    targets = [
+        float(result_by_key[_candidate_key(row)]["sampled_success_rate"])
+        for row in training
+    ]
     model = _fit_ridge(training, targets)
     model.update(
         {
@@ -444,7 +446,10 @@ def run_training(
             "training_outcomes_sha256": _sha256(results),
         }
     )
-    model["model_sha256"] = _sha256({key: value for key, value in model.items() if key != "model_sha256"})
+    model_payload = {
+        key: value for key, value in model.items() if key != "model_sha256"
+    }
+    model["model_sha256"] = _sha256(model_payload)
 
     destination = Path(destination)
     result_sha = _write_jsonl(destination / "w1-02-results.jsonl", results)
@@ -460,7 +465,9 @@ def run_training(
     return summary
 
 
-def _model_scores(rows: list[dict[str, Any]], model: dict[str, Any]) -> dict[tuple[str, str], float]:
+def _model_scores(
+    rows: list[dict[str, Any]], model: dict[str, Any]
+) -> dict[tuple[str, str], float]:
     return {_candidate_key(row): _predict(row, model) for row in rows}
 
 
@@ -580,7 +587,10 @@ def run_discovery_holdout(
         salt="w1-04-random-baseline",
     )
     predicted = [scores[_candidate_key(row)] for row in holdout]
-    actual = [float(w104_by_key[_candidate_key(row)]["sampled_success_rate"]) for row in holdout]
+    actual = [
+        float(w104_by_key[_candidate_key(row)]["sampled_success_rate"])
+        for row in holdout
+    ]
     rank_correlation = _spearman(predicted, actual)
     gates = campaign_config["decision_gates"]
     w104_pass = (
@@ -596,9 +606,7 @@ def run_discovery_holdout(
 
     shift_rows = []
     for family in ("alias_a", "shift_25", "shift_50"):
-        results = _evaluate_rows(
-            holdout, private, config, family, f"w1-05:{family}"
-        )
+        results = _evaluate_rows(holdout, private, config, family, f"w1-05:{family}")
         by_key = {_candidate_key(row): row for row in results}
         comp = _selection_comparison(
             holdout,
@@ -619,7 +627,7 @@ def run_discovery_holdout(
         )
 
     selected_keys = set()
-    for field_id, rows in _group_by_field(holdout).items():
+    for _field_id, rows in _group_by_field(holdout).items():
         selected = sorted(
             rows,
             key=lambda row: (scores[_candidate_key(row)], str(row["agent_id"])),
@@ -702,7 +710,10 @@ def run_replication(
         salt="w1-07-random-baseline",
     )
     predicted = [scores[_candidate_key(row)] for row in replication]
-    actual = [float(by_key[_candidate_key(row)]["sampled_success_rate"]) for row in replication]
+    actual = [
+        float(by_key[_candidate_key(row)]["sampled_success_rate"])
+        for row in replication
+    ]
     rank_correlation = _spearman(predicted, actual)
     gates = campaign_config["decision_gates"]
     passed = (
