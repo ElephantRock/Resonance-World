@@ -26,9 +26,9 @@
     "confidence_inflation": 0.0
   },
   "seeds": [726, 847, 968],
-  "holdout_seeds": [],
+  "holdout_seeds": [1089, 1210, 1331],
   "holdout_cycles": 84,
-  "holdout_shift_period": 15,
+  "holdout_shift_period": 13,
   "holdout_candidate_count": 7,
   "success_tolerance": 0.015,
   "incumbent_tolerance": 0.05,
@@ -48,8 +48,8 @@
     "minimum_hhi_improvement": 0.02,
     "rapid_shift_period": 12,
     "synthesis_cycles": 96,
-    "replication_seeds": [726, 847, 968],
-    "holdout_lifetime_cycles": 29,
-    "holdout_shift_period": 15
+    "replication_seeds": [726, 847],
+    "holdout_lifetime_cycles": 31,
+    "holdout_shift_period": 13
   }
 }
