@@ -4,6 +4,7 @@ Status: **PREREGISTERED — NO W5B OUTCOMES YET**
 
 - Parent issue: #37
 - Implementation PR: #43
+- Hosted runner registered on `main`: `5f2510719b1cb54b039661882788bd164d90bd40`
 - Experiment count: 5
 - Source architecture: Field-derived individual competence + W4 relationship state + W5B-00 PairModule
 - Discovery source Fields: 5 x 12 agents = 60 fresh agents
