@@ -86,14 +86,33 @@ jobs:
             sudo apt-get install -y postgresql-client
           fi
 
-      - name: Create matched databases
+      - name: Create source and matched databases
         run: |
+          dropdb --if-exists w0_source
           dropdb --if-exists w0_control
           dropdb --if-exists w0_observed
+          createdb w0_source
           createdb w0_control
           createdb w0_observed
 
-      - name: Run isolated control
+      - name: Reproduce unmodified source Field
+        env:
+          SEED: ${{ matrix.seed }}
+          SOURCE_DSN: postgresql://resonance:resonance@localhost:5432/w0_source
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/source" "$GITHUB_WORKSPACE/evidence"
+          (
+            cd field
+            python -m resonance.experiments.cli \
+              --config configs/experiments/first-emergence.json \
+              --ablation full \
+              --seed "$SEED" \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$SOURCE_DSN" \
+              --output-dir "$GITHUB_WORKSPACE/source"
+          )
+
+      - name: Run identity-controlled isolated match
         env:
           SEED: ${{ matrix.seed }}
           CONTROL_DSN: postgresql://resonance:resonance@localhost:5432/w0_control
@@ -102,7 +121,8 @@ jobs:
           start=$(date +%s%N)
           (
             cd field
-            python -m resonance.experiments.cli \
+            python -m resonance_world.w0_field_runner \
+              --uuid-seed "w0-seed-$SEED" \
               --config configs/experiments/first-emergence.json \
               --ablation full \
               --seed "$SEED" \
@@ -115,7 +135,7 @@ jobs:
           print(($end - $start) / 1_000_000_000)
           PY
 
-      - name: Run World-observed match
+      - name: Run identity-controlled World-observed match
         env:
           SEED: ${{ matrix.seed }}
           OBSERVED_DSN: postgresql://resonance:resonance@localhost:5432/w0_observed
@@ -140,7 +160,8 @@ jobs:
           start=$(date +%s%N)
           (
             cd field
-            python -m resonance.experiments.cli \
+            python -m resonance_world.w0_field_runner \
+              --uuid-seed "w0-seed-$SEED" \
               --config configs/experiments/first-emergence.json \
               --ablation full \
               --seed "$SEED" \
@@ -168,6 +189,7 @@ jobs:
             "$GITHUB_WORKSPACE/observed" \
             "$GITHUB_WORKSPACE/evidence/observer-stats.json" \
             "$GITHUB_WORKSPACE/evidence/report.json" \
+            --source-dir "$GITHUB_WORKSPACE/source" \
             --control-runtime "$(cat "$GITHUB_WORKSPACE/evidence/control-runtime.txt")" \
             --observed-runtime "$(cat "$GITHUB_WORKSPACE/evidence/observed-runtime.txt")" \
             --seed "$SEED" \
@@ -178,7 +200,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: emergence-full-seed-${{ matrix.seed }}
-          path: control
+          path: source
           if-no-files-found: warn
           retention-days: 90
 
@@ -189,6 +211,7 @@ jobs:
           name: w0-ni-seed-${{ matrix.seed }}
           path: |
             evidence
+            control
             observed
           if-no-files-found: warn
           retention-days: 90
@@ -310,12 +333,16 @@ jobs:
           print()
           for report in data["matched_runs"]:
               print(
-                  f"- Seed {report['seed']}: behavior identical = "
-                  f"**{report['behavior_identical']}**, live snapshots = "
+                  f"- Seed {report['seed']}: raw evidence identical = "
+                  f"**{report['hashes_identical']}**, source metrics preserved = "
+                  f"**{report['source_summary_matches']}**, live snapshots = "
                   f"**{report['observer']['successful_snapshots']}**, "
                   f"instrumentation ratio = "
                   f"**{report['instrumentation_overhead_ratio']:.4%}**"
               )
+          print()
+          print("Matched arms use the same deterministic opaque-identity allocator; ")
+          print("the cohort itself is derived from separate unmodified source reproductions.")
           print()
           print(f"Actions evidence run: {os.environ['GITHUB_SERVER_URL']}/"
                 f"{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}")
