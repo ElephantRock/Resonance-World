@@ -1,0 +1,57 @@
+{
+  "version": 1,
+  "source_skills": ["urban_heat", "water_systems", "energy_storage", "supply_networks", "public_health", "mobility"],
+  "training_fields": ["w2-source-seed-111", "w2-source-seed-222", "w2-source-seed-333"],
+  "discovery_holdout_fields": ["w2-source-seed-444", "w2-source-seed-555"],
+  "replication_fields": ["w2-source-seed-777", "w2-source-seed-888", "w2-source-seed-999"],
+  "trials_per_mission": 180,
+  "destination_law": {
+    "base_success_probability": 0.38,
+    "practice_gain": 0.14,
+    "maximum_success_probability": 0.90
+  },
+  "purpose_built": {
+    "response_practice_budget": 4.0,
+    "response_compute_cost_per_practice": 1.0,
+    "deployment_compute_cost": 12.0
+  },
+  "utility": {
+    "success_weight": 1.0,
+    "response_compute_weight": 0.002,
+    "latency_weight": 0.001
+  },
+  "recruiter": {
+    "alpha_grid": [0.0, 0.25, 0.5, 0.75, 1.0, 1.25],
+    "abstention_quantiles": [0.1, 0.2, 0.3, 0.4],
+    "dominant_fit_weight": 1.0,
+    "secondary_fit_weight": 0.5
+  },
+  "families": {
+    "calibration": [
+      {"mission": "district_heat_continuity", "requirements": {"urban_heat": 0.6, "energy_storage": 0.4}},
+      {"mission": "water_supply_continuity", "requirements": {"water_systems": 0.6, "supply_networks": 0.4}},
+      {"mission": "care_mobility_continuity", "requirements": {"public_health": 0.6, "mobility": 0.4}}
+    ],
+    "discovery": [
+      {"mission": "resilient_service_corridor", "requirements": {"energy_storage": 0.4, "supply_networks": 0.35, "mobility": 0.25}},
+      {"mission": "emergency_water_continuity", "requirements": {"water_systems": 0.45, "public_health": 0.30, "supply_networks": 0.25}},
+      {"mission": "thermal_health_response", "requirements": {"urban_heat": 0.45, "energy_storage": 0.25, "public_health": 0.30}}
+    ],
+    "abstention": [
+      {"mission": "supported_logistics_health", "requirements": {"supply_networks": 0.55, "public_health": 0.45}, "supported": true},
+      {"mission": "supported_water_mobility", "requirements": {"water_systems": 0.55, "mobility": 0.45}, "supported": true},
+      {"mission": "unsupported_cyber_incident", "requirements": {"cyber_security": 1.0}, "supported": false},
+      {"mission": "unsupported_legal_reasoning", "requirements": {"legal_reasoning": 1.0}, "supported": false}
+    ],
+    "drift": [
+      {"mission": "drift_phase_a", "requirements": {"energy_storage": 0.65, "supply_networks": 0.35}},
+      {"mission": "drift_phase_b", "requirements": {"energy_storage": 0.35, "supply_networks": 0.35, "mobility": 0.30}},
+      {"mission": "drift_phase_c", "requirements": {"supply_networks": 0.30, "mobility": 0.30, "public_health": 0.25, "water_systems": 0.15}}
+    ],
+    "replication": [
+      {"mission": "regional_cascade_alpha", "requirements": {"urban_heat": 0.30, "energy_storage": 0.25, "supply_networks": 0.25, "mobility": 0.20}},
+      {"mission": "regional_cascade_beta", "requirements": {"water_systems": 0.30, "public_health": 0.25, "supply_networks": 0.25, "energy_storage": 0.20}},
+      {"mission": "regional_cascade_gamma", "requirements": {"public_health": 0.25, "mobility": 0.25, "water_systems": 0.25, "urban_heat": 0.25}}
+    ]
+  }
+}
