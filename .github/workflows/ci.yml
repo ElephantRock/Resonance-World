@@ -23,3 +23,57 @@ jobs:
         run: ruff check .
       - name: Test
         run: pytest -q
+
+  w8-campaign:
+    if: github.head_ref == 'w8/sustainable-circulation-campaign'
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: resonance
+          POSTGRES_USER: resonance
+          POSTGRES_PASSWORD: resonance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resonance -d resonance"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      FIELD_SHA: 2a85739603ebac86f451b90733229782c0d45ce0
+      DSN: postgresql://resonance:resonance@localhost:5432/resonance
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: resonance
+      PGPASSWORD: resonance
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git ../field
+          git -C ../field checkout "$FIELD_SHA"
+          test "$(git -C ../field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install World and Field
+        run: python -m pip install -e '../field[dev]' -e .
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Execute complete W8 campaign
+        env:
+          FIELD_DIR: ${{ github.workspace }}/../field
+        run: bash scripts/run_w8_campaign.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w8-premerge-evidence
+          path: output/w8
+          if-no-files-found: error
+          retention-days: 90
