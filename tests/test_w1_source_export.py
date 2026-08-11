@@ -95,9 +95,13 @@ def test_source_export_separates_public_and_private_state(tmp_path: Path) -> Non
     assert summary["field_count"] == 1
     assert summary["agent_count"] == 2
 
-    candidates = [json.loads(line) for line in (output / "candidates.jsonl").read_text().splitlines()]
+    candidates = [
+        json.loads(line)
+        for line in (output / "candidates.jsonl").read_text().splitlines()
+    ]
     capsules = [
-        json.loads(line) for line in (output / "capsules.private.jsonl").read_text().splitlines()
+        json.loads(line)
+        for line in (output / "capsules.private.jsonl").read_text().splitlines()
     ]
     assert "practice_by_skill" not in json.dumps(candidates, sort_keys=True)
     by_agent = {row["agent_id"]: row for row in capsules}
