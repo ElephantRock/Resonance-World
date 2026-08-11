@@ -1,0 +1,31 @@
+{
+  "cohort_id": "w0-first-cohort",
+  "source_repository": "ElephantRock/Resonance-Field",
+  "expected_agents_per_field": 20,
+  "fields": [
+    {
+      "field_id": "field-001-seed-101",
+      "seed": 101,
+      "run_id": "7b7b3800-81d8-5d2c-bda1-698ad7a44cd4",
+      "artifact_name": "emergence-full-seed-101",
+      "code_sha": "8ad07a5213d24c489a3223773b04d478f1807f24",
+      "ablation": "full"
+    },
+    {
+      "field_id": "field-002-seed-202",
+      "seed": 202,
+      "run_id": "156da5f8-974d-563a-aaa4-9b009d43c5ca",
+      "artifact_name": "emergence-full-seed-202",
+      "code_sha": "8ad07a5213d24c489a3223773b04d478f1807f24",
+      "ablation": "full"
+    },
+    {
+      "field_id": "field-003-seed-303",
+      "seed": 303,
+      "run_id": "4ac57050-cffa-5bdc-a9a1-04f56668a6ad",
+      "artifact_name": "emergence-full-seed-303",
+      "code_sha": "8ad07a5213d24c489a3223773b04d478f1807f24",
+      "ablation": "full"
+    }
+  ]
+}
