@@ -120,18 +120,21 @@ class OrganizationController:
     def _balanced_pair(
         self, members: list[IndividualState], mission: JointMission
     ) -> tuple[IndividualState, IndividualState]:
-        pairs: list[tuple[float, str, IndividualState, IndividualState]] = []
-        for first in members:
-            for second in members:
-                if first.agent_id == second.agent_id:
-                    continue
-                score = min(
-                    first.practice(mission.lead_skill),
-                    second.practice(mission.support_skill),
-                )
-                pairs.append((score, first.agent_id + second.agent_id, first, second))
-        _, _, lead, support = max(pairs)
-        return lead, support
+        ranked = sorted(
+            members,
+            key=lambda item: (
+                min(
+                    item.practice(mission.lead_skill),
+                    item.practice(mission.support_skill),
+                ),
+                item.agent_id,
+            ),
+            reverse=True,
+        )
+        first, second = ranked[:2]
+        if first.practice(mission.lead_skill) >= second.practice(mission.lead_skill):
+            return first, second
+        return second, first
 
     def select(self, organization: OrganizationState, mission: JointMission) -> OrganizationDecision:
         members = list(organization.members.values())
