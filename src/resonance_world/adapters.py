@@ -2,12 +2,13 @@
 
 from __future__ import annotations
 
-from copy import deepcopy
-from datetime import datetime
 import hashlib
 import json
+from collections.abc import Mapping
+from copy import deepcopy
+from datetime import datetime
 from pathlib import Path
-from typing import Any, Mapping, Protocol
+from typing import Any, Protocol
 
 from resonance_world.protocol import (
     PROTOCOL_VERSION,
