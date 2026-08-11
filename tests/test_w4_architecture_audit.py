@@ -1,3 +1,5 @@
+# ruff: noqa: I001
+
 from copy import deepcopy
 from pathlib import Path
 
