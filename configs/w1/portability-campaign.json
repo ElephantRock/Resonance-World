@@ -1,6 +1,9 @@
 {
   "campaign_id": "w1-portable-capability-v0.1",
-  "source_cohort": "w0-first-precontact-cohort",
+  "field_sha": "5cee5ff1c75d027f5c78c681c5f306cab2c85bf3",
+  "source_cohort": "w1-stateful-fast-learning-sources",
+  "discovery_source_seeds": [101, 202, 303, 404, 505],
+  "replication_source_seeds": [707, 808, 909],
   "experiments": [
     {"id": "W1-01", "name": "home-baseline", "confirmatory": true},
     {"id": "W1-02", "name": "naive-zero-shot-transfer", "confirmatory": true},
@@ -17,9 +20,23 @@
     "match_compute_budget": true
   },
   "zero_shot_constraints": {
-    "home_private_state_import": false,
+    "intrinsic_learned_state_transfer": true,
+    "home_private_history_import": false,
     "home_private_substrate_import": false,
+    "home_reputation_import": false,
     "portable_evidence_metadata_allowed": true
+  },
+  "selection_visibility": {
+    "public_home_evidence_allowed": true,
+    "private_practice_vector_hidden_from_selector": true,
+    "destination_outcomes_hidden_until_ranking_frozen": true
+  },
+  "decision_gates": {
+    "w1_04_min_selected_lift": 0.02,
+    "w1_04_min_rank_correlation": 0.20,
+    "w1_07_min_selected_lift": 0.02,
+    "w1_07_min_positive_fields": 2,
+    "w1_07_min_rank_correlation": 0.15
   },
   "target_seed_count_per_condition": {"min": 3, "max": 5},
   "expected_total_cells": {"min": 40, "max": 70}
