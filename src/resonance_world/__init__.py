@@ -14,8 +14,14 @@ from resonance_world.protocol import (
     Metric,
 )
 from resonance_world.registry import WorldRegistry
+from resonance_world.resonance_field_artifacts import (
+    FIELD_ARTIFACT_PROTOCOL_VERSION,
+    ResonanceFieldArtifactAdapter,
+    build_resonance_field_checkpoint,
+)
 
 __all__ = [
+    "FIELD_ARTIFACT_PROTOCOL_VERSION",
     "PROTOCOL_VERSION",
     "AgentPassport",
     "CapabilityScore",
@@ -24,6 +30,8 @@ __all__ = [
     "FieldRunObservation",
     "Metric",
     "NonInterferenceReport",
+    "ResonanceFieldArtifactAdapter",
     "WorldRegistry",
+    "build_resonance_field_checkpoint",
     "compare_observations",
 ]
