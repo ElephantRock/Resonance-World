@@ -6,7 +6,11 @@ import json
 import pytest
 
 from resonance_world.w4a_joint_learning import IndividualState, JointEnvironment
-from resonance_world.w5a_organization import OrganizationEnvironment, OrganizationMemory, OrganizationState
+from resonance_world.w5a_organization import (
+    OrganizationEnvironment,
+    OrganizationMemory,
+    OrganizationState,
+)
 from resonance_world.w6_mobility import PortableAgentState
 from resonance_world.w7_competition import CooperationAgreement, TalentMarket, TalentOffer
 
