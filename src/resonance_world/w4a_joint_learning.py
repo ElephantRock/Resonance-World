@@ -125,7 +125,10 @@ class SharedPairMemory:
         self.episodes.append(episode)
 
     def last_for_context(self, context: str) -> JointEpisode | None:
-        return next((episode for episode in reversed(self.episodes) if episode.context == context), None)
+        return next(
+            (episode for episode in reversed(self.episodes) if episode.context == context),
+            None,
+        )
 
     def as_dict(self) -> dict[str, object]:
         return {
