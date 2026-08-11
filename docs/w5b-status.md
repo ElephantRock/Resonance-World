@@ -6,6 +6,7 @@ Final synthesis status from the first complete hosted campaign: **`w5b_discovery
 
 - Parent issue: #37
 - Implementation PR: #43
+- Post-merge validation branch reset to current `main` before this documentation-only trigger
 - Experiment count: 5
 - Source architecture: Field-derived individual competence + W4 relationship state + W5B-00 PairModule
 - Discovery source Fields: 5 x 12 agents = 60 fresh agents
