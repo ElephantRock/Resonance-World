@@ -1,0 +1,38 @@
+{
+  "campaign_id": "w2-individual-recruitment-v0.1",
+  "experiments": [
+    {"id": "W2-01", "name": "mission-conditioned-recruiter-calibration"},
+    {"id": "W2-02", "name": "recruited-vs-fresh", "confirmatory": true},
+    {"id": "W2-03", "name": "recruited-vs-purpose-built", "confirmatory": true, "decision_checkpoint": true},
+    {"id": "W2-04", "name": "equal-development-upper-bound", "confirmatory_after_w2_03": true},
+    {"id": "W2-05", "name": "recruit-or-abstain", "confirmatory_after_w2_03": true},
+    {"id": "W2-06", "name": "mission-drift", "confirmatory_after_w2_03": true},
+    {"id": "W2-07", "name": "unseen-recruitment-replication", "replication": true}
+  ],
+  "decision_gates": {
+    "w2_02_min_completion_lift": 0.02,
+    "w2_02_min_positive_fields": 2,
+    "w2_03_noninferiority_margin": 0.02,
+    "w2_03_min_utility_delta": 0.0,
+    "w2_05_min_selective_risk_reduction": 0.05,
+    "w2_05_min_supported_coverage": 0.50,
+    "w2_07_min_completion_lift": 0.02,
+    "w2_07_noninferiority_margin": 0.02,
+    "w2_07_min_positive_fields": 2,
+    "w2_07_min_coverage": 0.67
+  },
+  "resource_controls": {
+    "same_base_controller": true,
+    "same_tools": true,
+    "same_permissions": true,
+    "same_mission_information": true,
+    "same_execution_trials": true
+  },
+  "state_boundary": {
+    "selector_can_read_private_practice": false,
+    "capsule_transfers_private_practice": true,
+    "home_private_substrate_import": false,
+    "home_reputation_import": false,
+    "public_specialization_labels_are_lossy": true
+  }
+}
