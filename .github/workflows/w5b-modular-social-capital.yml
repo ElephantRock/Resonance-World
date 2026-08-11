@@ -1,0 +1,431 @@
+name: W5B Modular Social Capital
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/w5b-modular-social-capital.yml"
+      - "configs/w5b/**"
+      - "docs/w5b-status.md"
+      - "src/resonance_world/w5b_*.py"
+      - "tests/test_w5b_*.py"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/w5b-modular-social-capital.yml"
+      - "configs/w5b/**"
+      - "docs/w5b-status.md"
+      - "src/resonance_world/w5b_*.py"
+      - "tests/test_w5b_*.py"
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: w5b-modular-social-capital-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FIELD_REPOSITORY: https://github.com/ElephantRock/Resonance-Field.git
+  FIELD_SHA: 0914a21249261fe61e02c5191f4a36df416c672f
+  PGHOST: localhost
+  PGPORT: "5432"
+  PGUSER: resonance
+  PGPASSWORD: resonance
+
+jobs:
+  discovery-sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: resonance
+          POSTGRES_USER: resonance
+          POSTGRES_PASSWORD: resonance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resonance -d resonance"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - run: python -m pip install -e 'field[dev]' -e world
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Develop five fresh source Fields
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/source-step" "$GITHUB_WORKSPACE/raw"
+          (
+            cd field
+            python -m resonance.experiments.lifecycle_step_cli \
+              --config "$GITHUB_WORKSPACE/world/configs/w5b/source-development-discovery.json" \
+              --experiment 63 \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$DSN" \
+              --output-dir "$GITHUB_WORKSPACE/source-step"
+          )
+      - name: Export immutable Field evidence
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+          CAMPAIGN: w5b-stateful-source-development-discovery-v0.1
+        run: |
+          psql "$DSN" --csv -c "
+            SELECT run_id::text, seed, arm_label, environment::text, metrics::text, completed_at
+            FROM integration_campaign_runs
+            WHERE campaign_name = '$CAMPAIGN'
+              AND experiment_number = 63
+              AND arm_label = 'immortal_control'
+            ORDER BY seed
+          " > raw/runs.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, o.cycle, o.task_id::text, o.task_domain,
+                   o.required_skill, o.winner_agent_id::text, o.winner_slot,
+                   o.success, o.winning_price, o.task_budget, o.created_at
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, o.cycle
+          " > raw/outcomes.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, t.task_id::text, t.requester_agent_id::text
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_tasks t ON t.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, t.task_id
+          " > raw/tasks.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, b.task_id::text, b.bidder_agent_id::text,
+                   b.price, b.confidence, b.status
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_bids b ON b.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, b.task_id, b.bidder_agent_id
+          " > raw/bids.csv
+      - name: Materialize Field-derived individual state
+        run: >-
+          python -m resonance_world.w4_source_export
+          raw/runs.csv raw/outcomes.csv raw/tasks.csv raw/bids.csv
+          output/discovery-source
+      - name: Enforce discovery source boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('output/discovery-source/w4-source-summary.json').read_text())
+          assert data['field_count'] == 5, data
+          assert data['agent_count'] == 60, data
+          assert data['seeds'] == [157, 278, 399, 520, 641], data
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w5b-discovery-source
+          path: |
+            output/discovery-source
+            raw
+            source-step
+          if-no-files-found: error
+          retention-days: 90
+
+  discovery:
+    needs: discovery-sources
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: w5b-discovery-source
+          path: source
+      - name: Execute W5B-01 through W5B-04
+        run: >-
+          python -m resonance_world.w5b_modules discover
+          source/output/discovery-source/capsules.private.jsonl
+          configs/w5b/module-missions.json
+          configs/w5b/module-campaign.json
+          output/discovery
+      - name: Enforce registered discovery structure
+        run: |
+          python - <<'PY'
+          import inspect
+          import json
+          from resonance_world.w4a_joint_learning import JointEnvironment
+          data = json.load(open('output/discovery/w5b-discovery.json', encoding='utf-8'))
+          assert len(data['field_results']) == 2
+          assert set(data['summary']) == {'w5b_01', 'w5b_02', 'w5b_03', 'w5b_04'}
+          forbidden = {
+              'module', 'module_id', 'module_library', 'module_history',
+              'organization', 'institutional_memory'
+          }
+          assert not set(inspect.signature(JointEnvironment.evaluate).parameters) & forbidden
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w5b-discovery-results
+          path: output/discovery
+          if-no-files-found: error
+          retention-days: 90
+
+  replication-sources:
+    needs: discovery
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: resonance
+          POSTGRES_USER: resonance
+          POSTGRES_PASSWORD: resonance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resonance -d resonance"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - run: python -m pip install -e 'field[dev]' -e world
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Develop post-discovery replication Fields
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/source-step" "$GITHUB_WORKSPACE/raw"
+          (
+            cd field
+            python -m resonance.experiments.lifecycle_step_cli \
+              --config "$GITHUB_WORKSPACE/world/configs/w5b/source-development-replication.json" \
+              --experiment 63 \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$DSN" \
+              --output-dir "$GITHUB_WORKSPACE/source-step"
+          )
+      - name: Export unseen Field evidence
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+          CAMPAIGN: w5b-stateful-source-development-replication-v0.1
+        run: |
+          psql "$DSN" --csv -c "
+            SELECT run_id::text, seed, arm_label, environment::text, metrics::text, completed_at
+            FROM integration_campaign_runs
+            WHERE campaign_name = '$CAMPAIGN'
+              AND experiment_number = 63
+              AND arm_label = 'immortal_control'
+            ORDER BY seed
+          " > raw/runs.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, o.cycle, o.task_id::text, o.task_domain,
+                   o.required_skill, o.winner_agent_id::text, o.winner_slot,
+                   o.success, o.winning_price, o.task_budget, o.created_at
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, o.cycle
+          " > raw/outcomes.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, t.task_id::text, t.requester_agent_id::text
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_tasks t ON t.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, t.task_id
+          " > raw/tasks.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, b.task_id::text, b.bidder_agent_id::text,
+                   b.price, b.confidence, b.status
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_bids b ON b.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, b.task_id, b.bidder_agent_id
+          " > raw/bids.csv
+      - run: >-
+          python -m resonance_world.w4_source_export
+          raw/runs.csv raw/outcomes.csv raw/tasks.csv raw/bids.csv
+          output/replication-source
+      - name: Enforce unseen source cohort
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('output/replication-source/w4-source-summary.json').read_text())
+          assert data['field_count'] == 3, data
+          assert data['agent_count'] == 36, data
+          assert data['seeds'] == [762, 883, 994], data
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w5b-replication-source
+          path: |
+            output/replication-source
+            raw
+            source-step
+          if-no-files-found: error
+          retention-days: 90
+
+  replication:
+    needs: [discovery, replication-sources]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: w5b-replication-source
+          path: source
+      - uses: actions/download-artifact@v4
+        with:
+          name: w5b-discovery-results
+          path: discovery
+      - name: Execute W5B-05 without retuning
+        run: >-
+          python -m resonance_world.w5b_modules replicate
+          source/output/replication-source/capsules.private.jsonl
+          configs/w5b/module-missions.json
+          configs/w5b/module-campaign.json
+          discovery/w5b-discovery.json
+          output/replication
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w5b-replication-results
+          path: output/replication
+          if-no-files-found: error
+          retention-days: 90
+
+  synthesize:
+    needs: [discovery, replication]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: w5b-discovery-results
+          path: evidence/discovery
+      - uses: actions/download-artifact@v4
+        with:
+          name: w5b-replication-results
+          path: evidence/replication
+      - name: Synthesize W5B
+        run: >-
+          python -m resonance_world.w5b_modules synthesize
+          evidence/discovery/w5b-discovery.json
+          evidence/replication/w5b-05-replication.json
+          output
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w5b-evidence
+          path: |
+            output
+            evidence
+          if-no-files-found: error
+          retention-days: 90
+      - name: Publish authoritative W5B result
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          data = json.loads(Path('output/w5b-synthesis.json').read_text())
+          discovery = data['discovery']
+          replication = data['replication']
+          body = f'''## W5B Modular Social Capital — complete
+
+- Status: **{data['status']}**
+- W5B-01 discovery effect/classification: **{discovery['w5b_01']['effect']:.4%} / {discovery['w5b_01']['classification']}**
+- W5B-02 discovery effect/classification: **{discovery['w5b_02']['effect']:.4%} / {discovery['w5b_02']['classification']}**
+- W5B-03 discovery effect/classification: **{discovery['w5b_03']['effect']:.4%} / {discovery['w5b_03']['classification']}**
+- W5B-04 discovery effect/classification: **{discovery['w5b_04']['effect']:.4%} / {discovery['w5b_04']['classification']}**
+- W5B-01 replication effect: **{replication['w5b_01']['effect']:.4%}**
+- W5B-02 replication effect: **{replication['w5b_02']['effect']:.4%}**
+- W5B-03 replication effect: **{replication['w5b_03']['effect']:.4%}**
+- W5B-04 replication effect: **{replication['w5b_04']['effect']:.4%}**
+- Replication gate: **{data['replication_gate']}**
+
+Interpretation boundary: deterministic Field-derived competence plus explicit W4/W5B-00 state modules. PairModule only transports state; the outcome law never reads module identity or module history. No generic procedure interpreter is present.
+
+Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/{os.environ['GITHUB_RUN_ID']}
+'''
+          Path('w5b-comment.md').write_text(body)
+          PY
+          gh issue comment 37 --repo ElephantRock/Resonance-World --body-file w5b-comment.md
+          gh issue close 37 --repo ElephantRock/Resonance-World --reason completed
