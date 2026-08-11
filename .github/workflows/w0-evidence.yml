@@ -1,0 +1,351 @@
+name: W0 Evidence Campaign
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/w0-evidence.yml"
+      - "configs/w0/**"
+      - "src/resonance_world/w0_*.py"
+      - "src/resonance_world/non_interference.py"
+      - "src/resonance_world/resonance_field_artifacts.py"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/w0-evidence.yml"
+      - "configs/w0/**"
+      - "src/resonance_world/w0_*.py"
+      - "src/resonance_world/non_interference.py"
+      - "src/resonance_world/resonance_field_artifacts.py"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  matched-runs:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        seed: [101, 202, 303]
+
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: resonance
+          POSTGRES_USER: resonance
+          POSTGRES_PASSWORD: resonance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resonance -d resonance"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+
+    env:
+      FIELD_REPOSITORY: https://github.com/ElephantRock/Resonance-Field.git
+      FIELD_SHA: 8ad07a5213d24c489a3223773b04d478f1807f24
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: resonance
+      PGPASSWORD: resonance
+
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+
+      - name: Install Field and World
+        run: python -m pip install -e 'field[dev]' -e world
+
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v createdb >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+
+      - name: Create source and matched databases
+        run: |
+          dropdb --if-exists w0_source
+          dropdb --if-exists w0_control
+          dropdb --if-exists w0_observed
+          createdb w0_source
+          createdb w0_control
+          createdb w0_observed
+
+      - name: Reproduce unmodified source Field
+        env:
+          SEED: ${{ matrix.seed }}
+          SOURCE_DSN: postgresql://resonance:resonance@localhost:5432/w0_source
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/source" "$GITHUB_WORKSPACE/evidence"
+          (
+            cd field
+            python -m resonance.experiments.cli \
+              --config configs/experiments/first-emergence.json \
+              --ablation full \
+              --seed "$SEED" \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$SOURCE_DSN" \
+              --output-dir "$GITHUB_WORKSPACE/source"
+          )
+
+      - name: Run identity-controlled isolated match
+        env:
+          SEED: ${{ matrix.seed }}
+          CONTROL_DSN: postgresql://resonance:resonance@localhost:5432/w0_control
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/control" "$GITHUB_WORKSPACE/evidence"
+          start=$(date +%s%N)
+          (
+            cd field
+            python -m resonance_world.w0_field_runner \
+              --uuid-seed "w0-seed-$SEED" \
+              --config configs/experiments/first-emergence.json \
+              --ablation full \
+              --seed "$SEED" \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$CONTROL_DSN" \
+              --output-dir "$GITHUB_WORKSPACE/control"
+          )
+          end=$(date +%s%N)
+          python - <<PY > "$GITHUB_WORKSPACE/evidence/control-runtime.txt"
+          print(($end - $start) / 1_000_000_000)
+          PY
+
+      - name: Run identity-controlled World-observed match
+        env:
+          SEED: ${{ matrix.seed }}
+          OBSERVED_DSN: postgresql://resonance:resonance@localhost:5432/w0_observed
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/observed" "$GITHUB_WORKSPACE/evidence"
+          stop_file="$GITHUB_WORKSPACE/evidence/observer.stop"
+          stats_file="$GITHUB_WORKSPACE/evidence/observer-stats.json"
+          rm -f "$stop_file"
+          python -m resonance_world.w0_live_observer \
+            --dsn "$OBSERVED_DSN" \
+            --stop-file "$stop_file" \
+            --output "$stats_file" \
+            --interval 0.10 \
+            --max-seconds 120 &
+          observer_pid=$!
+          cleanup() {
+            touch "$stop_file"
+            wait "$observer_pid" || true
+          }
+          trap cleanup EXIT
+
+          start=$(date +%s%N)
+          (
+            cd field
+            python -m resonance_world.w0_field_runner \
+              --uuid-seed "w0-seed-$SEED" \
+              --config configs/experiments/first-emergence.json \
+              --ablation full \
+              --seed "$SEED" \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$OBSERVED_DSN" \
+              --output-dir "$GITHUB_WORKSPACE/observed"
+          )
+          end=$(date +%s%N)
+          touch "$stop_file"
+          wait "$observer_pid"
+          trap - EXIT
+
+          python - <<PY > "$GITHUB_WORKSPACE/evidence/observed-runtime.txt"
+          print(($end - $start) / 1_000_000_000)
+          PY
+
+      - name: Compare matched evidence
+        id: compare
+        continue-on-error: true
+        env:
+          SEED: ${{ matrix.seed }}
+        run: |
+          python -m resonance_world.w0_evidence \
+            "$GITHUB_WORKSPACE/control" \
+            "$GITHUB_WORKSPACE/observed" \
+            "$GITHUB_WORKSPACE/evidence/observer-stats.json" \
+            "$GITHUB_WORKSPACE/evidence/report.json" \
+            --source-dir "$GITHUB_WORKSPACE/source" \
+            --control-runtime "$(cat "$GITHUB_WORKSPACE/evidence/control-runtime.txt")" \
+            --observed-runtime "$(cat "$GITHUB_WORKSPACE/evidence/observed-runtime.txt")" \
+            --seed "$SEED" \
+            --max-instrumentation-ratio 0.05
+
+      - name: Upload reproduced source Field
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: emergence-full-seed-${{ matrix.seed }}
+          path: source
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Upload non-interference evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: w0-ni-seed-${{ matrix.seed }}
+          path: |
+            evidence
+            control
+            observed
+          if-no-files-found: warn
+          retention-days: 90
+
+      - name: Enforce W0 matched-run gate
+        if: always()
+        run: |
+          test -f "$GITHUB_WORKSPACE/evidence/report.json"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("evidence/report.json").read_text())
+          if not report["passed"]:
+              raise SystemExit(json.dumps(report, indent=2, sort_keys=True))
+          PY
+
+  synthesize:
+    needs: matched-runs
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+
+      - name: Install World
+        run: python -m pip install -e .
+
+      - name: Download reproduced Field artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: emergence-full-seed-*
+          path: staged
+          merge-multiple: false
+
+      - name: Download non-interference evidence
+        uses: actions/download-artifact@v4
+        with:
+          pattern: w0-ni-seed-*
+          path: non-interference
+          merge-multiple: false
+
+      - name: Materialize 60-agent World cohort
+        run: >-
+          python -m resonance_world.w0_campaign
+          configs/w0/first-cohort.json
+          staged
+          output/cohort
+
+      - name: Synthesize W0 result
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          reports = []
+          for path in sorted(Path("non-interference").glob("w0-ni-seed-*/evidence/report.json")):
+              reports.append(json.loads(path.read_text()))
+          if len(reports) != 3:
+              raise SystemExit(f"expected 3 non-interference reports, got {len(reports)}")
+
+          cohort = json.loads(Path("output/cohort/cohort-summary.json").read_text())
+          passed = (
+              all(report["passed"] for report in reports)
+              and cohort["field_count"] == 3
+              and cohort["passport_count"] == 60
+              and cohort["total_agents"] == 60
+          )
+          synthesis = {
+              "cohort": cohort,
+              "matched_runs": reports,
+              "passed": passed,
+          }
+          Path("output/w0-synthesis.json").write_text(
+              json.dumps(synthesis, indent=2, sort_keys=True) + "\n"
+          )
+          if not passed:
+              raise SystemExit(json.dumps(synthesis, indent=2, sort_keys=True))
+          PY
+
+      - name: Upload W0 evidence package
+        uses: actions/upload-artifact@v4
+        with:
+          name: w0-evidence
+          path: |
+            output
+            non-interference
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Publish W0 synthesis and close issue
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY' > output/w0-comment.md
+          import json
+          import os
+          from pathlib import Path
+
+          data = json.loads(Path("output/w0-synthesis.json").read_text())
+          cohort = data["cohort"]
+          print("## W0 evidence campaign — PASS")
+          print()
+          print(f"- Fields: **{cohort['field_count']}**")
+          print(f"- Agent Passports: **{cohort['passport_count']}**")
+          print(f"- Total agents: **{cohort['total_agents']}**")
+          print(f"- Passport SHA-256: `{cohort['passports_sha256']}`")
+          print(f"- Registry SHA-256: `{cohort['registry_sha256']}`")
+          print()
+          print("### Matched non-interference runs")
+          print()
+          for report in data["matched_runs"]:
+              print(
+                  f"- Seed {report['seed']}: raw evidence identical = "
+                  f"**{report['hashes_identical']}**, source metrics preserved = "
+                  f"**{report['source_summary_matches']}**, live snapshots = "
+                  f"**{report['observer']['successful_snapshots']}**, "
+                  f"instrumentation ratio = "
+                  f"**{report['instrumentation_overhead_ratio']:.4%}**"
+              )
+          print()
+          print("Matched arms use the same deterministic opaque-identity allocator; ")
+          print("the cohort itself is derived from separate unmodified source reproductions.")
+          print()
+          print(f"Actions evidence run: {os.environ['GITHUB_SERVER_URL']}/"
+                f"{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}")
+          PY
+          gh issue comment 1 --repo "$GITHUB_REPOSITORY" --body-file output/w0-comment.md
+          gh issue close 1 --repo "$GITHUB_REPOSITORY" --reason completed
