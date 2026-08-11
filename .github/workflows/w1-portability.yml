@@ -1,0 +1,486 @@
+name: W1 Portable Capability Campaign
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/w1-portability.yml"
+      - "configs/w1/**"
+      - "docs/w1-*.md"
+      - "src/resonance_world/w1_*.py"
+      - "tests/test_w1_*.py"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/w1-portability.yml"
+      - "configs/w1/**"
+      - "docs/w1-*.md"
+      - "src/resonance_world/w1_*.py"
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: w1-portability-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FIELD_REPOSITORY: https://github.com/ElephantRock/Resonance-Field.git
+  FIELD_SHA: 5cee5ff1c75d027f5c78c681c5f306cab2c85bf3
+  PGHOST: localhost
+  PGPORT: "5432"
+  PGUSER: resonance
+  PGPASSWORD: resonance
+
+jobs:
+  discovery-sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: resonance
+          POSTGRES_USER: resonance
+          POSTGRES_PASSWORD: resonance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resonance -d resonance"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - name: Install Field and World
+        run: python -m pip install -e 'field[dev]' -e world
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Develop five independent source Fields
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/source-step" "$GITHUB_WORKSPACE/raw"
+          (
+            cd field
+            python -m resonance.experiments.lifecycle_step_cli \
+              --config "$GITHUB_WORKSPACE/world/configs/w1/source-development-discovery.json" \
+              --experiment 63 \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$DSN" \
+              --output-dir "$GITHUB_WORKSPACE/source-step"
+          )
+      - name: Export immutable Field evidence
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+          CAMPAIGN: w1-stateful-source-development-discovery-v0.1
+        run: |
+          psql "$DSN" --csv -c "
+            SELECT run_id::text, seed, arm_label, environment::text, metrics::text, completed_at
+            FROM integration_campaign_runs
+            WHERE campaign_name = '$CAMPAIGN'
+              AND experiment_number = 63
+              AND arm_label = 'immortal_control'
+            ORDER BY seed
+          " > raw/runs.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, o.cycle, o.task_id::text, o.task_domain,
+                   o.required_skill, o.winner_agent_id::text, o.winner_slot,
+                   o.success, o.winning_price, o.task_budget, o.created_at
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, o.cycle
+          " > raw/outcomes.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, t.task_id::text, t.requester_agent_id::text
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_tasks t ON t.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, t.task_id
+          " > raw/tasks.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, b.task_id::text, b.bidder_agent_id::text,
+                   b.price, b.confidence, b.status
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_bids b ON b.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, b.task_id, b.bidder_agent_id
+          " > raw/bids.csv
+      - name: Materialize W1-01 home baseline and capsules
+        run: >-
+          python -m resonance_world.w1_source_export
+          raw/runs.csv raw/outcomes.csv raw/tasks.csv raw/bids.csv
+          output/discovery-source
+      - name: Enforce discovery source cohort
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("output/discovery-source/w1-01-summary.json").read_text())
+          assert data["field_count"] == 5, data
+          assert data["agent_count"] == 60, data
+          assert data["seeds"] == [101, 202, 303, 404, 505], data
+          PY
+      - name: Upload discovery source evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: w1-discovery-source
+          path: |
+            output/discovery-source
+            raw
+            source-step
+          if-no-files-found: error
+          retention-days: 90
+
+  training:
+    needs: discovery-sources
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: w1-discovery-source
+          path: source
+      - name: Run W1-02 and W1-03; freeze W1-04 model
+        run: >-
+          python -m resonance_world.w1_transfer train
+          source/output/discovery-source/candidates.jsonl
+          source/output/discovery-source/capsules.private.jsonl
+          configs/w1/transfer-environments.json
+          output/training
+      - name: Enforce pre-holdout model freeze
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          model = json.loads(Path("output/training/w1-04-frozen-model.json").read_text())
+          assert model["frozen_before_discovery_holdout"] is True
+          assert "practice_by_skill" not in json.dumps(model, sort_keys=True)
+          assert len(model["training_fields"]) == 3
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w1-frozen-training
+          path: output/training
+          if-no-files-found: error
+          retention-days: 90
+
+  discovery-holdout:
+    needs: [discovery-sources, training]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: w1-discovery-source
+          path: source
+      - uses: actions/download-artifact@v4
+        with:
+          name: w1-frozen-training
+          path: frozen
+      - name: Execute W1-04 decision checkpoint, W1-05, and W1-06
+        run: >-
+          python -m resonance_world.w1_transfer holdout
+          source/output/discovery-source/candidates.jsonl
+          source/output/discovery-source/capsules.private.jsonl
+          configs/w1/transfer-environments.json
+          frozen/w1-04-frozen-model.json
+          configs/w1/portability-campaign.json
+          output/discovery
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w1-discovery-results
+          path: output/discovery
+          if-no-files-found: error
+          retention-days: 90
+
+  replication-sources:
+    needs: training
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: resonance
+          POSTGRES_USER: resonance
+          POSTGRES_PASSWORD: resonance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resonance -d resonance"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - run: python -m pip install -e 'field[dev]' -e world
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Develop three unseen source Fields after model freeze
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/source-step" "$GITHUB_WORKSPACE/raw"
+          (
+            cd field
+            python -m resonance.experiments.lifecycle_step_cli \
+              --config "$GITHUB_WORKSPACE/world/configs/w1/source-development-replication.json" \
+              --experiment 63 \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$DSN" \
+              --output-dir "$GITHUB_WORKSPACE/source-step"
+          )
+      - name: Export unseen source evidence
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+          CAMPAIGN: w1-stateful-source-development-replication-v0.1
+        run: |
+          psql "$DSN" --csv -c "
+            SELECT run_id::text, seed, arm_label, environment::text, metrics::text, completed_at
+            FROM integration_campaign_runs
+            WHERE campaign_name = '$CAMPAIGN'
+              AND experiment_number = 63
+              AND arm_label = 'immortal_control'
+            ORDER BY seed
+          " > raw/runs.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, o.cycle, o.task_id::text, o.task_domain,
+                   o.required_skill, o.winner_agent_id::text, o.winner_slot,
+                   o.success, o.winning_price, o.task_budget, o.created_at
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, o.cycle
+          " > raw/outcomes.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, t.task_id::text, t.requester_agent_id::text
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_tasks t ON t.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, t.task_id
+          " > raw/tasks.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, b.task_id::text, b.bidder_agent_id::text,
+                   b.price, b.confidence, b.status
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_bids b ON b.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, b.task_id, b.bidder_agent_id
+          " > raw/bids.csv
+      - run: >-
+          python -m resonance_world.w1_source_export
+          raw/runs.csv raw/outcomes.csv raw/tasks.csv raw/bids.csv
+          output/replication-source
+      - name: Enforce unseen replication cohort
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("output/replication-source/w1-01-summary.json").read_text())
+          assert data["field_count"] == 3, data
+          assert data["agent_count"] == 36, data
+          assert data["seeds"] == [707, 808, 909], data
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w1-replication-source
+          path: |
+            output/replication-source
+            raw
+            source-step
+          if-no-files-found: error
+          retention-days: 90
+
+  replication:
+    needs: [discovery-holdout, replication-sources, training]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: w1-replication-source
+          path: source
+      - uses: actions/download-artifact@v4
+        with:
+          name: w1-frozen-training
+          path: frozen
+      - name: Execute W1-07 unseen replication without retuning
+        run: >-
+          python -m resonance_world.w1_transfer replicate
+          source/output/replication-source/candidates.jsonl
+          source/output/replication-source/capsules.private.jsonl
+          configs/w1/transfer-environments.json
+          frozen/w1-04-frozen-model.json
+          configs/w1/portability-campaign.json
+          output/replication
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w1-replication-results
+          path: output/replication
+          if-no-files-found: error
+          retention-days: 90
+
+  synthesize:
+    needs: [training, discovery-holdout, replication]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/download-artifact@v4
+        with:
+          name: w1-frozen-training
+          path: evidence/training
+      - uses: actions/download-artifact@v4
+        with:
+          name: w1-discovery-results
+          path: evidence/discovery
+      - uses: actions/download-artifact@v4
+        with:
+          name: w1-replication-results
+          path: evidence/replication
+      - name: Synthesize all seven experiments
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          training = json.loads(Path("evidence/training/training-summary.json").read_text())
+          discovery = json.loads(Path("evidence/discovery/discovery-summary.json").read_text())
+          replication = json.loads(Path("evidence/replication/w1-07-summary.json").read_text())
+          discovery_passed = bool(discovery["w1_04_passed"])
+          replication_passed = discovery_passed and bool(replication["passed"])
+          if replication_passed:
+              status = "replicated_portable_capability"
+          elif discovery_passed:
+              status = "discovery_not_replicated"
+          else:
+              status = "no_portable_capability_discovery"
+          result = {
+              "campaign": "w1-portable-capability-v0.1",
+              "discovery_passed": discovery_passed,
+              "model_sha256": training["model_sha256"],
+              "replication_passed": replication_passed,
+              "status": status,
+              "training": training,
+              "discovery": discovery,
+              "replication": replication,
+          }
+          Path("output").mkdir()
+          Path("output/w1-synthesis.json").write_text(
+              json.dumps(result, indent=2, sort_keys=True) + "\n"
+          )
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w1-evidence
+          path: |
+            output
+            evidence
+          if-no-files-found: error
+          retention-days: 90
+      - name: Publish W1 result and close campaign issue
+        if: github.event_name != 'pull_request'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY' > output/w1-comment.md
+          import json
+          import os
+          from pathlib import Path
+          data = json.loads(Path("output/w1-synthesis.json").read_text())
+          discovery = data["discovery"]
+          replication = data["replication"]
+          print("## W1 Portable Capability Campaign — complete")
+          print()
+          print(f"- Status: **{data['status']}**")
+          print(f"- W1-04 discovery gate: **{data['discovery_passed']}**")
+          print(f"- W1-04 selected lift: **{discovery['w1_04_pooled_lift']:.4%}**")
+          print(f"- W1-04 rank correlation: **{discovery['w1_04_rank_correlation']:.4f}**")
+          print(f"- W1-07 replication gate: **{data['replication_passed']}**")
+          print(f"- W1-07 selected lift: **{replication['comparison']['pooled_lift']:.4%}**")
+          print(f"- W1-07 positive Fields: **{replication['comparison']['positive_fields']}**")
+          print(f"- W1-07 rank correlation: **{replication['rank_correlation']:.4f}**")
+          print(f"- Frozen model SHA-256: `{data['model_sha256']}`")
+          print()
+          print("Interpretation boundary: this campaign tests transfer in the current deterministic skill-practice Field model; it is not evidence of foundation-model weight transfer or general LLM-agent cognition.")
+          print()
+          print(f"Actions run: {os.environ['GITHUB_SERVER_URL']}/{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}")
+          PY
+          gh issue comment 10 --repo "$GITHUB_REPOSITORY" --body-file output/w1-comment.md
+          gh issue close 10 --repo "$GITHUB_REPOSITORY" --reason completed
