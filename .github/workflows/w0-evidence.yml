@@ -2,6 +2,14 @@ name: W0 Evidence Campaign
 
 on:
   workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/w0-evidence.yml"
+      - "configs/w0/**"
+      - "src/resonance_world/w0_*.py"
+      - "src/resonance_world/non_interference.py"
+      - "src/resonance_world/resonance_field_artifacts.py"
   push:
     branches: [main]
     paths:
@@ -279,6 +287,7 @@ jobs:
           retention-days: 90
 
       - name: Publish W0 synthesis and close issue
+        if: github.event_name != 'pull_request'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
