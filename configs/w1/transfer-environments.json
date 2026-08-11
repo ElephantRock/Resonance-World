@@ -1,0 +1,72 @@
+{
+  "version": 1,
+  "source_skills": [
+    "urban_heat",
+    "water_systems",
+    "energy_storage",
+    "supply_networks",
+    "public_health",
+    "mobility"
+  ],
+  "training_fields": [
+    "w1-source-seed-101",
+    "w1-source-seed-202",
+    "w1-source-seed-303"
+  ],
+  "discovery_holdout_fields": [
+    "w1-source-seed-404",
+    "w1-source-seed-505"
+  ],
+  "replication_fields": [
+    "w1-source-seed-707",
+    "w1-source-seed-808",
+    "w1-source-seed-909"
+  ],
+  "trials_per_agent": 120,
+  "selected_per_field": 3,
+  "destination_law": {
+    "base_success_probability": 0.38,
+    "practice_gain": 0.14,
+    "maximum_success_probability": 0.90
+  },
+  "families": {
+    "alias_a": [
+      {"task": "thermal_resilience", "requirements": {"urban_heat": 1.0}},
+      {"task": "hydrologic_anomaly", "requirements": {"water_systems": 1.0}},
+      {"task": "grid_flexibility", "requirements": {"energy_storage": 1.0}},
+      {"task": "logistics_disruption", "requirements": {"supply_networks": 1.0}},
+      {"task": "outbreak_response", "requirements": {"public_health": 1.0}},
+      {"task": "transit_recovery", "requirements": {"mobility": 1.0}}
+    ],
+    "shift_25": [
+      {"task": "heat_water_cascade", "requirements": {"urban_heat": 0.75, "water_systems": 0.25}},
+      {"task": "water_grid_cascade", "requirements": {"water_systems": 0.75, "energy_storage": 0.25}},
+      {"task": "grid_supply_cascade", "requirements": {"energy_storage": 0.75, "supply_networks": 0.25}},
+      {"task": "supply_health_cascade", "requirements": {"supply_networks": 0.75, "public_health": 0.25}},
+      {"task": "health_mobility_cascade", "requirements": {"public_health": 0.75, "mobility": 0.25}},
+      {"task": "mobility_heat_cascade", "requirements": {"mobility": 0.75, "urban_heat": 0.25}}
+    ],
+    "shift_50": [
+      {"task": "thermal_hydrologic_joint", "requirements": {"urban_heat": 0.5, "water_systems": 0.5}},
+      {"task": "hydrologic_grid_joint", "requirements": {"water_systems": 0.5, "energy_storage": 0.5}},
+      {"task": "grid_logistics_joint", "requirements": {"energy_storage": 0.5, "supply_networks": 0.5}},
+      {"task": "logistics_health_joint", "requirements": {"supply_networks": 0.5, "public_health": 0.5}},
+      {"task": "health_transit_joint", "requirements": {"public_health": 0.5, "mobility": 0.5}},
+      {"task": "transit_thermal_joint", "requirements": {"mobility": 0.5, "urban_heat": 0.5}}
+    ],
+    "replication_b": [
+      {"task": "resilient_district_ops", "requirements": {"urban_heat": 0.4, "energy_storage": 0.6}},
+      {"task": "critical_flow_ops", "requirements": {"water_systems": 0.4, "supply_networks": 0.6}},
+      {"task": "continuity_of_care_ops", "requirements": {"public_health": 0.4, "mobility": 0.6}},
+      {"task": "thermal_logistics_ops", "requirements": {"urban_heat": 0.6, "supply_networks": 0.4}},
+      {"task": "water_health_ops", "requirements": {"water_systems": 0.6, "public_health": 0.4}},
+      {"task": "grid_transit_ops", "requirements": {"energy_storage": 0.6, "mobility": 0.4}}
+    ]
+  },
+  "adaptation": {
+    "family": "shift_50",
+    "trials": 72,
+    "window": 12,
+    "target_expected_improvement": 0.06
+  }
+}
