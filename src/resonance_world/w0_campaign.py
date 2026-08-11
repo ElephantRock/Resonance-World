@@ -97,6 +97,16 @@ def _passport_line(passport: AgentPassport) -> bytes:
     return passport.canonical_bytes() + b"\n"
 
 
+def _logical_run_id(checkpoint_id: str) -> str:
+    marker = "@sha256:"
+    if marker not in checkpoint_id:
+        raise ValueError(f"checkpoint is not content-addressed: {checkpoint_id}")
+    run_id, digest = checkpoint_id.split(marker, 1)
+    if not run_id or len(digest) != 64:
+        raise ValueError(f"invalid content-addressed checkpoint: {checkpoint_id}")
+    return run_id
+
+
 def run_cohort(
     manifest_path: str | Path,
     artifact_root: str | Path,
@@ -120,10 +130,11 @@ def run_cohort(
         adapter = ResonanceFieldArtifactAdapter(artifact_dir, field_id=field.field_id)
         descriptor = adapter.descriptor()
 
-        if descriptor.checkpoint_id != field.run_id:
+        actual_run_id = _logical_run_id(descriptor.checkpoint_id)
+        if actual_run_id != field.run_id:
             raise ValueError(
                 f"{field.field_id} run mismatch: expected {field.run_id}, "
-                f"got {descriptor.checkpoint_id}"
+                f"got {actual_run_id}"
             )
         if descriptor.runtime_version != field.code_sha:
             raise ValueError(
@@ -149,6 +160,7 @@ def run_cohort(
             {
                 "ablation": field.ablation,
                 "artifact_name": field.artifact_name,
+                "checkpoint_id": descriptor.checkpoint_id,
                 "code_sha": field.code_sha,
                 "field_id": field.field_id,
                 "run_id": field.run_id,
