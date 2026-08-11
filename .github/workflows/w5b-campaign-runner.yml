@@ -56,6 +56,13 @@ jobs:
           --health-retries 10
     steps:
       - uses: actions/checkout@v4
+      - name: Announce pre-merge W5B run
+        if: github.event_name == 'push' && github.ref == 'refs/heads/w5b/modular-social-capital'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh issue comment 37 --repo ElephantRock/Resonance-World
+          --body "W5B pre-merge campaign started on head **$GITHUB_SHA**. Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/$GITHUB_RUN_ID"
       - name: Checkout pinned Resonance Field
         run: |
           git clone "$FIELD_REPOSITORY" ../field
