@@ -409,8 +409,10 @@ jobs:
         run: |
           python - <<'PY'
           import json
+          import os
           from pathlib import Path
           data = json.loads(Path('output/w4-synthesis.json').read_text())
+          run_id = os.environ['GITHUB_RUN_ID']
           body = f'''## W4 Relationship Formation & Portability — complete
 
           - Status: **{data['status']}**
@@ -426,7 +428,7 @@ jobs:
 
           Interpretation boundary: deterministic Field-derived individual competence plus World-side joint-learning substrate. No direct relationship/teamwork success bonus.
 
-          Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/${{GITHUB_RUN_ID}}
+          Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/{run_id}
           '''
           Path('w4-comment.md').write_text(body)
           PY
