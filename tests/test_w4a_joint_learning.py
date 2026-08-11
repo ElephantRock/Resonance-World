@@ -36,6 +36,7 @@ def test_environment_has_no_relationship_state_input() -> None:
     assert "relationship_state" not in parameters
     assert "coordination_exposure" not in parameters
     assert "pair_memory" not in parameters
+    assert "teamwork_model" not in parameters
 
 
 def test_identical_actions_and_individual_state_have_relationship_independent_outcome() -> None:
@@ -84,17 +85,30 @@ def test_relationship_state_is_separable_from_individual_practice() -> None:
     snapshot = relationships.snapshot()
     assert "practice_by_skill" not in str(snapshot)
     assert snapshot["partner_models"]
+    assert snapshot["teamwork_models"]
     assert snapshot["pair_memories"]
 
     relationships.reset_partner_models(first.agent_id, second.agent_id)
     after_partner_reset = relationships.snapshot()
     assert after_partner_reset["partner_models"] == []
+    assert after_partner_reset["teamwork_models"]
     assert after_partner_reset["pair_memories"]
     assert first.practice_by_skill == original_first
     assert second.practice_by_skill == original_second
 
     relationships.clear_pair_memory(first.agent_id, second.agent_id)
-    assert relationships.snapshot()["pair_memories"] == []
+    after_pair_reset = relationships.snapshot()
+    assert after_pair_reset["pair_memories"] == []
+    assert after_pair_reset["teamwork_models"]
+    assert first.practice_by_skill == original_first
+    assert second.practice_by_skill == original_second
+
+    relationships.reset_general_teamwork(first.agent_id)
+    relationships.reset_general_teamwork(second.agent_id)
+    after_full_reset = relationships.snapshot()
+    assert after_full_reset["partner_models"] == []
+    assert after_full_reset["teamwork_models"] == []
+    assert after_full_reset["pair_memories"] == []
     assert first.practice_by_skill == original_first
     assert second.practice_by_skill == original_second
 
