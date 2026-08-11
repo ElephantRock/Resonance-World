@@ -190,7 +190,9 @@ def build_resonance_field_checkpoint(
 
         action_rows = event_rows_by_agent[agent_id]
         action_counts = Counter(
-            str(row.get("proposed_action") or "") for row in action_rows if row.get("proposed_action")
+            str(row.get("proposed_action") or "")
+            for row in action_rows
+            if row.get("proposed_action")
         )
         action_concentration = (
             max(action_counts.values()) / sum(action_counts.values()) if action_counts else 0.0

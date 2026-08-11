@@ -1,6 +1,5 @@
 from resonance_world.adapters import CheckpointJsonAdapter
 from resonance_world.registry import WorldRegistry
-
 from tests.fixtures import checkpoint_bundle
 
 

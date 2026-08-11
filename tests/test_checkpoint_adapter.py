@@ -1,7 +1,6 @@
 from __future__ import annotations
 
 from resonance_world.adapters import CheckpointJsonAdapter, sha256_json
-
 from tests.fixtures import checkpoint_bundle
 
 
