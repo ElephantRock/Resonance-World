@@ -1,0 +1,79 @@
+{
+  "version": 1,
+  "effect_band": 0.02,
+  "service_trials": 128,
+  "destination_learning_episodes": 12,
+  "recovery_max_episodes": 24,
+  "pair_formation_depth": 12,
+  "pair_evaluation_trials": 128,
+  "communication_bandwidth_bits": 1,
+  "destination_law": {
+    "base_success_probability": 0.38,
+    "practice_gain": 0.14,
+    "maximum_success_probability": 0.90
+  },
+  "public_selector": {
+    "home_success_rate": 0.30,
+    "bid_win_rate": 0.20,
+    "mean_bid_confidence": 0.10,
+    "experience": 0.10,
+    "dominant_host_fit": 0.20,
+    "secondary_host_fit": 0.10,
+    "experience_scale": 12.0
+  },
+  "home_family": "home_service",
+  "mission_families": {
+    "home_service": [
+      {"task": "thermal_resilience", "requirements": {"urban_heat": 1.0}},
+      {"task": "hydrologic_response", "requirements": {"water_systems": 1.0}},
+      {"task": "grid_flexibility", "requirements": {"energy_storage": 1.0}},
+      {"task": "logistics_continuity", "requirements": {"supply_networks": 1.0}},
+      {"task": "health_response", "requirements": {"public_health": 1.0}},
+      {"task": "mobility_recovery", "requirements": {"mobility": 1.0}}
+    ],
+    "host_grid_mobility": [
+      {"task": "grid_transit_ops", "requirements": {"energy_storage": 0.6, "mobility": 0.4}},
+      {"task": "thermal_grid_ops", "requirements": {"urban_heat": 0.5, "energy_storage": 0.5}},
+      {"task": "transit_heat_ops", "requirements": {"mobility": 0.6, "urban_heat": 0.4}}
+    ],
+    "host_water_health": [
+      {"task": "water_health_ops", "requirements": {"water_systems": 0.6, "public_health": 0.4}},
+      {"task": "critical_flow_ops", "requirements": {"water_systems": 0.5, "supply_networks": 0.5}},
+      {"task": "health_logistics_ops", "requirements": {"public_health": 0.6, "supply_networks": 0.4}}
+    ],
+    "host_civic_integrated": [
+      {"task": "continuity_ops", "requirements": {"public_health": 0.4, "mobility": 0.3, "water_systems": 0.3}},
+      {"task": "resilient_district_ops", "requirements": {"urban_heat": 0.4, "energy_storage": 0.3, "supply_networks": 0.3}},
+      {"task": "mobility_supply_ops", "requirements": {"mobility": 0.6, "supply_networks": 0.4}}
+    ]
+  },
+  "pair_missions": {
+    "host_grid_mobility": {
+      "context": "w6-grid-mobility-pair",
+      "lead_skill": "energy_storage",
+      "support_skill": "mobility"
+    },
+    "host_water_health": {
+      "context": "w6-water-health-pair",
+      "lead_skill": "water_systems",
+      "support_skill": "public_health"
+    },
+    "host_civic_integrated": {
+      "context": "w6-civic-pair",
+      "lead_skill": "supply_networks",
+      "support_skill": "urban_heat"
+    }
+  },
+  "routes": {
+    "discovery": [
+      {"route_id": "d1", "home_seed": 191, "host_seed": 313, "host_family": "host_grid_mobility"},
+      {"route_id": "d2", "home_seed": 437, "host_seed": 559, "host_family": "host_water_health"},
+      {"route_id": "d3", "home_seed": 683, "host_seed": 809, "host_family": "host_civic_integrated"}
+    ],
+    "replication": [
+      {"route_id": "r1", "home_seed": 929, "host_seed": 1051, "host_family": "host_grid_mobility"},
+      {"route_id": "r2", "home_seed": 1177, "host_seed": 1301, "host_family": "host_water_health"},
+      {"route_id": "r3", "home_seed": 1423, "host_seed": 1549, "host_family": "host_civic_integrated"}
+    ]
+  }
+}
