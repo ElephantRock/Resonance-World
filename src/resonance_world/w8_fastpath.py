@@ -1,7 +1,8 @@
 """Mathematically exact execution acceleration for W8.
 
 This module changes no scientific rule. It replaces two hot calculations with equivalent
-cached implementations before delegating to the frozen W8 execution wrapper.
+cached implementations before delegating to the frozen W8 execution wrapper, and installs
+an outcome-neutral synthesis label correction.
 """
 
 from __future__ import annotations
@@ -12,6 +13,7 @@ from typing import Any
 
 from . import w8_campaign as base
 from . import w8_execution as execution
+from . import w8_synthesis
 from .w6_mobility import PortableAgentState
 from .w7_competition import TalentMarket, TalentOffer
 
@@ -139,6 +141,7 @@ def fast_matched_source_loss_frontier(
 def install_fastpath() -> None:
     base._source_frontier = exact_source_frontier
     base.matched_source_loss_frontier = fast_matched_source_loss_frontier
+    base.synthesize = w8_synthesis.synthesize
 
 
 def main(argv: Sequence[str] | None = None) -> int:
