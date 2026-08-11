@@ -67,3 +67,13 @@ The shuffled-edge result indicates that relationship information still contains 
 Therefore the correct W3 synthesis is **`w3_relationship_capital_not_replicated`**, not `replicated_transferable_relationship_capital`.
 
 No stronger relationship-capital claim is permitted without a new preregistered campaign.
+
+## W4-00 architecture clarification
+
+W4-00 established that Resonance Field does **not** currently carry native persistent pair-level learned state. In W3, `coordination_exposure` was derived by Resonance World from successful requester↔winner interaction counts and then used by the World destination law as an explicit coordination bonus. It was therefore a **World-derived experimental proxy**, not a Field-native relationship phenotype.
+
+This clarification does not alter any W3 numerical result or the `w3_relationship_capital_not_replicated` synthesis. It narrows the mechanism claim:
+
+> W3 replicated a two-agent swarm advantage under a World destination model containing an explicit coordination-exposure proxy; it did not demonstrate spontaneous emergence or transfer of partner-specific relationship state from the current Resonance Field runtime.
+
+The canonical machine-readable boundary is `configs/w4/relationship-state-audit.json`, validated by `resonance_world.w4_architecture_audit`.

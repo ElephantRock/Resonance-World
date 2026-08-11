@@ -1,0 +1,209 @@
+{
+  "audit_id": "w4-00-relationship-state-architecture-v0.1",
+  "classification": "A_NO_NATIVE_PAIR_STATE",
+  "audited_field": {
+    "repository": "ElephantRock/Resonance-Field",
+    "commit": "0914a21249261fe61e02c5191f4a36df416c672f"
+  },
+  "audited_world": {
+    "repository": "ElephantRock/Resonance-World",
+    "commit": "b377c68abeb2151e57fc4c4c45e64c0d3fd92f98"
+  },
+  "primitives": [
+    {
+      "name": "individual_practice_by_skill",
+      "origin": "field_native",
+      "scope": "agent",
+      "persistent": true,
+      "relationship_specific": false,
+      "independently_manipulable": true,
+      "native_relationship_state": false,
+      "provenance": {
+        "repository": "ElephantRock/Resonance-Field",
+        "commit": "0914a21249261fe61e02c5191f4a36df416c672f",
+        "path": "src/resonance/experiments/integration_campaign.py",
+        "evidence": "practice is keyed by (winner_slot, required_skill) and updated for the task winner"
+      }
+    },
+    {
+      "name": "shared_stigmergic_trace",
+      "origin": "field_native",
+      "scope": "global_shared_substrate",
+      "persistent": true,
+      "relationship_specific": false,
+      "independently_manipulable": true,
+      "native_relationship_state": false,
+      "provenance": {
+        "repository": "ElephantRock/Resonance-Field",
+        "commit": "0914a21249261fe61e02c5191f4a36df416c672f",
+        "path": "src/resonance/substrate/models.py",
+        "evidence": "Trace has an optional author_agent_id and shared visibility but no pair owner or partner set"
+      }
+    },
+    {
+      "name": "requester_winner_interaction_history",
+      "origin": "field_evidence",
+      "scope": "interaction_record",
+      "persistent": true,
+      "relationship_specific": true,
+      "independently_manipulable": false,
+      "native_relationship_state": false,
+      "provenance": {
+        "repository": "ElephantRock/Resonance-Field",
+        "commit": "0914a21249261fe61e02c5191f4a36df416c672f",
+        "path": "src/resonance/experiments/integration_campaign.py",
+        "evidence": "tasks record requester and winner outcomes, but no pair state is updated"
+      }
+    },
+    {
+      "name": "topology_opportunity_observation",
+      "origin": "field_evidence",
+      "scope": "candidate_edge_observation",
+      "persistent": true,
+      "relationship_specific": false,
+      "independently_manipulable": false,
+      "native_relationship_state": false,
+      "provenance": {
+        "repository": "ElephantRock/Resonance-Field",
+        "commit": "0914a21249261fe61e02c5191f4a36df416c672f",
+        "path": "migrations/014_coordination_topology_experiments.sql",
+        "evidence": "append-only pre-award candidate-edge evidence; not learned partner state"
+      }
+    },
+    {
+      "name": "persistent_pair_object",
+      "origin": "absent",
+      "scope": "pair",
+      "persistent": false,
+      "relationship_specific": true,
+      "independently_manipulable": false,
+      "native_relationship_state": false,
+      "provenance": {
+        "repository": "ElephantRock/Resonance-Field",
+        "commit": "0914a21249261fe61e02c5191f4a36df416c672f",
+        "path": "src/resonance",
+        "evidence": "audit found no pair-owned persistent domain object in the tested architecture"
+      }
+    },
+    {
+      "name": "pair_owned_memory",
+      "origin": "absent",
+      "scope": "pair",
+      "persistent": false,
+      "relationship_specific": true,
+      "independently_manipulable": false,
+      "native_relationship_state": false,
+      "provenance": {
+        "repository": "ElephantRock/Resonance-Field",
+        "commit": "0914a21249261fe61e02c5191f4a36df416c672f",
+        "path": "src/resonance/substrate/models.py",
+        "evidence": "shared traces are global/shared and are not pair-owned"
+      }
+    },
+    {
+      "name": "partner_conditioned_policy",
+      "origin": "absent",
+      "scope": "agent_partner",
+      "persistent": false,
+      "relationship_specific": true,
+      "independently_manipulable": false,
+      "native_relationship_state": false,
+      "provenance": {
+        "repository": "ElephantRock/Resonance-Field",
+        "commit": "0914a21249261fe61e02c5191f4a36df416c672f",
+        "path": "src/resonance",
+        "evidence": "no partner-indexed learned policy is present in the audited runtime"
+      }
+    },
+    {
+      "name": "joint_execution_state",
+      "origin": "absent",
+      "scope": "pair",
+      "persistent": false,
+      "relationship_specific": true,
+      "independently_manipulable": false,
+      "native_relationship_state": false,
+      "provenance": {
+        "repository": "ElephantRock/Resonance-Field",
+        "commit": "0914a21249261fe61e02c5191f4a36df416c672f",
+        "path": "src/resonance/experiments/integration_campaign.py",
+        "evidence": "delegation awards one winner; the campaign does not execute a pair-owned joint policy"
+      }
+    },
+    {
+      "name": "pair_role_allocation",
+      "origin": "absent",
+      "scope": "pair",
+      "persistent": false,
+      "relationship_specific": true,
+      "independently_manipulable": false,
+      "native_relationship_state": false,
+      "provenance": {
+        "repository": "ElephantRock/Resonance-Field",
+        "commit": "0914a21249261fe61e02c5191f4a36df416c672f",
+        "path": "src/resonance",
+        "evidence": "no persistent who-does-what state exists for a pair"
+      }
+    },
+    {
+      "name": "w3_coordination_exposure",
+      "origin": "world_derived_proxy",
+      "scope": "pair",
+      "persistent": true,
+      "relationship_specific": true,
+      "independently_manipulable": true,
+      "native_relationship_state": false,
+      "direct_outcome_effect": true,
+      "provenance": {
+        "repository": "ElephantRock/Resonance-World",
+        "commit": "b377c68abeb2151e57fc4c4c45e64c0d3fd92f98",
+        "path": "src/resonance_world/w3_source_export.py",
+        "evidence": "World derives coordination_exposure from successful requester-winner interaction counts"
+      },
+      "outcome_law": {
+        "repository": "ElephantRock/Resonance-World",
+        "commit": "b377c68abeb2151e57fc4c4c45e64c0d3fd92f98",
+        "path": "src/resonance_world/w3_swarm_core.py",
+        "evidence": "team probability adds coordination_gain * sqrt(coordination_exposure), capped by maximum_coordination_bonus"
+      }
+    },
+    {
+      "name": "portable_pair_capsule",
+      "origin": "absent",
+      "scope": "pair",
+      "persistent": false,
+      "relationship_specific": true,
+      "independently_manipulable": false,
+      "native_relationship_state": false,
+      "provenance": {
+        "repository": "ElephantRock/Resonance-Field",
+        "commit": "0914a21249261fe61e02c5191f4a36df416c672f",
+        "path": "src/resonance",
+        "evidence": "no Field-native portable pair capsule exists"
+      }
+    }
+  ],
+  "blocked_behavioral_operations": [
+    "relationship_reset",
+    "joint_memory_ablation",
+    "partner_policy_ablation",
+    "portable_pair_capsule_transfer"
+  ],
+  "w3_clarification": {
+    "numerical_results_remain_valid_under_the_w3_destination_model": true,
+    "field_native_relationship_capital_demonstrated": false,
+    "safe_claim": "W3 replicated a two-agent swarm advantage under a World destination model containing an explicit coordination-exposure proxy; independent relationship-aware selection did not replicate against the competence-only pair baseline."
+  },
+  "next_phase": {
+    "id": "W4A",
+    "name": "Minimal Joint-Learning Substrate",
+    "behavioral_w4_allowed": false,
+    "required_affordances": [
+      "joint_execution_environment",
+      "partner_conditioned_experience",
+      "pair_shared_episode_memory",
+      "communication_parity_controls",
+      "no_direct_relationship_success_bonus"
+    ]
+  }
+}
