@@ -1,28 +1,10 @@
-from __future__ import annotations
-
-import inspect
 import json
 
 import pytest
-
-from resonance_world.w4a_joint_learning import IndividualState, JointEnvironment
-from resonance_world.w5a_organization import OrganizationEnvironment, OrganizationMemory, OrganizationState
+from resonance_world.w4_joint import JointEnvironment
 from resonance_world.w6_mobility import PortableAgentState
 from resonance_world.w7_competition import CooperationAgreement, TalentMarket, TalentOffer
-
-
-def _agent(agent_id: str, home: str, water: int, energy: int) -> PortableAgentState:
-    return PortableAgentState.from_individual(
-        IndividualState(agent_id, {"water_systems": water, "energy_storage": energy}),
-        home_field_id=home,
-        evidence_refs=(f"field://{home}/{agent_id}",),
-    )
-
-
-def _organization(organization_id: str) -> OrganizationState:
-    member = IndividualState(f"incumbent-{organization_id}", {"water_systems": 1})
-    memory = OrganizationMemory()
-    return OrganizationState(organization_id, {member.agent_id: member}, memory)
+from tests.test_w7_competition import _agent, _market, _offer
 
 
 def _offer(
@@ -30,9 +12,9 @@ def _offer(
     organization_id: str,
     agent_id: str,
     bid: int,
-    *,
     window: str = "window-1",
 ) -> TalentOffer:
+    """Helper to create a valid TalentOffer for testing."""
     return TalentOffer(
         offer_id=offer_id,
         organization_id=organization_id,
