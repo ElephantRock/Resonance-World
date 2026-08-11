@@ -5,13 +5,13 @@ from pathlib import Path
 
 import pytest
 
+from resonance_world.w4a_joint_learning import IndividualState
 from resonance_world.w6_mobility_campaign import (
     _classify,
     _expected_probability,
     _public_score,
     run_phase,
 )
-from resonance_world.w4a_joint_learning import IndividualState
 
 SKILLS = [
     "urban_heat",
@@ -120,9 +120,15 @@ def test_discovery_phase_executes_all_w6_causal_boundaries(tmp_path: Path) -> No
     for route in result["routes"]:
         assert route["w6_02"]["home_difference"] == 0.0
         assert route["w6_02"]["host_difference"] == 0.0
-        assert route["w6_01"]["mobility_event"]["state_before_sha256"] == route["w6_01"]["mobility_event"]["state_after_sha256"]
-        assert route["w6_04"]["learned_state_before_sha256"] != route["w6_04"]["learned_state_after_sha256"]
-        assert route["w6_04"]["discard_state_before_sha256"] == route["w6_04"]["discard_state_after_sha256"]
+        movement = route["w6_01"]["mobility_event"]
+        assert movement["state_before_sha256"] == movement["state_after_sha256"]
+        learning = route["w6_04"]
+        assert learning["learned_state_before_sha256"] != learning[
+            "learned_state_after_sha256"
+        ]
+        assert learning["discard_state_before_sha256"] == learning[
+            "discard_state_after_sha256"
+        ]
         assert len(route["w6_06"]["member_ids"]) == 2
         assert route["w6_06"]["communication_bandwidth_bits"] == 1
         assert route["w6_06"]["trials"] == 128
