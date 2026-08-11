@@ -1,7 +1,7 @@
 """Mathematically exact execution acceleration for W8.
 
 This module changes no scientific rule. It replaces two hot calculations with equivalent
-closed-form/cached implementations before delegating to the frozen W8 execution wrapper.
+cached implementations before delegating to the frozen W8 execution wrapper.
 """
 
 from __future__ import annotations
@@ -20,21 +20,22 @@ def exact_source_frontier(
     states: Sequence[PortableAgentState],
     config: Mapping[str, Any],
 ) -> float:
-    """Closed-form equivalent of W8's periodic 512-trial source frontier."""
+    """Bitwise-equivalent source frontier with cached per-skill maxima."""
     if not states:
         return 0.0
     missions = list(config["home_service_missions"])
     trials = int(config["service_trials"])
     if not missions or trials <= 0:
         return 0.0
-    quotient, remainder = divmod(trials, len(missions))
-    counts: dict[str, int] = {}
-    for index, mission in enumerate(missions):
-        skill = str(mission["skill"])
-        counts[skill] = counts.get(skill, 0) + quotient + (1 if index < remainder else 0)
+    skills = {str(mission["skill"]) for mission in missions}
+    best_by_skill = {
+        skill: max(base._source_probability(state, skill, config) for state in states)
+        for skill in skills
+    }
     total = 0.0
-    for skill, count in counts.items():
-        total += count * max(base._source_probability(state, skill, config) for state in states)
+    for trial in range(trials):
+        skill = str(missions[trial % len(missions)]["skill"])
+        total += best_by_skill[skill]
     return total / trials
 
 
