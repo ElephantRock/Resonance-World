@@ -32,7 +32,12 @@ def _state(agent_id: str, field_id: str = "field-a") -> PortableAgentState:
     )
 
 
-def _contract(agent_id: str, *, organization_id: str = "org-alpha", price: int = 80) -> TalentContract:
+def _contract(
+    agent_id: str,
+    *,
+    organization_id: str = "org-alpha",
+    price: int = 80,
+) -> TalentContract:
     return TalentContract(
         contract_id=f"contract:w1:{agent_id}",
         offer_id=f"offer:w1:{organization_id}:{agent_id}",
