@@ -61,6 +61,7 @@ def build_non_interference_report(
     control_runtime_seconds: float,
     observed_runtime_seconds: float,
     seed: int,
+    source_dir: str | Path | None = None,
     max_instrumentation_ratio: float = 0.05,
 ) -> dict[str, Any]:
     """Compare matched Field runs and return a serializable W0 evidence report."""
@@ -75,6 +76,31 @@ def build_non_interference_report(
     observed_run_id = str(observed_summary.get("run_id") or "")
     if not control_run_id or control_run_id != observed_run_id:
         raise ValueError("matched runs must have the same deterministic run_id")
+
+    source_summary_matches = True
+    source_metric_deltas: list[list[object]] = []
+    if source_dir is not None:
+        source_summary = _load_json(Path(source_dir) / "experiment.json")
+        source_run_id = str(source_summary.get("run_id") or "")
+        if source_run_id != control_run_id:
+            raise ValueError("source and matched control must have the same run_id")
+        source_metrics = _numeric_metrics(source_summary)
+        control_metrics = _numeric_metrics(control_summary)
+        for key in sorted(set(source_metrics) | set(control_metrics)):
+            left = source_metrics.get(key)
+            right = control_metrics.get(key)
+            delta = float("inf") if left is None or right is None else abs(left - right)
+            source_metric_deltas.append([key, delta])
+        source_summary_matches = (
+            all(delta == 0.0 for _, delta in source_metric_deltas)
+            and source_summary.get("name") == control_summary.get("name")
+            and source_summary.get("ablation") == control_summary.get("ablation")
+            and source_summary.get("seed") == control_summary.get("seed")
+            and source_summary.get("config_hash") == control_summary.get("config_hash")
+            and source_summary.get("code_sha") == control_summary.get("code_sha")
+            and source_summary.get("cycles") == control_summary.get("cycles")
+            and source_summary.get("agents") == control_summary.get("agents")
+        )
 
     query_seconds = float(observer_stats.get("query_seconds", 0.0))
     successful_snapshots = int(observer_stats.get("successful_snapshots", 0))
@@ -104,12 +130,13 @@ def build_non_interference_report(
     wall_clock_delta_ratio = (
         observed_runtime_seconds - control_runtime_seconds
     ) / control_runtime_seconds
-    passed = comparison.passed and observer_active
+    passed = comparison.passed and observer_active and source_summary_matches
     return {
         "behavior_identical": comparison.behavior_identical,
         "control_runtime_seconds": control_runtime_seconds,
         "differing_hashes": list(comparison.differing_hashes),
         "hashes_identical": comparison.hashes_identical,
+        "identity_allocator": "deterministic-matched-arms-v1",
         "instrumentation_overhead_ratio": comparison.overhead_ratio,
         "instrumentation_overhead_within_bound": comparison.overhead_within_bound,
         "max_instrumentation_ratio": max_instrumentation_ratio,
@@ -121,6 +148,8 @@ def build_non_interference_report(
         "passed": passed,
         "run_id": control_run_id,
         "seed": seed,
+        "source_metric_deltas": source_metric_deltas,
+        "source_summary_matches": source_summary_matches,
         "wall_clock_delta_ratio": wall_clock_delta_ratio,
     }
 
@@ -134,6 +163,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--control-runtime", required=True, type=float)
     parser.add_argument("--observed-runtime", required=True, type=float)
     parser.add_argument("--seed", required=True, type=int)
+    parser.add_argument("--source-dir", type=Path)
     parser.add_argument("--max-instrumentation-ratio", type=float, default=0.05)
     args = parser.parse_args(argv)
     report = build_non_interference_report(
@@ -143,6 +173,7 @@ def main(argv: list[str] | None = None) -> int:
         control_runtime_seconds=args.control_runtime,
         observed_runtime_seconds=args.observed_runtime,
         seed=args.seed,
+        source_dir=args.source_dir,
         max_instrumentation_ratio=args.max_instrumentation_ratio,
     )
     args.report.parent.mkdir(parents=True, exist_ok=True)
