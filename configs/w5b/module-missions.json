@@ -1,0 +1,36 @@
+{
+  "discovery": [
+    {
+      "module_key": "storage-grid",
+      "formation": {"mission_id": "d-form-storage-grid", "context": "storage-grid", "lead_skill": "energy_storage", "support_skill": "supply_networks"},
+      "evaluation": {"mission_id": "d-eval-storage-grid", "context": "storage-grid", "lead_skill": "energy_storage", "support_skill": "supply_networks"}
+    },
+    {
+      "module_key": "clinic-water",
+      "formation": {"mission_id": "d-form-clinic-water", "context": "clinic-water", "lead_skill": "public_health", "support_skill": "water_systems"},
+      "evaluation": {"mission_id": "d-eval-clinic-water", "context": "clinic-water", "lead_skill": "public_health", "support_skill": "water_systems"}
+    },
+    {
+      "module_key": "heat-mobility",
+      "formation": {"mission_id": "d-form-heat-mobility", "context": "heat-mobility", "lead_skill": "urban_heat", "support_skill": "mobility"},
+      "evaluation": {"mission_id": "d-eval-heat-mobility", "context": "heat-mobility", "lead_skill": "urban_heat", "support_skill": "mobility"}
+    }
+  ],
+  "replication": [
+    {
+      "module_key": "harbor-chain",
+      "formation": {"mission_id": "r-form-harbor-chain", "context": "harbor-chain", "lead_skill": "mobility", "support_skill": "supply_networks"},
+      "evaluation": {"mission_id": "r-eval-harbor-chain", "context": "harbor-chain", "lead_skill": "mobility", "support_skill": "supply_networks"}
+    },
+    {
+      "module_key": "thermal-reserve",
+      "formation": {"mission_id": "r-form-thermal-reserve", "context": "thermal-reserve", "lead_skill": "urban_heat", "support_skill": "energy_storage"},
+      "evaluation": {"mission_id": "r-eval-thermal-reserve", "context": "thermal-reserve", "lead_skill": "urban_heat", "support_skill": "energy_storage"}
+    },
+    {
+      "module_key": "mobile-clinic",
+      "formation": {"mission_id": "r-form-mobile-clinic", "context": "mobile-clinic", "lead_skill": "public_health", "support_skill": "water_systems"},
+      "evaluation": {"mission_id": "r-eval-mobile-clinic", "context": "mobile-clinic", "lead_skill": "public_health", "support_skill": "water_systems"}
+    }
+  ]
+}
