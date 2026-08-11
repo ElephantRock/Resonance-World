@@ -142,6 +142,32 @@ def test_return_migration_can_carry_explicit_agent_owned_learning() -> None:
     assert "destination://field-host/episodes/1-12" in learned.evidence_refs
 
 
+def test_changed_returned_state_requires_new_destination_evidence() -> None:
+    registry = MobilityRegistry()
+    state = _state()
+    registry.register_home_agent(state)
+    registry.execute(
+        _contract(
+            "temporary-1",
+            "temporary_migration",
+            "field-home",
+            "field-host",
+        )
+    )
+    changed_without_new_evidence = PortableAgentState(
+        agent_id="agent-01",
+        home_field_id="field-home",
+        practice_by_skill=(("energy", 2), ("water", 5)),
+        evidence_refs=state.evidence_refs,
+    )
+
+    with pytest.raises(ValueError, match="new provenance"):
+        registry.execute(
+            _contract("return-1", "return_migration", "field-host", "field-home"),
+            returned_state=changed_without_new_evidence,
+        )
+
+
 def test_returned_learning_cannot_change_identity_home_or_reduce_practice() -> None:
     registry = MobilityRegistry()
     state = _state()
@@ -192,7 +218,7 @@ def test_returned_learning_cannot_change_identity_home_or_reduce_practice() -> N
         )
 
 
-def test_transition_validation_rejects_wrong_origin_and_duplicate_contract() -> None:
+def test_transition_validation_rejects_wrong_origin_duplicate_contract_and_mode() -> None:
     registry = MobilityRegistry()
     registry.register_home_agent(_state())
 
@@ -200,6 +226,9 @@ def test_transition_validation_rejects_wrong_origin_and_duplicate_contract() -> 
         registry.execute(
             _contract("wrong-origin", "secondment", "field-other", "field-host")
         )
+
+    with pytest.raises(ValueError, match="unsupported mobility mode"):
+        _contract("invalid-mode", "teleport", "field-home", "field-host")
 
     contract = _contract("secondment-1", "secondment", "field-home", "field-host")
     registry.execute(contract)
