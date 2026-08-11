@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime, timezone
 import json
+from dataclasses import dataclass
+from datetime import UTC, datetime
 from typing import Any
 
 PROTOCOL_VERSION = "0.1"
@@ -102,7 +102,7 @@ class AgentPassport:
     home_dependency_score: float | None = None
     portable_capability_score: float | None = None
     evidence_refs: tuple[EvidenceRef, ...] = ()
-    issued_at: datetime = datetime(1970, 1, 1, tzinfo=timezone.utc)
+    issued_at: datetime = datetime(1970, 1, 1, tzinfo=UTC)
 
     def __post_init__(self) -> None:
         if not self.agent_id:
@@ -165,7 +165,7 @@ class AgentPassport:
             "completed_tasks": self.completed_tasks,
             "evidence_refs": [evidence(ref) for ref in sorted(self.evidence_refs)],
             "home_dependency_score": self.home_dependency_score,
-            "issued_at": self.issued_at.astimezone(timezone.utc).isoformat(),
+            "issued_at": self.issued_at.astimezone(UTC).isoformat(),
             "passport_version": self.passport_version,
             "portable_capability_score": self.portable_capability_score,
             "source_field_id": self.source_field_id,
