@@ -1,0 +1,30 @@
+{
+  "discovery": {
+    "formation": [
+      {"mission_id": "d-form-1", "context": "north-grid", "lead_skill": "energy_storage", "support_skill": "supply_networks", "regime": "specialist"},
+      {"mission_id": "d-form-2", "context": "civic-loop", "lead_skill": "water_systems", "support_skill": "public_health", "regime": "balanced"},
+      {"mission_id": "d-form-3", "context": "heat-mobility", "lead_skill": "urban_heat", "support_skill": "mobility", "regime": "balanced"},
+      {"mission_id": "d-form-4", "context": "reserve-flow", "lead_skill": "supply_networks", "support_skill": "energy_storage", "regime": "specialist"}
+    ],
+    "evaluation": [
+      {"mission_id": "d-eval-1", "context": "north-grid", "lead_skill": "energy_storage", "support_skill": "supply_networks", "regime": "specialist"},
+      {"mission_id": "d-eval-2", "context": "civic-loop", "lead_skill": "water_systems", "support_skill": "public_health", "regime": "balanced"},
+      {"mission_id": "d-eval-3", "context": "heat-mobility", "lead_skill": "urban_heat", "support_skill": "mobility", "regime": "balanced"},
+      {"mission_id": "d-eval-4", "context": "reserve-flow", "lead_skill": "supply_networks", "support_skill": "energy_storage", "regime": "specialist"}
+    ]
+  },
+  "replication": {
+    "formation": [
+      {"mission_id": "r-form-1", "context": "harbor-chain", "lead_skill": "mobility", "support_skill": "supply_networks", "regime": "specialist"},
+      {"mission_id": "r-form-2", "context": "clinic-water", "lead_skill": "public_health", "support_skill": "water_systems", "regime": "balanced"},
+      {"mission_id": "r-form-3", "context": "thermal-reserve", "lead_skill": "urban_heat", "support_skill": "energy_storage", "regime": "specialist"},
+      {"mission_id": "r-form-4", "context": "mobile-health", "lead_skill": "mobility", "support_skill": "public_health", "regime": "balanced"}
+    ],
+    "evaluation": [
+      {"mission_id": "r-eval-1", "context": "harbor-chain", "lead_skill": "mobility", "support_skill": "supply_networks", "regime": "specialist"},
+      {"mission_id": "r-eval-2", "context": "clinic-water", "lead_skill": "public_health", "support_skill": "water_systems", "regime": "balanced"},
+      {"mission_id": "r-eval-3", "context": "thermal-reserve", "lead_skill": "urban_heat", "support_skill": "energy_storage", "regime": "specialist"},
+      {"mission_id": "r-eval-4", "context": "mobile-health", "lead_skill": "mobility", "support_skill": "public_health", "regime": "balanced"}
+    ]
+  }
+}
