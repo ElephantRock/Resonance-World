@@ -11,8 +11,9 @@ on:
       - "src/resonance_world/w5b_*.py"
       - "tests/test_w5b_*.py"
   push:
-    branches: [main]
+    branches: [main, w5b/modular-social-capital]
     paths:
+      - ".github/workflows/w5b-campaign-runner.yml"
       - "configs/w5b/**"
       - "docs/w5b-status.md"
       - "scripts/run_w5b_campaign.sh"
