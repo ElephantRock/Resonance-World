@@ -31,6 +31,12 @@
     "development_credit_per_cycle": 12,
     "vacancy_cycle": 72
   },
+  "replacement_classification": {
+    "recovery_source_loss_max": 0.02,
+    "contingency_cosine_distance": 0.10,
+    "replication_cosine_similarity": 0.95,
+    "replication_dominant_match_share": 0.80
+  },
   "coalition": {
     "message_bandwidth_bits": 1,
     "required_positive_missions": 4,
@@ -52,8 +58,11 @@
     "compounding_max_budget": 500,
     "stress_schedule": {
       "demand_shift_cycles": [6, 12, 18],
+      "demand_shift_skill_rotation": 1,
       "source_shortage_cycles": [8, 16],
-      "withholding_cycles": [10, 20]
+      "source_shortage_field_stride": 1,
+      "withholding_cycles": [10, 20],
+      "withholding_side": "support"
     }
   },
   "selector": {
