@@ -372,7 +372,9 @@ class CapabilityStockObservation:
             raise ValueError("benchmark mission may be assigned only once")
         unknown = set(agents) - set(self.living_agent_ids)
         if unknown:
-            raise ValueError(f"benchmark assignment references non-living agents: {sorted(unknown)}")
+            raise ValueError(
+                f"benchmark assignment references non-living agents: {sorted(unknown)}"
+            )
 
     @property
     def stock(self) -> float:
