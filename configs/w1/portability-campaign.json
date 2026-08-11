@@ -1,0 +1,26 @@
+{
+  "campaign_id": "w1-portable-capability-v0.1",
+  "source_cohort": "w0-first-precontact-cohort",
+  "experiments": [
+    {"id": "W1-01", "name": "home-baseline", "confirmatory": true},
+    {"id": "W1-02", "name": "naive-zero-shot-transfer", "confirmatory": true},
+    {"id": "W1-03", "name": "random-transfer-control", "confirmatory": true},
+    {"id": "W1-04", "name": "passport-predicted-transfer", "confirmatory": true, "decision_checkpoint": true},
+    {"id": "W1-05", "name": "domain-shift-stress", "confirmatory_after_w1_04": true},
+    {"id": "W1-06", "name": "bounded-adaptation", "confirmatory_after_w1_04": true},
+    {"id": "W1-07", "name": "unseen-replication", "replication": true}
+  ],
+  "resource_controls": {
+    "match_underlying_model": true,
+    "match_tool_access": true,
+    "match_task_information": true,
+    "match_compute_budget": true
+  },
+  "zero_shot_constraints": {
+    "home_private_state_import": false,
+    "home_private_substrate_import": false,
+    "portable_evidence_metadata_allowed": true
+  },
+  "target_seed_count_per_condition": {"min": 3, "max": 5},
+  "expected_total_cells": {"min": 40, "max": 70}
+}
