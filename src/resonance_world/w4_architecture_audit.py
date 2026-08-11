@@ -93,7 +93,10 @@ def validate_manifest(manifest: dict[str, Any]) -> AuditResult:
             if not str(provenance.get(key, "")).strip():
                 raise ValueError(f"{primitive.name}: provenance.{key} is required")
 
-        if primitive.native_relationship_state != primitive.qualifies_as_native_relationship_state:
+        if (
+            primitive.native_relationship_state
+            != primitive.qualifies_as_native_relationship_state
+        ):
             raise ValueError(
                 f"{primitive.name}: native_relationship_state does not match provenance semantics"
             )
@@ -101,11 +104,15 @@ def validate_manifest(manifest: dict[str, Any]) -> AuditResult:
         if primitive.origin == "world_derived_proxy" and primitive.native_relationship_state:
             raise ValueError(f"{primitive.name}: World proxy cannot be Field-native state")
 
-    proxy = next((item for item in primitives if item.name == "w3_coordination_exposure"), None)
+    proxy = next(
+        (item for item in primitives if item.name == "w3_coordination_exposure"), None
+    )
     if proxy is None:
         raise ValueError("W3 coordination proxy must be audited explicitly")
     if proxy.origin != "world_derived_proxy" or not proxy.direct_outcome_effect:
-        raise ValueError("W3 coordination exposure must remain labeled as an outcome-affecting proxy")
+        raise ValueError(
+            "W3 coordination exposure must remain labeled as an outcome-affecting proxy"
+        )
 
     native = [item for item in primitives if item.native_relationship_state]
     classification = str(manifest.get("classification", ""))
@@ -136,7 +143,9 @@ def validate_manifest(manifest: dict[str, Any]) -> AuditResult:
     if expected == "A_NO_NATIVE_PAIR_STATE" and behavioral_allowed:
         raise ValueError("behavioral W4 cannot proceed while pair state is absent")
 
-    required_affordances = set(str(item) for item in next_phase.get("required_affordances", []))
+    required_affordances = set(
+        str(item) for item in next_phase.get("required_affordances", [])
+    )
     if "no_direct_relationship_success_bonus" not in required_affordances:
         raise ValueError("W4A must prohibit a direct relationship-success bonus")
 
@@ -149,7 +158,9 @@ def validate_manifest(manifest: dict[str, Any]) -> AuditResult:
     return AuditResult(
         classification=expected,
         native_relationship_state_count=len(native),
-        world_proxy_count=sum(item.origin == "world_derived_proxy" for item in primitives),
+        world_proxy_count=sum(
+            item.origin == "world_derived_proxy" for item in primitives
+        ),
         blocked_behavioral_operations=blocked,
         behavioral_w4_allowed=behavioral_allowed,
     )
