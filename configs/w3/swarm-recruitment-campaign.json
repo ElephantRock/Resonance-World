@@ -1,0 +1,12 @@
+{
+  "name": "w3-swarm-recruitment-v0.1",
+  "thresholds": {
+    "minimum_swarm_vs_individual_lift": 0.02,
+    "minimum_relationship_capital": 0.01,
+    "minimum_shuffle_ablation_lift": 0.01,
+    "minimum_drift_swarm_advantage": 0.00,
+    "minimum_replication_individual_lift": 0.02,
+    "minimum_replication_relationship_capital": 0.005,
+    "minimum_replication_shuffle_lift": 0.005
+  }
+}
