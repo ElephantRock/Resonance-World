@@ -106,7 +106,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--output", type=Path)
     args = parser.parse_args(argv)
 
-    payload = json.dumps(probe(args.field_root, args.w3_world_root), indent=2, sort_keys=True) + "\n"
+    result = probe(args.field_root, args.w3_world_root)
+    payload = json.dumps(result, indent=2, sort_keys=True) + "\n"
     if args.output is None:
         print(payload, end="")
     else:
