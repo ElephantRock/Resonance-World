@@ -1,0 +1,141 @@
+name: W4A Joint-Learning Architecture
+
+on:
+  pull_request:
+    branches: [main]
+  push:
+    branches: [main]
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install
+        run: python -m pip install -e '.[dev]'
+
+      - name: Run W4A invariant tests
+        run: pytest -q tests/test_w4a_joint_learning.py
+
+      - name: Materialize W4A validation evidence
+        run: |
+          python - <<'PY'
+          import inspect
+          import json
+
+          from resonance_world.w4a_joint_learning import (
+              CommunicationPolicy,
+              IndividualState,
+              JointController,
+              JointEnvironment,
+              JointLearningSession,
+              JointMission,
+              RelationshipStateStore,
+          )
+
+          first = IndividualState('agent-a', {'planning': 9, 'verification': 1})
+          second = IndividualState('agent-b', {'planning': 9, 'verification': 1})
+          mission = JointMission(
+              mission_id='w4a-validation',
+              context='joint-control',
+              lead_skill='planning',
+              support_skill='verification',
+          )
+          relationships = RelationshipStateStore()
+          communication = CommunicationPolicy(bandwidth_bits=0)
+          session = JointLearningSession(
+              environment=JointEnvironment(),
+              controller=JointController(),
+              relationships=relationships,
+              communication=communication,
+          )
+
+          before_first = dict(first.practice_by_skill)
+          before_second = dict(second.practice_by_skill)
+          episode_one = session.run_episode(first, second, mission, seed=1)
+          episode_two = session.run_episode(first, second, mission, seed=2)
+          before_reset = relationships.snapshot()
+          relationships.reset_partner_models(first.agent_id, second.agent_id)
+          after_partner_reset = relationships.snapshot()
+          relationships.clear_pair_memory(first.agent_id, second.agent_id)
+          after_full_reset = relationships.snapshot()
+
+          environment_parameters = set(inspect.signature(JointEnvironment.evaluate).parameters)
+          forbidden = {
+              'relationships',
+              'relationship_state',
+              'coordination_exposure',
+              'pair_memory',
+          }
+          evidence = {
+              'architecture': 'W4A_MINIMAL_JOINT_LEARNING',
+              'decision_changed_after_shared_history': (
+                  episode_one.action_a == episode_one.action_b
+                  and episode_two.action_a != episode_two.action_b
+              ),
+              'individual_practice_unchanged': (
+                  first.practice_by_skill == before_first
+                  and second.practice_by_skill == before_second
+              ),
+              'no_direct_relationship_input_to_outcome_law': not bool(
+                  environment_parameters & forbidden
+              ),
+              'pair_memory_existed_before_reset': bool(before_reset['pair_memories']),
+              'partner_models_existed_before_reset': bool(before_reset['partner_models']),
+              'partner_reset_preserved_pair_memory': (
+                  after_partner_reset['partner_models'] == []
+                  and bool(after_partner_reset['pair_memories'])
+              ),
+              'full_relationship_reset_is_independent': (
+                  after_full_reset['partner_models'] == []
+                  and after_full_reset['pair_memories'] == []
+                  and first.practice_by_skill == before_first
+                  and second.practice_by_skill == before_second
+              ),
+              'communication_bandwidth_bits': communication.bandwidth_bits,
+          }
+          assert all(
+              value is True
+              for key, value in evidence.items()
+              if key not in {'architecture', 'communication_bandwidth_bits'}
+          )
+          with open('w4a-validation.json', 'w', encoding='utf-8') as handle:
+              json.dump(evidence, handle, indent=2, sort_keys=True)
+              handle.write('\n')
+          PY
+
+      - name: Upload W4A validation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: w4a-joint-learning-validation
+          path: w4a-validation.json
+
+      - name: Publish authoritative W4A result
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment 21 --repo ElephantRock/Resonance-World --body "## W4A Minimal Joint-Learning Substrate — architecture validated
+
+          - Partner-conditioned state: **available and independently resettable**
+          - Pair-shared episodic memory: **available and independently ablatable**
+          - Individual practice preserved across relationship reset: **yes**
+          - Direct relationship input to environment outcome law: **none**
+          - Shared history can alter joint decisions: **yes**
+          - Relationship-capital scientific claim: **none; behavioral W4 remains separate**
+
+          Resonance Field was not modified. W4A is a World-side architectural extension.
+
+          Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/${GITHUB_RUN_ID}"
+          gh issue close 21 --repo ElephantRock/Resonance-World --reason completed
