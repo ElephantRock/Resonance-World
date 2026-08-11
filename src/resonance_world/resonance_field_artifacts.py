@@ -124,6 +124,20 @@ def build_resonance_field_checkpoint(
             f"agents.csv population mismatch: expected {expected_agents}, got {len(agents)}"
         )
 
+    # The Field run_id identifies the logical seeded experiment, but independent
+    # reproductions may contain fresh opaque UUIDs. A checkpoint must therefore
+    # identify the exact evidence bundle, not merely the logical run.
+    checkpoint_digest = sha256_json(
+        {
+            "agents": agents,
+            "events": events,
+            "experiment": summary,
+            "tasks": tasks,
+            "traces": traces,
+        }
+    )
+    checkpoint_id = f"{run_id}@sha256:{checkpoint_digest}"
+
     issued_at = _issued_at(events, tasks, traces)
     evidence: list[dict[str, Any]] = []
     evidence_by_key: dict[tuple[str, str], str] = {}
@@ -252,7 +266,7 @@ def build_resonance_field_checkpoint(
             "field_protocol_version": FIELD_ARTIFACT_PROTOCOL_VERSION,
             "runtime_version": code_sha,
             "experiment_id": f"{name}:{ablation}:{seed}",
-            "checkpoint_id": run_id,
+            "checkpoint_id": checkpoint_id,
             "issued_at": issued_at.isoformat(),
         },
         "agents": passport_rows,
