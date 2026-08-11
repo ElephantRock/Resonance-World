@@ -51,7 +51,10 @@ def test_general_teamwork_transfers_decision_state_to_new_partner() -> None:
         )
     )
     assert trained.pair_memory(experienced.agent_id, stranger.agent_id).episodes == []
-    assert trained.partner_model(experienced.agent_id, stranger.agent_id).predict(mission.context) is None
+    stranger_prediction = trained.partner_model(
+        experienced.agent_id, stranger.agent_id
+    ).predict(mission.context)
+    assert stranger_prediction is None
 
     transferred_action = controller.choose_action(
         experienced,
@@ -85,7 +88,9 @@ def test_general_teamwork_reset_is_independent() -> None:
     relationships.reset_general_teamwork(first.agent_id)
     snapshot = relationships.snapshot()
 
-    assert all(row["owner_agent_id"] != first.agent_id for row in snapshot["teamwork_models"])
+    assert all(
+        row["owner_agent_id"] != first.agent_id for row in snapshot["teamwork_models"]
+    )
     assert snapshot["partner_models"]
     assert snapshot["pair_memories"]
     assert first.practice_by_skill == before_first
