@@ -86,8 +86,8 @@ jobs:
           path: output/w5b
           if-no-files-found: error
           retention-days: 90
-      - name: Publish authoritative W5B result
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+      - name: Publish W5B evidence record
+        if: github.event_name == 'push'
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
@@ -98,24 +98,28 @@ jobs:
           data = json.loads(Path('output/w5b/w5b-synthesis.json').read_text())
           discovery = data['discovery']
           replication = data['replication']
-          body = f'''## W5B Modular Social Capital — complete
+          ref = os.environ['GITHUB_REF']
+          phase = 'AUTHORITATIVE MAIN' if ref == 'refs/heads/main' else 'PRE-MERGE REPRODUCTION'
+          body = f'''## W5B Modular Social Capital — {phase}
 
 - Status: **{data['status']}**
 - W5B-01 discovery: **{discovery['w5b_01']['effect']:.4%} / {discovery['w5b_01']['classification']}**
 - W5B-02 discovery: **{discovery['w5b_02']['effect']:.4%} / {discovery['w5b_02']['classification']}**
 - W5B-03 discovery: **{discovery['w5b_03']['effect']:.4%} / {discovery['w5b_03']['classification']}**
 - W5B-04 discovery: **{discovery['w5b_04']['effect']:.4%} / {discovery['w5b_04']['classification']}**
-- W5B-01 replication: **{replication['w5b_01']['effect']:.4%}**
-- W5B-02 replication: **{replication['w5b_02']['effect']:.4%}**
-- W5B-03 replication: **{replication['w5b_03']['effect']:.4%}**
-- W5B-04 replication: **{replication['w5b_04']['effect']:.4%}**
+- W5B-01 replication: **{replication['w5b_01']['effect']:.4%} / {replication['w5b_01']['classification']}**
+- W5B-02 replication: **{replication['w5b_02']['effect']:.4%} / {replication['w5b_02']['classification']}**
+- W5B-03 replication: **{replication['w5b_03']['effect']:.4%} / {replication['w5b_03']['classification']}**
+- W5B-04 replication: **{replication['w5b_04']['effect']:.4%} / {replication['w5b_04']['classification']}**
 - Replication gate: **{data['replication_gate']}**
+- Head SHA: **{os.environ['GITHUB_SHA']}**
+- Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/{os.environ['GITHUB_RUN_ID']}
 
 PairModule transports existing W4 state only. The outcome law does not read module identity/history, and no generic procedure interpreter is present.
-
-Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/{os.environ['GITHUB_RUN_ID']}
 '''
           Path('w5b-comment.md').write_text(body)
           PY
           gh issue comment 37 --repo ElephantRock/Resonance-World --body-file w5b-comment.md
-          gh issue close 37 --repo ElephantRock/Resonance-World --reason completed
+          if [ "$GITHUB_REF" = "refs/heads/main" ]; then
+            gh issue close 37 --repo ElephantRock/Resonance-World --reason completed
+          fi
