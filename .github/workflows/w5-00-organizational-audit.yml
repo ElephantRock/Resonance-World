@@ -1,0 +1,45 @@
+name: W5-00 Organizational State Audit
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/w5-00-organizational-audit.yml"
+      - "configs/w5/organizational-state-audit.json"
+      - "docs/w5-00-organizational-state-audit.md"
+      - "src/resonance_world/w5_organizational_audit.py"
+      - "tests/test_w5_organizational_audit.py"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/w5-00-organizational-audit.yml"
+      - "configs/w5/organizational-state-audit.json"
+      - "docs/w5-00-organizational-state-audit.md"
+      - "src/resonance_world/w5_organizational_audit.py"
+      - "tests/test_w5_organizational_audit.py"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - run: ruff check .
+      - run: pytest -q tests/test_w5_organizational_audit.py
+      - name: Execute architecture audit
+        run: python -m resonance_world.w5_organizational_audit configs/w5/organizational-state-audit.json
+      - name: Publish authoritative W5-00 result
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh issue comment 28 --repo ElephantRock/Resonance-World --body "W5-00 authoritative audit PASS: current World has **zero native persistent organization-state primitives**; W4 pair state is not institutional memory; the outcome law is organization-blind. W5 therefore requires a minimal organization-owned architectural extension before behavioral turnover experiments. Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/$GITHUB_RUN_ID"
+          gh issue close 28 --repo ElephantRock/Resonance-World --reason completed
