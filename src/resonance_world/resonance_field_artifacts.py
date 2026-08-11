@@ -1,86 +1,4 @@
-"""Compatibility adapter for Resonance Field's existing experiment artifacts."""
-
-from __future__ import annotations
-
-import csv
-import json
-from collections import Counter
-from collections.abc import Iterable
-from datetime import datetime
-from pathlib import Path
-from typing import Any
-
-from resonance_world.adapters import CheckpointJsonAdapter, FieldAdapter, sha256_json
-from resonance_world.protocol import AgentPassport, EvidenceRef, FieldDescriptor
-
-FIELD_ARTIFACT_PROTOCOL_VERSION = "resonance-field-experiment-artifacts-v0.1"
-
-
-def _load_json_object(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text(encoding="utf-8"))
-    if not isinstance(value, dict):
-        raise ValueError(f"{path.name} must contain a JSON object")
-    return value
-
-
-def _load_csv(path: Path) -> list[dict[str, str]]:
-    if not path.exists():
-        raise ValueError(f"missing Resonance Field artifact: {path.name}")
-    with path.open(newline="", encoding="utf-8") as handle:
-        return [dict(row) for row in csv.DictReader(handle)]
-
-
-def _load_jsonl(path: Path) -> list[dict[str, Any]]:
-    if not path.exists():
-        raise ValueError(f"missing Resonance Field artifact: {path.name}")
-    rows = []
-    for line_number, line in enumerate(path.read_text(encoding="utf-8").splitlines(), 1):
-        if not line.strip():
-            continue
-        value = json.loads(line)
-        if not isinstance(value, dict):
-            raise ValueError(f"{path.name}:{line_number} must contain a JSON object")
-        rows.append(value)
-    return rows
-
-
-def _first_timestamp(rows: Iterable[dict[str, Any]], key: str) -> datetime | None:
-    values = []
-    for row in rows:
-        raw = row.get(key)
-        if not raw:
-            continue
-        value = datetime.fromisoformat(str(raw).replace("Z", "+00:00"))
-        if value.tzinfo is None:
-            raise ValueError(f"artifact timestamp {key} must include a timezone")
-        values.append(value)
-    return min(values) if values else None
-
-
-def _issued_at(
-    events: list[dict[str, Any]],
-    tasks: list[dict[str, str]],
-    traces: list[dict[str, str]],
-) -> datetime:
-    candidates = [
-        _first_timestamp(events, "occurred_at"),
-        _first_timestamp(tasks, "created_at"),
-        _first_timestamp(traces, "created_at"),
-    ]
-    present = [value for value in candidates if value is not None]
-    if not present:
-        raise ValueError("Field artifacts contain no timezone-aware timestamp")
-    return min(present)
-
-
-def _required_text(value: Any, name: str) -> str:
-    text = str(value or "").strip()
-    if not text:
-        raise ValueError(f"experiment.json missing {name}")
-    return text
-
-
-def _evidence_entry(
+ence_entry(
     *, field_id: str, kind: str, source_record_id: str, payload: Any
 ) -> dict[str, Any]:
     uri = f"field://{field_id}/evidence/{kind}/{source_record_id}"
@@ -121,7 +39,8 @@ def build_resonance_field_checkpoint(
         raise ValueError("experiment.json cycles and agents must be positive")
     if len(agents) != expected_agents:
         raise ValueError(
-            f"agents.csv population mismatch: expected {expected_agents}, got {len(agents)}"
+            f"agents.csv population mismatch: "
+            f"expected {expected_agents}, got {len(agents)}"
         )
 
     issued_at = _issued_at(events, tasks, traces)
@@ -137,7 +56,9 @@ def build_resonance_field_checkpoint(
         )
         key = (kind, source_record_id)
         if key in evidence_by_key:
-            raise ValueError(f"duplicate artifact evidence identity: {kind}/{source_record_id}")
+            raise ValueError(
+                f"duplicate artifact evidence identity: {kind}/{source_record_id}"
+            )
         evidence.append(entry)
         evidence_by_key[key] = str(entry["uri"])
         return str(entry["uri"])
@@ -156,8 +77,12 @@ def build_resonance_field_checkpoint(
         agent_id: [] for agent_id in agent_uri
     }
     for index, row in enumerate(events):
-        event_id = _required_text(row.get("event_id"), f"events.jsonl row {index} event_id")
-        agent_id = _required_text(row.get("agent_id"), f"events.jsonl row {index} agent_id")
+        event_id = _required_text(
+            row.get("event_id"), f"events.jsonl row {index} event_id"
+        )
+        agent_id = _required_text(
+            row.get("agent_id"), f"events.jsonl row {index} agent_id"
+        )
         if agent_id not in agent_uri:
             raise ValueError(f"event references unknown experiment agent: {agent_id}")
         uri = add_evidence("decision-event", event_id, row)
@@ -180,20 +105,30 @@ def build_resonance_field_checkpoint(
     passport_rows = []
     for agent_id in sorted(agent_uri):
         awarded_tasks = [
-            row for row in tasks if str(row.get("awarded_agent_id") or "").strip() == agent_id
+            row
+            for row in tasks
+            if str(row.get("awarded_agent_id") or "").strip() == agent_id
         ]
-        completed_tasks = [row for row in awarded_tasks if row.get("status") == "completed"]
+        completed_tasks = [
+            row for row in awarded_tasks if row.get("status") == "completed"
+        ]
         task_success_rate = (
             len(completed_tasks) / len(awarded_tasks) if awarded_tasks else 0.0
         )
-        awarded_task_uris = [task_uris[str(row["task_id"])] for row in awarded_tasks]
+        awarded_task_uris = [
+            task_uris[str(row["task_id"])] for row in awarded_tasks
+        ]
 
         action_rows = event_rows_by_agent[agent_id]
         action_counts = Counter(
-            str(row.get("proposed_action") or "") for row in action_rows if row.get("proposed_action")
+            str(row.get("proposed_action") or "")
+            for row in action_rows
+            if row.get("proposed_action")
         )
         action_concentration = (
-            max(action_counts.values()) / sum(action_counts.values()) if action_counts else 0.0
+            max(action_counts.values()) / sum(action_counts.values())
+            if action_counts
+            else 0.0
         )
         requester_count = len(
             {
@@ -261,7 +196,9 @@ def build_resonance_field_checkpoint(
 class ResonanceFieldArtifactAdapter(FieldAdapter):
     """Read-only W0 adapter over canonical Resonance Field experiment artifacts."""
 
-    def __init__(self, artifact_dir: str | Path, *, field_id: str | None = None) -> None:
+    def __init__(
+        self, artifact_dir: str | Path, *, field_id: str | None = None
+    ) -> None:
         bundle = build_resonance_field_checkpoint(artifact_dir, field_id=field_id)
         self._delegate = CheckpointJsonAdapter(bundle)
 
