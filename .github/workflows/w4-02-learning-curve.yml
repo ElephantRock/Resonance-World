@@ -1,0 +1,163 @@
+name: W4-02 Learning Curve Completion
+
+on:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/w4-02-learning-curve.yml"
+      - "src/resonance_world/w4_learning_curve.py"
+      - "src/resonance_world/w4_relationship.py"
+      - "src/resonance_world/w4_source_export.py"
+      - "configs/w4/**"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/w4-02-learning-curve.yml"
+      - "src/resonance_world/w4_learning_curve.py"
+      - "src/resonance_world/w4_relationship.py"
+      - "src/resonance_world/w4_source_export.py"
+      - "configs/w4/**"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: w4-02-curve-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FIELD_REPOSITORY: https://github.com/ElephantRock/Resonance-Field.git
+  FIELD_SHA: 0914a21249261fe61e02c5191f4a36df416c672f
+  PGHOST: localhost
+  PGPORT: "5432"
+  PGUSER: resonance
+  PGPASSWORD: resonance
+
+jobs:
+  curve:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: resonance
+          POSTGRES_USER: resonance
+          POSTGRES_PASSWORD: resonance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resonance -d resonance"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - run: python -m pip install -e 'field[dev]' -e world
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Reproduce W4 discovery source Fields
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/source-step" "$GITHUB_WORKSPACE/raw"
+          (
+            cd field
+            python -m resonance.experiments.lifecycle_step_cli \
+              --config "$GITHUB_WORKSPACE/world/configs/w4/source-development-discovery.json" \
+              --experiment 63 \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$DSN" \
+              --output-dir "$GITHUB_WORKSPACE/source-step"
+          )
+      - name: Export immutable Field evidence
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+          CAMPAIGN: w4-stateful-source-development-discovery-v0.1
+        run: |
+          psql "$DSN" --csv -c "
+            SELECT run_id::text, seed, arm_label, environment::text, metrics::text, completed_at
+            FROM integration_campaign_runs
+            WHERE campaign_name = '$CAMPAIGN'
+              AND experiment_number = 63
+              AND arm_label = 'immortal_control'
+            ORDER BY seed
+          " > raw/runs.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, o.cycle, o.task_id::text, o.task_domain,
+                   o.required_skill, o.winner_agent_id::text, o.winner_slot,
+                   o.success, o.winning_price, o.task_budget, o.created_at
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, o.cycle
+          " > raw/outcomes.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, t.task_id::text, t.requester_agent_id::text
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_tasks t ON t.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, t.task_id
+          " > raw/tasks.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, b.task_id::text, b.bidder_agent_id::text,
+                   b.price, b.confidence, b.status
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_bids b ON b.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, b.task_id, b.bidder_agent_id
+          " > raw/bids.csv
+      - name: Materialize W4 source capsules
+        run: >-
+          python -m resonance_world.w4_source_export
+          raw/runs.csv raw/outcomes.csv raw/tasks.csv raw/bids.csv
+          output/source
+      - name: Execute every registered W4-02 checkpoint
+        run: >-
+          python -m resonance_world.w4_learning_curve
+          output/source/capsules.private.jsonl
+          world/configs/w4/relationship-missions.json
+          world/configs/w4/relationship-campaign.json
+          output/w4-02-learning-curve.json
+      - name: Enforce checkpoint completeness
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('output/w4-02-learning-curve.json').read_text())
+          assert data['registered_checkpoints_complete'] is True, data
+          assert sorted(map(int, data['checkpoints'])) == [0, 1, 2, 4, 6, 8, 12], data
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w4-02-learning-curve
+          path: output/w4-02-learning-curve.json
+          if-no-files-found: error
+          retention-days: 90
