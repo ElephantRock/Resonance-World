@@ -105,7 +105,9 @@ def test_public_selector_score_does_not_require_private_practice() -> None:
     assert _public_score(candidate, missions, config) >= 0.0
 
 
-def test_discovery_phase_executes_all_w6_causal_boundaries(tmp_path: Path) -> None:
+def test_discovery_phase_executes_all_w6_causal_boundaries(
+    tmp_path: Path,
+) -> None:
     candidates, capsules = _write_sources(tmp_path)
     result = run_phase(
         candidates,
@@ -120,9 +122,12 @@ def test_discovery_phase_executes_all_w6_causal_boundaries(tmp_path: Path) -> No
     for route in result["routes"]:
         assert route["w6_02"]["home_difference"] == 0.0
         assert route["w6_02"]["host_difference"] == 0.0
-        assert route["w6_01"]["mobility_event"]["state_before_sha256"] == route["w6_01"]["mobility_event"]["state_after_sha256"]
-        assert route["w6_04"]["learned_state_before_sha256"] != route["w6_04"]["learned_state_after_sha256"]
-        assert route["w6_04"]["discard_state_before_sha256"] == route["w6_04"]["discard_state_after_sha256"]
+        sha256 = route["w6_01"]["mobility_event"]["state_before_sha256"]
+        assert sha256 == route["w6_01"]["mobility_event"]["state_after_sha256"]
+        learned = route["w6_04"]["learned_state_before_sha256"]
+        assert learned != route["w6_04"]["learned_state_after_sha256"]
+        discarded = route["w6_04"]["discard_state_before_sha256"]
+        assert discarded == route["w6_04"]["discard_state_after_sha256"]
         assert len(route["w6_06"]["member_ids"]) == 2
         assert route["w6_06"]["communication_bandwidth_bits"] == 1
         assert route["w6_06"]["trials"] == 128
