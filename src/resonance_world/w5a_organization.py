@@ -136,7 +136,11 @@ class OrganizationController:
             return first, second
         return second, first
 
-    def select(self, organization: OrganizationState, mission: JointMission) -> OrganizationDecision:
+    def select(
+        self,
+        organization: OrganizationState,
+        mission: JointMission,
+    ) -> OrganizationDecision:
         members = list(organization.members.values())
         if len(members) < 2:
             raise ValueError("organization requires at least two members")
