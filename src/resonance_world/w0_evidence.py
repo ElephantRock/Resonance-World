@@ -77,6 +77,8 @@ def build_non_interference_report(
         raise ValueError("matched runs must have the same deterministic run_id")
 
     query_seconds = float(observer_stats.get("query_seconds", 0.0))
+    successful_snapshots = int(observer_stats.get("successful_snapshots", 0))
+    observer_active = successful_snapshots > 0
     control = FieldRunObservation(
         field_id=f"w0-seed-{seed}",
         checkpoint_id=control_run_id,
@@ -102,6 +104,7 @@ def build_non_interference_report(
     wall_clock_delta_ratio = (
         observed_runtime_seconds - control_runtime_seconds
     ) / control_runtime_seconds
+    passed = comparison.passed and observer_active
     return {
         "behavior_identical": comparison.behavior_identical,
         "control_runtime_seconds": control_runtime_seconds,
@@ -114,7 +117,8 @@ def build_non_interference_report(
         "metrics_within_tolerance": comparison.metrics_within_tolerance,
         "observed_runtime_seconds": observed_runtime_seconds,
         "observer": observer_stats,
-        "passed": comparison.passed,
+        "observer_active": observer_active,
+        "passed": passed,
         "run_id": control_run_id,
         "seed": seed,
         "wall_clock_delta_ratio": wall_clock_delta_ratio,
