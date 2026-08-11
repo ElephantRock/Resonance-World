@@ -1,0 +1,17 @@
+{
+  "audit_version": "0.1",
+  "classification": "no_native_organization_state",
+  "primitives": [
+    {"name": "individual_practice", "owner": "agent", "persistent": true, "organization_state": false, "source": "src/resonance_world/w4a_joint_learning.py:IndividualState"},
+    {"name": "partner_models", "owner": "agent_partner_edge", "persistent": true, "organization_state": false, "source": "src/resonance_world/w4a_joint_learning.py:RelationshipStateStore"},
+    {"name": "general_teamwork_models", "owner": "agent", "persistent": true, "organization_state": false, "source": "src/resonance_world/w4a_joint_learning.py:RelationshipStateStore"},
+    {"name": "pair_memories", "owner": "pair", "persistent": true, "organization_state": false, "source": "src/resonance_world/w4a_joint_learning.py:RelationshipStateStore"},
+    {"name": "organization_identity", "owner": "organization", "persistent": false, "organization_state": true, "source": null},
+    {"name": "organization_roster", "owner": "organization", "persistent": false, "organization_state": true, "source": null},
+    {"name": "organization_episode_memory", "owner": "organization", "persistent": false, "organization_state": true, "source": null},
+    {"name": "organization_procedural_memory", "owner": "organization", "persistent": false, "organization_state": true, "source": null},
+    {"name": "organization_routing_memory", "owner": "organization", "persistent": false, "organization_state": true, "source": null}
+  ],
+  "behavioral_w5_allowed_without_extension": false,
+  "field_modified": false
+}
