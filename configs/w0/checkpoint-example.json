@@ -1,0 +1,70 @@
+{
+  "field": {
+    "field_id": "field-a",
+    "field_protocol_version": "field-evidence-v1",
+    "runtime_version": "0.1-example",
+    "experiment_id": "w0-example",
+    "checkpoint_id": "checkpoint-001",
+    "issued_at": "2026-08-11T03:00:00Z"
+  },
+  "agents": [
+    {
+      "agent_id": "agent-01",
+      "observed_cycles": 180,
+      "completed_tasks": 16,
+      "success_rate": 0.875,
+      "capability_vector": [
+        {
+          "name": "domain-alpha",
+          "score": 0.875,
+          "sample_size": 16,
+          "evidence_refs": [
+            "field://field-a/evidence/metric-1"
+          ]
+        }
+      ],
+      "calibration_metrics": [],
+      "adaptation_metrics": [],
+      "specialization_metrics": [
+        {
+          "name": "award-mutual-information",
+          "value": 0.42,
+          "evidence_refs": [
+            "field://field-a/evidence/metric-1"
+          ]
+        }
+      ],
+      "collaboration_metrics": [],
+      "home_dependency_score": 0.3,
+      "portable_capability_score": null,
+      "evidence_refs": [
+        "field://field-a/evidence/task-9"
+      ]
+    }
+  ],
+  "evidence": [
+    {
+      "uri": "field://field-a/evidence/task-9",
+      "kind": "task-result",
+      "source_record_id": "task-9",
+      "sha256": "d6302d2c9a057c813194774d0627c75fb791589b4b3a1cbbf4a7fd939c97b855",
+      "payload": {
+        "agent_id": "agent-01",
+        "task_id": "task-9",
+        "outcome": "success"
+      }
+    },
+    {
+      "uri": "field://field-a/evidence/metric-1",
+      "kind": "metric",
+      "source_record_id": "metric-1",
+      "sha256": "bb4546e29b5d12110ac7efc2e501e6121cf3bca06e6135996426ac856e050373",
+      "payload": {
+        "agent_id": "agent-01",
+        "metric": "domain-alpha-success",
+        "value": 0.875,
+        "sample_size": 16
+      }
+    }
+  ]
+}
