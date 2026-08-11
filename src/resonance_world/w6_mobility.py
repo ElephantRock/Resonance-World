@@ -25,6 +25,12 @@ MobilityStatus = Literal[
     "temporary_migrant",
     "permanent_migrant",
 ]
+_VALID_MODES = {
+    "secondment",
+    "temporary_migration",
+    "permanent_migration",
+    "return_migration",
+}
 
 
 def _canonical_bytes(value: object) -> bytes:
@@ -149,6 +155,8 @@ class MobilityContract:
         )
         if any(not value for value in values):
             raise ValueError("mobility contract identifiers/evidence must be non-empty")
+        if self.mode not in _VALID_MODES:
+            raise ValueError(f"unsupported mobility mode: {self.mode}")
         if self.origin_field_id == self.destination_field_id:
             raise ValueError("mobility requires distinct origin and destination Fields")
 
@@ -321,8 +329,10 @@ class MobilityRegistry:
             raise ValueError("returned state changed immutable home Field identity")
         if not returned.dominates(current):
             raise ValueError("returned learning cannot reduce agent-owned practice")
-        if returned.digest() != current.digest() and not returned.evidence_refs:
-            raise ValueError("changed returned state requires provenance evidence")
+        if returned.digest() != current.digest():
+            new_refs = set(returned.evidence_refs) - set(current.evidence_refs)
+            if not new_refs:
+                raise ValueError("changed returned state requires new provenance evidence")
 
     def snapshot(self) -> dict[str, object]:
         return {
