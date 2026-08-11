@@ -143,6 +143,42 @@ Final preregistered status: **`w5b_discovery_not_replicated`**.
 
 The earlier run `31486280121` is not scientific evidence: it completed discovery but failed before replication because a monolithic runner reused the discovery PostgreSQL database and Field migrations attempted to reapply an older experiment-number constraint. The runner was corrected to use independent discovery and replication databases; no scientific config or evaluator logic changed.
 
+## Exact-head reproduction
+
+The final documented implementation head `96121f48efc102a9716be991c0f867081bae3ae3` reproduced the complete campaign in hosted CI run `31486934567`.
+
+- Ruff + pytest: **PASS**
+- complete W5B campaign: **PASS**
+- evidence artifact: `9099502349`
+- artifact digest: `sha256:ac7ed0d55800f3bd357d74202ab9299dc53b4d0332e170dbd9129993e5ebf388`
+- discovery JSON SHA-256: `f1f0e139d5d30707350d07a0a20d4d71ed46aa8f9ccab1459dfc021842e06b7e`
+- W5B-05 replication JSON SHA-256: `f8878edd73c99ee532ae717c7e6ac5467ec2df3eb588f4a34080143e1518177e`
+- synthesis JSON SHA-256: `242a9edc53c6741aa36432dfb13955de6dd85fb31a57b6c4a0d26d6122f18096`
+
+All three scientific JSON outputs were byte-for-byte identical to the first complete campaign.
+
+## Authoritative post-merge validation
+
+After PR #43 merged, the W5B validation branch was reset to the then-current `main` state before adding a one-line documentation-only validation marker. The repository's already-registered CI workflow then reran the entire W5B campaign against that post-merge science state.
+
+- post-merge validation PR: #50
+- baseline `main` before validation marker: `e234aaa88a443b62d810b0c025ad379476a38f8d`
+- validation head: `c0264deb6397f85bdea1f69d1134654fad84b456`
+- hosted CI run: `31488910819`
+- Ruff + pytest: **PASS**
+- complete W5B campaign: **PASS**
+- discovery population regenerated: 5 Fields / 60 agents
+- replication population regenerated: 3 Fields / 36 agents
+- evidence artifact: `9100242289`
+- artifact digest: `sha256:e20f90592517739311689e7f506d22ed94998dcbcb70c061c2f08984a9e8a249`
+- discovery JSON SHA-256: `f1f0e139d5d30707350d07a0a20d4d71ed46aa8f9ccab1459dfc021842e06b7e`
+- W5B-05 replication JSON SHA-256: `f8878edd73c99ee532ae717c7e6ac5467ec2df3eb588f4a34080143e1518177e`
+- synthesis JSON SHA-256: `242a9edc53c6741aa36432dfb13955de6dd85fb31a57b6c4a0d26d6122f18096`
+
+The discovery, replication, and synthesis JSON files were again byte-for-byte identical to both complete pre-merge evidence sets. The mixed result, including the failed W5B-03 replication gate, therefore survived the merge unchanged.
+
+The dedicated `w5b-campaign-runner.yml` never registered as an active GitHub Actions workflow. Rather than treating an unobservable runner as evidence, post-merge acceptance used the already-registered CI workflow that had produced the two prior identical W5B campaigns. This infrastructure exception changes the execution route only; it does not change any scientific configuration, mission, threshold, source seed, module semantics, controller, or environment outcome law.
+
 ## Hard boundaries
 
 - Resonance Field is unchanged.
