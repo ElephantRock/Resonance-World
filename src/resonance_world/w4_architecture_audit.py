@@ -105,7 +105,9 @@ def validate_manifest(manifest: dict[str, Any]) -> AuditResult:
     if proxy is None:
         raise ValueError("W3 coordination proxy must be audited explicitly")
     if proxy.origin != "world_derived_proxy" or not proxy.direct_outcome_effect:
-        raise ValueError("W3 coordination exposure must remain labeled as an outcome-affecting proxy")
+        raise ValueError(
+            "W3 coordination exposure must remain labeled as an outcome-affecting proxy"
+        )
 
     native = [item for item in primitives if item.native_relationship_state]
     classification = str(manifest.get("classification", ""))
