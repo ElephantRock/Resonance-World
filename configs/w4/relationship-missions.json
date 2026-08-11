@@ -7,6 +7,11 @@
     {"mission_id": "f-b-2", "context": "allocation-b", "lead_skill": "supply_networks", "support_skill": "urban_heat"},
     {"mission_id": "f-c-2", "context": "allocation-c", "lead_skill": "mobility", "support_skill": "energy_storage"}
   ],
+  "formation_probe": [
+    {"mission_id": "p-a", "context": "allocation-a", "lead_skill": "urban_heat", "support_skill": "public_health"},
+    {"mission_id": "p-b", "context": "allocation-b", "lead_skill": "energy_storage", "support_skill": "mobility"},
+    {"mission_id": "p-c", "context": "allocation-c", "lead_skill": "water_systems", "support_skill": "supply_networks"}
+  ],
   "transfer": [
     {"mission_id": "t-a-1", "context": "allocation-a", "lead_skill": "energy_storage", "support_skill": "public_health"},
     {"mission_id": "t-b-1", "context": "allocation-b", "lead_skill": "mobility", "support_skill": "urban_heat"},
