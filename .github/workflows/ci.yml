@@ -7,6 +7,7 @@ on:
 
 permissions:
   contents: read
+  issues: write
 
 jobs:
   test:
@@ -25,7 +26,7 @@ jobs:
         run: pytest -q
 
   w5b-campaign:
-    if: github.head_ref == 'w5b/modular-social-capital'
+    if: github.head_ref == 'w5b/modular-social-capital' || github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 60
     services:
@@ -51,6 +52,13 @@ jobs:
       PGPASSWORD: resonance
     steps:
       - uses: actions/checkout@v4
+      - name: Announce authoritative W5B CI run
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: >-
+          gh issue comment 37 --repo ElephantRock/Resonance-World
+          --body "W5B authoritative main campaign started on head **$GITHUB_SHA**. Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/$GITHUB_RUN_ID"
       - name: Checkout pinned Resonance Field
         run: |
           git clone https://github.com/ElephantRock/Resonance-Field.git ../field
@@ -73,7 +81,40 @@ jobs:
         run: bash scripts/run_w5b_campaign.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: w5b-premerge-evidence
+          name: w5b-authoritative-evidence
           path: output/w5b
           if-no-files-found: error
           retention-days: 90
+      - name: Publish authoritative W5B result
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          data = json.loads(Path('output/w5b/w5b-synthesis.json').read_text())
+          discovery = data['discovery']
+          replication = data['replication']
+          body = f'''## W5B Modular Social Capital — AUTHORITATIVE MAIN
+
+- Status: **{data['status']}**
+- W5B-01 discovery: **{discovery['w5b_01']['effect']:.4%} / {discovery['w5b_01']['classification']}**
+- W5B-02 discovery: **{discovery['w5b_02']['effect']:.4%} / {discovery['w5b_02']['classification']}**
+- W5B-03 discovery: **{discovery['w5b_03']['effect']:.4%} / {discovery['w5b_03']['classification']}**
+- W5B-04 discovery: **{discovery['w5b_04']['effect']:.4%} / {discovery['w5b_04']['classification']}**
+- W5B-01 replication: **{replication['w5b_01']['effect']:.4%} / {replication['w5b_01']['classification']}**
+- W5B-02 replication: **{replication['w5b_02']['effect']:.4%} / {replication['w5b_02']['classification']}**
+- W5B-03 replication: **{replication['w5b_03']['effect']:.4%} / {replication['w5b_03']['classification']}**
+- W5B-04 replication: **{replication['w5b_04']['effect']:.4%} / {replication['w5b_04']['classification']}**
+- Replication gate: **{data['replication_gate']}**
+- Head SHA: **{os.environ['GITHUB_SHA']}**
+- Actions run: https://github.com/ElephantRock/Resonance-World/actions/runs/{os.environ['GITHUB_RUN_ID']}
+
+Interpretation boundary: PairModule transports existing W4 state only. The outcome law does not read module identity/history, and no generic procedure interpreter is present.
+'''
+          Path('w5b-authoritative-comment.md').write_text(body)
+          PY
+          gh issue comment 37 --repo ElephantRock/Resonance-World --body-file w5b-authoritative-comment.md
+          gh issue close 37 --repo ElephantRock/Resonance-World --reason completed
