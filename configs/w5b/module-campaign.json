@@ -1,0 +1,15 @@
+{
+  "protocol_version": "0.1",
+  "calibration_fields": ["w4-source-seed-157", "w4-source-seed-278", "w4-source-seed-399"],
+  "discovery_fields": ["w4-source-seed-520", "w4-source-seed-641"],
+  "replication_fields": ["w4-source-seed-762", "w4-source-seed-883", "w4-source-seed-994"],
+  "formation_depth": 12,
+  "evaluation_trials_per_mission": 128,
+  "effect_threshold": 0.02,
+  "minimum_positive_replication_fields": 2,
+  "communication_bandwidth_bits": 1,
+  "module_pair_slots": [[0, 1], [2, 3], [4, 5]],
+  "replacement_slots": [6, 7, 8],
+  "library_sizes": [0, 1, 2, 3],
+  "field_source_sha": "0914a21249261fe61e02c5191f4a36df416c672f"
+}
