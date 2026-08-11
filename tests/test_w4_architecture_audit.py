@@ -31,7 +31,7 @@ def test_w3_coordination_exposure_cannot_be_reclassified_as_native_state() -> No
     proxy["origin"] = "field_native"
     proxy["native_relationship_state"] = True
 
-    with pytest.raises(ValueError, match="classification|native_relationship_state"):
+    with pytest.raises(ValueError, match="outcome-affecting proxy"):
         validate_manifest(tampered)
 
 
