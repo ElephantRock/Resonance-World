@@ -11,7 +11,10 @@ The contract is an exported checkpoint evidence bundle. The source Field remains
 ```text
 Resonance Field
     |
-    | exported checkpoint evidence (read only)
+    | exported evidence (read only)
+    v
+Field Adapter
+    |
     v
 CheckpointJsonAdapter
     |
@@ -20,6 +23,32 @@ WorldRegistry -> AgentPassport
 ```
 
 World does not receive mutation methods for local tasks, traces, reputation, credits, practice, lifecycle, or markets.
+
+## Existing Resonance Field compatibility
+
+W0 can consume the canonical artifact set already emitted by the Resonance Field experiment harness:
+
+```text
+experiment.json
+agents.csv
+events.jsonl
+tasks.csv
+traces.csv
+```
+
+`ResonanceFieldArtifactAdapter` converts those files into the generic checkpoint contract outside the Field runtime. No Resonance World package is imported by Resonance Field.
+
+The compatibility adapter derives only claims that the current artifact surface can support directly:
+
+- population identity and observed cycles;
+- completed and awarded task counts;
+- task-execution success rate;
+- action concentration from decision events;
+- trace authorship count;
+- distinct task requesters served;
+- source evidence references for every derived claim.
+
+It deliberately leaves `home_dependency_score` and `portable_capability_score` unset because neither can be established from an isolated home-Field run. W1 transfer experiments are required for portability evidence.
 
 ## Bundle shape
 
@@ -81,7 +110,7 @@ For the same checkpoint bundle:
 - agent enumeration is sorted;
 - capability and metric collections are sorted by their frozen protocol representation;
 - evidence references are sorted;
-- passport issuance time comes from the checkpoint rather than the observer clock;
+- passport issuance time comes from source artifact timestamps rather than the observer clock;
 - canonical passport serialization is deterministic.
 
 This makes repeated W0 exports idempotence-testable.
