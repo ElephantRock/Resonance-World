@@ -1,0 +1,485 @@
+name: W3 Swarm Recruitment
+
+on:
+  workflow_dispatch:
+  pull_request:
+    branches: [main]
+    paths:
+      - ".github/workflows/w3-swarm-recruitment.yml"
+      - "configs/w3/**"
+      - "docs/w3-*.md"
+      - "src/resonance_world/w3_*.py"
+      - "tests/test_w3_*.py"
+  push:
+    branches: [main]
+    paths:
+      - ".github/workflows/w3-swarm-recruitment.yml"
+      - "configs/w3/**"
+      - "docs/w3-*.md"
+      - "src/resonance_world/w3_*.py"
+
+permissions:
+  contents: read
+  issues: write
+
+concurrency:
+  group: w3-swarm-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  FIELD_REPOSITORY: https://github.com/ElephantRock/Resonance-Field.git
+  FIELD_SHA: 5cee5ff1c75d027f5c78c681c5f306cab2c85bf3
+  PGHOST: localhost
+  PGPORT: "5432"
+  PGUSER: resonance
+  PGPASSWORD: resonance
+
+jobs:
+  discovery-sources:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: resonance
+          POSTGRES_USER: resonance
+          POSTGRES_PASSWORD: resonance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resonance -d resonance"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - run: python -m pip install -e 'field[dev]' -e world
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Develop five new source Fields
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/source-step" "$GITHUB_WORKSPACE/raw"
+          (
+            cd field
+            python -m resonance.experiments.lifecycle_step_cli \
+              --config "$GITHUB_WORKSPACE/world/configs/w3/source-development-discovery.json" \
+              --experiment 63 \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$DSN" \
+              --output-dir "$GITHUB_WORKSPACE/source-step"
+          )
+      - name: Export immutable Field evidence
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+          CAMPAIGN: w3-stateful-source-development-discovery-v0.1
+        run: |
+          psql "$DSN" --csv -c "
+            SELECT run_id::text, seed, arm_label, environment::text, metrics::text, completed_at
+            FROM integration_campaign_runs
+            WHERE campaign_name = '$CAMPAIGN'
+              AND experiment_number = 63
+              AND arm_label = 'immortal_control'
+            ORDER BY seed
+          " > raw/runs.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, o.cycle, o.task_id::text, o.task_domain,
+                   o.required_skill, o.winner_agent_id::text, o.winner_slot,
+                   o.success, o.winning_price, o.task_budget, o.created_at
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, o.cycle
+          " > raw/outcomes.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, t.task_id::text, t.requester_agent_id::text
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_tasks t ON t.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, t.task_id
+          " > raw/tasks.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, b.task_id::text, b.bidder_agent_id::text,
+                   b.price, b.confidence, b.status
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_bids b ON b.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, b.task_id, b.bidder_agent_id
+          " > raw/bids.csv
+      - name: Materialize W3 public/private evidence
+        run: >-
+          python -m resonance_world.w3_source_export
+          raw/runs.csv raw/outcomes.csv raw/tasks.csv raw/bids.csv
+          output/discovery-source
+      - name: Enforce discovery cohort and state boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("output/discovery-source/w3-01-source-summary.json").read_text())
+          assert data["field_count"] == 5, data
+          assert data["agent_count"] == 60, data
+          assert data["pair_edge_count"] == 330, data
+          assert data["seeds"] == [121, 242, 363, 484, 605], data
+          candidates = Path("output/discovery-source/candidates.jsonl").read_text()
+          edges = Path("output/discovery-source/pair-edges.jsonl").read_text()
+          assert "practice_by_skill" not in candidates
+          assert "coordination_exposure" not in edges
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w3-discovery-source
+          path: |
+            output/discovery-source
+            raw
+            source-step
+          if-no-files-found: error
+          retention-days: 90
+
+  calibration:
+    needs: discovery-sources
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: w3-discovery-source
+          path: source
+      - name: Execute W3-01 and freeze swarm recruiter
+        run: >-
+          python -m resonance_world.w3_swarm calibrate
+          source/output/discovery-source/candidates.jsonl
+          source/output/discovery-source/capsules.private.jsonl
+          source/output/discovery-source/pair-edges.jsonl
+          source/output/discovery-source/pair-state.private.jsonl
+          configs/w3/swarm-missions.json
+          output/calibration
+      - name: Enforce recruiter boundary
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+          text = Path("output/calibration/w3-01-frozen-swarm-recruiter.json").read_text()
+          assert "practice_by_skill" not in text
+          assert "coordination_exposure" not in text
+          assert '"frozen_before_discovery": true' in text
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w3-frozen-recruiter
+          path: output/calibration
+          if-no-files-found: error
+          retention-days: 90
+
+  discovery:
+    needs: [discovery-sources, calibration]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: w3-discovery-source
+          path: source
+      - uses: actions/download-artifact@v4
+        with:
+          name: w3-frozen-recruiter
+          path: frozen
+      - name: Execute W3-02 through W3-06
+        run: >-
+          python -m resonance_world.w3_swarm discover
+          source/output/discovery-source/candidates.jsonl
+          source/output/discovery-source/capsules.private.jsonl
+          source/output/discovery-source/pair-edges.jsonl
+          source/output/discovery-source/pair-state.private.jsonl
+          configs/w3/swarm-missions.json
+          configs/w3/swarm-recruitment-campaign.json
+          frozen/w3-01-frozen-swarm-recruiter.json
+          output/discovery
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w3-discovery-results
+          path: output/discovery
+          if-no-files-found: error
+          retention-days: 90
+
+  replication-sources:
+    needs: calibration
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: resonance
+          POSTGRES_USER: resonance
+          POSTGRES_PASSWORD: resonance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resonance -d resonance"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - run: python -m pip install -e 'field[dev]' -e world
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Develop unseen source Fields after swarm recruiter freeze
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/source-step" "$GITHUB_WORKSPACE/raw"
+          (
+            cd field
+            python -m resonance.experiments.lifecycle_step_cli \
+              --config "$GITHUB_WORKSPACE/world/configs/w3/source-development-replication.json" \
+              --experiment 63 \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$DSN" \
+              --output-dir "$GITHUB_WORKSPACE/source-step"
+          )
+      - name: Export unseen Field evidence
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+          CAMPAIGN: w3-stateful-source-development-replication-v0.1
+        run: |
+          psql "$DSN" --csv -c "
+            SELECT run_id::text, seed, arm_label, environment::text, metrics::text, completed_at
+            FROM integration_campaign_runs
+            WHERE campaign_name = '$CAMPAIGN'
+              AND experiment_number = 63
+              AND arm_label = 'immortal_control'
+            ORDER BY seed
+          " > raw/runs.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, o.cycle, o.task_id::text, o.task_domain,
+                   o.required_skill, o.winner_agent_id::text, o.winner_slot,
+                   o.success, o.winning_price, o.task_budget, o.created_at
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, o.cycle
+          " > raw/outcomes.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, t.task_id::text, t.requester_agent_id::text
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_tasks t ON t.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, t.task_id
+          " > raw/tasks.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, b.task_id::text, b.bidder_agent_id::text,
+                   b.price, b.confidence, b.status
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_bids b ON b.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 63
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, b.task_id, b.bidder_agent_id
+          " > raw/bids.csv
+      - run: >-
+          python -m resonance_world.w3_source_export
+          raw/runs.csv raw/outcomes.csv raw/tasks.csv raw/bids.csv
+          output/replication-source
+      - name: Enforce unseen cohort and state boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path("output/replication-source/w3-01-source-summary.json").read_text())
+          assert data["field_count"] == 3, data
+          assert data["agent_count"] == 36, data
+          assert data["pair_edge_count"] == 198, data
+          assert data["seeds"] == [726, 847, 968], data
+          edges = Path("output/replication-source/pair-edges.jsonl").read_text()
+          assert "coordination_exposure" not in edges
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w3-replication-source
+          path: |
+            output/replication-source
+            raw
+            source-step
+          if-no-files-found: error
+          retention-days: 90
+
+  replication:
+    needs: [discovery, replication-sources, calibration]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+          cache: pip
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: w3-replication-source
+          path: source
+      - uses: actions/download-artifact@v4
+        with:
+          name: w3-frozen-recruiter
+          path: frozen
+      - name: Execute W3-07 without retuning
+        run: >-
+          python -m resonance_world.w3_swarm replicate
+          source/output/replication-source/candidates.jsonl
+          source/output/replication-source/capsules.private.jsonl
+          source/output/replication-source/pair-edges.jsonl
+          source/output/replication-source/pair-state.private.jsonl
+          configs/w3/swarm-missions.json
+          configs/w3/swarm-recruitment-campaign.json
+          frozen/w3-01-frozen-swarm-recruiter.json
+          output/replication
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w3-replication-results
+          path: output/replication
+          if-no-files-found: error
+          retention-days: 90
+
+  synthesize:
+    needs: [calibration, discovery, replication]
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - run: python -m pip install -e .
+      - uses: actions/download-artifact@v4
+        with:
+          name: w3-frozen-recruiter
+          path: evidence/calibration
+      - uses: actions/download-artifact@v4
+        with:
+          name: w3-discovery-results
+          path: evidence/discovery
+      - uses: actions/download-artifact@v4
+        with:
+          name: w3-replication-results
+          path: evidence/replication
+      - name: Synthesize all seven experiments
+        run: >-
+          python -m resonance_world.w3_swarm synthesize
+          evidence/calibration/w3-01-frozen-swarm-recruiter.json
+          evidence/discovery/w3-discovery-summary.json
+          evidence/replication/w3-07-summary.json
+          output/synthesis
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w3-evidence
+          path: |
+            output/synthesis
+            evidence/calibration
+            evidence/discovery
+            evidence/replication
+          if-no-files-found: error
+          retention-days: 90
+      - name: Publish authoritative W3 result
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          summary = json.loads(Path("output/synthesis/w3-campaign-summary.json").read_text())
+          discovery = summary["discovery"]
+          replication = summary["replication"]
+          recruiter = summary["frozen_recruiter"]
+          lines = [
+              "## W3 Swarm Recruitment & Relationship Capital — complete",
+              "",
+              f"- Status: **{summary['status']}**",
+              f"- W3-02 swarm-vs-individual lift: **{discovery['w3_02_swarm_vs_individual_lift']:.4%}**",
+              f"- W3-03 relationship-capital lift: **{discovery['w3_03_swarm_vs_assembled_lift']:.4%}**",
+              f"- W3-04 shuffled-edge ablation lift: **{discovery['w3_04_swarm_vs_shuffled_lift']:.4%}**",
+              f"- W3-06 drift gate: **{discovery['w3_06_gate']}**",
+              f"- W3-07 replication gate: **{replication['replication_gate']}**",
+              f"- W3-07 swarm-vs-individual lift: **{replication['swarm_vs_individual_lift']:.4%}**",
+              f"- W3-07 relationship-capital lift: **{replication['swarm_vs_assembled_lift']:.4%}**",
+              f"- W3-07 shuffled-edge lift: **{replication['swarm_vs_shuffled_lift']:.4%}**",
+              f"- W3-07 positive Fields: **{replication['positive_fields']}/3**",
+              f"- Frozen swarm recruiter SHA-256: `{recruiter['recruiter_sha256']}`",
+              "",
+              "Interpretation boundary: deterministic skill-practice-plus-coordination model only.",
+              "",
+              f"Actions run: {os.environ['GITHUB_SERVER_URL']}/"
+              f"{os.environ['GITHUB_REPOSITORY']}/actions/runs/{os.environ['GITHUB_RUN_ID']}",
+          ]
+          Path("w3-comment.md").write_text("\n".join(lines) + "\n")
+          PY
+          gh issue comment 16 --repo "$GITHUB_REPOSITORY" --body-file w3-comment.md
+          gh issue close 16 --repo "$GITHUB_REPOSITORY" --reason completed
