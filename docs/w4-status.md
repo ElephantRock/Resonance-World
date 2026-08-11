@@ -1,6 +1,6 @@
 # W4 Campaign Status
 
-Status: **PROTOCOL FROZEN / FIRST HOSTED CAMPAIGN PENDING**
+Status: **PROTOCOL FROZEN / HOSTED VALIDATION STARTED**
 
 - Parent issue: #26
 - Experiment count: 7
@@ -10,5 +10,7 @@ Status: **PROTOCOL FROZEN / FIRST HOSTED CAMPAIGN PENDING**
 - Deep formation: 12 fixed-pair episodes
 - Communication: 1 bit for every pair condition
 - Primary threshold: 2 absolute percentage points
+
+The registered protocol, source cohorts, mission families, assignment algorithm, causal contrasts, thresholds, and replication rule remain frozen before the first held-out W4 outcome.
 
 No partner-specific, general-teamwork, or negative claim is permitted before W4-03 executes on held-out Fields. No replicated claim is permitted before W4-07 executes on the post-discovery source Fields without protocol changes.
