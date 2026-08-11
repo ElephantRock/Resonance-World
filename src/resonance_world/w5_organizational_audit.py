@@ -44,7 +44,9 @@ def audit(path: str | Path) -> dict[str, object]:
     if data["classification"] != "no_native_organization_state":
         raise AssertionError("W5-00 classification must match the audited architecture")
     if data["behavioral_w5_allowed_without_extension"] is not False:
-        raise AssertionError("behavioral W5 must be blocked before an organization substrate exists")
+        raise AssertionError(
+            "behavioral W5 must be blocked before an organization substrate exists"
+        )
 
     signature = inspect.signature(JointEnvironment.evaluate)
     leaked = set(signature.parameters) & FORBIDDEN_ENVIRONMENT_INPUTS
