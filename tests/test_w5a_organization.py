@@ -1,6 +1,10 @@
 import inspect
 
-from resonance_world.w4a_joint_learning import IndividualState, JointMission, RelationshipStateStore
+from resonance_world.w4a_joint_learning import (
+    IndividualState,
+    JointMission,
+    RelationshipStateStore,
+)
 from resonance_world.w5a_organization import (
     OrganizationController,
     OrganizationEnvironment,
@@ -39,7 +43,9 @@ def test_organization_reset_does_not_change_individual_or_pair_state() -> None:
     )
     relationships = RelationshipStateStore()
     pair_before = relationships.snapshot()
-    practice_before = {key: dict(value.practice_by_skill) for key, value in organization.members.items()}
+    practice_before = {
+        key: dict(value.practice_by_skill) for key, value in organization.members.items()
+    }
     organization.reset_memory()
     assert organization.memory.snapshot()["episode_count"] == 0
     assert relationships.snapshot() == pair_before
@@ -57,9 +63,8 @@ def test_retained_procedure_changes_routing_on_new_roster() -> None:
     ]
     controller = OrganizationController()
     mission = _mission()
-    organization = OrganizationState("org-routing", {item.agent_id: item for item in roster})
+    organization = OrganizationState("org-routing-3", {item.agent_id: item for item in roster})
 
-    # Train a procedure without retaining old members.
     for index in range(3):
         organization.memory.observe(
             OrganizationEpisode(
@@ -73,16 +78,18 @@ def test_retained_procedure_changes_routing_on_new_roster() -> None:
         )
     decision = controller.select(organization, mission)
     assert decision.strategy == "balanced"
-    assert {decision.lead.agent_id, decision.support.agent_id} == {"general-1", "general-2"}
+    assert {decision.lead.agent_id, decision.support.agent_id} == {
+        "general-1",
+        "general-2",
+    }
 
     organization.reset_memory()
-    # A reset removes the learned organizational procedure; selection returns to the
-    # organization's deterministic untrained policy rather than the retained history.
     reset = controller.select(organization, mission)
-    assert reset.strategy != "balanced" or {
-        reset.lead.agent_id,
-        reset.support.agent_id,
-    } != {"general-1", "general-2"}
+    assert reset.strategy == "specialist"
+    assert {reset.lead.agent_id, reset.support.agent_id} == {
+        "special-lead",
+        "special-support",
+    }
 
 
 def test_environment_is_organization_memory_blind() -> None:
