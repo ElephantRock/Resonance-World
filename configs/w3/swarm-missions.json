@@ -1,0 +1,49 @@
+{
+  "training_fields": ["w3-source-seed-121", "w3-source-seed-242", "w3-source-seed-363"],
+  "discovery_holdout_fields": ["w3-source-seed-484", "w3-source-seed-605"],
+  "trials_per_mission": 270,
+  "destination_law": {
+    "base_success_probability": 0.34,
+    "practice_gain": 0.115,
+    "maximum_success_probability": 0.88,
+    "coordination_gain": 0.055,
+    "maximum_coordination_bonus": 0.12,
+    "team_overhead_penalty": 0.018,
+    "team_maximum_success_probability": 0.94
+  },
+  "recruiter": {
+    "individual_alpha": 1.0,
+    "dominant_fit_weight": 1.0,
+    "secondary_fit_weight": 0.45,
+    "coverage_weight": 0.32,
+    "complementarity_weight": 0.10,
+    "relationship_band_scores": {
+      "none": 0.0,
+      "observed": 0.45,
+      "strong": 0.85
+    },
+    "repeated_success_bonus": 0.20,
+    "beta_grid": [0.0, 0.25, 0.5, 0.75, 1.0, 1.25],
+    "shuffle_offset": 11
+  },
+  "families": {
+    "calibration": [
+      {"mission": "cal-heat-water", "requirements": {"urban_heat": 0.55, "water_systems": 0.45}},
+      {"mission": "cal-energy-supply", "requirements": {"energy_storage": 0.50, "supply_networks": 0.50}},
+      {"mission": "cal-health-mobility", "requirements": {"public_health": 0.55, "mobility": 0.45}}
+    ],
+    "discovery": [
+      {"mission": "disc-heat-energy-water", "requirements": {"urban_heat": 0.40, "energy_storage": 0.35, "water_systems": 0.25}},
+      {"mission": "disc-health-mobility-supply", "requirements": {"public_health": 0.40, "mobility": 0.35, "supply_networks": 0.25}},
+      {"mission": "disc-water-supply-energy", "requirements": {"water_systems": 0.40, "supply_networks": 0.35, "energy_storage": 0.25}}
+    ],
+    "drift": [
+      {"mission": "drift-heat-health-mobility", "requirements": {"urban_heat": 0.34, "public_health": 0.33, "mobility": 0.33}},
+      {"mission": "drift-water-energy-supply", "requirements": {"water_systems": 0.34, "energy_storage": 0.33, "supply_networks": 0.33}}
+    ],
+    "replication": [
+      {"mission": "rep-urban-resilience", "requirements": {"urban_heat": 0.28, "water_systems": 0.24, "energy_storage": 0.24, "mobility": 0.24}},
+      {"mission": "rep-systemic-continuity", "requirements": {"public_health": 0.28, "supply_networks": 0.24, "water_systems": 0.24, "energy_storage": 0.24}}
+    ]
+  }
+}
