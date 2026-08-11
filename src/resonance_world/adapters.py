@@ -82,7 +82,7 @@ class CheckpointJsonAdapter:
     def from_path(cls, path: str | Path) -> CheckpointJsonAdapter:
         """Load a checkpoint without modifying it."""
 
-        with Path(path).open("r", encoding="utf-8") as handle:
+        with Path(path).open(encoding="utf-8") as handle:
             value = json.load(handle)
         if not isinstance(value, dict):
             raise ValueError("checkpoint root must be an object")
