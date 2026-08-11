@@ -2,6 +2,7 @@ from copy import deepcopy
 from pathlib import Path
 
 import pytest
+
 from resonance_world.w4_architecture_audit import load_manifest, validate_manifest
 
 
