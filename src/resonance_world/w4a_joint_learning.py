@@ -1,7 +1,8 @@
-"""Minimal joint-learning substrate for W4A.
+"""Minimal joint-learning substrate for W4A and W4A.1.
 
-Relationship state may affect agent decisions, but the environment outcome law
-never reads relationship age, partner history, or shared pair memory directly.
+Relationship and teamwork state may affect agent decisions, but the environment
+outcome law never reads relationship age, partner history, teamwork history, or
+shared pair memory directly.
 """
 
 from __future__ import annotations
@@ -109,6 +110,47 @@ class PartnerModel:
 
 
 @dataclass(slots=True)
+class GeneralTeamworkModel:
+    """Agent-owned teamwork experience that is independent of partner identity."""
+
+    owner_agent_id: str
+    successful_roles_by_context: dict[str, dict[Role, int]] = field(default_factory=dict)
+    collision_failures_by_context: dict[str, int] = field(default_factory=dict)
+    episode_counts_by_context: dict[str, int] = field(default_factory=dict)
+
+    def observe(self, context: str, own_role: Role, partner_role: Role, success: bool) -> None:
+        self.episode_counts_by_context[context] = self.episode_counts_by_context.get(context, 0) + 1
+        if success:
+            counts = self.successful_roles_by_context.setdefault(
+                context, {"lead": 0, "support": 0}
+            )
+            counts[own_role] += 1
+        elif own_role == partner_role:
+            self.collision_failures_by_context[context] = (
+                self.collision_failures_by_context.get(context, 0) + 1
+            )
+
+    def successful_role(self, context: str) -> Role | None:
+        counts = self.successful_roles_by_context.get(context)
+        if not counts or sum(counts.values()) == 0:
+            return None
+        if counts["lead"] == counts["support"]:
+            return None
+        return "lead" if counts["lead"] > counts["support"] else "support"
+
+    def learned_collision_convention(self, context: str) -> bool:
+        return self.collision_failures_by_context.get(context, 0) > 0
+
+    def as_dict(self) -> dict[str, object]:
+        return {
+            "collision_failures_by_context": self.collision_failures_by_context,
+            "episode_counts_by_context": self.episode_counts_by_context,
+            "owner_agent_id": self.owner_agent_id,
+            "successful_roles_by_context": self.successful_roles_by_context,
+        }
+
+
+@dataclass(slots=True)
 class SharedPairMemory:
     """Pair-owned episodic memory, distinct from either agent's competence."""
 
@@ -151,9 +193,10 @@ class SharedPairMemory:
 
 @dataclass(slots=True)
 class RelationshipStateStore:
-    """Persistent pair/partner state that intentionally excludes individual practice."""
+    """Persistent coordination state that intentionally excludes individual practice."""
 
     partner_models: dict[tuple[str, str], PartnerModel] = field(default_factory=dict)
+    teamwork_models: dict[str, GeneralTeamworkModel] = field(default_factory=dict)
     pair_memories: dict[tuple[str, str], SharedPairMemory] = field(default_factory=dict)
 
     def partner_model(self, owner: str, partner: str) -> PartnerModel:
@@ -161,6 +204,11 @@ class RelationshipStateStore:
         if key not in self.partner_models:
             self.partner_models[key] = PartnerModel(owner, partner)
         return self.partner_models[key]
+
+    def teamwork_model(self, owner: str) -> GeneralTeamworkModel:
+        if owner not in self.teamwork_models:
+            self.teamwork_models[owner] = GeneralTeamworkModel(owner)
+        return self.teamwork_models[owner]
 
     def pair_memory(self, first: str, second: str) -> SharedPairMemory:
         key = _pair_key(first, second)
@@ -175,33 +223,50 @@ class RelationshipStateStore:
         self.partner_model(episode.agent_b, episode.agent_a).observe(
             episode.context, episode.action_a
         )
+        self.teamwork_model(episode.agent_a).observe(
+            episode.context, episode.action_a, episode.action_b, episode.success
+        )
+        self.teamwork_model(episode.agent_b).observe(
+            episode.context, episode.action_b, episode.action_a, episode.success
+        )
         self.pair_memory(episode.agent_a, episode.agent_b).append(episode)
 
     def reset_partner_models(self, first: str, second: str) -> None:
         self.partner_models.pop((first, second), None)
         self.partner_models.pop((second, first), None)
 
+    def reset_general_teamwork(self, agent_id: str) -> None:
+        self.teamwork_models.pop(agent_id, None)
+
     def clear_pair_memory(self, first: str, second: str) -> None:
         self.pair_memories.pop(_pair_key(first, second), None)
 
     def snapshot(self) -> dict[str, object]:
-        models = [
+        partner_models = [
             model.as_dict()
             for _, model in sorted(self.partner_models.items(), key=lambda item: item[0])
         ]
-        memories = [
+        teamwork_models = [
+            model.as_dict()
+            for _, model in sorted(self.teamwork_models.items(), key=lambda item: item[0])
+        ]
+        pair_memories = [
             memory.as_dict()
             for _, memory in sorted(self.pair_memories.items(), key=lambda item: item[0])
         ]
-        value = {"pair_memories": memories, "partner_models": models}
+        value = {
+            "pair_memories": pair_memories,
+            "partner_models": partner_models,
+            "teamwork_models": teamwork_models,
+        }
         if "practice_by_skill" in json.dumps(value, sort_keys=True):
-            raise AssertionError("individual practice leaked into relationship-state snapshot")
+            raise AssertionError("individual practice leaked into coordination-state snapshot")
         return value
 
 
 @dataclass(frozen=True, slots=True)
 class JointEnvironment:
-    """Pure outcome law with no relationship-state input."""
+    """Pure outcome law with no relationship or teamwork-state input."""
 
     base_success_probability: float = 0.35
     practice_gain: float = 0.16
@@ -247,7 +312,7 @@ class JointEnvironment:
 
 @dataclass(frozen=True, slots=True)
 class JointController:
-    """Generic decision policy that may read learned relationship state."""
+    """Generic decision policy that may read learned coordination state."""
 
     def preferred_role(self, state: IndividualState, mission: JointMission) -> Role:
         lead = state.practice(mission.lead_skill)
@@ -286,7 +351,16 @@ class JointController:
             role = preferred if state.agent_id < partner.agent_id else _other(preferred)
             return JointAction(state.agent_id, role)
 
-        if communication.bandwidth_bits >= 1 and partner_message == preferred:
+        teamwork = relationships.teamwork_model(state.agent_id)
+        general_role = teamwork.successful_role(mission.context)
+        if general_role is not None:
+            return JointAction(state.agent_id, general_role)
+
+        if (
+            communication.bandwidth_bits >= 1
+            and partner_message == preferred
+            and teamwork.learned_collision_convention(mission.context)
+        ):
             role = preferred if state.agent_id < partner.agent_id else _other(preferred)
             return JointAction(state.agent_id, role)
 
