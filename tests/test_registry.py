@@ -1,33 +1,11 @@
-from __future__ import annotations
-
-from copy import deepcopy
-
 from resonance_world.adapters import CheckpointJsonAdapter
 from resonance_world.registry import WorldRegistry
 
-from test_checkpoint_adapter import checkpoint_bundle
+from tests.fixtures import checkpoint_bundle
 
 
 def field_adapter(field_id: str) -> CheckpointJsonAdapter:
-    bundle = deepcopy(checkpoint_bundle())
-    bundle["field"]["field_id"] = field_id
-    for evidence in bundle["evidence"]:
-        old_uri = evidence["uri"]
-        new_uri = old_uri.replace("field-a", field_id)
-        evidence["uri"] = new_uri
-    for agent in bundle["agents"]:
-        agent["evidence_refs"] = [
-            uri.replace("field-a", field_id) for uri in agent["evidence_refs"]
-        ]
-        for capability in agent["capability_vector"]:
-            capability["evidence_refs"] = [
-                uri.replace("field-a", field_id) for uri in capability["evidence_refs"]
-            ]
-        for metric in agent["specialization_metrics"]:
-            metric["evidence_refs"] = [
-                uri.replace("field-a", field_id) for uri in metric["evidence_refs"]
-            ]
-    return CheckpointJsonAdapter(bundle)
+    return CheckpointJsonAdapter(checkpoint_bundle(field_id))
 
 
 def test_registry_holds_three_independent_fields() -> None:
