@@ -1,0 +1,32 @@
+{
+  "campaign_id": "w4-relationship-formation-portability-v0.1",
+  "calibration_fields": ["w4-source-seed-137", "w4-source-seed-258", "w4-source-seed-379"],
+  "discovery_fields": ["w4-source-seed-491", "w4-source-seed-612"],
+  "replication_fields": ["w4-source-seed-733", "w4-source-seed-854", "w4-source-seed-975"],
+  "formation_depths": [0, 2, 6, 12],
+  "deep_formation_depth": 12,
+  "learning_checkpoints": [0, 1, 2, 4, 6, 8, 12],
+  "communication_bandwidth_bits": 1,
+  "evaluation_trials_per_mission": 128,
+  "effect_threshold": 0.02,
+  "minimum_positive_replication_fields": 2,
+  "assignment": {
+    "agents_per_field": 12,
+    "treated_agents": 6,
+    "fixed_pairs": 3,
+    "pair_dissolution_allowed": false,
+    "assignment_uses_outcomes": false
+  },
+  "compute_accounting": {
+    "pair_actions_per_trial": 2,
+    "solo_actions_per_trial": 2,
+    "report_per_agent_and_total": true
+  },
+  "prohibitions": [
+    "direct_relationship_success_bonus",
+    "direct_teamwork_success_bonus",
+    "formation_pair_selection_by_outcome",
+    "pair_dissolution_after_poor_performance",
+    "individual_practice_updates_during_relationship_formation"
+  ]
+}

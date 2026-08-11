@@ -1,0 +1,36 @@
+{
+  "formation": [
+    {"mission_id": "f-a-1", "context": "allocation-a", "lead_skill": "urban_heat", "support_skill": "water_systems"},
+    {"mission_id": "f-b-1", "context": "allocation-b", "lead_skill": "energy_storage", "support_skill": "supply_networks"},
+    {"mission_id": "f-c-1", "context": "allocation-c", "lead_skill": "public_health", "support_skill": "mobility"},
+    {"mission_id": "f-a-2", "context": "allocation-a", "lead_skill": "water_systems", "support_skill": "public_health"},
+    {"mission_id": "f-b-2", "context": "allocation-b", "lead_skill": "supply_networks", "support_skill": "urban_heat"},
+    {"mission_id": "f-c-2", "context": "allocation-c", "lead_skill": "mobility", "support_skill": "energy_storage"}
+  ],
+  "formation_probe": [
+    {"mission_id": "p-a", "context": "allocation-a", "lead_skill": "urban_heat", "support_skill": "public_health"},
+    {"mission_id": "p-b", "context": "allocation-b", "lead_skill": "energy_storage", "support_skill": "mobility"},
+    {"mission_id": "p-c", "context": "allocation-c", "lead_skill": "water_systems", "support_skill": "supply_networks"}
+  ],
+  "transfer": [
+    {"mission_id": "t-a-1", "context": "allocation-a", "lead_skill": "energy_storage", "support_skill": "public_health"},
+    {"mission_id": "t-b-1", "context": "allocation-b", "lead_skill": "mobility", "support_skill": "urban_heat"},
+    {"mission_id": "t-c-1", "context": "allocation-c", "lead_skill": "supply_networks", "support_skill": "water_systems"},
+    {"mission_id": "t-a-2", "context": "allocation-a", "lead_skill": "public_health", "support_skill": "supply_networks"},
+    {"mission_id": "t-b-2", "context": "allocation-b", "lead_skill": "urban_heat", "support_skill": "energy_storage"},
+    {"mission_id": "t-c-2", "context": "allocation-c", "lead_skill": "water_systems", "support_skill": "mobility"}
+  ],
+  "context_shift": [
+    {"mission_id": "x-1", "context": "unseen-delta", "lead_skill": "energy_storage", "support_skill": "public_health"},
+    {"mission_id": "x-2", "context": "unseen-epsilon", "lead_skill": "mobility", "support_skill": "urban_heat"},
+    {"mission_id": "x-3", "context": "unseen-zeta", "lead_skill": "supply_networks", "support_skill": "water_systems"}
+  ],
+  "replication": [
+    {"mission_id": "r-a-1", "context": "allocation-a", "lead_skill": "water_systems", "support_skill": "energy_storage"},
+    {"mission_id": "r-b-1", "context": "allocation-b", "lead_skill": "public_health", "support_skill": "supply_networks"},
+    {"mission_id": "r-c-1", "context": "allocation-c", "lead_skill": "urban_heat", "support_skill": "mobility"},
+    {"mission_id": "r-a-2", "context": "allocation-a", "lead_skill": "supply_networks", "support_skill": "public_health"},
+    {"mission_id": "r-b-2", "context": "allocation-b", "lead_skill": "energy_storage", "support_skill": "water_systems"},
+    {"mission_id": "r-c-2", "context": "allocation-c", "lead_skill": "mobility", "support_skill": "urban_heat"}
+  ]
+}
