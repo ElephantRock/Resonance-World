@@ -1,5 +1,5 @@
 {
-  "version": "context-graph-graduation-record-v0.1",
+  "version": "context-graph-graduation-record-v0.2",
   "status": "architectural-graduation-parity-pass",
   "scientific_claim": false,
   "standalone_runtime": {
@@ -20,7 +20,15 @@
     "result_artifact_id": 9157806653,
     "result_artifact_digest": "sha256:3a333eb1b502c78c03e237d9bebe4a6249b13ed9aefee9082b3baa0894e79249",
     "exact_result_commit": "e19703a40e0070c34a7e8e9f424d5cb0b31db134",
-    "dependency_direction": "Resonance World -> Resonance ContextGraph; reverse dependency forbidden"
+    "dependency_direction": "Resonance World -> Resonance ContextGraph; reverse dependency forbidden",
+    "runtime_facade": "src/resonance_world/context_graph_runtime.py",
+    "adapter": "src/resonance_world/context_graph_adapter.py",
+    "adapter_uses_structural_producer_protocols": true,
+    "adapter_imports_legacy_world_contextgraph": false,
+    "final_decoupled_validation_run": 31638854949,
+    "final_decoupled_validation_head": "e104f8872531065416271a11736fc4b991d163b3",
+    "final_decoupled_semantic_parity_status": "success",
+    "final_decoupled_frozen_regression_status": "success"
   },
   "frozen_replay": {
     "cg5": {
@@ -74,8 +82,9 @@
   "retirement_boundary": {
     "standalone_semantics_match_frozen_world": true,
     "world_duplicate_runtime_can_be_deprecated": true,
+    "production_runtime_path_uses_legacy_world_contextgraph": false,
     "world_duplicate_runtime_can_be_deleted_now": false,
-    "reason_not_deleted_now": "Deprecation façade and downstream import migration must land first; scientific fixtures and frozen experiment records remain permanently available.",
+    "reason_not_deleted_now": "Historical CG runners and replay fixtures still require the legacy modules to reproduce frozen science. Runtime ownership is retired; scientific compatibility ownership remains.",
     "frozen_experiment_records_must_remain": true,
     "legacy_world_context_graph_modules_become": "scientific compatibility fixtures, not production runtime ownership"
   },
@@ -85,5 +94,5 @@
     "contextgraph_object_enters_joint_environment": false,
     "outcome_law_changed": false
   },
-  "interpretation": "Architectural graduation is authorized by exact semantic parity, not by a new efficacy claim. Resonance ContextGraph now owns the validated runtime semantics. Resonance World retains immutable scientific provenance and temporary compatibility fixtures until downstream imports are migrated."
+  "interpretation": "Architectural graduation is authorized by exact semantic parity, not by a new efficacy claim. Resonance ContextGraph owns the validated runtime semantics. Resonance World's production-facing integration no longer imports the historical ContextGraph implementation; World retains that implementation only as immutable scientific compatibility infrastructure."
 }
