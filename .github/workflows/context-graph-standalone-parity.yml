@@ -1,0 +1,65 @@
+name: ContextGraph Standalone Parity
+
+on:
+  push:
+    branches: ["experiment/context-graph"]
+    paths:
+      - ".github/workflows/context-graph-standalone-parity.yml"
+      - "pyproject.toml"
+      - "src/resonance_world/context_graph_adapter.py"
+      - "tests/test_context_graph_standalone_parity.py"
+      - "experiments/context_graph/run_context_graph_standalone_cg11_parity.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  semantic-parity:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with pinned standalone ContextGraph
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Prove standalone dependency is pinned to the graduated commit
+        run: |
+          python - <<'PY'
+          import importlib.metadata
+          import json
+          from pathlib import Path
+
+          dist = importlib.metadata.distribution("resonance-contextgraph")
+          direct = Path(dist._path) / "direct_url.json"
+          payload = json.loads(direct.read_text())
+          commit = payload["vcs_info"]["commit_id"]
+          assert commit == "7aafa8cd7aabbbcdf5e4f37670f275d0bd339bd3", commit
+          PY
+      - name: Lint adapter parity surface
+        run: >-
+          ruff check
+          src/resonance_world/context_graph_adapter.py
+          tests/test_context_graph_standalone_parity.py
+      - name: Run semantic parity gates
+        run: pytest -q tests/test_context_graph_standalone_parity.py
+      - name: Re-prove outcome-law isolation
+        run: |
+          python - <<'PY'
+          import inspect
+          from resonance_world.w4a_joint_learning import JointEnvironment
+
+          forbidden = {
+              "graph", "context_graph", "evidence", "claims",
+              "relationship_state", "organization_memory",
+              "acquisition_state", "stopping_state",
+          }
+          params = set(inspect.signature(JointEnvironment.evaluate).parameters)
+          assert not forbidden.intersection(params), params
+          PY
