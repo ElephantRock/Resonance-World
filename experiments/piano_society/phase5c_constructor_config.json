@@ -1,0 +1,74 @@
+{
+  "revision": "piano-phase5c-roster-conditional-v1",
+  "no_model_calls": true,
+  "source_fields": {
+    "calibration_pool": [
+      "w4-source-seed-16001",
+      "w4-source-seed-16103",
+      "w4-source-seed-16217",
+      "w4-source-seed-16333",
+      "w4-source-seed-16447",
+      "w4-source-seed-16561"
+    ],
+    "confirmatory_pool": [
+      "w4-source-seed-16673",
+      "w4-source-seed-16787",
+      "w4-source-seed-16889",
+      "w4-source-seed-16993",
+      "w4-source-seed-17107",
+      "w4-source-seed-17209",
+      "w4-source-seed-17317",
+      "w4-source-seed-17431",
+      "w4-source-seed-17539",
+      "w4-source-seed-17653",
+      "w4-source-seed-17761",
+      "w4-source-seed-17863",
+      "w4-source-seed-17977",
+      "w4-source-seed-18089",
+      "w4-source-seed-18203",
+      "w4-source-seed-18313",
+      "w4-source-seed-18427",
+      "w4-source-seed-18539"
+    ]
+  },
+  "skills": [
+    "urban_heat",
+    "water_systems",
+    "energy_storage",
+    "supply_networks",
+    "public_health",
+    "mobility"
+  ],
+  "strategy_vocabulary": ["specialist", "balanced"],
+  "structural_hypotheses": ["role_specific", "cross_coverage"],
+  "neutral_prior": {
+    "role_specific": 0.5,
+    "cross_coverage": 0.5
+  },
+  "eligibility": {
+    "require_distinct_ordered_policy_assignments": true,
+    "min_role_specific_specialist_advantage": 0.02,
+    "min_cross_coverage_balanced_advantage": 0.02,
+    "min_neutral_forecast_margin": 0.0005,
+    "min_formation_hypothesis_identifiability": 0.005
+  },
+  "target_rule": "choose_the_structural_regime_whose_optimal_policy_opposes_the_neutral_prior_preference",
+  "score_rule": "min_hypothesis_policy_advantage_times_formation_identifiability",
+  "formation_depth": 96,
+  "calibration_evaluation_trials_per_policy": 512,
+  "selection": {
+    "calibration_units": 4,
+    "calibration_target_role_specific": 2,
+    "calibration_target_cross_coverage": 2,
+    "confirmatory_units": 12,
+    "confirmatory_target_role_specific": 6,
+    "confirmatory_target_cross_coverage": 6,
+    "one_unit_per_field": true
+  },
+  "calibration_acceptance": {
+    "min_mean_retained_minus_neutral_success_rate": 0.03,
+    "min_nonnegative_units": 4,
+    "min_forecast_preference_change_units": 4,
+    "min_target_posterior_match_units": 4
+  }
+}
