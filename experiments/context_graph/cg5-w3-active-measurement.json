@@ -1,0 +1,143 @@
+{
+  "version": "context-graph-cg5-w3-active-measurement-v0.1",
+  "status": "preregistered-before-fresh-cohort-generation",
+  "confirmatory_claim": true,
+  "objective": "Test on a newly generated untouched cohort whether the CG-4M measurement-reconciled coverage graph causes better partner-selection decisions and downstream mission outcomes than a genuinely evidence-using bundle-aware flat baseline under matched context budgets and an unchanged W4 outcome law.",
+  "interpretation_boundary": "CG-5 tests an active evidence-acquisition architecture, not passive endogenous memory. Current members are deliberately probed until six independent reconciled events exist per agent/skill cell before the decision assay. A pass therefore supports graph-conditioned decision advantage after sufficient active measurement; it does not establish that sparse passive observations are sufficient.",
+  "scientific_boundary": "Fresh W3 Field capsules are evaluator-hidden world state used only to instantiate individual capability, generate live probe outcomes, and compute oracle diagnostics. No historical W3 task/outcome/bid/pair-edge evidence is imported into context. Evidence retrieval never mutates per-agent beliefs. JointEnvironment receives individual states, mission/actions, and seed only; it receives no graph, evidence, relationship, or organization state.",
+  "frozen_design_sources": {
+    "cg4m_result_commit": "0b289cc5d00fab2b4556f6bb2be0aa33e3bf9840",
+    "cg4m_source_workflow_run": 31621085298,
+    "cg4m_source_artifact_id": 9151247914,
+    "cg4m_source_artifact_digest": "sha256:c95881670f91e9830e28e1c1b7a3369a3e5be4577867f0c1c25ff6cc64d4c8ca",
+    "fresh_source_config": "configs/context_graph/cg5-fresh-source.json",
+    "fresh_source_config_commit": "477aac6e53ed0d471bc7a579c3124a8439110017"
+  },
+  "fresh_source": {
+    "resonance_field_repository": "https://github.com/ElephantRock/Resonance-Field.git",
+    "resonance_field_sha": "5cee5ff1c75d027f5c78c681c5f306cab2c85bf3",
+    "experiment_number": 63,
+    "campaign_name": "cg5-context-graph-fresh-source-v0.1",
+    "field_seeds": [1452, 1573, 1694, 1815, 1936, 2057, 2178, 2299, 2420, 2541, 2662, 2783, 2904, 3025, 3146],
+    "field_count": 15,
+    "prohibited_prior_seeds": [121, 242, 363, 484, 605, 726, 847, 968, 1089, 1210, 1331],
+    "required_seed_overlap_with_prior": 0,
+    "source_generation_rule": "The fresh source Fields are generated only after this protocol commit. Source generation and CG-5 evaluation occur in one dependency-gated workflow; the private source artifact is not inspected between generation and scoring."
+  },
+  "society": {
+    "initial_roster_size": 8,
+    "turnover_count": 4,
+    "initial_probes_per_skill": 2,
+    "initial_skills_per_agent": 3,
+    "observation_noise_rate": 0.18,
+    "rumor_count": 2,
+    "min_confidence": 0.7,
+    "turnover_rule": "Identical to frozen CG-4: after the pre-turnover live probe phase, the four initial members with the highest observed canonical probe-success counts depart; ties resolve by agent_id; four deterministic reserve agents join.",
+    "supplemental_probe_rule": "After turnover is fixed, append deterministic independent live probe events for current members only until every current agent/skill cell has six independent event identities. Supplemental probes cannot change the roster.",
+    "observer_rule": {
+      "participant_confidence": 0.95,
+      "scout_confidence": 0.85,
+      "noisy_scout_confidence": 0.45,
+      "scout_noise_rate": 0.18
+    },
+    "event_reconciliation": "Collapse all complete observer reports sharing an event identity to one canonical event before capability estimation. Choose highest minimum claim confidence, then latest observed_at, then observer id. Count a canonical event exactly once.",
+    "target_independent_events_per_current_agent_skill": 6
+  },
+  "estimator": {
+    "name": "wilson80_min3",
+    "kind": "wilson_lower",
+    "z": 1.2815515655446004,
+    "minimum_independent_event_support": 3,
+    "fallback_score": 0.35,
+    "pair_score": "lead_skill_score * support_skill_score"
+  },
+  "context": {
+    "claim_budget_cap": 48,
+    "membership_rule": "Include the latest admissible active membership registry claim for each current member.",
+    "evidence_unit": "A complete canonical event/participant/skill/outcome observation bundle represented by exactly three live-probe claims.",
+    "bundle_flat": "After current membership, select complete canonical bundles matching either required skill in deterministic mission/event hash order. No candidate-skill coverage allocation and no evidence-score ranking.",
+    "revised_coverage_graph": "After current membership, estimate current candidate/required-skill cells with the frozen Wilson estimator, rank cells by conservative score and support, balance lead/support retrieval, and retrieve complete supporting bundles without duplicating event identities.",
+    "shuffled_revised_graph": "Use the same revised context volume and membership, but deterministically permute current-agent identities only on live evidence participant edges. Preserve event, skill, outcome, confidence, provenance, and membership so this ablation corrupts evidence topology rather than availability.",
+    "legacy_graph_active": "Apply the original CG-4 graph compiler/estimator to the same actively measured claim stream as a historical architecture control.",
+    "passive_revised_graph": "Apply the revised reconciler/estimator/retriever before supplemental probes are appended, isolating the effect of active measurement.",
+    "local_only_active": "Current membership plus complete admissible bundles observed by the coordinator only, scored by the same frozen Wilson estimator.",
+    "matched_budget_rule": "bundle_flat, revised_coverage_graph, and shuffled_revised_graph must contain equal mean context claim counts and equal complete-bundle counts; all remain at or below the 48-claim cap."
+  },
+  "missions": [
+    {"mission_id": "cg5-heat-water", "lead_skill": "urban_heat", "support_skill": "water_systems"},
+    {"mission_id": "cg5-energy-supply", "lead_skill": "energy_storage", "support_skill": "supply_networks"},
+    {"mission_id": "cg5-health-mobility", "lead_skill": "public_health", "support_skill": "mobility"},
+    {"mission_id": "cg5-water-health", "lead_skill": "water_systems", "support_skill": "public_health"},
+    {"mission_id": "cg5-energy-mobility", "lead_skill": "energy_storage", "support_skill": "mobility"},
+    {"mission_id": "cg5-supply-heat", "lead_skill": "supply_networks", "support_skill": "urban_heat"}
+  ],
+  "arms": [
+    "local_only_active",
+    "bundle_flat_active",
+    "legacy_graph_active",
+    "passive_revised_graph",
+    "revised_coverage_graph",
+    "shuffled_revised_graph",
+    "oracle"
+  ],
+  "evaluation": {
+    "expected_decisions": 90,
+    "trials_per_decision": 512,
+    "primary_unit": "Field-clustered paired decision outcomes",
+    "bootstrap": {
+      "resamples": 5000,
+      "seed": 50505,
+      "cluster": "field_id",
+      "confidence": 0.95,
+      "primary_contrast": "revised_coverage_graph minus bundle_flat_active mean expected success"
+    }
+  },
+  "metrics": [
+    "mission_success_rate",
+    "mean_expected_success",
+    "mean_regret",
+    "oracle_pair_rate",
+    "invalid_selection_rate",
+    "mean_context_claims",
+    "mean_complete_bundles",
+    "provenance_completeness",
+    "estimate_truth_pearson",
+    "selected_single_success_rate",
+    "mean_selected_role_true_gap",
+    "field_level_expected_success_lift",
+    "bootstrap_expected_success_lift_ci",
+    "supplemental_probe_events",
+    "duplicate_observer_bundles_collapsed",
+    "belief_contamination",
+    "historical_outcome_rows_consumed",
+    "posthoc_imported_claims",
+    "outcome_law_graph_inputs"
+  ],
+  "success_gates": {
+    "fresh_field_count_min": 15,
+    "evaluation_decision_count_min": 90,
+    "fresh_seed_overlap_with_prior_max": 0,
+    "revised_expected_success_lift_over_bundle_flat_min": 0.02,
+    "revised_realized_success_lift_over_bundle_flat_min": 0.015,
+    "revised_regret_improvement_over_bundle_flat_min": 0.02,
+    "revised_expected_success_lift_over_shuffled_min": 0.05,
+    "revised_expected_success_lift_over_passive_min": 0.03,
+    "revised_estimate_truth_pearson_min": 0.40,
+    "revised_selected_single_success_rate_max": 0.05,
+    "revised_invalid_selection_rate_max": 0.0,
+    "bundle_flat_complete_bundles_mean_min": 10.0,
+    "revised_complete_bundles_mean_min": 10.0,
+    "revised_provenance_completeness_min": 1.0,
+    "positive_field_lift_count_min": 10,
+    "bootstrap_expected_lift_ci_lower_min_exclusive": 0.0,
+    "matched_context_claims": true,
+    "matched_complete_bundle_counts": true,
+    "event_identity_reconciliation_required": true,
+    "supplemental_probe_roster_changes_max": 0,
+    "historical_outcome_rows_consumed_max": 0,
+    "posthoc_imported_claims_max": 0,
+    "belief_contamination_max": 0,
+    "outcome_law_graph_inputs_max": 0
+  },
+  "decision_rule": "All gates are conjunctive. No threshold or architecture parameter may be changed after fresh source generation begins. A failed gate remains a CG-5 failure and the new cohort becomes permanently unblinded/exploratory."
+}
