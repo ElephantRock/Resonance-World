@@ -33,6 +33,44 @@
         "object": "bridge-y"
       }
     ],
+    "evidence_claims": [
+      {
+        "subject": "asset-alpha",
+        "predicate": "uses",
+        "object": "bridge-x",
+        "source_id": "source-alpha",
+        "observed_by": "agent-a",
+        "confidence": 0.99,
+        "direct": true
+      },
+      {
+        "subject": "asset-beta",
+        "predicate": "uses",
+        "object": "bridge-x",
+        "source_id": "source-beta",
+        "observed_by": "agent-b",
+        "confidence": 0.98,
+        "direct": true
+      },
+      {
+        "subject": "asset-gamma",
+        "predicate": "uses",
+        "object": "bridge-y",
+        "source_id": "source-gamma",
+        "observed_by": "agent-c",
+        "confidence": 0.97,
+        "direct": true
+      },
+      {
+        "subject": "asset-beta",
+        "predicate": "uses",
+        "object": "bridge-z",
+        "source_id": "source-rumor",
+        "observed_by": "agent-c",
+        "confidence": 0.40,
+        "direct": false
+      }
+    ],
     "queries": [
       {
         "query_id": "q-shared-bridge",
@@ -58,6 +96,8 @@
     "shared_false_positive_rate_max": 0.0,
     "shared_provenance_completeness_min": 1.0,
     "cross_agent_answers_min": 1,
+    "raw_contradiction_groups_min": 1,
+    "filtered_contradiction_groups_max": 0,
     "belief_contamination_max": 0
   }
 }
