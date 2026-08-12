@@ -85,3 +85,70 @@ jobs:
           path: output/context_graph/cg3-w5-decision-calibration.json
           if-no-files-found: error
           retention-days: 90
+
+  cg3-evaluation:
+    needs: cg3-calibration
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e '.[dev]'
+      - name: Download pinned W5 calibration source
+        uses: actions/download-artifact@v4
+        with:
+          name: w5-discovery-source
+          path: w5-calibration
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31479913325
+      - name: Download pinned unseen W5 replication source
+        uses: actions/download-artifact@v4
+        with:
+          name: w5-replication-source
+          path: w5-evaluation
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31479913325
+      - name: Enforce held-out source boundary
+        run: |
+          test -f w5-evaluation/raw/runs.csv
+          test -f w5-evaluation/raw/outcomes.csv
+          test -f w5-evaluation/output/replication-source/capsules.private.jsonl
+          ! grep -q "w5-discovery.json" src/resonance_world/context_graph_w5_decision.py
+          ! grep -q "w5-07-replication.json" src/resonance_world/context_graph_w5_decision.py
+      - name: Execute preregistered CG-3 evaluation
+        id: execute
+        continue-on-error: true
+        run: >-
+          python experiments/context_graph/run_cg3_w5_decision.py
+          --config experiments/context_graph/cg3-w5-decision.json
+          --missions configs/w5/institution-missions.json
+          --calibration-source-dir w5-calibration
+          --evaluation-source-dir w5-evaluation
+          --output output/context_graph/cg3-w5-decision-result.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: context-graph-cg3-w5-decision-result
+          path: output/context_graph/cg3-w5-decision-result.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: Enforce preregistered CG-3 gates
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          value = json.loads(
+              Path("output/context_graph/cg3-w5-decision-result.json").read_text()
+          )
+          print(json.dumps(value["gate_results"], indent=2, sort_keys=True))
+          print(json.dumps(value["evaluation"]["diagnostics"], indent=2, sort_keys=True))
+          if not value["passed"]:
+              raise SystemExit("CG-3 failed preregistered unseen-evaluation gates")
+          PY
