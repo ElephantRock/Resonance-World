@@ -1,0 +1,31 @@
+{
+  "version": "w9-01-result-v0.1",
+  "pr": 80,
+  "exact_head_sha": "6467688cbb13eb9a5a1de0adadc265997bd7aa64",
+  "merge_sha": "772eeba862323b545f729f620d886945cb86ddb7",
+  "workflow_run": 31550902474,
+  "artifact_id": 9124221212,
+  "artifact_digest": "sha256:ff3adc7b7cfb7cbace1dd985d23bc1b1672673a71719947ae4996cf57696647a",
+  "normalized_scientific_payload_sha256": "78c02160ec3859dafc8af810c83d0adc63297dd8fd8a4633a06ae789be4c46ef",
+  "classification": "criticality_allocation_ineffective",
+  "gate": false,
+  "gates": {
+    "source_loss_at_most_2pp": true,
+    "source_loss_reduction_at_least_50pct": true,
+    "organization_noninferiority": false
+  },
+  "unrestricted": {
+    "mean_organization_success_pct": 45.18229166666667,
+    "mean_source_loss_pp": 3.1656409894904503,
+    "contract_count": 9
+  },
+  "criticality_aware": {
+    "mean_organization_success_pct": 24.869791666666664,
+    "mean_source_loss_pp": 0.2592175532970553,
+    "source_loss_reduction_fraction_vs_unrestricted": 0.9181153029804622,
+    "contract_count": 5,
+    "predicted_mean_source_loss_pp": 0.2514589027505032,
+    "actual_allocation_calibration_residual_pp": -0.007758650546552115
+  },
+  "eligible_for_w9_05_C": false
+}
