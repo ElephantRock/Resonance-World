@@ -1,0 +1,24 @@
+{
+  "formation": [
+    {"mission_id": "p5-form-grid-health", "context": "p5-grid-health", "lead_skill": "energy_storage", "support_skill": "public_health", "regime": "specialist"},
+    {"mission_id": "p5-form-water-mobility", "context": "p5-water-mobility", "lead_skill": "water_systems", "support_skill": "mobility", "regime": "balanced"},
+    {"mission_id": "p5-form-heat-supply", "context": "p5-heat-supply", "lead_skill": "urban_heat", "support_skill": "supply_networks", "regime": "specialist"},
+    {"mission_id": "p5-form-health-heat", "context": "p5-health-heat", "lead_skill": "public_health", "support_skill": "urban_heat", "regime": "balanced"}
+  ],
+  "evaluation": [
+    {"mission_id": "p5-eval-grid-health", "context": "p5-grid-health", "lead_skill": "energy_storage", "support_skill": "public_health", "regime": "specialist"},
+    {"mission_id": "p5-eval-water-mobility", "context": "p5-water-mobility", "lead_skill": "water_systems", "support_skill": "mobility", "regime": "balanced"},
+    {"mission_id": "p5-eval-heat-supply", "context": "p5-heat-supply", "lead_skill": "urban_heat", "support_skill": "supply_networks", "regime": "specialist"},
+    {"mission_id": "p5-eval-health-heat", "context": "p5-health-heat", "lead_skill": "public_health", "support_skill": "urban_heat", "regime": "balanced"}
+  ],
+  "formation_depth": 12,
+  "formation_strategy_order": ["specialist", "balanced", "continuity"],
+  "evaluation_trials_per_strategy": 128,
+  "calibration_fields": ["w4-source-seed-12017", "w4-source-seed-12119"],
+  "confirmatory_fields": ["w4-source-seed-12227", "w4-source-seed-12329", "w4-source-seed-12433", "w4-source-seed-12539", "w4-source-seed-12641", "w4-source-seed-12743"],
+  "calibration_acceptance": {
+    "min_mean_historical_best_lift_over_uniform_strategy_mean": 0.03,
+    "min_nonnegative_units": 5,
+    "required_units": 8
+  }
+}
