@@ -1,0 +1,40 @@
+{
+  "revision": "piano-phase5b-transfer-search-v1",
+  "no_model_calls": true,
+  "source_fields": {
+    "calibration": [
+      "w4-source-seed-13007",
+      "w4-source-seed-13109"
+    ],
+    "confirmatory_untouched": [
+      "w4-source-seed-13217",
+      "w4-source-seed-13331",
+      "w4-source-seed-13441",
+      "w4-source-seed-13553",
+      "w4-source-seed-13669",
+      "w4-source-seed-13781"
+    ]
+  },
+  "skills": [
+    "urban_heat",
+    "water_systems",
+    "energy_storage",
+    "supply_networks",
+    "public_health",
+    "mobility"
+  ],
+  "regimes": ["specialist", "balanced"],
+  "turnover_strategy_vocabulary": ["specialist", "balanced"],
+  "formation_depth": 48,
+  "evaluation_trials_per_policy": 256,
+  "selection": {
+    "selected_contexts": 4,
+    "selected_per_regime": 2,
+    "require_distinct_ordered_skill_pairs": true
+  },
+  "acceptance": {
+    "required_selected_units": 8,
+    "min_mean_transfer_policy_lift_over_neutral_policy": 0.03,
+    "min_nonnegative_selected_units": 6
+  }
+}
