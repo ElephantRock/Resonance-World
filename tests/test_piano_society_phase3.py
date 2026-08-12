@@ -3,7 +3,12 @@ from pathlib import Path
 
 import pytest
 
-from experiments.piano_society.phase3 import _board_digest, analyze, materialize_roles, validate_config
+from experiments.piano_society.phase3 import (
+    _board_digest,
+    analyze,
+    materialize_roles,
+    validate_config,
+)
 
 
 def _config() -> dict[str, object]:
