@@ -1,0 +1,105 @@
+{
+  "version": "context-graph-cg11-run-record-v0.1",
+  "status": "preregistered-confirmatory-pass",
+  "confirmatory_claim": true,
+  "protocol": {
+    "freeze_sha": "4b336f824f3bbcbfde425de1920dfabd6d23b738",
+    "evaluator_freeze_sha": "fdc7368d90e5deeb5c770ad2101eca8e3f37e721",
+    "preflight_run_id": 31632376342,
+    "execution_head_sha": "70f41b960c51865d08bf29195ccc452f189d2bdf",
+    "result_commit_sha": "280ce5fddadf290cff6fcc0f06810ceb5590166c"
+  },
+  "workflow": {
+    "run_id": 31632483751,
+    "preflight_job": 94234474358,
+    "fresh_source_job": 94234535798,
+    "evaluation_job": 94235613137,
+    "workflow_conclusion": "success",
+    "scientific_gate_enforcement": "success"
+  },
+  "artifacts": {
+    "fresh_source": {
+      "artifact_id": 9155752146,
+      "zip_digest": "sha256:838d19248f1b0faadb537b7d82a7f4e77dcf686bf62391d1420d6b03abf79ce2",
+      "capsules_sha256": "038c1b8b22c685c4e24a516b1f7de6b2f95cc6c24c3f2f1312545fd8463bd25e"
+    },
+    "result": {
+      "artifact_id": 9155777208,
+      "zip_digest": "sha256:154137a512dc85b2d7f4193576efc7fb92d769574244d36e570762cbd8ef67ca"
+    }
+  },
+  "cohort": {
+    "fresh_fields": 30,
+    "agents": 360,
+    "pair_edges": 1980,
+    "decisions": 180,
+    "trials_per_decision": 512,
+    "trials_per_arm": 92160,
+    "prior_seed_overlap": 0
+  },
+  "stopping_policy": {
+    "acquisition": "deterministic uniform round-robin",
+    "criterion": "At or after 60 supplemental events, stop at the first checkpoint whose six-mission selected-pair vector exactly matches the immediately preceding checkpoint; otherwise stop at 168.",
+    "checkpoints": [48, 60, 72, 96, 120, 144, 168],
+    "mean_probe_events": 111.2,
+    "p90_probe_events": 168.0,
+    "maximum_probe_events": 168,
+    "forced_cap_fraction": 0.26666666666666666,
+    "stop_budget_histogram": {"60": 8, "72": 4, "96": 3, "120": 4, "144": 2, "168": 9},
+    "fixed6_probe_events": 216.0,
+    "cost_fraction_vs_fixed6": 0.5148148148148148,
+    "cost_reduction_vs_fixed6": 0.48518518518518516
+  },
+  "primary_noninferiority": {
+    "stopped_graph_expected_success": 0.2790790551714306,
+    "fixed6_expected_success": 0.28111686910074246,
+    "expected_success_difference": -0.002037813929311849,
+    "expected_success_loss": 0.002037813929311849,
+    "stopped_graph_realized_success": 0.27507595486111114,
+    "fixed6_realized_success": 0.2769965277777778,
+    "realized_success_loss": 0.0019205729166666408,
+    "regret_increase": 0.002037813929311877,
+    "field_clustered_95_ci": [-0.01273644855252886, 0.008471978107990202],
+    "frozen_noninferiority_margin": -0.015,
+    "passed": true
+  },
+  "topology": {
+    "stopped_graph_expected_success": 0.2790790551714306,
+    "cost_matched_bundle_flat_expected_success": 0.23579355738359445,
+    "graph_minus_flat": 0.043285497787836164,
+    "graph_minus_flat_field_clustered_95_ci": [0.024750411577349092, 0.0614619325409784],
+    "positive_graph_flat_fields": 22,
+    "stopped_shuffled_expected_success": 0.20674335731768048,
+    "graph_minus_shuffled": 0.07233569785375013,
+    "graph_minus_shuffled_field_clustered_95_ci": [0.05518247320639642, 0.08976068038353197],
+    "passive_graph_expected_success": 0.23777849113785712,
+    "graph_minus_passive": 0.04130056403357349
+  },
+  "measurement_quality": {
+    "stopped_estimate_truth_pearson": 0.4220262436317142,
+    "selected_single_success_rate": 0.008333333333333333,
+    "invalid_selection_rate": 0.0,
+    "provenance_completeness": 1.0
+  },
+  "matched_context": {
+    "stopped_graph_mean_claims": 47.0,
+    "bundle_flat_mean_claims": 47.0,
+    "shuffled_mean_claims": 47.0,
+    "stopped_graph_mean_complete_bundles": 13.0,
+    "bundle_flat_mean_complete_bundles": 13.0,
+    "shuffled_mean_complete_bundles": 13.0
+  },
+  "causal_integrity": {
+    "belief_contamination": 0,
+    "historical_outcome_rows_consumed": 0,
+    "posthoc_imported_claims": 0,
+    "supplemental_probe_roster_changes": 0,
+    "outcome_law_graph_inputs": 0,
+    "stopping_evaluator_truth_inputs": 0
+  },
+  "gate_summary": {
+    "all_preregistered_gates_passed": true,
+    "failed_gates": []
+  },
+  "interpretation": "CG-11 confirmatorily supports balanced round-robin evidence acquisition with observable pair-stability stopping. The frozen stopping rule reduced mean supplemental measurement by 48.5% relative to fixed-six while meeting the preregistered Field-clustered non-inferiority criterion. At the stopped evidence cost, topology-aware graph retrieval retained a positive advantage over matched bundle-flat and shuffled-topology controls. This does not retroactively convert failed CG-7, CG-9, or CG-10 claims into passes; it confirms the separately frozen CG-10B stopping hypothesis on new societies."
+}
