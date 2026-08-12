@@ -7,7 +7,9 @@ on:
       - ".github/workflows/context-graph-standalone-parity.yml"
       - "pyproject.toml"
       - "src/resonance_world/context_graph_adapter.py"
+      - "src/resonance_world/context_graph_runtime.py"
       - "tests/test_context_graph_standalone_parity.py"
+      - "tests/test_context_graph_runtime_facade.py"
       - "experiments/context_graph/run_context_graph_standalone_parity_v2.py"
   workflow_dispatch:
 
@@ -48,13 +50,18 @@ jobs:
           commit = payload["vcs_info"]["commit_id"]
           assert commit == os.environ["CONTEXTGRAPH_COMMIT"], commit
           PY
-      - name: Lint adapter and semantic parity surface
+      - name: Lint adapter, facade, and semantic parity surface
         run: |
           ruff check src/resonance_world/context_graph_adapter.py
+          ruff check src/resonance_world/context_graph_runtime.py
           ruff check tests/test_context_graph_standalone_parity.py
+          ruff check tests/test_context_graph_runtime_facade.py
           ruff check experiments/context_graph/run_context_graph_standalone_parity_v2.py
-      - name: Run semantic parity gates
-        run: pytest -q tests/test_context_graph_standalone_parity.py
+      - name: Run semantic parity and facade gates
+        run: >-
+          pytest -q
+          tests/test_context_graph_standalone_parity.py
+          tests/test_context_graph_runtime_facade.py
       - name: Re-prove outcome-law isolation
         run: |
           python - <<'PY'
