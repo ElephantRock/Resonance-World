@@ -1,28 +1,35 @@
 # Phase 2 preregistration — one-agent model-backed PIANO experiment
 
-Status: **locked as preregistration revision `zai-v1`; no scientific model output had been observed when this revision was committed**
+Status: **locked as preregistration revision `zai-coding-glm5.2-v2`**
 
 ## Question
 
 Does a shared controller intention plus grounded execution acknowledgement causally improve behavioral coherence in a real Resonance Field agent without materially reducing task success?
 
-## Provider revision record
+## Revision history and provider lock
 
-The initial provider lock targeted OpenAI, but the repository did not contain the required `OPENAI_API_KEY`. Every attempted live run stopped at the credential gate before any model inference occurred. Before observing any Phase-2 model output, the provider was therefore revised and recorded as `zai-v1`.
+The original OpenAI lock never reached inference because the required repository credential was absent. Revision `zai-v1` then targeted Z.AI's general API with `glm-4-32b-0414-128k`; live attempts reached Z.AI but failed with provider error 1113 before a complete campaign could be produced. An isolated probe of that older model on the Coding Plan endpoint also failed with 1113.
 
-Frozen provider details for this revision:
+Before this v2 campaign was locked, non-scientific connectivity probes established that `glm-5.2` is accepted by the Coding Plan Chat Completions endpoint. A second probe used the exact Phase-2 structured request shape with thinking disabled, sampling disabled, zero temperature, 128 maximum output tokens, and JSON-object mode; that probe also succeeded. Those probes tested transport and output-contract compatibility only and are not experiment observations.
+
+Frozen provider details for `zai-coding-glm5.2-v2`:
 
 - provider: Z.AI
-- API surface: OpenAI-compatible Chat Completions
-- general API base: `https://api.z.ai/api/paas/v4`
+- API surface: Coding Plan OpenAI-compatible Chat Completions
+- API base: `https://api.z.ai/api/coding/paas/v4`
 - GitHub Actions credential: `ZAI_API_KEY`
-- model identifier: `glm-4-32b-0414-128k`
+- model identifier: `glm-5.2`
+- thinking: disabled
+- sampling: `do_sample=false`
 - temperature: `0.0`
 - structured output: provider `json_object` mode plus Field-side exact stage-contract validation
-- provider RNG seed: not used because Z.AI's documented Chat Completions contract does not expose a seed parameter
-- the 20 preregistered numeric seeds remain immutable **pair identifiers** and determine only episode identity and counterbalanced arm order
+- provider RNG seed: not used because the documented Chat Completions contract does not expose a seed parameter
+- the 20 preregistered numeric seeds remain immutable pair identifiers and determine only episode identity and counterbalanced arm order
+- Field revision: `79fb6231352aa207e67210eff794030b628f8b23`
 
-The scenarios, prompts, action vocabulary, four-call budget, sample size, primary/secondary metrics, statistical tests, exclusion rules, and advancement thresholds are unchanged from the original preregistration.
+Z.AI exposes `glm-5.2` as a provider model identifier rather than a dated immutable snapshot. The campaign fails closed if the API returns a different identifier, but it cannot detect a silent provider-side weight change behind the same identifier. This reproducibility limitation is accepted and recorded before the v2 scientific campaign.
+
+The scenarios, cognitive prompts, action vocabulary, four-call budget, sample size, primary/secondary metrics, statistical tests, exclusion rules, and advancement thresholds are unchanged from the original preregistration.
 
 ## Hypotheses
 
@@ -57,7 +64,7 @@ No other prompt-flow difference is permitted in the registered implementation.
 
 ## Sample
 
-One agent per episode. There are 60 paired episode keys: 20 fixed pair identifiers crossed with three scenarios. Each key produces one control episode and one treatment episode, for 120 total agent episodes.
+One agent per episode. There are 60 paired episode keys: 20 fixed pair identifiers crossed with three scenarios. Each key produces one control episode and one treatment episode, for 120 total agent episodes and 480 provider model calls.
 
 ### substrate-observe
 
@@ -110,7 +117,7 @@ Task success is defined mechanically: the executed action must match the preregi
 
 ## Pairing and execution order
 
-The pair key is `(scenario_id, trial_seed)`, where `trial_seed` is the immutable pair identifier in this Z.AI revision and is **not** sent as a provider sampling seed.
+The pair key is `(scenario_id, trial_seed)`, where `trial_seed` is an immutable pair identifier and is not sent as a provider sampling seed.
 
 Within each pair, arm order is counterbalanced by pair-identifier parity:
 
@@ -126,7 +133,7 @@ Control and treatment must contain exactly one record for every preregistered ke
 A record or campaign is invalid rather than selectively excludable when any of the following occurs:
 
 - wrong Field revision;
-- model identifier drift;
+- returned model identifier differs from `glm-5.2`;
 - wrong scenario target;
 - wrong pair identifier;
 - call count other than four;
@@ -146,10 +153,10 @@ For each primary binary error outcome, also compute an exact two-sided sign test
 The campaign is eligible for scientific interpretation only if:
 
 - `campaign_locked` is `true`;
-- `preregistration_revision` is `zai-v1`;
-- `required_model_snapshot` is exactly `glm-4-32b-0414-128k`;
+- `preregistration_revision` is `zai-coding-glm5.2-v2`;
+- `required_model_snapshot` is exactly `glm-5.2`;
 - all 60 pairs are present and valid;
-- every record uses the exact frozen Field revision and model identifier;
+- every record uses Field revision `79fb6231352aa207e67210eff794030b628f8b23` and model identifier `glm-5.2`;
 - every record uses exactly four model calls.
 
 ## Advancement gate
@@ -165,4 +172,4 @@ Failure to pass is evidence to revise the one-agent architecture before adding s
 
 ## Locking rule
 
-This `zai-v1` provider revision was committed before any successful Phase-2 model call. Any change to model identifier, provider, temperature, prompts, scenarios, pair identifiers, action vocabulary, Field revision, call budget, metrics, tests, or advancement thresholds after a model-backed campaign begins creates a new experiment revision rather than modifying this one.
+Revision `zai-coding-glm5.2-v2` was committed after transport-only probes but before any v2 model-backed campaign observation. Any change to model identifier, provider endpoint, thinking/sampling mode, temperature, cognitive prompts, scenarios, pair identifiers, action vocabulary, Field revision, call budget, metrics, statistical tests, or advancement thresholds after the v2 scientific campaign begins creates a new experiment revision rather than modifying this one.
