@@ -7,6 +7,7 @@ on:
       - ".github/workflows/context-graph-cg4f.yml"
       - "experiments/context_graph/cg4f-failure-analysis.json"
       - "experiments/context_graph/run_cg4f_failure_analysis.py"
+      - "experiments/context_graph/run_cg4f_signal_diagnostics.py"
   workflow_dispatch:
 
 permissions:
@@ -44,6 +45,7 @@ jobs:
         run: >-
           ruff check
           experiments/context_graph/run_cg4f_failure_analysis.py
+          experiments/context_graph/run_cg4f_signal_diagnostics.py
       - name: Execute exploratory CG-4F autopsy
         run: >-
           python experiments/context_graph/run_cg4f_failure_analysis.py
@@ -55,6 +57,15 @@ jobs:
           --evaluation-capsules
           w3-evaluation/output/replication-source/capsules.private.jsonl
           --output output/context_graph/cg4f-failure-analysis-result.json
+      - name: Execute evaluator-only signal diagnostics
+        run: >-
+          python experiments/context_graph/run_cg4f_signal_diagnostics.py
+          --analysis-result output/context_graph/cg4f-failure-analysis-result.json
+          --calibration-capsules
+          w3-calibration/output/discovery-source/capsules.private.jsonl
+          --evaluation-capsules
+          w3-evaluation/output/replication-source/capsules.private.jsonl
+          --output output/context_graph/cg4f-signal-diagnostics.json
       - name: Verify exploratory boundary and original-arm reproduction
         run: |
           python - <<'PY'
@@ -64,11 +75,15 @@ jobs:
           result = json.loads(
               Path("output/context_graph/cg4f-failure-analysis-result.json").read_text()
           )
+          signal = json.loads(
+              Path("output/context_graph/cg4f-signal-diagnostics.json").read_text()
+          )
           frozen = json.loads(
               Path("experiments/context_graph/cg4-w3-endogenous-result.json").read_text()
           )
           assert result["status"] == "exploratory-post-unblinding"
           assert result["confirmatory_claim"] is False
+          assert signal["confirmatory_claim"] is False
           assert frozen["passed"] is False
           assert result["evaluation"]["summary"]["decision_count"] == 12
           cal = result["calibration"]["summary"]["arms"]
@@ -89,10 +104,19 @@ jobs:
               ev["pooled_flat"]["mean_expected_success"]
               - frozen["evaluation"]["metrics"]["pooled_flat"]["mean_expected_success"]
           ) < 1e-12
-          text = Path("output/context_graph/cg4f-failure-analysis-result.json").read_text()
+          graph_signal = signal["evaluation"]["original_graph"]
+          assert graph_signal["selected_roles"] == 24
+          assert graph_signal["selected_single_success_roles"] == 24
+          assert graph_signal["selected_zero_evidence_roles"] == 0
+          assert signal["evaluation"]["pooled_flat_complete_bundle_mean"] == 0.0
+          text = (
+              Path("output/context_graph/cg4f-failure-analysis-result.json").read_text()
+              + Path("output/context_graph/cg4f-signal-diagnostics.json").read_text()
+          )
           assert "practice_by_skill" not in text
           print(json.dumps(result["evaluation"]["summary"], indent=2, sort_keys=True))
           print(json.dumps(result["evaluation"]["budget_sweep"], indent=2, sort_keys=True))
+          print(json.dumps(signal["evaluation"], indent=2, sort_keys=True))
           PY
       - name: Prove frozen CG-4 files are unchanged
         run: >-
@@ -102,6 +126,8 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: context-graph-cg4f-failure-analysis
-          path: output/context_graph/cg4f-failure-analysis-result.json
+          path: |
+            output/context_graph/cg4f-failure-analysis-result.json
+            output/context_graph/cg4f-signal-diagnostics.json
           if-no-files-found: error
           retention-days: 90
