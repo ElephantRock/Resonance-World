@@ -69,7 +69,7 @@ import json
 from pathlib import Path
 
 result = json.loads(Path('output/w9/w9-06-long-horizon.json').read_text())
-assert result['version'] == 'w9-06-long-horizon-result-v0.2', result
+assert result['version'] == 'w9-06-long-horizon-result-v0.3', result
 assert result['phase'] == 'discovery', result
 assert result['selected_mechanisms'] == [], result
 assert result['structural_status'] == 'selected_W9_equals_W7_and_noP_control', result
@@ -86,8 +86,11 @@ assert selected['developmental_efficiency'] is None, selected
 assert result['gates']['developmental_efficiency_at_least_20pct_better_than_W8'] is False, result
 assert result['accounting']['source_development_unit'] == 'resident_agent_cycle', result
 assert w8['compute']['coalition_mission_execution_compute'] == 36864.0, w8
+assert w8['compute']['standalone_comparator_pair_selection_compute'] == 48.0, w8
 assert w8['compute']['mission_execution_compute'] == 135168.0, w8
+assert w8['compute']['organization_coordination_compute'] == 144.0, w8
 assert result['accounting_corrections']['w8_coalition_mission_execution']['trial_blocks_per_cycle'] == 3, result
+assert result['accounting_corrections']['w8_standalone_comparator_pair_selection']['pair_selections_per_cycle'] == 2, result
 assert 'practice_by_skill' not in json.dumps(result, sort_keys=True), result
 
 summary = {
