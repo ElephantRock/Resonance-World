@@ -1,24 +1,21 @@
-import json
-from pathlib import Path
-
-from resonance.experiments.piano_phase2 import ModelRequest
-from resonance_world.w4a_joint_learning import IndividualState
-
-from experiments.piano_society.phase3 import config_digest
-from experiments.piano_society.phase5 import analyze, materialize_units, validate_config
-from experiments.piano_society.phase5_campaign import _memory_text, _mission_text, _roster_views
-from experiments.piano_society.phase5_zai import Phase5ZAIChatCompletionsBackend
-
-
-def _config() -> dict[str, object]:
-    return json.loads(Path("experiments/piano_society/phase5_config.json").read_text())
-
-
-def _stats():
-    return {
-        "specialist": {"attempts": 48, "successes": 36, "rate": 0.75},
+attempts": 48, "successes": 36, "rate": 0.75},
         "balanced": {"attempts": 48, "successes": 24, "rate": 0.5},
     }
+
+
+import json
+from resonance_world.w4a_joint_learning import IndividualState
+from experiments.piano_society.phase5_zai import Phase5ZAIChatCompletionsBackend
+from experiments.piano_society.phase5_analyzer import analyze
+from experiments.piano_society.phase5_analyzer import config_digest
+from experiments.piano_society.phase5_analyzer import materialize_units
+from experiments.piano_society.phase5_analyzer import validate_config
+from resonance_world.llm.schema import ModelRequest
+from experiments.piano_society.phase5_utils import _mission_text
+from experiments.piano_society.phase5_utils import _roster_views
+from experiments.piano_society.phase5_utils import _stats
+from experiments.piano_society.phase5_utils import _memory_text
+from experiments.piano_society.phase5_utils import _config
 
 
 def _record(unit, *, arm: str, success_count: int, selected_strategy: str):
