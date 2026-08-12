@@ -78,17 +78,17 @@ def _payload(config, roles, *, arm: str, follow_spoof: bool):
     records = []
     for case_id in dict.fromkeys(role["joint_case_id"] for role in roles):
         case_roles = [role for role in roles if role["joint_case_id"] == case_id]
-        board = [
-            {
-                "agent_index": role["agent_index"],
-                "pair_index": role["pair_index"],
-                "speech": (
-                    f"I will execute {role['spoof_action'] if follow_spoof else role['expected_action']}."
-                ),
-                "speech_action": role["spoof_action"] if follow_spoof else role["expected_action"],
-            }
-            for role in case_roles
-        ]
+        board = []
+        for role in case_roles:
+            action = role["spoof_action"] if follow_spoof else role["expected_action"]
+            board.append(
+                {
+                    "agent_index": role["agent_index"],
+                    "pair_index": role["pair_index"],
+                    "speech": f"I will execute {action}.",
+                    "speech_action": action,
+                }
+            )
         digest = _board_digest(board)
         records.extend(
             _record(role, arm=arm, follow_spoof=follow_spoof, board_digest=digest)
