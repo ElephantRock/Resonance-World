@@ -1,0 +1,59 @@
+{
+  "version": "context-graph-cg10-calibration-record-v0.1",
+  "status": "no-stopping-rule-selected",
+  "confirmatory_claim": false,
+  "workflow": {
+    "run_id": 31631378410,
+    "head_sha": "b3799884d883429dcd5a61281fa907b5df7046c7",
+    "artifact_id": 9155243423,
+    "artifact_digest": "sha256:0653e38ac576b4fb3ecb4675dd14a6e905c986e6caa874f82aa5ba4776b579ca"
+  },
+  "cohorts": {"cg5_fields": 15, "cg7_fields": 15, "cg9_fields": 24, "pooled_fields": 54},
+  "common_control_replay": {
+    "cg9_fixed6_within_1e_12": true,
+    "cg9_uniform60_within_1e_12": true
+  },
+  "integrity": {
+    "cohort_overlap": 0,
+    "stopping_evaluator_truth_inputs": 0,
+    "historical_outcome_rows_consumed": 0,
+    "posthoc_imported_claims": 0,
+    "belief_contamination": 0,
+    "outcome_law_graph_inputs": 0
+  },
+  "candidates": {
+    "pair_stability_2": {
+      "mean_probe_events": 116.66666666666667,
+      "median_probe_events": 96.0,
+      "p90_probe_events": 216.0,
+      "forced_maximum_fields": 6,
+      "pooled_mean_expected_success": 0.2679897134872481,
+      "pooled_fixed6_expected_success": 0.2669648355588424,
+      "pooled_expected_success_loss_vs_fixed6": -0.0010248779284057208,
+      "pooled_graph_lift_over_cost_matched_flat": 0.043491774620436546,
+      "failed_checks": ["p90_probe_events_max"]
+    },
+    "pair_stability_2_support3": {
+      "mean_probe_events": 138.88888888888889,
+      "p90_probe_events": 216.0,
+      "forced_maximum_fields": 9,
+      "pooled_expected_success_loss_vs_fixed6": -0.003115646915777981,
+      "failed_checks": ["mean_probe_events_max", "p90_probe_events_max"]
+    },
+    "pair_stability_3_support3": {
+      "mean_probe_events": 179.11111111111111,
+      "p90_probe_events": 216.0,
+      "forced_maximum_fields": 22,
+      "pooled_expected_success_loss_vs_fixed6": 0.00037246612867819495,
+      "failed_checks": ["mean_probe_events_max", "p90_probe_events_max"]
+    },
+    "pair_stability_2_support3_margin003": {
+      "mean_probe_events": 216.0,
+      "p90_probe_events": 216.0,
+      "forced_maximum_fields": 54,
+      "pooled_expected_success_loss_vs_fixed6": 0.0,
+      "failed_checks": ["mean_probe_events_max", "p90_probe_events_max"]
+    }
+  },
+  "interpretation": "Observable pair stability is informative about decision sufficiency, but an uncapped stability-only rule has an unacceptable long measurement tail. The next exploratory hypothesis is not a different allocation policy: retain deterministic balanced round-robin and the same pair-stability criterion, but impose a hard 168-event stopping ceiling. This repair is post-hoc to CG-10 and requires a separate exploratory record before any fresh confirmatory cohort."
+}
