@@ -17,7 +17,7 @@ dev = [
   "ruff>=0.9",
 ]
 contextgraph = [
-  "resonance-contextgraph @ git+https://github.com/ElephantRock/Resonance-ContextGraph.git@7aafa8cd7aabbbcdf5e4f37670f275d0bd339bd3",
+  "resonance-contextgraph @ git+https://github.com/ElephantRock/Resonance-ContextGraph.git@8baaeb1a887a46ab4507fb028d1b17aaac66fe52",
 ]
 
 [tool.hatch.metadata]
