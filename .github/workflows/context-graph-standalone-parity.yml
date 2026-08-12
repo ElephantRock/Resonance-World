@@ -8,7 +8,7 @@ on:
       - "pyproject.toml"
       - "src/resonance_world/context_graph_adapter.py"
       - "tests/test_context_graph_standalone_parity.py"
-      - "experiments/context_graph/run_context_graph_standalone_parity.py"
+      - "experiments/context_graph/run_context_graph_standalone_parity_v2.py"
   workflow_dispatch:
 
 permissions:
@@ -16,7 +16,7 @@ permissions:
   actions: read
 
 env:
-  CONTEXTGRAPH_COMMIT: 8baaeb1a887a46ab4507fb028d1b17aaac66fe52
+  CONTEXTGRAPH_COMMIT: 55ce7bb435b3d4a1ff888474a5ca76ccff843150
   CG5_RUN_ID: "31622647635"
   CG11_RUN_ID: "31632483751"
 
@@ -48,15 +48,11 @@ jobs:
           commit = payload["vcs_info"]["commit_id"]
           assert commit == os.environ["CONTEXTGRAPH_COMMIT"], commit
           PY
-      - name: Lint adapter and semantic parity tests
-        run: >-
-          ruff check
-          src/resonance_world/context_graph_adapter.py
-          tests/test_context_graph_standalone_parity.py
-      - name: Check replay harness excluding two known style-only findings
-        run: >-
-          ruff check --ignore F401,E501
-          experiments/context_graph/run_context_graph_standalone_parity.py
+      - name: Lint adapter and semantic parity surface
+        run: |
+          ruff check src/resonance_world/context_graph_adapter.py
+          ruff check tests/test_context_graph_standalone_parity.py
+          ruff check experiments/context_graph/run_context_graph_standalone_parity_v2.py
       - name: Run semantic parity gates
         run: pytest -q tests/test_context_graph_standalone_parity.py
       - name: Re-prove outcome-law isolation
@@ -110,7 +106,7 @@ jobs:
             "038c1b8b22c685c4e24a516b1f7de6b2f95cc6c24c3f2f1312545fd8463bd25e"
       - name: Replay frozen CG-5 and CG-11 semantics through standalone package
         run: |
-          PYTHONPATH=. python experiments/context_graph/run_context_graph_standalone_parity.py \
+          PYTHONPATH=. python experiments/context_graph/run_context_graph_standalone_parity_v2.py \
             --cg5-capsules source/cg5/world/output/cg5-source/capsules.private.jsonl \
             --cg5-summary source/cg5/world/output/cg5-source/w3-01-source-summary.json \
             --cg5-config experiments/context_graph/cg5-w3-active-measurement.json \
@@ -134,6 +130,7 @@ jobs:
           assert result["cg11"]["passed"] is True
           assert result["cg5"]["context_mismatches"] == 0
           assert result["cg11"]["context_mismatches"] == 0
+          assert result["cg11"]["checkpoint_observable_mismatches"] == 0
           assert result["cg11"]["scheduler_mismatches"] == 0
           assert result["cg11"]["stopping_mismatches"] == 0
           assert result["retirement_gate"]["world_duplicate_runtime_can_be_deprecated"] is True
