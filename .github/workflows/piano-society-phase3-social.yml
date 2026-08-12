@@ -1,0 +1,129 @@
+name: PIANO Society Phase 3 Social
+
+on:
+  push:
+    branches:
+      - experiment/piano-society-phase3-social
+    paths:
+      - "experiments/piano_society/phase3*"
+      - "experiments/piano_society/PHASE3_PREREGISTRATION.md"
+      - "tests/test_piano_society_phase3.py"
+      - ".github/workflows/piano-society-phase3-social.yml"
+  pull_request:
+    paths:
+      - "experiments/piano_society/phase3*"
+      - "experiments/piano_society/PHASE3_PREREGISTRATION.md"
+      - "tests/test_piano_society_phase3.py"
+      - ".github/workflows/piano-society-phase3-social.yml"
+
+permissions:
+  contents: read
+
+env:
+  PIANO_FIELD_SHA: cc8dbcedf6366f687c9acc7050b5654c1867bd8e
+
+jobs:
+  validate-social-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git ../field
+          git -C ../field checkout "$PIANO_FIELD_SHA"
+          test "$(git -C ../field rev-parse HEAD)" = "$PIANO_FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install World and pinned Field
+        run: python -m pip install -e '../field[dev]' -e '.[dev]'
+      - name: Lint and test Phase 3 contract
+        run: |
+          ruff check experiments/piano_society/phase3.py experiments/piano_society/phase3_campaign.py tests/test_piano_society_phase3.py
+          pytest -q tests/test_piano_society_phase3.py
+      - name: Validate exact scientific lock
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from resonance.experiments.piano_phase3_social import Phase3SocialExperimentAgent
+          from experiments.piano_society.phase3 import validate_config
+
+          config = json.loads(Path('experiments/piano_society/phase3_config.json').read_text())
+          normalized = validate_config(config)
+          assert Phase3SocialExperimentAgent is not None
+          assert config['campaign_locked'] is True
+          assert config['preregistration_revision'] == 'glm5.2-social-dyads-v1'
+          assert config['field_revision'] == 'cc8dbcedf6366f687c9acc7050b5654c1867bd8e'
+          assert config['required_model_snapshot'] == 'glm-5.2'
+          assert config['agent_count'] == 10
+          assert config['pair_count'] == 5
+          assert config['calls_per_agent'] == 4
+          assert config['required_joint_cases'] == 6
+          assert config['max_output_tokens_per_call'] == 128
+          assert len(normalized['roles']) == 60
+          assert config['arms'] == ['decentralized', 'piano']
+          prereq = config['validated_prerequisites']
+          assert prereq['acknowledgement_validated'] is True
+          assert prereq['controller_broadcast_validated'] is True
+          assert prereq['phase2b_artifact_digest'] == 'sha256:6fdc5d0ddf1aa693c81801b78aae4f71f4807215d27960d19bbc9d2c0b62a7e2'
+          assert prereq['phase2c_artifact_digest'] == 'sha256:f330a4d5153327a3bca37ea9e30ab8fd7eb3f167f0cb474f708ef0e4fc5a698b'
+          backend = config['model_backend']
+          assert backend['thinking'] == 'disabled'
+          assert backend['do_sample'] is False
+          assert backend['temperature'] == 0.0
+          assert backend['timeout_seconds'] == 60.0
+          assert backend['max_attempts'] == 6
+          assert backend['max_workers'] == 3
+          PY
+      - name: Emit locked preregistration summary
+        run: |
+          mkdir -p output/piano_society/phase3-prereg
+          python -m experiments.piano_society.phase3 \
+            --config experiments/piano_society/phase3_config.json \
+            > output/piano_society/phase3-prereg/preregistration.json
+          cp experiments/piano_society/phase3_config.json output/piano_society/phase3-prereg/
+          cp experiments/piano_society/PHASE3_PREREGISTRATION.md output/piano_society/phase3-prereg/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase3-preregistration
+          path: output/piano_society/phase3-prereg
+          if-no-files-found: error
+          retention-days: 30
+
+  social-campaign:
+    needs: validate-social-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require campaign credential
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "::error::ZAI_API_KEY is required for Phase 3 execution"
+            exit 2
+          fi
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git ../field
+          git -C ../field checkout "$PIANO_FIELD_SHA"
+          test "$(git -C ../field rev-parse HEAD)" = "$PIANO_FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen experiment revisions
+        run: python -m pip install -e '../field[dev]' -e '.[dev]'
+      - name: Execute six ten-agent social cases
+        run: |
+          python -m experiments.piano_society.phase3_campaign \
+            --config experiments/piano_society/phase3_config.json \
+            --output-dir output/piano_society/phase3-live
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase3-social-live
+          path: output/piano_society/phase3-live
+          if-no-files-found: error
+          retention-days: 90
