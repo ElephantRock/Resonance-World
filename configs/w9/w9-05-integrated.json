@@ -1,0 +1,189 @@
+{
+  "version": "w9-05-integrated-market-v0.1",
+  "field_sha": "2a85739603ebac86f451b90733229782c0d45ce0",
+  "discovery_seeds": [3611, 3731, 3851, 3971, 4091],
+  "replication_seeds": [4211, 4331, 4451, 4571, 4691],
+  "agents_per_field": 12,
+  "service_trials": 512,
+  "organization_budget": 220,
+  "offer_count": 8,
+  "bid_base": 30,
+  "bid_span": 60,
+  "effect_band_pp": 2.0,
+  "source_loss_bound_pp": 2.0,
+  "required_source_loss_reduction_fraction": 0.50,
+  "organization_inequality_worsening_bound_pp": 2.0,
+  "source_loss_budget_pp": 2.0,
+  "conservative_z": 1.645,
+  "estimator_residual_se_pp": 0.70,
+  "source_incremental_bound_pp": 2.0,
+  "source_cumulative_bound_pp": 2.0,
+  "stratum_cumulative_bound_pp": 3.0,
+  "development_cycles": 12,
+  "development_resident_agent_cycle_units_per_field": 144,
+  "horizon_windows": 24,
+  "source_slots_per_window": 6,
+  "learning_per_executed_role": 1,
+  "lease_recovery_windows": 1,
+  "lease_organization_slots": {
+    "org-alpha": 0,
+    "org-beta": 2,
+    "org-gamma": 4
+  },
+  "w8_4_2": {
+    "external_windows": 4,
+    "home_windows": 2,
+    "roster_offsets": [0, 2, 4]
+  },
+  "upstream_eligibility": {
+    "C": false,
+    "L": false,
+    "P": false,
+    "K": []
+  },
+  "selector": {
+    "home_success_rate": 0.30,
+    "bid_win_rate": 0.20,
+    "mean_bid_confidence": 0.10,
+    "experience": 0.10,
+    "dominant_host_fit": 0.20,
+    "secondary_host_fit": 0.10,
+    "experience_scale": 12.0
+  },
+  "public_estimator": {
+    "probability_mapping": "source_base_plus_public_score_span",
+    "mission_requirement_weight": 1.0,
+    "selector": {
+      "home_success_rate": 0.30,
+      "bid_win_rate": 0.20,
+      "mean_bid_confidence": 0.10,
+      "experience": 0.10,
+      "dominant_host_fit": 0.20,
+      "secondary_host_fit": 0.10,
+      "experience_scale": 12.0
+    }
+  },
+  "organization_environment": {
+    "base_success_probability": 0.35,
+    "practice_gain": 0.16,
+    "maximum_role_success": 0.94
+  },
+  "source_service_law": {
+    "base_success_probability": 0.38,
+    "practice_gain": 0.14,
+    "maximum_success_probability": 0.90
+  },
+  "organizations": [
+    {"organization_id": "org-alpha", "lead_skill": "energy_storage", "support_skill": "mobility"},
+    {"organization_id": "org-beta", "lead_skill": "water_systems", "support_skill": "public_health"},
+    {"organization_id": "org-gamma", "lead_skill": "supply_networks", "support_skill": "urban_heat"}
+  ],
+  "home_service_missions": [
+    {"mission_id": "home-urban-heat", "skill": "urban_heat"},
+    {"mission_id": "home-water", "skill": "water_systems"},
+    {"mission_id": "home-energy", "skill": "energy_storage"},
+    {"mission_id": "home-supply", "skill": "supply_networks"},
+    {"mission_id": "home-health", "skill": "public_health"},
+    {"mission_id": "home-mobility", "skill": "mobility"}
+  ],
+  "source_loss_match_tolerance": 0.002,
+  "effect_band": 0.02,
+  "stock_growth_band": 0.02,
+  "source_reserve": {
+    "primary_cap": 2,
+    "sensitivity_caps": [1, 3]
+  },
+  "circulation": {
+    "horizon_windows": 24,
+    "primary_external_windows": 4,
+    "primary_home_windows": 2,
+    "sensitivity_external_windows": 3,
+    "sensitivity_home_windows": 3,
+    "roster_offsets": [0, 2, 4],
+    "learning_per_executed_role": 1
+  },
+  "dividend": {
+    "primary_basis_points": 5000,
+    "sensitivity_basis_points": [0, 10000],
+    "development_credit_per_cycle": 12,
+    "vacancy_cycle": 72
+  },
+  "replacement_classification": {
+    "recovery_source_loss_max": 0.02,
+    "contingency_cosine_distance": 0.10,
+    "replication_cosine_similarity": 0.95,
+    "replication_dominant_match_share": 0.80
+  },
+  "coalition": {
+    "message_bandwidth_bits": 1,
+    "required_positive_missions": 4,
+    "nondecomposable_cross_base": 0.30,
+    "nondecomposable_cross_gain": 0.12,
+    "nondecomposable_cross_max": 0.92
+  },
+  "integrated_charter": {
+    "reserve_cap": 2,
+    "external_windows": 4,
+    "home_windows": 2,
+    "dividend_basis_points": 5000,
+    "message_bandwidth_bits": 1
+  },
+  "benchmark_missions": [
+    {"mission_id": "bench-heat-1", "skill": "urban_heat"},
+    {"mission_id": "bench-heat-2", "skill": "urban_heat"},
+    {"mission_id": "bench-water-1", "skill": "water_systems"},
+    {"mission_id": "bench-water-2", "skill": "water_systems"},
+    {"mission_id": "bench-energy-1", "skill": "energy_storage"},
+    {"mission_id": "bench-energy-2", "skill": "energy_storage"},
+    {"mission_id": "bench-supply-1", "skill": "supply_networks"},
+    {"mission_id": "bench-supply-2", "skill": "supply_networks"},
+    {"mission_id": "bench-health-1", "skill": "public_health"},
+    {"mission_id": "bench-health-2", "skill": "public_health"},
+    {"mission_id": "bench-mobility-1", "skill": "mobility"},
+    {"mission_id": "bench-mobility-2", "skill": "mobility"}
+  ],
+  "coalition_missions": [
+    {
+      "coalition_id": "decomp-alpha-beta",
+      "structure": "decomposable",
+      "lead_organization_id": "org-alpha",
+      "support_organization_id": "org-beta",
+      "mission": {"mission_id": "w8-decomp-energy-health", "context": "decomp-energy-health", "lead_skill": "energy_storage", "support_skill": "public_health"}
+    },
+    {
+      "coalition_id": "decomp-beta-gamma",
+      "structure": "decomposable",
+      "lead_organization_id": "org-beta",
+      "support_organization_id": "org-gamma",
+      "mission": {"mission_id": "w8-decomp-water-heat", "context": "decomp-water-heat", "lead_skill": "water_systems", "support_skill": "urban_heat"}
+    },
+    {
+      "coalition_id": "decomp-gamma-alpha",
+      "structure": "decomposable",
+      "lead_organization_id": "org-gamma",
+      "support_organization_id": "org-alpha",
+      "mission": {"mission_id": "w8-decomp-supply-mobility", "context": "decomp-supply-mobility", "lead_skill": "supply_networks", "support_skill": "mobility"}
+    },
+    {
+      "coalition_id": "joint-alpha-beta",
+      "structure": "nondecomposable",
+      "lead_organization_id": "org-alpha",
+      "support_organization_id": "org-beta",
+      "mission": {"mission_id": "w8-joint-mobility-water", "context": "joint-mobility-water", "lead_skill": "mobility", "support_skill": "water_systems"}
+    },
+    {
+      "coalition_id": "joint-beta-gamma",
+      "structure": "nondecomposable",
+      "lead_organization_id": "org-beta",
+      "support_organization_id": "org-gamma",
+      "mission": {"mission_id": "w8-joint-health-supply", "context": "joint-health-supply", "lead_skill": "public_health", "support_skill": "supply_networks"}
+    },
+    {
+      "coalition_id": "joint-gamma-alpha",
+      "structure": "nondecomposable",
+      "lead_organization_id": "org-gamma",
+      "support_organization_id": "org-alpha",
+      "mission": {"mission_id": "w8-joint-heat-energy", "context": "joint-heat-energy", "lead_skill": "urban_heat", "support_skill": "energy_storage"}
+    }
+  ]
+}
