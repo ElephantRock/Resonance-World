@@ -16,7 +16,7 @@ permissions:
   actions: read
 
 env:
-  CONTEXTGRAPH_COMMIT: 7aafa8cd7aabbbcdf5e4f37670f275d0bd339bd3
+  CONTEXTGRAPH_COMMIT: 8baaeb1a887a46ab4507fb028d1b17aaac66fe52
   CG5_RUN_ID: "31622647635"
   CG11_RUN_ID: "31632483751"
 
