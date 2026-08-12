@@ -9,9 +9,10 @@ import pytest
 
 pytest.importorskip("resonance_contextgraph")
 
-from experiments.context_graph.run_cg10_balanced_stopping import choose_stop
 from experiments.context_graph.run_cg4m_measurement_sufficiency import (
     EstimatorSpec as WorldEstimatorSpec,
+)
+from experiments.context_graph.run_cg4m_measurement_sufficiency import (
     _canonical_event_bundles,
     _coverage_graph_context,
 )
@@ -19,6 +20,7 @@ from experiments.context_graph.run_cg6_adaptive_acquisition import (
     choose_cell,
     pair_from_context,
 )
+from experiments.context_graph.run_cg10_balanced_stopping import choose_stop
 from resonance_world.context_graph_adapter import (
     choose_stopping_point,
     compile_live_context,
@@ -177,10 +179,10 @@ def test_standalone_compiler_matches_frozen_world_coverage_semantics() -> None:
         min_confidence=0.7,
         respect_temporal_order=True,
     )
-    world_event_ids = tuple(
+    world_event_ids = {
         bundle[0]
         for bundle in _canonical_event_bundles(world_context, min_confidence=0.7)
-    )
+    }
 
     standalone_pair, standalone = pair_from_live_context(
         claims=field.claims,
@@ -190,7 +192,7 @@ def test_standalone_compiler_matches_frozen_world_coverage_semantics() -> None:
         claim_budget=48,
         min_confidence=0.7,
     )
-    standalone_event_ids = tuple(event.event_id for event in standalone.events)
+    standalone_event_ids = {event.event_id for event in standalone.events}
 
     assert standalone.candidates == frozenset(world_candidates)
     assert standalone.claim_cost == len(world_context) == 46
