@@ -7,6 +7,7 @@ on:
       - ".github/workflows/context-graph-cg10.yml"
       - "experiments/context_graph/run_cg10_balanced_stopping.py"
       - "experiments/context_graph/cg10-balanced-stopping-calibration.json"
+      - "pyproject.toml"
   workflow_dispatch:
 
 permissions:
@@ -107,8 +108,8 @@ jobs:
               Path("output/context_graph/cg10-balanced-stopping-calibration-result.json").read_text()
           )
           replay = result["integrity"]["cg9_common_control_replay"]
-          assert replay["cg9_fixed6_within_1e_12"], replay
-          assert replay["cg9_uniform60_within_1e_12"], replay
+          assert replay["cg9_fixed6_within_1e-12"] if "cg9_fixed6_within_1e-12" in replay else replay["cg9_fixed6_within_1e_12"]
+          assert replay["cg9_uniform60_within_1e-12"] if "cg9_uniform60_within_1e-12" in replay else replay["cg9_uniform60_within_1e_12"]
           assert result["confirmatory_claim"] is False
           assert result["integrity"]["cohort_overlap"] == 0
           assert result["integrity"]["stopping_evaluator_truth_inputs"] == 0
