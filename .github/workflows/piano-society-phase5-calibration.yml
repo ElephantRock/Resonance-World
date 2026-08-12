@@ -1,0 +1,177 @@
+name: PIANO Society Phase 5 Calibration
+
+on:
+  push:
+    branches:
+      - experiment/piano-society-phase5-institutional-memory
+    paths:
+      - experiments/piano_society/phase5_source_config.json
+      - experiments/piano_society/phase5_missions_candidate.json
+      - experiments/piano_society/phase5_calibration.py
+      - .github/workflows/piano-society-phase5-calibration.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FIELD_REPOSITORY: https://github.com/ElephantRock/Resonance-Field.git
+  FIELD_SHA: e877bf03dbf6681ce7cbd98d984e73c032e911aa
+  PGHOST: localhost
+  PGPORT: "5432"
+  PGUSER: resonance
+  PGPASSWORD: resonance
+
+jobs:
+  deterministic-capability-calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 50
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: resonance
+          POSTGRES_USER: resonance
+          POSTGRES_PASSWORD: resonance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resonance -d resonance"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - name: Install frozen revisions
+        run: python -m pip install -e 'field[dev]' -e world
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Develop eight fresh source Fields
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+        run: |
+          mkdir -p "$GITHUB_WORKSPACE/source-step" "$GITHUB_WORKSPACE/raw"
+          (
+            cd field
+            python -m resonance.experiments.lifecycle_step_cli \
+              --config "$GITHUB_WORKSPACE/world/experiments/piano_society/phase5_source_config.json" \
+              --experiment 71 \
+              --code-sha "$FIELD_SHA" \
+              --dsn "$DSN" \
+              --output-dir "$GITHUB_WORKSPACE/source-step"
+          )
+      - name: Export immutable Field evidence
+        env:
+          DSN: postgresql://resonance:resonance@localhost:5432/resonance
+          CAMPAIGN: piano-phase5-institutional-memory-source-v0.1
+        run: |
+          psql "$DSN" --csv -c "
+            SELECT run_id::text, seed, arm_label, environment::text, metrics::text, completed_at
+            FROM integration_campaign_runs
+            WHERE campaign_name = '$CAMPAIGN'
+              AND experiment_number = 71
+              AND arm_label = 'immortal_control'
+            ORDER BY seed
+          " > raw/runs.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, o.cycle, o.task_id::text, o.task_domain,
+                   o.required_skill, o.winner_agent_id::text, o.winner_slot,
+                   o.success, o.winning_price, o.task_budget, o.created_at
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 71
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, o.cycle
+          " > raw/outcomes.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, t.task_id::text, t.requester_agent_id::text
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_tasks t ON t.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 71
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, t.task_id
+          " > raw/tasks.csv
+          psql "$DSN" --csv -c "
+            SELECT o.run_id::text, b.task_id::text, b.bidder_agent_id::text,
+                   b.price, b.confidence, b.status
+            FROM integration_campaign_outcomes o
+            JOIN integration_campaign_runs r ON r.run_id = o.run_id
+            JOIN market_bids b ON b.task_id = o.task_id
+            WHERE r.campaign_name = '$CAMPAIGN'
+              AND r.experiment_number = 71
+              AND r.arm_label = 'immortal_control'
+            ORDER BY r.seed, b.task_id, b.bidder_agent_id
+          " > raw/bids.csv
+      - name: Materialize Field-derived individual state
+        working-directory: world
+        run: >-
+          python -m resonance_world.w4_source_export
+          ../raw/runs.csv ../raw/outcomes.csv ../raw/tasks.csv ../raw/bids.csv
+          ../output/source
+      - name: Enforce untouched source split
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          data = json.loads(Path('output/source/w4-source-summary.json').read_text())
+          assert data['field_count'] == 8, data
+          assert data['agent_count'] == 96, data
+          assert data['seeds'] == [12017, 12119, 12227, 12329, 12433, 12539, 12641, 12743], data
+          PY
+      - name: Lint calibration code
+        working-directory: world
+        run: ruff check --ignore E501 experiments/piano_society/phase5_calibration.py
+      - name: Run deterministic pre-inference capability calibration
+        working-directory: world
+        run: |
+          mkdir -p ../output/calibration
+          python -m experiments.piano_society.phase5_calibration \
+            ../output/source/capsules.private.jsonl \
+            experiments/piano_society/phase5_missions_candidate.json \
+            ../output/calibration/result.json
+      - name: Assert no model credential or model execution
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          python - <<'PY'
+          import json
+          data = json.load(open('output/calibration/result.json', encoding='utf-8'))
+          assert data['model_calls'] == 0
+          assert data['accepted'] is True
+          assert data['confirmatory_fields_untouched'] == [
+              'w4-source-seed-12227', 'w4-source-seed-12329',
+              'w4-source-seed-12433', 'w4-source-seed-12539',
+              'w4-source-seed-12641', 'w4-source-seed-12743'
+          ]
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase5-calibration
+          path: |
+            output/source
+            output/calibration
+            raw
+            source-step
+          if-no-files-found: error
+          retention-days: 90
