@@ -233,11 +233,15 @@ def _arm_score(records: Sequence[Mapping[str, Any]]) -> dict[str, float | int]:
     }
 
 
-def _exact_sign_test(control: Sequence[int], treatment: Sequence[int]) -> dict[str, float | int]:
+def _exact_sign_test(
+    control: Sequence[int],
+    treatment: Sequence[int],
+) -> dict[str, float | int]:
     if len(control) != len(treatment):
         raise ValueError("paired sign test requires equal lengths")
-    treatment_better = sum(treatment_value < control_value for control_value, treatment_value in zip(control, treatment))
-    treatment_worse = sum(treatment_value > control_value for control_value, treatment_value in zip(control, treatment))
+    pairs = tuple(zip(control, treatment, strict=True))
+    treatment_better = sum(treatment_value < control_value for control_value, treatment_value in pairs)
+    treatment_worse = sum(treatment_value > control_value for control_value, treatment_value in pairs)
     discordant = treatment_better + treatment_worse
     if discordant == 0:
         p_value = 1.0
