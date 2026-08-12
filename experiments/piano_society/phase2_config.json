@@ -1,13 +1,17 @@
 {
   "experiment": "piano-society-runtime-v0-phase2",
+  "preregistration_revision": "zai-v1",
   "campaign_locked": true,
-  "field_revision": "bff92d11b4c62c3e6b950696d5fd5ebf7ad2caa5",
-  "required_model_snapshot": "gpt-4.1-mini-2025-04-14",
+  "field_revision": "5fd619d9b2170b4344b6872798db4f09fc35924b",
+  "required_model_snapshot": "glm-4-32b-0414-128k",
   "model_backend": {
-    "provider": "openai",
+    "provider": "zai",
     "endpoint": "chat_completions",
-    "structured_output": "strict_json_schema",
-    "temperature": 0.7,
+    "base_url": "https://api.z.ai/api/paas/v4",
+    "structured_output": "json_object_local_schema_validation",
+    "temperature": 0.0,
+    "provider_seed_supported": false,
+    "trial_seed_role": "pair_identifier_only",
     "pair_order": "counterbalanced_by_seed_parity",
     "max_workers": 6
   },
