@@ -1,0 +1,75 @@
+name: Context Graph CG-11 Preflight
+
+on:
+  push:
+    branches: ["experiment/context-graph"]
+    paths:
+      - ".github/workflows/context-graph-cg11-preflight.yml"
+      - "experiments/context_graph/run_cg11_w3_balanced_stopping.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: context-graph-cg11-preflight-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PROTOCOL_FREEZE_SHA: 4b336f824f3bbcbfde425de1920dfabd6d23b738
+  EVALUATOR_FREEZE_SHA: 7915ad5254804df3526bbd78c755d562c7d4b4d4
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prove CG-11 protocol and source seeds stayed frozen
+        run: >-
+          git diff --exit-code
+          "$PROTOCOL_FREEZE_SHA" HEAD --
+          configs/context_graph/cg11-fresh-source.json
+          experiments/context_graph/cg11-w3-balanced-stopping.json
+      - name: Prove evaluator stayed frozen
+        run: >-
+          git diff --exit-code
+          "$EVALUATOR_FREEZE_SHA" HEAD --
+          experiments/context_graph/run_cg11_w3_balanced_stopping.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Lint and compile frozen evaluator
+        run: |
+          ruff check experiments/context_graph/run_cg11_w3_balanced_stopping.py
+          python -m py_compile experiments/context_graph/run_cg11_w3_balanced_stopping.py
+      - name: Verify frozen acquisition stopping and outcome-law isolation
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import inspect
+          import json
+          from pathlib import Path
+          from experiments.context_graph.run_cg10_balanced_stopping import choose_stop, stopping_observables
+          from experiments.context_graph.run_cg6_adaptive_acquisition import choose_cell
+          from resonance_world.w4a_joint_learning import JointEnvironment
+
+          config = json.loads(Path("experiments/context_graph/cg11-w3-balanced-stopping.json").read_text())
+          assert config["acquisition"]["policy"] == "uniform_round_robin"
+          assert config["acquisition"]["minimum_stop_budget"] == 60
+          assert config["acquisition"]["hard_stop_budget"] == 168
+          assert config["evaluation"]["bootstrap"]["noninferiority_margin"] == -0.015
+          uniform_source = inspect.getsource(choose_cell).split('if policy == "uniform_round_robin":', 1)[1].split('if policy == "uncertainty_only":', 1)[0]
+          stop_source = inspect.getsource(stopping_observables) + inspect.getsource(choose_stop)
+          assert ".states" not in uniform_source
+          assert ".states" not in stop_source
+          forbidden = {
+              "graph", "context_graph", "evidence", "claims", "relationship_state",
+              "organization_memory", "acquisition_state", "stopping_state",
+          }
+          params = set(inspect.signature(JointEnvironment.evaluate).parameters)
+          assert not forbidden.intersection(params), params
+          PY
