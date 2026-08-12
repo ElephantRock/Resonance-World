@@ -1,0 +1,102 @@
+{
+  "version": "context-graph-cg8-constrained-adaptive-calibration-v0.1",
+  "status": "exploratory-calibration-on-already-unblinded-cg5-and-cg7-cohorts",
+  "confirmatory_claim": false,
+  "objective": "Test whether a coverage-constrained decision-adaptive acquisition policy can improve on cost-matched uniform measurement without recreating CG-6's self-reinforcing coverage collapse, while preserving most fixed-six decision quality. Calibration uses only already-unblinded CG-5 and CG-7 cohorts; evaluator capability is diagnostics-only.",
+  "interpretation_boundary": "CG-8 calibration is exploratory. It reuses already-unblinded CG-5 and CG-7 societies and cannot support a confirmatory claim. A fresh CG-8 cohort may be generated only if one preregistered constrained-adaptive budget satisfies every frozen calibration selection requirement.",
+  "frozen_predecessors": {
+    "cg5_result_commit": "1c56bf2533aa164e40a0073c5bc4bdeb32083510",
+    "cg5_source_workflow_run": 31622647635,
+    "cg5_source_artifact_name": "context-graph-cg5-fresh-source",
+    "cg5_capsules_sha256": "ec623fa479f9514081d606daf93fa189e16591a233604ffab9427ebcd4c2d53b",
+    "cg7_result_commit": "2b502624cc3d948775fd21153158fb10ee3d7d21",
+    "cg7_source_workflow_run": 31625645587,
+    "cg7_source_artifact_name": "context-graph-cg7-fresh-source",
+    "cg7_capsules_sha256": "35f89d7f0559bb87b2aac9a82f4f28bc37d68ffeef986cde59f27ec887747f1b"
+  },
+  "society": {
+    "initial_roster_size": 8,
+    "turnover_count": 4,
+    "initial_probes_per_skill": 2,
+    "initial_skills_per_agent": 3,
+    "observation_noise_rate": 0.18,
+    "rumor_count": 2,
+    "min_confidence": 0.7,
+    "observer_noise_rate": 0.18,
+    "maximum_events_per_current_agent_skill": 6,
+    "current_agent_skill_cell_count": 48
+  },
+  "estimator": {
+    "name": "wilson80_min3",
+    "kind": "wilson_lower",
+    "z": 1.2815515655446004,
+    "minimum_independent_event_support": 3,
+    "fallback_score": 0.35
+  },
+  "missions": [
+    {"mission_id": "cg8-heat-water", "lead_skill": "urban_heat", "support_skill": "water_systems"},
+    {"mission_id": "cg8-energy-supply", "lead_skill": "energy_storage", "support_skill": "supply_networks"},
+    {"mission_id": "cg8-health-mobility", "lead_skill": "public_health", "support_skill": "mobility"},
+    {"mission_id": "cg8-water-health", "lead_skill": "water_systems", "support_skill": "public_health"},
+    {"mission_id": "cg8-energy-mobility", "lead_skill": "energy_storage", "support_skill": "mobility"},
+    {"mission_id": "cg8-supply-heat", "lead_skill": "supply_networks", "support_skill": "urban_heat"}
+  ],
+  "context": {
+    "claim_budget_cap": 48,
+    "retrieval": "Frozen CG-5 revised coverage graph with event reconciliation, Wilson conservative scores, and complete three-claim bundles.",
+    "flat_baseline": "Frozen CG-5 bundle-aware flat retrieval over the exact same acquired evidence and matched context budget."
+  },
+  "acquisition": {
+    "budget_candidates": [60, 72, 84, 96, 120],
+    "policies": ["coverage_constrained_decision", "uniform_round_robin"],
+    "coverage_constraint": "Let s(c) be supplemental events acquired for each of the 48 current-agent/skill cells. A cell may receive its next supplemental event only when s(c) equals the current minimum supplemental count across all 48 cells. Therefore max_c s(c) - min_c s(c) is always at most one. Every full 48-event tier is completed before any cell can enter the next tier.",
+    "coverage_constrained_decision": "Within the currently least-measured supplemental tier only, rank cells using the frozen CG-6 decision-adaptive priority computed from reconciled observed evidence: Wilson interval width, minimum-support deficit, current selected mission roles, and plausible challengers. Evaluator capability and oracle pairs are forbidden inputs.",
+    "decision_adaptive_weights": {
+      "selected_role_bonus": 2.0,
+      "plausible_challenger_bonus": 2.0,
+      "support_deficit_bonus": 0.35,
+      "ambiguity_margin": 0.05
+    },
+    "uniform_round_robin": "Frozen CG-7 comparator: repeatedly select the cell with the smallest reconciled total event count, with deterministic hashing for ties.",
+    "fixed_six_replay": "Acquire every remaining event required to reach six reconciled events in every current-agent/skill cell."
+  },
+  "evaluation": {
+    "cohorts": ["cg5", "cg7"],
+    "field_count": 30,
+    "decisions_per_policy": 180,
+    "primary_metric": "mean expected mission success under revised coverage retrieval",
+    "cost_metric": "mean supplemental probe events per Field",
+    "secondary_metrics": [
+      "mean regret",
+      "mean selected-role true gap",
+      "estimate-truth Pearson correlation",
+      "coverage-graph lift over cost-matched bundle-flat",
+      "positive Field graph-minus-flat count",
+      "lift over cost-matched uniform round-robin",
+      "maximum supplemental allocation imbalance",
+      "minimum supplemental events per cell"
+    ]
+  },
+  "selection_rule": {
+    "candidate_scope": "coverage_constrained_decision budgets only",
+    "complexity_order": [60, 72, 84, 96, 120],
+    "required_expected_success_retention_vs_fixed_six": 0.95,
+    "maximum_absolute_expected_success_loss_vs_fixed_six": 0.015,
+    "maximum_per_cohort_expected_success_loss_vs_fixed_six": 0.025,
+    "minimum_graph_lift_over_cost_matched_flat": 0.02,
+    "minimum_positive_field_graph_lift_count": 18,
+    "minimum_expected_success_lift_over_cost_matched_uniform": 0.0,
+    "maximum_selected_role_true_gap_increase_vs_fixed_six": 0.025,
+    "maximum_probe_cost_fraction_vs_fixed_six": 0.56,
+    "maximum_supplemental_allocation_imbalance": 1,
+    "minimum_supplemental_events_per_cell": 1,
+    "choice": "Choose the first constrained-adaptive budget in complexity_order satisfying every pooled and per-cohort requirement. If none qualifies, calibration selects no architecture and no fresh CG-8 confirmatory cohort may be generated."
+  },
+  "integrity": {
+    "historical_outcome_rows_consumed": 0,
+    "posthoc_imported_claims": 0,
+    "belief_updates_from_retrieval": 0,
+    "outcome_law_graph_inputs": 0,
+    "evaluator_truth_available_to_acquisition_policy": false
+  }
+}
