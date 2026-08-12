@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 from experiments.piano_society.phase1 import run_pair, score_records
 
 
