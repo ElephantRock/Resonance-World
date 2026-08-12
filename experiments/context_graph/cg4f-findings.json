@@ -1,0 +1,72 @@
+{
+  "version": "context-graph-cg4f-findings-v0.1",
+  "status": "exploratory-post-unblinding-complete",
+  "confirmatory_claim": false,
+  "source": {
+    "analysis_config_commit": "738e0b550712eda6077474abcefe57e1fe1bb922",
+    "workflow_run_id": 31617142393,
+    "workflow_head_sha": "68d183a86403b74f621654167f718fbec059eaf4",
+    "artifact_id": 9149707084,
+    "artifact_name": "context-graph-cg4f-failure-analysis",
+    "artifact_digest": "sha256:9a277b7f5d62e82fe2622df81c8c0eb03ead1d0db089bd21492ecb8b7b1c6caa"
+  },
+  "frozen_cg4": {
+    "preregistered_gate_commit": "58102fe4d317ac6aa0b52e015fda8a377e55f0d7",
+    "unblinding_commit": "297c28054fc2245d84f475359dd20b52416c3541",
+    "result_commit": "18b95b1ed91605e969d34c359af6af39512f8d9a",
+    "status": "failed-and-unchanged"
+  },
+  "evaluation_reproduction": {
+    "decisions": 12,
+    "original_graph_mean_expected_success": 0.2075594452035925,
+    "pooled_flat_mean_expected_success": 0.22265500296852034,
+    "graph_minus_flat_expected": -0.015095557764927816,
+    "graph_better_decisions": 4,
+    "flat_better_decisions": 6,
+    "ties": 2,
+    "pair_disagreements": 12
+  },
+  "hypothesis_results": {
+    "H1-single-observation-truncation": {
+      "support": "not-supported-as-primary-cause",
+      "evidence": "Event-deduplicated repeated-observation graph retrieval produced the same held-out selected pairs and the same mean expected success as the original graph at the 48-claim budget."
+    },
+    "H2-optimistic-missing-evidence-prior": {
+      "support": "not-supported-for-original-graph-failure",
+      "evidence": "All 24 original-graph selected roles had complete evidence. Replacing the original prior with Beta(1,2) produced the same held-out graph decisions and expected success."
+    },
+    "H3-context-budget-starvation": {
+      "support": "secondary-only",
+      "evidence": "Increasing the graph budget from 48 to 72 claims improved mean expected success from 0.20756 to 0.21368, but 72, 96 and 144 claims all remained below flat pooling. The gap never reversed."
+    },
+    "H4-live-signal-insufficiency": {
+      "support": "strongly-supported",
+      "evidence": "Using all eligible live evidence achieved only 0.22153 mean expected success, or 0.22346 with a skeptical prior, versus the 0.41421 oracle. Evidence estimates had weak evaluator alignment: Pearson 0.18673 for the original graph and 0.27409 even with full evidence across held-out candidate/skill cells."
+    }
+  },
+  "mechanism": {
+    "primary": "single-positive-probe winner's curse over a weak endogenous capability proxy",
+    "details": [
+      "All 24 original-graph selected held-out roles were selected from exactly one observed successful probe bundle.",
+      "Those roles all received the same evidence estimate, 0.6610169491525423, despite a mean true role probability of only 0.4631872430677794.",
+      "The best available role for the same decision/skill averaged 0.6504360402283462 true probability, leaving a mean selected-role gap of 0.18724879716056683.",
+      "Full live evidence raised estimate/true correlation only to 0.274092445803995 and retained a large role-quality gap, indicating that retrieval alone cannot repair the measurement problem.",
+      "Participant and scout reports can create multiple observer bundles for one underlying probe event; the current estimator counts complete observer bundles independently, so future reconciliation should aggregate at event identity before updating capability estimates."
+    ]
+  },
+  "flat_baseline_diagnostic": {
+    "finding": "The CG-4 pooled-flat context contained zero complete live observation bundles at the 48-claim budget in every held-out decision.",
+    "consequence": "Because the selector only consumes complete event/participant/skill/outcome bundles, the flat arm did not use live skill-outcome evidence at that budget and effectively selected from its deterministic no-evidence tie rule after membership filtering.",
+    "interpretation": "The flat arm remains a matched-claim control for CG-4, but it should not be described as a strong evidence-using flat/RAG baseline. A future confirmatory experiment needs a bundle-aware flat baseline."
+  },
+  "design_requirements_for_next_confirmatory_experiment": [
+    "Use a new untouched cohort; Fields 726/847/968 are permanently exploratory after CG-4 unblinding.",
+    "Reconcile duplicate observers at event identity before capability estimation.",
+    "Require more than a single positive probe before a candidate can receive a high capability rank, or use explicit uncertainty-aware shrinkage/credible bounds.",
+    "Increase or redesign endogenous capability observations so their held-out alignment with evaluator role probability is materially stronger before testing graph retrieval advantage.",
+    "Use a bundle-aware flat baseline that retrieves complete evidence units under the same claim/token budget.",
+    "Keep original CG-4 graph as a historical control, plus revised graph, shuffled graph, bundle-aware flat, local-only and oracle.",
+    "Retain zero belief contamination and zero graph input to the environment outcome law."
+  ],
+  "interpretation_boundary": "These findings are exploratory mechanism diagnosis on already-unblinded societies. They explain CG-4 and constrain the next design; they do not convert CG-4 into a pass or establish a new confirmatory effect."
+}
