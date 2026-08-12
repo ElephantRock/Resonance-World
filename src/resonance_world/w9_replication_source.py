@@ -7,7 +7,8 @@ import hashlib
 import json
 import shutil
 from pathlib import Path
-from typing import Any, Mapping, Sequence
+from typing import Any
+from collections.abc import Mapping, Sequence
 
 NORMALIZATION_VERSION = "w9-07-semantic-public-provenance-v0.1"
 _PROVENANCE_FIELDS = frozenset({"checkpoint_id", "source_evidence_sha256"})
