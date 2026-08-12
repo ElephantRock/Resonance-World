@@ -1,0 +1,83 @@
+{
+  "version": "context-graph-cg4m-measurement-sufficiency-v0.1",
+  "status": "exploratory-post-unblinding-before-execution",
+  "confirmatory_claim": false,
+  "objective": "Determine when endogenous live capability evidence becomes sufficiently reliable to justify graph-conditioned partner selection, while preserving the frozen CG-4 society, turnover roster, belief boundary, and environment outcome law.",
+  "scientific_boundary": "CG-4M is exploratory on already-unblinded CG-4 societies. The original CG-4 fields are rebuilt unchanged first; supplemental probes are appended only after turnover, so turnover membership and hidden capability state remain fixed. Private capsule practice is used only to generate new live probe outcomes and evaluator diagnostics. No historical W3 outcome/task/bid/pair-edge evidence is imported, retrieval never mutates beliefs, and JointEnvironment receives no graph input.",
+  "frozen_inputs": {
+    "cg4_config": "experiments/context_graph/cg4-w3-endogenous.json",
+    "cg4_result": "experiments/context_graph/cg4-w3-endogenous-result.json",
+    "cg4f_findings": "experiments/context_graph/cg4f-findings.json",
+    "cg4_preregistered_gate_commit": "58102fe4d317ac6aa0b52e015fda8a377e55f0d7",
+    "cg4_result_commit": "18b95b1ed91605e969d34c359af6af39512f8d9a",
+    "cg4f_findings_commit": "5212285732b514e18e06bd52f9c42f90549c3f33"
+  },
+  "hypotheses": [
+    "Event-identity reconciliation prevents duplicate observers from masquerading as independent capability trials.",
+    "A minimum independent-event support requirement removes the single-positive-probe winner's curse identified by CG-4F.",
+    "Increasing independent post-turnover probe depth improves evidence-estimate alignment with evaluator role probability and reduces selected-role regret.",
+    "A bundle-aware flat baseline that retrieves complete evidence units is stronger and more interpretable than the original fragmented pooled-flat control.",
+    "Topology-aware retrieval should be evaluated only after the measurement layer reaches a sufficient signal regime."
+  ],
+  "measurement": {
+    "target_independent_events_per_current_agent_skill": [0, 2, 3, 4, 6],
+    "target_zero_semantics": "Use the original CG-4 live evidence unchanged; append no supplemental probes.",
+    "supplemental_probe_scope": "Current post-turnover members only; append deterministic independent probe events until every current agent/skill cell reaches the target event count.",
+    "supplemental_observer_policy": {
+      "participant_confidence": 0.95,
+      "scout_confidence": 0.85,
+      "noisy_scout_confidence": 0.45,
+      "scout_noise_rate": 0.18
+    },
+    "event_reconciliation": "For each event identity, keep one canonical complete participant/skill/outcome bundle: highest minimum claim confidence, then latest observed_at, then observer id. Count the canonical event once regardless of observer duplicates.",
+    "estimators": [
+      {"name": "posterior_mean_min1", "kind": "posterior_mean", "alpha": 1.0, "beta": 1.0, "min_support": 1, "fallback_score": 0.5},
+      {"name": "posterior_mean_min2", "kind": "posterior_mean", "alpha": 1.0, "beta": 1.0, "min_support": 2, "fallback_score": 0.35},
+      {"name": "posterior_mean_min3", "kind": "posterior_mean", "alpha": 1.0, "beta": 1.0, "min_support": 3, "fallback_score": 0.35},
+      {"name": "wilson80_min2", "kind": "wilson_lower", "z": 1.2815515655446004, "min_support": 2, "fallback_score": 0.35},
+      {"name": "wilson80_min3", "kind": "wilson_lower", "z": 1.2815515655446004, "min_support": 3, "fallback_score": 0.35}
+    ]
+  },
+  "retrieval": {
+    "context_budgets_claims": [48, 72, 96],
+    "arms": ["bundle_flat", "coverage_graph", "hybrid_graph"],
+    "bundle_flat": "Resolve current membership, then retrieve complete canonical event bundles matching either required skill in deterministic hash order. It may use entity/skill filters but no candidate-skill coverage allocation or evidence-score ranking.",
+    "coverage_graph": "Resolve current membership, estimate candidate-skill support from the reconciled graph, rank cells by conservative evidence score, and retrieve enough complete supporting bundles for top cells while balancing lead/support roles.",
+    "hybrid_graph": "Allocate two thirds of the remaining post-membership budget to coverage_graph supporting bundles and fill the residual budget with bundle_flat complete bundles not already selected.",
+    "matched_budget_rule": "All non-oracle retrieval arms use the same claim budget. Membership is represented by the latest admissible registry claim per current member; live evidence is included only as complete three-claim canonical event bundles."
+  },
+  "architecture_selection_rule": {
+    "status": "exploratory-design-selection-not-confirmatory",
+    "measurement_candidates_in_complexity_order": [
+      "target2+posterior_mean_min2",
+      "target3+posterior_mean_min2",
+      "target3+wilson80_min2",
+      "target4+posterior_mean_min2",
+      "target4+wilson80_min2",
+      "target4+wilson80_min3",
+      "target6+wilson80_min3"
+    ],
+    "measurement_requirements": [
+      "selected_single_success_rate <= 0.10 on both calibration and evaluation",
+      "mean selected-role true gap improves by at least 0.03 versus target0+posterior_mean_min1 on both splits",
+      "mean pair expected success improves by at least 0.02 versus target0+posterior_mean_min1 on both splits"
+    ],
+    "retrieval_requirement": "At the smallest tested claim budget where usable, the revised graph or hybrid must not underperform bundle_flat in mean expected success on either split. If no variant satisfies this, freeze no CG-5 architecture and report measurement/retrieval insufficiency instead.",
+    "anti_overfit_rule": "Choose the first complexity-ordered measurement candidate satisfying all requirements; do not choose the numerically best unblinded configuration. Prefer the smallest qualifying context budget and coverage_graph over hybrid_graph when performance is tied within 0.005."
+  },
+  "outputs": [
+    "measurement_matrix",
+    "per_field_measurement_metrics",
+    "retrieval_matrix",
+    "bundle_completeness",
+    "event_duplicate_collapse_counts",
+    "added_probe_event_cost",
+    "estimate_truth_pearson",
+    "selected_single_success_rate",
+    "selected_role_true_gap",
+    "mean_expected_success",
+    "mean_regret",
+    "oracle_gap",
+    "architecture_selection"
+  ]
+}
