@@ -3,7 +3,12 @@ from pathlib import Path
 
 import pytest
 
-from experiments.piano_society.phase3 import _board_digest, analyze, materialize_roles, validate_config
+from experiments.piano_society.phase3 import (
+    _board_digest,
+    analyze,
+    materialize_roles,
+    validate_config,
+)
 
 
 def _config() -> dict[str, object]:
@@ -136,8 +141,10 @@ def test_phase3_mechanical_social_analysis_can_pass_registered_gate() -> None:
     assert delta["joint_case_completion_rate"] == 1.0
     assert delta["cross_channel_contradiction_rate"] == -1.0
     assert delta["outcome_report_mismatch_rate"] == 0.0
-    assert result["primary_exact_sign_tests"]["dyad_failure_rate"]["p_value_two_sided"] < 0.05
-    assert result["primary_exact_sign_tests"]["agent_role_failure_rate"]["p_value_two_sided"] < 0.05
+    dyad_test = result["primary_exact_sign_tests"]["dyad_failure_rate"]
+    agent_test = result["primary_exact_sign_tests"]["agent_role_failure_rate"]
+    assert dyad_test["p_value_two_sided"] < 0.05
+    assert agent_test["p_value_two_sided"] < 0.05
     assert result["advance_to_phase4_institutions"] is True
 
 
