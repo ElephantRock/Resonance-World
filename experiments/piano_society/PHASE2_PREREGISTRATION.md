@@ -1,6 +1,6 @@
 # Phase 2 preregistration — one-agent model-backed PIANO experiment
 
-Status: **locked as preregistration revision `zai-coding-glm5.2-v2`**
+Status: **locked as preregistration revision `zai-coding-glm5.2-v3`**
 
 ## Question
 
@@ -8,11 +8,13 @@ Does a shared controller intention plus grounded execution acknowledgement causa
 
 ## Revision history and provider lock
 
-The original OpenAI lock never reached inference because the required repository credential was absent. Revision `zai-v1` then targeted Z.AI's general API with `glm-4-32b-0414-128k`; live attempts reached Z.AI but failed with provider error 1113 before a complete campaign could be produced. An isolated probe of that older model on the Coding Plan endpoint also failed with 1113.
+The original OpenAI lock never reached inference because its repository credential was absent. Revision `zai-v1` targeted Z.AI's general API with `glm-4-32b-0414-128k`; attempts reached Z.AI but failed with provider error 1113 before a complete campaign was produced. Revision `zai-coding-glm5.2-v2` moved to the Coding Plan endpoint and `glm-5.2` after successful non-scientific transport and exact-request-shape probes.
 
-Before this v2 campaign was locked, non-scientific connectivity probes established that `glm-5.2` is accepted by the Coding Plan Chat Completions endpoint. A second probe used the exact Phase-2 structured request shape with thinking disabled, sampling disabled, zero temperature, 128 maximum output tokens, and JSON-object mode; that probe also succeeded. Those probes tested transport and output-contract compatibility only and are not experiment observations.
+Two complete v2 campaign attempts were invalidated by the same harness defect: a provider response exceeded the 60-second socket read timeout and Python raised `TimeoutError`, which the v2 backend did not retry. The failures occurred at different cognitive stages. Neither attempt produced a complete 60-pair artifact or a World statistical result, and no partial campaign output was used for scientific interpretation.
 
-Frozen provider details for `zai-coding-glm5.2-v2`:
+Revision `zai-coding-glm5.2-v3` changes only transport fault handling: a socket `TimeoutError` is retried under the same bounded retry policy already used for retryable HTTP/URL transport failures. The cognitive intervention, model, endpoint, request body, thinking/sampling mode, timeout duration, concurrency, scenarios, prompts, pair identifiers, call budget, metrics, tests, and advancement thresholds are unchanged from v2.
+
+Frozen provider and transport details for v3:
 
 - provider: Z.AI
 - API surface: Coding Plan OpenAI-compatible Chat Completions
@@ -23,13 +25,15 @@ Frozen provider details for `zai-coding-glm5.2-v2`:
 - sampling: `do_sample=false`
 - temperature: `0.0`
 - structured output: provider `json_object` mode plus Field-side exact stage-contract validation
-- provider RNG seed: not used because the documented Chat Completions contract does not expose a seed parameter
-- the 20 preregistered numeric seeds remain immutable pair identifiers and determine only episode identity and counterbalanced arm order
-- Field revision: `79fb6231352aa207e67210eff794030b628f8b23`
+- provider RNG seed: not used; the 20 numeric seeds are immutable pair identifiers only
+- per-attempt socket timeout: 60 seconds
+- maximum transport attempts per logical model call: 4
+- socket timeout retry: enabled
+- pair concurrency: 6 workers
+- within-pair arm order: counterbalanced by pair-identifier parity
+- Field revision: `d9fb7400c499feb78da11fb333e326b9563bf4ea`
 
-Z.AI exposes `glm-5.2` as a provider model identifier rather than a dated immutable snapshot. The campaign fails closed if the API returns a different identifier, but it cannot detect a silent provider-side weight change behind the same identifier. This reproducibility limitation is accepted and recorded before the v2 scientific campaign.
-
-The scenarios, cognitive prompts, action vocabulary, four-call budget, sample size, primary/secondary metrics, statistical tests, exclusion rules, and advancement thresholds are unchanged from the original preregistration.
+Z.AI exposes `glm-5.2` as a provider model identifier rather than a dated immutable snapshot. The campaign fails closed if the API returns a different identifier, but it cannot detect a silent provider-side weight change behind the same identifier. This reproducibility limitation is accepted and recorded before the v3 scientific campaign.
 
 ## Hypotheses
 
@@ -39,12 +43,14 @@ The scenarios, cognitive prompts, action vocabulary, four-call budget, sample si
 
 ## Causal intervention
 
-Each arm uses exactly four model calls per step:
+Each arm uses exactly four logical model calls per step:
 
 1. intention
 2. speech
 3. action
 4. post-action report
+
+A bounded transport retry is an attempt to complete the same logical call and does not add a cognitive stage.
 
 Both arms receive the same observation, retrieval state, model identifier, frozen action vocabulary, maximum output-token budget, and pair identifier.
 
@@ -64,7 +70,7 @@ No other prompt-flow difference is permitted in the registered implementation.
 
 ## Sample
 
-One agent per episode. There are 60 paired episode keys: 20 fixed pair identifiers crossed with three scenarios. Each key produces one control episode and one treatment episode, for 120 total agent episodes and 480 provider model calls.
+One agent per episode. There are 60 paired episode keys: 20 fixed pair identifiers crossed with three scenarios. Each key produces one control episode and one treatment episode, for 120 total agent episodes and 480 logical provider calls before any transport retries.
 
 ### substrate-observe
 
@@ -90,7 +96,7 @@ Expected action: `SLEEP`
 
 Expected outcome: `succeeded`
 
-The exact triggers, pair identifiers, action vocabulary, Field revision, model identifier, call budget, provider settings, and advancement thresholds are frozen in `phase2_config.json`.
+The exact triggers, pair identifiers, action vocabulary, Field revision, model identifier, call budget, provider settings, transport settings, and advancement thresholds are frozen in `phase2_config.json`.
 
 ## Blinding rule
 
@@ -136,11 +142,12 @@ A record or campaign is invalid rather than selectively excludable when any of t
 - returned model identifier differs from `glm-5.2`;
 - wrong scenario target;
 - wrong pair identifier;
-- call count other than four;
+- logical call count other than four;
 - missing structured speech/action/intention labels;
 - provider JSON that violates the frozen stage contract;
 - unsupported schema;
-- duplicate or missing pair.
+- duplicate or missing pair;
+- transport failure after all four registered attempts.
 
 There is no discretionary post-hoc exclusion rule. An invalid campaign is rerun from the frozen configuration rather than selectively cleaned.
 
@@ -153,11 +160,11 @@ For each primary binary error outcome, also compute an exact two-sided sign test
 The campaign is eligible for scientific interpretation only if:
 
 - `campaign_locked` is `true`;
-- `preregistration_revision` is `zai-coding-glm5.2-v2`;
+- `preregistration_revision` is `zai-coding-glm5.2-v3`;
 - `required_model_snapshot` is exactly `glm-5.2`;
 - all 60 pairs are present and valid;
-- every record uses Field revision `79fb6231352aa207e67210eff794030b628f8b23` and model identifier `glm-5.2`;
-- every record uses exactly four model calls.
+- every record uses Field revision `d9fb7400c499feb78da11fb333e326b9563bf4ea` and model identifier `glm-5.2`;
+- every record uses exactly four logical model calls.
 
 ## Advancement gate
 
@@ -172,4 +179,4 @@ Failure to pass is evidence to revise the one-agent architecture before adding s
 
 ## Locking rule
 
-Revision `zai-coding-glm5.2-v2` was committed after transport-only probes but before any v2 model-backed campaign observation. Any change to model identifier, provider endpoint, thinking/sampling mode, temperature, cognitive prompts, scenarios, pair identifiers, action vocabulary, Field revision, call budget, metrics, statistical tests, or advancement thresholds after the v2 scientific campaign begins creates a new experiment revision rather than modifying this one.
+Revision `zai-coding-glm5.2-v3` was committed after the two invalid v2 executions and before any v3 model-backed campaign observation. Any change to model identifier, provider endpoint, thinking/sampling mode, temperature, cognitive prompts, scenarios, pair identifiers, action vocabulary, Field revision, call budget, transport policy, metrics, statistical tests, or advancement thresholds after the v3 scientific campaign begins creates a new experiment revision rather than modifying this one.
