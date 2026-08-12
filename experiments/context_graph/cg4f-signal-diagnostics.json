@@ -1,0 +1,78 @@
+{
+  "calibration": {
+    "full_evidence": {
+      "best_available_role_mean_true_probability": 0.6465013480087235,
+      "candidate_skill_cells": 240,
+      "estimate_truth_pearson_all_cells": 0.3034904305607578,
+      "estimate_truth_pearson_observed_cells": 0.38771896938739586,
+      "observed_candidate_skill_cells": 147,
+      "selected_role_mean_bundle_count": 3.2666666666666666,
+      "selected_role_mean_estimate": 0.6921112755489909,
+      "selected_role_mean_true_gap": 0.132830239350177,
+      "selected_role_mean_true_probability": 0.5136711086585465,
+      "selected_role_mean_unique_events": 1.9333333333333333,
+      "selected_roles": 30,
+      "selected_single_success_rate": 0.0,
+      "selected_single_success_roles": 0,
+      "selected_zero_evidence_roles": 5
+    },
+    "original_graph": {
+      "best_available_role_mean_true_probability": 0.6465013480087235,
+      "candidate_skill_cells": 240,
+      "estimate_truth_pearson_all_cells": 0.22894523350303242,
+      "estimate_truth_pearson_observed_cells": 0.30009804834956866,
+      "observed_candidate_skill_cells": 140,
+      "selected_role_mean_bundle_count": 0.9333333333333333,
+      "selected_role_mean_estimate": 0.6502824858757061,
+      "selected_role_mean_true_gap": 0.11607432393079736,
+      "selected_role_mean_true_probability": 0.5304270240779262,
+      "selected_role_mean_unique_events": 0.9333333333333333,
+      "selected_roles": 30,
+      "selected_single_success_rate": 0.9333333333333333,
+      "selected_single_success_roles": 28,
+      "selected_zero_evidence_roles": 2
+    },
+    "pooled_flat_complete_bundle_mean": 0.0,
+    "pooled_flat_selected_zero_evidence_roles": 30
+  },
+  "confirmatory_claim": false,
+  "evaluation": {
+    "full_evidence": {
+      "best_available_role_mean_true_probability": 0.6504360402283462,
+      "candidate_skill_cells": 192,
+      "estimate_truth_pearson_all_cells": 0.274092445803995,
+      "estimate_truth_pearson_observed_cells": 0.30615158793163233,
+      "observed_candidate_skill_cells": 123,
+      "selected_role_mean_bundle_count": 3.125,
+      "selected_role_mean_estimate": 0.6909828722965395,
+      "selected_role_mean_true_gap": 0.1837912702119969,
+      "selected_role_mean_true_probability": 0.46664477001634935,
+      "selected_role_mean_unique_events": 1.75,
+      "selected_roles": 24,
+      "selected_single_success_rate": 0.0,
+      "selected_single_success_roles": 0,
+      "selected_zero_evidence_roles": 3
+    },
+    "original_graph": {
+      "best_available_role_mean_true_probability": 0.6504360402283462,
+      "candidate_skill_cells": 192,
+      "estimate_truth_pearson_all_cells": 0.186731927986752,
+      "estimate_truth_pearson_observed_cells": 0.21875537676146992,
+      "observed_candidate_skill_cells": 116,
+      "selected_role_mean_bundle_count": 1.0,
+      "selected_role_mean_estimate": 0.6610169491525423,
+      "selected_role_mean_true_gap": 0.18724879716056683,
+      "selected_role_mean_true_probability": 0.4631872430677794,
+      "selected_role_mean_unique_events": 1.0,
+      "selected_roles": 24,
+      "selected_single_success_rate": 1.0,
+      "selected_single_success_roles": 24,
+      "selected_zero_evidence_roles": 0
+    },
+    "pooled_flat_complete_bundle_mean": 0.0,
+    "pooled_flat_selected_zero_evidence_roles": 24
+  },
+  "interpretation_boundary": "Private capsule practice is used only to compute aggregate evaluator diagnostics against the unchanged JointEnvironment role-probability law. No individual hidden practice values or per-agent evaluator capability records are emitted.",
+  "status": "exploratory-post-unblinding-evaluator-only",
+  "version": "context-graph-cg4f-signal-diagnostics-v0.1"
+}
