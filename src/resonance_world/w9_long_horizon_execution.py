@@ -11,7 +11,7 @@ from . import w8_campaign as w8
 from . import w9_long_horizon as base
 from .w9_integrated import _phase_seeds, _read_json, _write_json
 
-RESULT_VERSION = "w9-06-long-horizon-result-v0.5"
+RESULT_VERSION = "w9-06-long-horizon-result-v0.6"
 
 
 def _recompute_efficiencies(value: dict[str, Any]) -> None:
@@ -35,30 +35,63 @@ def _recompute_efficiencies(value: dict[str, Any]) -> None:
     )
 
 
+def _selected_benchmark_stock_slots(
+    arm: Mapping[str, Any], config: Mapping[str, Any]
+) -> int:
+    horizon = int(config["long_horizon"]["cycles"])
+    width = len(config["benchmark_missions"])
+    if width <= 0:
+        return 0
+    series = list(arm["stock_series"])
+    if len(series) != horizon:
+        raise ValueError("W9-06 selected stock series must contain one row per cycle")
+    organization_calls = sum(
+        int(row["external_agent_count"]) >= width for row in series
+    )
+    return width * (1 + 2 * horizon + organization_calls)
+
+
+def _w8_benchmark_stock_slots(config: Mapping[str, Any], *, field_count: int) -> int:
+    horizon = int(config["long_horizon"]["cycles"])
+    width = len(config["benchmark_missions"])
+    if width <= 0:
+        return 0
+    max_external = int(config["integrated_charter"]["reserve_cap"]) * field_count
+    if max_external >= width:
+        raise ValueError(
+            "W9-06 W8 benchmark accounting requires exact organization-accessible counts "
+            "when reserve capacity can reach benchmark width"
+        )
+    return width * (1 + 2 * horizon)
+
+
 def _correct_selected_compute(
     arm: Mapping[str, Any],
     config: Mapping[str, Any],
     *,
     field_count: int,
 ) -> dict[str, Any]:
-    """Count the two source diagnostic frontier blocks omitted by the base formula."""
+    """Count source diagnostic trials and deterministic benchmark mission slots."""
 
     value = json.loads(json.dumps(arm))
     horizon = int(config["long_horizon"]["cycles"])
     trials = int(config["service_trials"])
     source_diagnostic_compute = float(2 * horizon * field_count * trials)
+    benchmark_stock_compute = float(_selected_benchmark_stock_slots(value, config))
+    total_added = source_diagnostic_compute + benchmark_stock_compute
 
     compute = value["compute"]
     compute["source_diagnostic_mission_execution_compute"] = source_diagnostic_compute
+    compute["benchmark_stock_mission_execution_compute"] = benchmark_stock_compute
     compute["mission_execution_compute"] = (
-        float(compute["mission_execution_compute"]) + source_diagnostic_compute
+        float(compute["mission_execution_compute"]) + total_added
     )
     compute["incremental_total_measured_compute"] = (
-        float(compute["incremental_total_measured_compute"]) + source_diagnostic_compute
+        float(compute["incremental_total_measured_compute"]) + total_added
     )
     compute["final_total_measured_compute_including_cycle0_embodied"] = (
         float(compute["final_total_measured_compute_including_cycle0_embodied"])
-        + source_diagnostic_compute
+        + total_added
     )
     _recompute_efficiencies(value)
     return value
@@ -78,6 +111,7 @@ def _correct_w8_compute(
     trials = int(config["service_trials"])
     coalition_mission_compute = float(3 * horizon * trials)
     source_diagnostic_compute = float((horizon + 1) * field_count * trials)
+    benchmark_stock_compute = float(_w8_benchmark_stock_slots(config, field_count=field_count))
     standalone_coordination_compute = float(2 * horizon)
     withholding_cycles = {
         int(cycle)
@@ -90,6 +124,7 @@ def _correct_w8_compute(
     total_added = (
         coalition_mission_compute
         + source_diagnostic_compute
+        + benchmark_stock_compute
         + standalone_coordination_compute
         + withholding_substitution_compute
         + budget_update_compute
@@ -99,6 +134,7 @@ def _correct_w8_compute(
     compute = value["compute"]
     compute["coalition_mission_execution_compute"] = coalition_mission_compute
     compute["source_diagnostic_mission_execution_compute"] = source_diagnostic_compute
+    compute["benchmark_stock_mission_execution_compute"] = benchmark_stock_compute
     compute["standalone_comparator_pair_selection_compute"] = (
         standalone_coordination_compute
     )
@@ -113,6 +149,7 @@ def _correct_w8_compute(
         float(compute["mission_execution_compute"])
         + coalition_mission_compute
         + source_diagnostic_compute
+        + benchmark_stock_compute
     )
     compute["organization_coordination_compute"] = (
         float(compute["organization_coordination_compute"])
@@ -200,6 +237,7 @@ def run_w9_06_execution(
         for cycle in merged["long_horizon"]["stress_schedule"]["withholding_cycles"]
         if 0 <= int(cycle) < horizon
     }
+    benchmark_width = len(merged["benchmark_missions"])
     result["version"] = RESULT_VERSION
     result["accounting_corrections"] = {
         "selected_source_frontier_diagnostics": {
@@ -209,6 +247,12 @@ def run_w9_06_execution(
             "trials_per_block": trials,
             "mission_execution_compute_added": float(
                 2 * horizon * field_count * trials
+            ),
+        },
+        "selected_benchmark_stock_assays": {
+            "benchmark_mission_count": benchmark_width,
+            "mission_execution_compute_added": float(
+                selected["compute"]["benchmark_stock_mission_execution_compute"]
             ),
         },
         "w8_coalition_mission_execution": {
@@ -224,6 +268,14 @@ def run_w9_06_execution(
             "trials_per_block": trials,
             "mission_execution_compute_added": float(
                 (horizon + 1) * field_count * trials
+            ),
+        },
+        "w8_benchmark_stock_assays": {
+            "benchmark_mission_count": benchmark_width,
+            "mission_execution_compute_added": float(
+                result["arms"]["W8_neutral_full_regulatory_charter"]["compute"][
+                    "benchmark_stock_mission_execution_compute"
+                ]
             ),
         },
         "w8_standalone_comparator_pair_selection": {
