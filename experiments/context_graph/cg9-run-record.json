@@ -1,0 +1,104 @@
+{
+  "version": "context-graph-cg9-run-record-v0.1",
+  "scientific_status": "failed-two-preregistered-primary-gates",
+  "protocol_freeze_commit": "444eaf4d764e6d1aa5b52aba707d3b64ff6581eb",
+  "evaluator_freeze_commit": "4671f46f9ae2039872b5d0e81135a132ead05a3a",
+  "preflight_workflow_commit": "fd2e8c2839b84ddc9cc6342853448b2e1d7c4e50",
+  "preflight_run_id": 31629576524,
+  "preflight_status": "success-before-fresh-generation",
+  "fresh_confirmatory_run": {
+    "workflow_run_id": 31629717950,
+    "workflow_head_sha": "d5f4dbcf63804cfa402a7eaf60969a4271f8fa00",
+    "preflight": "success",
+    "fresh_source_job": "success",
+    "frozen_evaluator_execution": "success",
+    "machine_result_integrity": "success",
+    "gate_enforcement": "scientific-failure",
+    "failed_gates": [
+      "bootstrap_noninferiority_ci_lower_min",
+      "uniform60_estimate_truth_pearson_min"
+    ],
+    "passed_gate_count": 25,
+    "total_gate_count": 27
+  },
+  "fresh_source_artifact": {
+    "id": 9154661686,
+    "name": "context-graph-cg9-fresh-source",
+    "zip_digest": "sha256:cffef96e0799bcdb2aaccd513203f79146dd1e35f0b0fb3206dd6c4000eb8457",
+    "capsules_sha256": "c19daddd342b65ff2dc61e0ae4ac500780f43574ae117b4fc7b8855c62fcfb55",
+    "field_count": 24,
+    "agent_count": 288,
+    "pair_edge_count": 1584
+  },
+  "result_artifact": {
+    "id": 9154680636,
+    "name": "context-graph-cg9-result",
+    "zip_digest": "sha256:4139ee517db3bf0f28f443f8cfb573bf665951c449b74b714c28c071a50a3f4b",
+    "json_sha256": "459e21ce6895f3a46e85a285949f6fba8fb40df82d7ec4247abf06a1395fdcd9"
+  },
+  "result_file": "experiments/context_graph/cg9-w3-balanced-frontier-result.json",
+  "result_commit": "ee5f4df1d06cb426db3a7819bedc7f0eef7bb62d",
+  "primary_result": {
+    "budget": 60,
+    "uniform60_expected_success": 0.25298462256374227,
+    "uniform60_realized_success": 0.2538655598958333,
+    "fixed6_expected_success": 0.2665795176732897,
+    "fixed6_realized_success": 0.2658284505208333,
+    "expected_difference_uniform60_minus_fixed6": -0.013594895109547422,
+    "realized_difference_uniform60_minus_fixed6": -0.011962890625,
+    "noninferiority_margin": -0.015,
+    "field_clustered_95_ci": [-0.02949133828825144, 0.002415045241356759],
+    "noninferiority_confirmed": false,
+    "uniform60_estimate_truth_pearson": 0.27818110319263045,
+    "estimate_truth_pearson_gate": 0.30,
+    "uniform60_probe_cost_fraction_vs_fixed6": 0.2777777777777778,
+    "uniform60_probe_cost_reduction_vs_fixed6": 0.7222222222222222
+  },
+  "topology_result": {
+    "uniform60_graph_expected_success": 0.25298462256374227,
+    "uniform60_flat_expected_success": 0.22699312778636094,
+    "graph_minus_flat": 0.02599149477738133,
+    "field_clustered_95_ci": [0.009083231726423965, 0.04414038817708705],
+    "positive_fields": 16,
+    "uniform60_shuffled_expected_success": 0.21475803501331298,
+    "graph_minus_shuffled": 0.03822658755042929,
+    "uniform60_passive_expected_success": 0.2300023187878846,
+    "graph_minus_passive": 0.022982303775857665
+  },
+  "descriptive_frontier_not_confirmatory": {
+    "48": {
+      "expected_success": 0.2445798993307927,
+      "difference_vs_fixed6": -0.021999618342497
+    },
+    "60": {
+      "expected_success": 0.25298462256374227,
+      "difference_vs_fixed6": -0.013594895109547422
+    },
+    "72": {
+      "expected_success": 0.27474952917469103,
+      "difference_vs_fixed6": 0.008170011501401342
+    },
+    "96": {
+      "expected_success": 0.2713416484769373,
+      "difference_vs_fixed6": 0.004762130803647624
+    },
+    "120": {
+      "expected_success": 0.2726665189958054,
+      "difference_vs_fixed6": 0.006087001322515717
+    },
+    "boundary": "The 48/72/96/120 arms were frozen descriptive frontier points. Their outcomes do not enter the CG-9 primary pass/fail decision and cannot rescue the failed 60-event claim."
+  },
+  "integrity": {
+    "fresh_seed_overlap_with_prior": 0,
+    "belief_contamination": 0,
+    "historical_outcome_rows_consumed": 0,
+    "posthoc_imported_claims": 0,
+    "supplemental_probe_roster_changes": 0,
+    "outcome_law_graph_inputs": 0,
+    "acquisition_evaluator_truth_inputs": 0,
+    "matched_context_claims": true,
+    "matched_complete_bundle_counts": true,
+    "frontier_nested_event_sets": true
+  },
+  "interpretation_boundary": "CG-9 does not confirm that 60 balanced supplemental probes are non-inferior to fixed-six at the preregistered 1.5 percentage-point margin, despite favorable point-loss, cost, and topology gates. The independent capability proxy at 60 probes also missed its frozen correlation gate. The descriptive frontier suggests a threshold or phase change between 60 and 72 probes on this cohort, but that observation is post-unblinding and requires separate analysis before any new confirmatory protocol."
+}
