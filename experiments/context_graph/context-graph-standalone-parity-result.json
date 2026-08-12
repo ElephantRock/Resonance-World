@@ -37,7 +37,7 @@
     "passed": true,
     "supplemental_probe_events": 3240
   },
-  "contextgraph_commit": "55ce7bb435b3d4a1ff888474a5ca76ccff843150",
+  "contextgraph_commit": "b896891108fd954869a8cd0423f6e8440ab0cdc0",
   "passed": true,
   "retirement_gate": {
     "frozen_experiment_records_must_remain": true,
