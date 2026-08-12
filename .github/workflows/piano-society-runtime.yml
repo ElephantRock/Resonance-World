@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 env:
-  PIANO_FIELD_SHA: bff92d11b4c62c3e6b950696d5fd5ebf7ad2caa5
+  PIANO_FIELD_SHA: 5fd619d9b2170b4344b6872798db4f09fc35924b
 
 jobs:
   phase-zero:
@@ -86,7 +86,7 @@ jobs:
           value = json.loads(Path('output/piano_society/phase1/result.json').read_text())
           assert value['phase'] == 'live-contract-smoke'
           assert value['scientific_claim_allowed'] is False
-          assert value['field_revision'] == 'bff92d11b4c62c3e6b950696d5fd5ebf7ad2caa5'
+          assert value['field_revision'] == '5fd619d9b2170b4344b6872798db4f09fc35924b'
           PY
       - uses: actions/upload-artifact@v4
         with:
@@ -116,9 +116,9 @@ jobs:
           pytest -q tests/test_piano_society_phase2.py
           python - <<'PY'
           from resonance.experiments.piano_phase2 import Phase2ExperimentAgent
-          from resonance.experiments.piano_phase2_openai import OpenAIChatCompletionsBackend
+          from resonance.experiments.piano_phase2_zai import ZAIChatCompletionsBackend
           assert Phase2ExperimentAgent is not None
-          assert OpenAIChatCompletionsBackend is not None
+          assert ZAIChatCompletionsBackend is not None
           PY
       - name: Validate locked preregistration
         run: |
@@ -133,9 +133,9 @@ jobs:
               Path('output/piano_society/phase2/preregistration.json').read_text()
           )
           assert value['campaign_locked'] is True
-          assert value['model_snapshot'] == 'gpt-4.1-mini-2025-04-14'
+          assert value['model_snapshot'] == 'glm-4-32b-0414-128k'
           assert value['required_pairs'] == 60
-          assert value['field_revision'] == 'bff92d11b4c62c3e6b950696d5fd5ebf7ad2caa5'
+          assert value['field_revision'] == '5fd619d9b2170b4344b6872798db4f09fc35924b'
           PY
           cp experiments/piano_society/phase2_config.json output/piano_society/phase2/
           cp experiments/piano_society/PHASE2_PREREGISTRATION.md output/piano_society/phase2/
@@ -151,13 +151,13 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
-      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
     steps:
       - uses: actions/checkout@v4
       - name: Require campaign credential
         run: |
-          if [ -z "$OPENAI_API_KEY" ]; then
-            echo "::error::OPENAI_API_KEY repository secret is required for Phase 2 execution"
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "::error::ZAI_API_KEY repository secret is required for Phase 2-ZAI execution"
             exit 2
           fi
       - name: Checkout pinned Resonance Field
@@ -177,7 +177,7 @@ jobs:
             --output-dir output/piano_society/phase2-live
       - uses: actions/upload-artifact@v4
         with:
-          name: piano-society-phase2-live
+          name: piano-society-phase2-zai-live
           path: output/piano_society/phase2-live
           if-no-files-found: error
           retention-days: 90
