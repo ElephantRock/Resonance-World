@@ -101,16 +101,16 @@ def _payload(arm: str, record: dict[str, object]) -> dict[str, object]:
     }
 
 
-def test_repository_preregistration_is_locked_to_zai_coding_glm52_v2() -> None:
+def test_repository_preregistration_is_locked_to_zai_coding_glm52_v3() -> None:
     path = Path("experiments/piano_society/phase2_config.json")
     config = json.loads(path.read_text(encoding="utf-8"))
     normalized = validate_config(config)
 
     assert normalized["campaign_locked"] is True
     assert normalized["required_model_snapshot"] == "glm-5.2"
-    assert normalized["field_revision"] == "79fb6231352aa207e67210eff794030b628f8b23"
+    assert normalized["field_revision"] == "d9fb7400c499feb78da11fb333e326b9563bf4ea"
     assert normalized["required_pairs"] == 60
-    assert config["preregistration_revision"] == "zai-coding-glm5.2-v2"
+    assert config["preregistration_revision"] == "zai-coding-glm5.2-v3"
     backend = config["model_backend"]
     assert backend["provider"] == "zai"
     assert backend["endpoint"] == "coding_chat_completions"
@@ -121,6 +121,9 @@ def test_repository_preregistration_is_locked_to_zai_coding_glm52_v2() -> None:
     assert backend["provider_seed_supported"] is False
     assert backend["trial_seed_role"] == "pair_identifier_only"
     assert backend["model_id_stability"] == "provider_alias_without_dated_snapshot"
+    assert backend["timeout_seconds"] == 60.0
+    assert backend["max_attempts"] == 4
+    assert backend["retry_timeout"] is True
 
 
 def test_locked_pair_analysis_is_mechanical_and_can_pass_gate() -> None:
