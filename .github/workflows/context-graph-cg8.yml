@@ -1,0 +1,121 @@
+name: Context Graph CG-8 Constrained Adaptive Calibration
+
+on:
+  push:
+    branches: ["experiment/context-graph"]
+    paths:
+      - ".github/workflows/context-graph-cg8.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: context-graph-cg8-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prove predecessor scientific records remain frozen
+        run: |
+          git diff --exit-code 1c56bf2533aa164e40a0073c5bc4bdeb32083510 HEAD -- \
+            experiments/context_graph/cg5-w3-active-measurement.json \
+            experiments/context_graph/cg5-w3-active-measurement-result.json \
+            experiments/context_graph/run_cg5_w3_active_measurement.py
+          git diff --exit-code 2b502624cc3d948775fd21153158fb10ee3d7d21 HEAD -- \
+            experiments/context_graph/cg7-w3-measurement-economy.json \
+            experiments/context_graph/cg7-w3-measurement-economy-result.json \
+            experiments/context_graph/run_cg7_w3_measurement_economy.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Download already-unblinded CG-5 cohort
+        uses: actions/download-artifact@v4
+        with:
+          name: context-graph-cg5-fresh-source
+          path: source-cg5
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31622647635
+      - name: Download already-unblinded CG-7 cohort
+        uses: actions/download-artifact@v4
+        with:
+          name: context-graph-cg7-fresh-source
+          path: source-cg7
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31625645587
+      - name: Lint and compile CG-8 calibrator
+        run: |
+          ruff check experiments/context_graph/run_cg8_constrained_adaptive.py
+          python -m py_compile experiments/context_graph/run_cg8_constrained_adaptive.py
+      - name: Verify acquisition and outcome-law isolation
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import inspect
+          from experiments.context_graph.run_cg8_constrained_adaptive import acquire_constrained
+          from resonance_world.w4a_joint_learning import JointEnvironment
+
+          acquisition_source = inspect.getsource(acquire_constrained)
+          assert ".states" not in acquisition_source
+          forbidden = {
+              "graph", "context_graph", "evidence", "claims",
+              "relationship_state", "organization_memory", "acquisition_state",
+          }
+          params = set(inspect.signature(JointEnvironment.evaluate).parameters)
+          assert not forbidden.intersection(params), params
+          PY
+      - name: Run exploratory constrained-adaptive calibration
+        run: |
+          CG5_CAPSULES=source-cg5/world/output/cg5-source/capsules.private.jsonl
+          CG5_SUMMARY=source-cg5/world/output/cg5-source/w3-01-source-summary.json
+          CG7_CAPSULES=source-cg7/world/output/cg7-source/capsules.private.jsonl
+          CG7_SUMMARY=source-cg7/world/output/cg7-source/w3-01-source-summary.json
+          PYTHONPATH=. python experiments/context_graph/run_cg8_constrained_adaptive.py \
+            --config experiments/context_graph/cg8-constrained-adaptive-calibration.json \
+            --cg5-capsules "$CG5_CAPSULES" \
+            --cg5-summary "$CG5_SUMMARY" \
+            --cg5-result experiments/context_graph/cg5-w3-active-measurement-result.json \
+            --cg7-capsules "$CG7_CAPSULES" \
+            --cg7-summary "$CG7_SUMMARY" \
+            --cg7-result experiments/context_graph/cg7-w3-measurement-economy-result.json \
+            --output output/context_graph/cg8-constrained-adaptive-calibration-result.json
+      - name: Enforce predecessor replay and coverage constraint
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(
+              Path("output/context_graph/cg8-constrained-adaptive-calibration-result.json").read_text()
+          )
+          replay = result["integrity"]["predecessor_replay"]
+          assert replay["cg5"]["event_count_exact"], replay
+          assert replay["cg5"]["expected_within_1e_12"], replay
+          assert replay["cg5"]["flat_within_1e_12"], replay
+          assert replay["cg7"]["event_count_exact"], replay
+          assert replay["cg7"]["fixed6_expected_within_1e_12"], replay
+          assert replay["cg7"]["uniform72_expected_within_1e_12"], replay
+          for budget, row in result["selection"]["checks"].items():
+              constraint = row["constraint"]
+              assert constraint["maximum_peak_supplemental_allocation_imbalance"] <= 1, (budget, constraint)
+              assert constraint["all_fields_cell_count"] == [48], (budget, constraint)
+          assert result["confirmatory_claim"] is False
+          print(json.dumps(result["selection"], indent=2, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: context-graph-cg8-calibration
+          path: output/context_graph/cg8-constrained-adaptive-calibration-result.json
+          if-no-files-found: warn
+          retention-days: 90
