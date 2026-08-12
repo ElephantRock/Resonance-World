@@ -60,6 +60,7 @@
     "retry_contract_errors": true,
     "contract_retry_prompt_hardening": true,
     "unique_request_id_per_attempt": true,
+    "format_template_action_source": "first_registered_strategy",
     "timeout_seconds": 60.0,
     "max_attempts": 12,
     "retry_backoff_cap_seconds": 30.0,
@@ -92,6 +93,7 @@
   "missions": [
     {
       "mission_id": "route-a",
+      "formation_mission_id": "formation-route-a",
       "context": "route-a",
       "lead_skill": "public_health",
       "support_skill": "mobility",
@@ -101,6 +103,7 @@
     },
     {
       "mission_id": "route-b",
+      "formation_mission_id": "formation-route-b",
       "context": "route-b",
       "lead_skill": "water_systems",
       "support_skill": "urban_heat",
@@ -110,6 +113,7 @@
     },
     {
       "mission_id": "route-c",
+      "formation_mission_id": "formation-route-c",
       "context": "route-c",
       "lead_skill": "public_health",
       "support_skill": "supply_networks",
@@ -119,6 +123,7 @@
     },
     {
       "mission_id": "route-d",
+      "formation_mission_id": "formation-route-d",
       "context": "route-d",
       "lead_skill": "supply_networks",
       "support_skill": "public_health",
