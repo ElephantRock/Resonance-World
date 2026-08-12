@@ -1,0 +1,15 @@
+{
+  "version": "w9-02-result-v0.1",
+  "pr": 81,
+  "exact_head_sha": "b56c8ede807290ae250900f24d88de4ca80c5a63",
+  "merge_sha": "555da88a44a80b7d9e6ab5cf361e603db594f916",
+  "workflow_run": 31551377765,
+  "artifact_id": 9124384144,
+  "artifact_digest": "sha256:6bd0f439c84222fceca6ae3917c55571f3574d5fc41b1e570672f51087258069",
+  "result_sha256": "5e2927d16395bd6a3572c610cc99c2720f7048b187862a991f21c1d5a4462032",
+  "classification": "leasing_switching_fragile",
+  "zero_recovery_gate": true,
+  "recovery_gate": false,
+  "robust_gate": false,
+  "eligible_for_w9_05_L": false
+}
