@@ -135,7 +135,7 @@ jobs:
       - name: Materialize fresh private capsules
         run: >-
           python -m resonance_world.w3_source_export
-          raw/runs.csv raw/outcomes.csv raw/tasks.csv raw/bids.csv
+          ../raw/runs.csv ../raw/outcomes.csv ../raw/tasks.csv ../raw/bids.csv
           output/cg5-source
         working-directory: world
       - name: Enforce fresh cohort identity and state boundary
@@ -155,7 +155,7 @@ jobs:
           public = Path("output/cg5-source/candidates.jsonl").read_text()
           assert "practice_by_skill" not in public
           PY
-          sha256sum output/cg5-source/capsules.private.jsonl raw/*.csv > output/cg5-source/source-integrity.sha256
+          sha256sum output/cg5-source/capsules.private.jsonl ../raw/*.csv > output/cg5-source/source-integrity.sha256
       - uses: actions/upload-artifact@v4
         with:
           name: context-graph-cg5-fresh-source
@@ -196,7 +196,7 @@ jobs:
           CAPSULES=source/world/output/cg5-source/capsules.private.jsonl
           SUMMARY=source/world/output/cg5-source/w3-01-source-summary.json
           SOURCE_SHA=$(sha256sum "$CAPSULES" | awk '{print $1}')
-          python experiments/context_graph/run_cg5_w3_active_measurement.py \
+          PYTHONPATH=. python experiments/context_graph/run_cg5_w3_active_measurement.py \
             --config experiments/context_graph/cg5-w3-active-measurement.json \
             --capsules "$CAPSULES" \
             --source-summary "$SUMMARY" \
