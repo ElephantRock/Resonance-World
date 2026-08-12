@@ -1,6 +1,12 @@
 # Phase 2 preregistration — one-agent model-backed PIANO experiment
 
-Status: **preregistered design; campaign intentionally unlocked until an immutable model snapshot is selected**
+Status: **LOCKED before any model-backed campaign output was generated or observed**
+
+Locked model snapshot: `gpt-4.1-mini-2025-04-14`
+
+Locked Resonance Field revision: `bff92d11b4c62c3e6b950696d5fd5ebf7ad2caa5`
+
+The machine-readable source of truth is `phase2_config.json`. This document records the same design in prose.
 
 ## Question
 
@@ -37,9 +43,30 @@ Treatment:
 
 No other prompt-flow difference is permitted in the registered implementation.
 
+## Locked model/backend
+
+The campaign uses:
+
+- provider: OpenAI;
+- API surface: Chat Completions;
+- model snapshot: `gpt-4.1-mini-2025-04-14`;
+- structured output: strict JSON Schema;
+- temperature: `0.7`;
+- per-stage maximum output tokens: `128`;
+- pair order: counterbalanced by seed parity;
+- concurrent pair workers: `6`.
+
+The provider adapter lives in Resonance Field and verifies the exact returned model identifier on every call. Model-snapshot drift invalidates the campaign.
+
+## Blinding of scenario targets
+
+`scenario_id`, `expected_action`, and `expected_outcome_status` are audit/scoring metadata only. Resonance Field removes those fields from model-visible context before any model request. They remain in exported records so Resonance World can score task success mechanically.
+
+This blinding correction was made before the campaign was locked and before any model-backed output was generated or observed.
+
 ## Sample
 
-One agent per episode. There are 60 paired episodes: 20 fixed seeds crossed with three scenarios.
+One agent per episode. There are 60 paired episodes: 20 fixed seeds crossed with three scenarios, producing 120 arm-level episodes total.
 
 ### substrate-observe
 
@@ -65,7 +92,7 @@ Expected action: `SLEEP`
 
 Expected outcome: `succeeded`
 
-The exact prompts, seeds, action vocabulary, Field revision, call budget, and advancement thresholds are frozen in `phase2_config.json`.
+The exact prompts, seeds, action vocabulary, Field revision, backend parameters, call budget, and advancement thresholds are frozen in `phase2_config.json`.
 
 ## Primary outcomes
 
@@ -112,7 +139,7 @@ For each primary binary error outcome, also compute an exact two-sided sign test
 The campaign is eligible for scientific interpretation only if:
 
 - `campaign_locked` is `true`;
-- `required_model_snapshot` is an immutable non-empty identifier;
+- `required_model_snapshot` is the locked immutable identifier;
 - all 60 pairs are present and valid;
 - every record uses the exact frozen Field revision and model snapshot;
 - every record uses exactly four model calls.
@@ -130,4 +157,6 @@ Failure to pass is evidence to revise the one-agent architecture before adding s
 
 ## Locking rule
 
-The current configuration deliberately has `campaign_locked: false` and `required_model_snapshot: null` because Resonance Field has no provider-specific model layer. Selecting a backend/model is a separate experimental decision. Once selected, those two fields are changed in one commit before any scientific run; changing any preregistered field after observing campaign outcomes creates a new experiment version rather than modifying this one.
+The campaign was locked by selecting the model/backend and updating the previously unresolved lock fields before any model-backed campaign result existed. After lock, changing any preregistered model, prompt-flow, scenario, seed, action vocabulary, budget, pairing rule, metric, or threshold creates a new experiment version rather than modifying this one.
+
+Mechanical implementation fixes that do not alter the frozen experiment parameters are permitted only when no scientific result has been observed from the affected run; they must remain auditable in Git history.
