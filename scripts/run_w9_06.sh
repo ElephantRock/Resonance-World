@@ -69,7 +69,7 @@ import json
 from pathlib import Path
 
 result = json.loads(Path('output/w9/w9-06-long-horizon.json').read_text())
-assert result['version'] == 'w9-06-long-horizon-result-v0.5', result
+assert result['version'] == 'w9-06-long-horizon-result-v0.6', result
 assert result['phase'] == 'discovery', result
 assert result['selected_mechanisms'] == [], result
 assert result['structural_status'] == 'selected_W9_equals_W7_and_noP_control', result
@@ -84,22 +84,26 @@ assert selected == result['arms']['W9_without_portfolio_development'], result
 assert selected['compute']['incremental_source_development_compute'] == 0.0, selected
 assert selected['developmental_efficiency'] is None, selected
 assert selected['compute']['source_diagnostic_mission_execution_compute'] == 122880.0, selected
-assert selected['compute']['mission_execution_compute'] == 221184.0, selected
-assert selected['compute']['final_total_measured_compute_including_cycle0_embodied'] == 222192.0, selected
+assert selected['compute']['benchmark_stock_mission_execution_compute'] == 588.0, selected
+assert selected['compute']['mission_execution_compute'] == 221772.0, selected
+assert selected['compute']['final_total_measured_compute_including_cycle0_embodied'] == 222780.0, selected
 assert result['gates']['developmental_efficiency_at_least_20pct_better_than_W8'] is False, result
 assert result['accounting']['source_development_unit'] == 'resident_agent_cycle', result
 assert w8['compute']['coalition_mission_execution_compute'] == 36864.0, w8
 assert w8['compute']['source_diagnostic_mission_execution_compute'] == 64000.0, w8
+assert w8['compute']['benchmark_stock_mission_execution_compute'] == 588.0, w8
 assert w8['compute']['standalone_comparator_pair_selection_compute'] == 48.0, w8
 assert w8['compute']['withholding_substitution_coordination_compute'] == 2.0, w8
 assert w8['compute']['neutral_budget_update_regulatory_compute'] == 72.0, w8
 assert w8['compute']['successor_activation_check_regulatory_compute'] == 120.0, w8
-assert w8['compute']['mission_execution_compute'] == 199168.0, w8
+assert w8['compute']['mission_execution_compute'] == 199756.0, w8
 assert w8['compute']['organization_coordination_compute'] == 146.0, w8
 assert w8['compute']['world_regulatory_estimation_compute'] == 2391.0, w8
-assert w8['compute']['final_total_measured_compute_including_cycle0_embodied'] == 202341.0, w8
+assert w8['compute']['final_total_measured_compute_including_cycle0_embodied'] == 202929.0, w8
 assert result['accounting_corrections']['selected_source_frontier_diagnostics']['mission_execution_compute_added'] == 122880.0, result
+assert result['accounting_corrections']['selected_benchmark_stock_assays']['mission_execution_compute_added'] == 588.0, result
 assert result['accounting_corrections']['w8_source_frontier_diagnostics']['mission_execution_compute_added'] == 64000.0, result
+assert result['accounting_corrections']['w8_benchmark_stock_assays']['mission_execution_compute_added'] == 588.0, result
 assert result['accounting_corrections']['w8_neutral_budget_updates']['world_regulatory_estimation_compute_added'] == 72.0, result
 assert result['accounting_corrections']['w8_successor_activation_checks']['world_regulatory_estimation_compute_added'] == 120.0, result
 assert result['accounting_corrections']['w8_withholding_substitution']['organization_coordination_compute_added'] == 2.0, result
