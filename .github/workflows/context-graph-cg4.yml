@@ -1,0 +1,89 @@
+name: Context Graph CG-4 Endogenous Formation
+
+on:
+  push:
+    branches: ["experiment/context-graph"]
+    paths:
+      - ".github/workflows/context-graph-cg4.yml"
+      - "experiments/context_graph/cg4-w3-endogenous.json"
+      - "experiments/context_graph/run_cg4_w3_endogenous.py"
+      - "src/resonance_world/context_graph_w3_endogenous.py"
+      - "tests/test_context_graph_w3_endogenous.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  cg4-calibration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e '.[dev]'
+      - name: Download pinned W3 discovery source only
+        uses: actions/download-artifact@v4
+        with:
+          name: w3-discovery-source
+          path: w3-calibration
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31470831322
+      - name: Verify CG-4 implementation
+        run: >-
+          ruff check
+          src/resonance_world/context_graph_w3_endogenous.py
+          tests/test_context_graph_w3_endogenous.py
+          experiments/context_graph/run_cg4_w3_endogenous.py
+      - name: Run CG-4 semantic tests
+        run: pytest -q tests/test_context_graph_w3_endogenous.py
+      - name: Enforce endogenous-evidence boundary
+        run: |
+          test -f w3-calibration/output/discovery-source/capsules.private.jsonl
+          ! grep -q "raw/outcomes" src/resonance_world/context_graph_w3_endogenous.py
+          ! grep -q "raw/tasks" src/resonance_world/context_graph_w3_endogenous.py
+          ! grep -q "raw/bids" src/resonance_world/context_graph_w3_endogenous.py
+          ! grep -q "pair-edges.jsonl" src/resonance_world/context_graph_w3_endogenous.py
+          ! grep -q "pair-state.private.jsonl" src/resonance_world/context_graph_w3_endogenous.py
+      - name: Execute CG-4 calibration only
+        run: >-
+          python experiments/context_graph/run_cg4_w3_endogenous.py
+          --config experiments/context_graph/cg4-w3-endogenous.json
+          --calibration-capsules
+          w3-calibration/output/discovery-source/capsules.private.jsonl
+          --output output/context_graph/cg4-w3-endogenous-calibration.json
+      - name: Enforce calibration-only boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(
+              Path("output/context_graph/cg4-w3-endogenous-calibration.json").read_text()
+          )
+          config = json.loads(
+              Path("experiments/context_graph/cg4-w3-endogenous.json").read_text()
+          )
+          source = result["sources"]["calibration"]
+          pin = config["sources"]["calibration"]
+          assert source["capsules_sha256"] == pin["capsules_sha256"], (source, pin)
+          assert result["evaluation"] is None
+          assert result["passed"] is None
+          live = result["calibration"]["live_evidence"]
+          assert live["posthoc_imported_claims"] == 0
+          assert live["historical_outcome_rows_consumed"] == 0
+          text = Path("output/context_graph/cg4-w3-endogenous-calibration.json").read_text()
+          assert "practice_by_skill" not in text
+          print(json.dumps(result["calibration"], indent=2, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: context-graph-cg4-calibration
+          path: output/context_graph/cg4-w3-endogenous-calibration.json
+          if-no-files-found: error
+          retention-days: 90
