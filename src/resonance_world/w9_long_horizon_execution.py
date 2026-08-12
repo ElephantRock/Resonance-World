@@ -11,42 +11,11 @@ from . import w8_campaign as w8
 from . import w9_long_horizon as base
 from .w9_integrated import _phase_seeds, _read_json, _write_json
 
-RESULT_VERSION = "w9-06-long-horizon-result-v0.3"
+RESULT_VERSION = "w9-06-long-horizon-result-v0.4"
 
 
-def _correct_w8_coalition_compute(
-    arm: Mapping[str, Any],
-    config: Mapping[str, Any],
-) -> dict[str, Any]:
-    """Count W8 coalition assay trials and standalone comparator selections."""
-
-    value = json.loads(json.dumps(arm))
-    horizon = int(config["long_horizon"]["cycles"])
-    trials = int(config["service_trials"])
-    coalition_mission_compute = float(3 * horizon * trials)
-    standalone_coordination_compute = float(2 * horizon)
-    total_added = coalition_mission_compute + standalone_coordination_compute
-
+def _recompute_efficiencies(value: dict[str, Any]) -> None:
     compute = value["compute"]
-    compute["coalition_mission_execution_compute"] = coalition_mission_compute
-    compute["standalone_comparator_pair_selection_compute"] = (
-        standalone_coordination_compute
-    )
-    compute["mission_execution_compute"] = (
-        float(compute["mission_execution_compute"]) + coalition_mission_compute
-    )
-    compute["organization_coordination_compute"] = (
-        float(compute["organization_coordination_compute"])
-        + standalone_coordination_compute
-    )
-    compute["incremental_total_measured_compute"] = (
-        float(compute["incremental_total_measured_compute"]) + total_added
-    )
-    compute["final_total_measured_compute_including_cycle0_embodied"] = (
-        float(compute["final_total_measured_compute_including_cycle0_embodied"])
-        + total_added
-    )
-
     mission_compute = float(compute["mission_execution_compute"])
     value["service_efficiency"] = (
         float(value["successful_mission_evaluations"]) / mission_compute
@@ -64,7 +33,109 @@ def _correct_w8_coalition_compute(
         if initial_efficiency not in (None, 0.0) and final_efficiency is not None
         else None
     )
+
+
+def _correct_selected_compute(
+    arm: Mapping[str, Any],
+    config: Mapping[str, Any],
+    *,
+    field_count: int,
+) -> dict[str, Any]:
+    """Count the two source diagnostic frontier blocks omitted by the base formula."""
+
+    value = json.loads(json.dumps(arm))
+    horizon = int(config["long_horizon"]["cycles"])
+    trials = int(config["service_trials"])
+    source_diagnostic_compute = float(2 * horizon * field_count * trials)
+
+    compute = value["compute"]
+    compute["source_diagnostic_mission_execution_compute"] = source_diagnostic_compute
+    compute["mission_execution_compute"] = (
+        float(compute["mission_execution_compute"]) + source_diagnostic_compute
+    )
+    compute["incremental_total_measured_compute"] = (
+        float(compute["incremental_total_measured_compute"]) + source_diagnostic_compute
+    )
+    compute["final_total_measured_compute_including_cycle0_embodied"] = (
+        float(compute["final_total_measured_compute_including_cycle0_embodied"])
+        + source_diagnostic_compute
+    )
+    _recompute_efficiencies(value)
     return value
+
+
+def _correct_w8_compute(
+    arm: Mapping[str, Any],
+    config: Mapping[str, Any],
+    *,
+    field_count: int,
+    organization_count: int,
+) -> dict[str, Any]:
+    """Count all reviewed W8 assay, coordination, and accounting operations."""
+
+    value = json.loads(json.dumps(arm))
+    horizon = int(config["long_horizon"]["cycles"])
+    trials = int(config["service_trials"])
+    coalition_mission_compute = float(3 * horizon * trials)
+    source_diagnostic_compute = float((horizon + 1) * field_count * trials)
+    standalone_coordination_compute = float(2 * horizon)
+    budget_update_compute = float(horizon * organization_count)
+    total_added = (
+        coalition_mission_compute
+        + source_diagnostic_compute
+        + standalone_coordination_compute
+        + budget_update_compute
+    )
+
+    compute = value["compute"]
+    compute["coalition_mission_execution_compute"] = coalition_mission_compute
+    compute["source_diagnostic_mission_execution_compute"] = source_diagnostic_compute
+    compute["standalone_comparator_pair_selection_compute"] = (
+        standalone_coordination_compute
+    )
+    compute["neutral_budget_update_regulatory_compute"] = budget_update_compute
+    compute["mission_execution_compute"] = (
+        float(compute["mission_execution_compute"])
+        + coalition_mission_compute
+        + source_diagnostic_compute
+    )
+    compute["organization_coordination_compute"] = (
+        float(compute["organization_coordination_compute"])
+        + standalone_coordination_compute
+    )
+    compute["world_regulatory_estimation_compute"] = (
+        float(compute["world_regulatory_estimation_compute"]) + budget_update_compute
+    )
+    compute["incremental_total_measured_compute"] = (
+        float(compute["incremental_total_measured_compute"]) + total_added
+    )
+    compute["final_total_measured_compute_including_cycle0_embodied"] = (
+        float(compute["final_total_measured_compute_including_cycle0_embodied"])
+        + total_added
+    )
+    _recompute_efficiencies(value)
+    return value
+
+
+def _refresh_selected_gate(result: dict[str, Any], long_config: Mapping[str, Any]) -> None:
+    selected = result["arms"]["selected_W9"]
+    growth = selected["compute_normalized_world_stock_growth"]
+    result["gates"]["compute_normalized_world_stock_growth_gt_2pct"] = (
+        growth is not None
+        and float(growth)
+        > float(long_config["required_compute_normalized_growth_fraction"])
+    )
+    gate = all(bool(value) for value in result["gates"].values())
+    result["long_horizon_gate"] = gate
+    source_org_pass = bool(result["gates"]["source_loss_at_most_2pp"]) and bool(
+        result["gates"]["organization_within_minus_2pp_of_W7"]
+    )
+    if gate:
+        result["classification"] = "regenerative_allocation"
+    elif source_org_pass:
+        result["classification"] = "sustainable_but_non_generative_allocation"
+    else:
+        result["classification"] = "long_horizon_gate_failed"
 
 
 def run_w9_06_execution(
@@ -75,7 +146,7 @@ def run_w9_06_execution(
     *,
     phase: str,
 ) -> dict[str, Any]:
-    """Run W9-06 and correct the W8 comparator's full-compute accounting."""
+    """Run W9-06 and apply reviewed full-compute accounting corrections."""
 
     result = base.run_w9_06(
         population,
@@ -85,24 +156,64 @@ def run_w9_06_execution(
         phase=phase,
     )
     merged = base._merged_config(market_config, long_horizon_config)
-    w8_arm = result["arms"]["W8_neutral_full_regulatory_charter"]
-    result["arms"]["W8_neutral_full_regulatory_charter"] = (
-        _correct_w8_coalition_compute(w8_arm, merged)
-    )
     horizon = int(merged["long_horizon"]["cycles"])
     trials = int(merged["service_trials"])
+    field_count = len(population.portable_by_field)
+    organization_count = len(merged["organizations"])
+
+    selected = _correct_selected_compute(
+        result["arms"]["selected_W9"],
+        merged,
+        field_count=field_count,
+    )
+    result["arms"]["selected_W9"] = selected
+    result["arms"]["W7_unrestricted"] = selected
+    result["arms"]["W9_without_portfolio_development"] = selected
+    result["arms"]["W8_neutral_full_regulatory_charter"] = _correct_w8_compute(
+        result["arms"]["W8_neutral_full_regulatory_charter"],
+        merged,
+        field_count=field_count,
+        organization_count=organization_count,
+    )
+    _refresh_selected_gate(result, long_horizon_config)
+
     result["version"] = RESULT_VERSION
     result["accounting_corrections"] = {
+        "selected_source_frontier_diagnostics": {
+            "additional_blocks_per_field_cycle": 2,
+            "cycles": horizon,
+            "field_count": field_count,
+            "trials_per_block": trials,
+            "mission_execution_compute_added": float(
+                2 * horizon * field_count * trials
+            ),
+        },
         "w8_coalition_mission_execution": {
             "trial_blocks_per_cycle": 3,
             "cycles": horizon,
             "trials_per_block": trials,
             "mission_execution_compute_added": float(3 * horizon * trials),
         },
+        "w8_source_frontier_diagnostics": {
+            "additional_field_blocks": (horizon + 1) * field_count,
+            "cycles": horizon,
+            "field_count": field_count,
+            "trials_per_block": trials,
+            "mission_execution_compute_added": float(
+                (horizon + 1) * field_count * trials
+            ),
+        },
         "w8_standalone_comparator_pair_selection": {
             "pair_selections_per_cycle": 2,
             "cycles": horizon,
             "organization_coordination_compute_added": float(2 * horizon),
+        },
+        "w8_neutral_budget_updates": {
+            "updates_per_cycle": organization_count,
+            "cycles": horizon,
+            "world_regulatory_estimation_compute_added": float(
+                horizon * organization_count
+            ),
         },
     }
     return result
