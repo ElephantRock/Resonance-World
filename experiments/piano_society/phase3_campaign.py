@@ -1,34 +1,41 @@
-"""Execute the locked ten-agent, two-round PIANO Phase-3 campaign."""
-
-from __future__ import annotations
-
 import argparse
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import UTC, datetime
+from datetime import datetime, UTC
 from pathlib import Path
+from uuid import uuid5, NAMESPACE_URL
 from typing import Any
-from uuid import NAMESPACE_URL, uuid5
 
-from resonance.agents import AgentObservation, DefaultPolicyGateway, InMemoryDecisionEventStore
-from resonance.experiments.piano_phase2 import Phase2Config
-from resonance.experiments.piano_phase2_zai import ZAIChatCompletionsBackend
-from resonance.experiments.piano_phase3_social import (
+import pytest
+
+from experiments.piano_society.phase3 import (
+    _board_digest,
+    analyze,
+    materialize_roles,
+    validate_config,
+)
+from experiments.piano_society.types import (
+    AgentObservation,
+    Phase2Config,
     Phase3Prepared,
     Phase3SocialArm,
     Phase3SocialExperimentAgent,
 )
+from experiments.piano_society.digest import config_digest
+from resonance.backends import ZAIChatCompletionsBackend
+from resonance.stores import InMemoryDecisionEventStore
+from resonance.world import DefaultPolicyGateway
 
-from experiments.piano_society.phase3 import analyze, config_digest, materialize_roles, validate_config
-
-_PAYLOAD_SCHEMA = "resonance-world-piano-phase3-social-arm-v0.1"
+_SCHEMA = "resonance-world-piano-phase3-social-arm-v0.1"
 _OBSERVED_AT = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
 _WRONG_ACTIONS = {
     "OBSERVE": ("SLEEP", "REQUEST_TOOL"),
     "SLEEP": ("OBSERVE", "REQUEST_TOOL"),
     "REQUEST_TOOL": ("OBSERVE", "SLEEP"),
 }
+
+_PAYLOAD_SCHEMA = _SCHEMA
 
 
 class EmptyTraceRepository:
