@@ -1,0 +1,156 @@
+{
+  "version": "context-graph-cg6-calibration-record-v0.1",
+  "status": "exploratory-calibration-complete-no-adaptive-architecture-selected",
+  "confirmatory_claim": false,
+  "workflow": {
+    "run_id": 31624680665,
+    "head_sha": "7af7dbbd362b959090f29682106a7a2644f80f73",
+    "artifact_id": 9152644211,
+    "artifact_name": "context-graph-cg6-calibration",
+    "artifact_digest": "sha256:e16557cf8c70cc30181d79021e86077ecd76b4a083bd8670951cf0e32f140a79"
+  },
+  "cg5_exact_replay": {
+    "supplemental_probe_events": 3240,
+    "mean_probe_events_per_field": 216.0,
+    "mean_graph_expected_success": 0.2776360068108691,
+    "mean_flat_expected_success": 0.2296363530672111,
+    "mean_regret": 0.14448056317223387,
+    "estimate_truth_pearson": 0.5308947604465617,
+    "graph_lift_over_flat": 0.04799965374365797,
+    "positive_field_graph_lift_count": 12,
+    "event_count_delta_vs_cg5": 0,
+    "graph_expected_success_delta_vs_cg5": 5.551115123125783e-17,
+    "flat_expected_success_delta_vs_cg5": 5.551115123125783e-17,
+    "replay_passed": true
+  },
+  "passive": {
+    "mean_graph_expected_success": 0.230006969724604,
+    "mean_flat_expected_success": 0.23296281820358128,
+    "mean_regret": 0.19210960025849894,
+    "estimate_truth_pearson": 0.1809622230724164,
+    "graph_lift_over_flat": -0.0029558484789772854,
+    "positive_field_graph_lift_count": 4
+  },
+  "decision_adaptive": {
+    "48": {
+      "mean_graph_expected_success": 0.22664956460741026,
+      "mean_flat_expected_success": 0.23075032876554252,
+      "mean_regret": 0.19546700537569264,
+      "mean_selected_role_true_gap": 0.17491954142985122,
+      "estimate_truth_pearson": 0.15829284754757056,
+      "graph_lift_over_flat": -0.004100764158132264,
+      "positive_field_graph_lift_count": 3,
+      "probe_cost_fraction_vs_fixed_six": 0.2222222222222222
+    },
+    "72": {
+      "mean_graph_expected_success": 0.224278459273311,
+      "mean_flat_expected_success": 0.2259277367922996,
+      "mean_regret": 0.19783811070979193,
+      "mean_selected_role_true_gap": 0.17780188870729058,
+      "estimate_truth_pearson": 0.16212293485188933,
+      "graph_lift_over_flat": -0.0016492775189886066,
+      "positive_field_graph_lift_count": 4,
+      "probe_cost_fraction_vs_fixed_six": 0.3333333333333333
+    },
+    "96": {
+      "mean_graph_expected_success": 0.2196273051933471,
+      "mean_flat_expected_success": 0.22829135455971833,
+      "mean_regret": 0.20248926478975582,
+      "mean_selected_role_true_gap": 0.18224633315173505,
+      "estimate_truth_pearson": 0.23516235713681016,
+      "graph_lift_over_flat": -0.008664049366371218,
+      "positive_field_graph_lift_count": 5,
+      "probe_cost_fraction_vs_fixed_six": 0.4444444444444444
+    },
+    "120": {
+      "mean_graph_expected_success": 0.21610627047554673,
+      "mean_flat_expected_success": 0.2269703128841658,
+      "mean_regret": 0.2060102995075562,
+      "mean_selected_role_true_gap": 0.1853326762228458,
+      "estimate_truth_pearson": 0.28103916656715955,
+      "graph_lift_over_flat": -0.010864042408619073,
+      "positive_field_graph_lift_count": 7,
+      "probe_cost_fraction_vs_fixed_six": 0.5555555555555556
+    }
+  },
+  "uniform_round_robin": {
+    "48": {
+      "mean_graph_expected_success": 0.25211867383702824,
+      "mean_flat_expected_success": 0.22872919592165963,
+      "mean_regret": 0.16999789614607466,
+      "estimate_truth_pearson": 0.2354042277876771,
+      "graph_lift_over_flat": 0.023389477915368606,
+      "positive_field_graph_lift_count": 11,
+      "probe_cost_fraction_vs_fixed_six": 0.2222222222222222
+    },
+    "72": {
+      "mean_graph_expected_success": 0.285169078383176,
+      "mean_flat_expected_success": 0.22980691642414694,
+      "mean_regret": 0.13694749159992686,
+      "mean_selected_role_true_gap": 0.1183082548397978,
+      "estimate_truth_pearson": 0.3774225472666234,
+      "graph_lift_over_flat": 0.05536216195902907,
+      "positive_field_graph_lift_count": 14,
+      "probe_cost_fraction_vs_fixed_six": 0.3333333333333333
+    },
+    "96": {
+      "mean_graph_expected_success": 0.2802675461609005,
+      "mean_flat_expected_success": 0.22664816588004216,
+      "mean_regret": 0.14184902382220244,
+      "estimate_truth_pearson": 0.4544532510116908,
+      "graph_lift_over_flat": 0.05361938028085833,
+      "positive_field_graph_lift_count": 14,
+      "probe_cost_fraction_vs_fixed_six": 0.4444444444444444
+    },
+    "120": {
+      "mean_graph_expected_success": 0.28555634458748586,
+      "mean_flat_expected_success": 0.22843894344808077,
+      "mean_regret": 0.13656022539561707,
+      "estimate_truth_pearson": 0.4775606179109797,
+      "graph_lift_over_flat": 0.05711740113940508,
+      "positive_field_graph_lift_count": 14,
+      "probe_cost_fraction_vs_fixed_six": 0.5555555555555556
+    }
+  },
+  "uncertainty_only": {
+    "48": {
+      "mean_graph_expected_success": 0.23046966677722416,
+      "graph_lift_over_flat": 0.0021160244854494803,
+      "positive_field_graph_lift_count": 4
+    },
+    "72": {
+      "mean_graph_expected_success": 0.21800496263483188,
+      "graph_lift_over_flat": -0.0053870167366524,
+      "positive_field_graph_lift_count": 5
+    },
+    "96": {
+      "mean_graph_expected_success": 0.25425841878235955,
+      "graph_lift_over_flat": 0.030228390959912144,
+      "positive_field_graph_lift_count": 14
+    },
+    "120": {
+      "mean_graph_expected_success": 0.278573643975229,
+      "graph_lift_over_flat": 0.05242925071639942,
+      "positive_field_graph_lift_count": 14
+    }
+  },
+  "selection": {
+    "selected": null,
+    "selection_passed": false,
+    "reason": "No preregistered decision_adaptive budget satisfied the frozen calibration selection rule. The protocol explicitly forbids substituting a uniform or uncertainty-only comparator after unblinding."
+  },
+  "posthoc_observation_not_confirmatory": {
+    "uniform_72_minus_fixed_six_expected_success": 0.007533071572306982,
+    "uniform_72_vs_fixed_six_field_cluster_bootstrap_95_ci": [-0.0031437844654823967, 0.018280308008484146],
+    "uniform_72_graph_minus_flat_field_cluster_bootstrap_95_ci": [0.03481142826752586, 0.07753514945350179],
+    "interpretation": "The 72-probe uniform comparator is a strong hypothesis for a new experiment, but its apparent advantage over fixed-six is not itself confirmatory and the fixed-six contrast interval includes zero."
+  },
+  "integrity": {
+    "historical_outcome_rows_consumed": 0,
+    "posthoc_imported_claims": 0,
+    "belief_contamination_from_retrieval": 0,
+    "outcome_law_graph_inputs": 0,
+    "evaluator_truth_available_to_acquisition_policy": false
+  },
+  "interpretation_boundary": "CG-6 adaptive calibration failed. No fresh CG-6 cohort may be generated under the failed protocol. Uniform round-robin at 72 probes is retained only as a hypothesis for a separately frozen future experiment."
+}
