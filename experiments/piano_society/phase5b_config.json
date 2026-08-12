@@ -1,0 +1,181 @@
+{
+  "experiment": "piano-society-runtime-v0-phase5b-transferable-memory",
+  "preregistration_revision": "glm5.2-transferable-institutional-model-v1",
+  "campaign_locked": true,
+  "field_revision": "e877bf03dbf6681ce7cbd98d984e73c032e911aa",
+  "required_model_snapshot": "glm-5.2",
+  "validated_prerequisites": {
+    "phase4c_world_revision": "b2da04a1cd3ab5fb07dc781cd8b7bb93fab4b0d1",
+    "phase4c_workflow_run": 31638087507,
+    "phase4c_artifact_id": 9158432521,
+    "phase4c_artifact_digest": "sha256:465c5d07c7e98a33dccedf24c0fb504a82ad54632590ec1fce8eddd1cf57279e",
+    "phase4c_advance_to_phase5": true,
+    "phase5_world_revision": "7671f683c3dcc9c93a6de2a1f0245e8b6f443d88",
+    "phase5_workflow_run": 31642962282,
+    "phase5_artifact_id": 9159703582,
+    "phase5_artifact_digest": "sha256:b22f618199188272c048f0cb2d1b985abd5f750fab0623f34edbc76b07c096e0",
+    "phase5_result_commit": "faec7ddc1ee01013f7a6ebfd427c5ae8726a06bf",
+    "phase5_mean_retained_minus_reset_success_rate": 0.006184895833333315,
+    "phase5_primary_sign_test_p": 0.7265625,
+    "phase5_advance": false
+  },
+  "source_lock": {
+    "workflow_run": 31649544130,
+    "world_revision": "55668e2f5aa74baa070d2c7fcfc2a2e77de26e8f",
+    "artifact_id": 9162069554,
+    "artifact_name": "piano-society-phase5b-frozen-source",
+    "artifact_digest": "sha256:f91b0d23cf3a5b78c100ecacba0fc873bcfc3f5db18ee9a7ed17900d14c793b5",
+    "capsule_sha256": "3db71e9b498605853454abe64c0937f032e8d91bf0500c76fe20b17c9e436ebd",
+    "candidate_sha256": "ca6a9317358643fdf22464512447b800b4336470b3488b03764a9dd3cc862190",
+    "field_count": 8,
+    "agent_count": 96,
+    "calibration_fields": [
+      "w4-source-seed-13007",
+      "w4-source-seed-13109"
+    ],
+    "confirmatory_fields": [
+      "w4-source-seed-13217",
+      "w4-source-seed-13331",
+      "w4-source-seed-13441",
+      "w4-source-seed-13553",
+      "w4-source-seed-13669",
+      "w4-source-seed-13781"
+    ]
+  },
+  "transfer_search_lock": {
+    "workflow_run": 31649908290,
+    "world_revision": "dbaae3d0bf672befa43583510b8f7bcd6ca2fcf7",
+    "artifact_id": 9162175324,
+    "artifact_name": "piano-society-phase5b-v2-transfer-search",
+    "artifact_digest": "sha256:f82f936d6d37a1d88967cabd7d698936bdc6234af2674585c4d2377c22f24d4c",
+    "revision": "piano-phase5b-transfer-search-v2",
+    "model_calls": 0,
+    "formation_depth": 96,
+    "candidate_count": 60,
+    "selected_unit_count": 8,
+    "mean_selected_transfer_policy_lift_over_neutral_policy": 0.03662109375,
+    "nonnegative_selected_units": 8,
+    "posterior_structure_matches": 8,
+    "accepted": true
+  },
+  "model_backend": {
+    "provider": "zai",
+    "endpoint": "coding_chat_completions",
+    "base_url": "https://api.z.ai/api/coding/paas/v4",
+    "thinking": "disabled",
+    "do_sample": false,
+    "temperature": 0.0,
+    "provider_seed_supported": false,
+    "retry_timeout": true,
+    "retry_contract_errors": true,
+    "contract_retry_prompt_hardening": true,
+    "unique_request_id_per_attempt": true,
+    "timeout_seconds": 60.0,
+    "max_attempts": 12,
+    "retry_backoff_cap_seconds": 30.0,
+    "max_workers": 3,
+    "arm_order": "retained_first_when_field_index_even_else_reset_first",
+    "strategy_order": "specialist_first_when_field_index_plus_mission_index_even_else_balanced_first"
+  },
+  "institutional_model_memory": {
+    "formation_depth": 96,
+    "formation_strategy_order": ["specialist", "balanced"],
+    "turnover_fraction": 1.0,
+    "structural_hypotheses": ["role_specific", "cross_coverage"],
+    "reset_prior": {
+      "role_specific": 0.5,
+      "cross_coverage": 0.5
+    },
+    "retained_posterior_source": "organization_owned_pre_turnover_episodes",
+    "forecast_uses_current_replacement_roster": true,
+    "model_visible_memory": "structural_posterior_plus_current_roster_strategy_forecast",
+    "model_visible_hidden_regime": false,
+    "environment_reads_memory": false,
+    "evaluation_updates_memory": false,
+    "strategy_vocabulary": ["specialist", "balanced"],
+    "evaluation_trials_per_unit": 128,
+    "grounded_success_threshold": 0.5,
+    "decisive_forecast_epsilon": 1e-12
+  },
+  "skill_aliases": {
+    "urban_heat": "skill-a",
+    "water_systems": "skill-b",
+    "energy_storage": "skill-c",
+    "supply_networks": "skill-d",
+    "public_health": "skill-e",
+    "mobility": "skill-f"
+  },
+  "missions": [
+    {
+      "mission_id": "route-a",
+      "context": "route-a",
+      "lead_skill": "supply_networks",
+      "support_skill": "urban_heat",
+      "hidden_regime": "balanced",
+      "public_lead_skill": "skill-d",
+      "public_support_skill": "skill-a"
+    },
+    {
+      "mission_id": "route-b",
+      "context": "route-b",
+      "lead_skill": "urban_heat",
+      "support_skill": "supply_networks",
+      "hidden_regime": "balanced",
+      "public_lead_skill": "skill-a",
+      "public_support_skill": "skill-d"
+    },
+    {
+      "mission_id": "route-c",
+      "context": "route-c",
+      "lead_skill": "energy_storage",
+      "support_skill": "urban_heat",
+      "hidden_regime": "specialist",
+      "public_lead_skill": "skill-c",
+      "public_support_skill": "skill-a"
+    },
+    {
+      "mission_id": "route-d",
+      "context": "route-d",
+      "lead_skill": "public_health",
+      "support_skill": "urban_heat",
+      "hidden_regime": "specialist",
+      "public_lead_skill": "skill-e",
+      "public_support_skill": "skill-a"
+    }
+  ],
+  "arms": ["model_reset", "model_retained"],
+  "confirmatory_field_count": 6,
+  "missions_per_field": 4,
+  "required_paired_units": 24,
+  "calls_per_arm_unit": 4,
+  "max_output_tokens_per_call": 128,
+  "strategy_order_counts": {
+    "specialist_first": 12,
+    "balanced_first": 12
+  },
+  "arm_order_counts": {
+    "model_retained_first": 12,
+    "model_reset_first": 12
+  },
+  "presentation_arm_cross_count_each": 6,
+  "primary_metric": "mission_success_rate",
+  "secondary_metrics": [
+    "forecast_fidelity_rate",
+    "forecast_action_change_rate",
+    "cross_channel_contradiction_rate",
+    "intent_action_divergence_rate",
+    "outcome_report_mismatch_rate",
+    "unsupported_success_claim_rate",
+    "mean_input_tokens",
+    "mean_output_tokens",
+    "mean_model_latency_ms"
+  ],
+  "advancement_gate": {
+    "min_mean_retained_minus_reset_success_rate": 0.03,
+    "max_primary_sign_test_p": 0.05,
+    "min_nonnegative_field_effects": 4,
+    "max_outcome_report_mismatch_delta": 0.05,
+    "min_decisive_forecast_units_each_arm": 8,
+    "min_forecast_fidelity_each_arm": 0.9
+  }
+}
