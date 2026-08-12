@@ -44,7 +44,9 @@ def test_normalization_ignores_run_specific_hashes():
         )
 
 
-def test_normalize_source_preserves_private_capsule_bytes(tmp_path: Path):
+def test_normalize_source_preserves_private_capsule_bytes_and_refreshes_summary(
+    tmp_path: Path,
+):
     raw = tmp_path / "raw"
     cooked = tmp_path / "cooked"
     raw.mkdir()
@@ -65,18 +67,41 @@ def test_normalize_source_preserves_private_capsule_bytes(tmp_path: Path):
         '[{"field_id":"w4-source-seed-4211","seed":4211}]\n',
         encoding="utf-8",
     )
+    raw_candidate_sha = hashlib.sha256((raw / "candidates.jsonl").read_bytes()).hexdigest()
+    private_sha = hashlib.sha256(private).hexdigest()
+    (raw / "w4-source-summary.json").write_text(
+        json.dumps(
+            {
+                "agent_count": 2,
+                "candidate_sha256": raw_candidate_sha,
+                "capsule_sha256": private_sha,
+                "field_count": 1,
+                "seeds": [4211],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+        + "\n",
+        encoding="utf-8",
+    )
 
     manifest = source.normalize_source(raw, cooked)
 
     assert (cooked / "capsules.private.jsonl").read_bytes() == private
     assert manifest["candidate_count"] == 2
     assert manifest["field_ids"] == ["w4-source-seed-4211"]
-    assert manifest["raw_candidates_sha256"] == hashlib.sha256(
-        (raw / "candidates.jsonl").read_bytes()
-    ).hexdigest()
+    assert manifest["raw_candidates_sha256"] == raw_candidate_sha
     assert manifest["normalized_candidates_sha256"] == hashlib.sha256(
         (cooked / "candidates.jsonl").read_bytes()
     ).hexdigest()
+    assert manifest["stage_input_role"] == "deterministic_semantic_public_view"
+    assert manifest["raw_provenance_role"] == "preserved_sibling_source_export"
+
+    raw_summary = json.loads((raw / "w4-source-summary.json").read_text())
+    cooked_summary = json.loads((cooked / "w4-source-summary.json").read_text())
+    assert raw_summary["candidate_sha256"] == raw_candidate_sha
+    assert cooked_summary["candidate_sha256"] == manifest["normalized_candidates_sha256"]
+    assert cooked_summary["capsule_sha256"] == private_sha
 
 
 def test_normalization_rejects_inconsistent_checkpoint_prefixes():
