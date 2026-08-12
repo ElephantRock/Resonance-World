@@ -8,6 +8,7 @@ import pytest
 
 pytest.importorskip("resonance_contextgraph")
 
+import resonance_world.context_graph_adapter as adapter
 import resonance_world.context_graph_runtime as runtime
 
 
@@ -37,3 +38,15 @@ def test_runtime_facade_exposes_adapter_operations_not_world_truth() -> None:
         "validated_estimator",
     }
     assert expected.issubset(set(runtime.__all__))
+
+
+def test_adapter_does_not_import_legacy_contextgraph_or_world_truth() -> None:
+    source = inspect.getsource(adapter)
+    forbidden = {
+        "context_graph_w3_endogenous",
+        "practice_by_skill",
+        "JointEnvironment",
+        "_oracle_pair",
+        ".states",
+    }
+    assert not {token for token in forbidden if token in source}
