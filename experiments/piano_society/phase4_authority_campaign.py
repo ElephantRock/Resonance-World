@@ -1,58 +1,4 @@
-"""Execute the locked PIANO Phase-4 institutional authority campaign."""
-
-from __future__ import annotations
-
-import argparse
-import json
-import os
-from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import UTC, datetime
-from pathlib import Path
-from typing import Any
-from uuid import NAMESPACE_URL, uuid5
-
-from resonance.agents import AgentObservation, DefaultPolicyGateway, InMemoryDecisionEventStore
-from resonance.experiments.piano_phase2 import Phase2Config
-from resonance.experiments.piano_phase2_zai import ZAIChatCompletionsBackend
-from resonance.experiments.piano_phase4_authority import (
-    Phase4AuthorityArm,
-    Phase4AuthorityExperimentAgent,
-)
-
-from experiments.piano_society.authority_ledger import AuthorityGrant, AuthorityLedger
-from experiments.piano_society.phase3_campaign import EmptyTraceRepository
-from experiments.piano_society.phase4_authority import (
-    analyze,
-    config_digest,
-    materialize_authority_roles,
-    validate_config,
-)
-
-_PAYLOAD_SCHEMA = "resonance-world-piano-phase4-authority-arm-v0.1"
-_OBSERVED_AT = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
-_LOCAL_ALTERNATIVES = {
-    "OBSERVE": ("SLEEP", "REQUEST_TOOL"),
-    "SLEEP": ("OBSERVE", "REQUEST_TOOL"),
-    "REQUEST_TOOL": ("OBSERVE", "SLEEP"),
-}
-
-
-def _backend(config: dict[str, Any], *, api_key: str) -> ZAIChatCompletionsBackend:
-    backend = config["model_backend"]
-    return ZAIChatCompletionsBackend(
-        api_key=api_key,
-        model_snapshot=str(config["required_model_snapshot"]),
-        allowed_actions=tuple(str(value) for value in config["action_vocabulary"]),
-        temperature=float(backend["temperature"]),
-        timeout_seconds=float(backend["timeout_seconds"]),
-        max_attempts=int(backend["max_attempts"]),
-        retry_backoff_cap_seconds=float(backend["retry_backoff_cap_seconds"]),
-        retry_contract_errors=bool(backend["retry_contract_errors"]),
-    )
-
-
-def _ledger_for_case(case_roles: list[dict[str, Any]]) -> AuthorityLedger:
-    ledger = AuthorityLedger()
+r()
     for role in case_roles:
         grant = AuthorityGrant(
             organization_id=str(role["organization_id"]),
@@ -100,7 +46,8 @@ def _observation(role: dict[str, Any], ledger: AuthorityLedger) -> AgentObservat
             "pair_index": pair_index,
             "institution": "resonance-world-atlas authority ledger",
             "shared_channel_context": (
-                f"You are agent {index} in dyad {pair_index}. Your output channel has only a partial "
+                "You are agent " + str(index) + " in dyad " + str(pair_index) + ". "
+                "Your output channel has only a partial "
                 "local view. A public ten-agent plan board will be available before execution."
             ),
             "speech_local_cue": (
@@ -265,5 +212,5 @@ def main() -> None:
     print(json.dumps(result, indent=2, sort_keys=True))
 
 
-if __name__ == "__main__":
+if __name__ == "____main__":
     main()
