@@ -11,7 +11,11 @@ from pathlib import Path
 from typing import Any
 from uuid import NAMESPACE_URL, uuid5
 
-from resonance.agents import AgentObservation, DefaultPolicyGateway, InMemoryDecisionEventStore
+from resonance.agents import (
+    AgentObservation,
+    DefaultPolicyGateway,
+    InMemoryDecisionEventStore,
+)
 from resonance.experiments.piano_phase2 import Phase2Config
 from resonance.experiments.piano_phase2_factorial import (
     Phase2FactorialArm,
@@ -19,7 +23,12 @@ from resonance.experiments.piano_phase2_factorial import (
 )
 from resonance.experiments.piano_phase2_zai import ZAIChatCompletionsBackend
 
-from experiments.piano_society.phase2b import analyze, config_digest, materialize_cases, validate_config
+from experiments.piano_society.phase2b import (
+    analyze,
+    config_digest,
+    materialize_cases,
+    validate_config,
+)
 
 _PAYLOAD_SCHEMA = "resonance-world-piano-phase2b-factorial-arm-v0.1"
 _OBSERVED_AT = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
@@ -66,7 +75,9 @@ def _observation(case: dict[str, Any]) -> AgentObservation:
             "expected_outcome_status": case["expected_outcome_status"],
             "challenge_family": case["challenge_family"],
             "distractor_variant": case["variant_id"],
-            "evidence_state": "current policy conflicts with a stale or misleading cue",
+            "evidence_state": (
+                "current policy conflicts with a stale or misleading cue"
+            ),
         },
     )
 
@@ -85,7 +96,9 @@ def _run_arm(
         config=Phase2Config(
             trial_seed=int(case["trial_seed"]),
             required_model_snapshot=str(config["required_model_snapshot"]),
-            max_output_tokens_per_call=int(config["max_output_tokens_per_call"]),
+            max_output_tokens_per_call=int(
+                config["max_output_tokens_per_call"]
+            ),
         ),
         traces=EmptyTraceRepository(),
         events=InMemoryDecisionEventStore(),
@@ -101,7 +114,9 @@ def _run_case(
     config: dict[str, Any],
     api_key: str,
 ) -> dict[str, dict[str, object]]:
-    order = _LATIN_ORDERS[(int(case["trial_seed"]) - int(config["case_seed_start"])) % 4]
+    order = _LATIN_ORDERS[
+        (int(case["trial_seed"]) - int(config["case_seed_start"])) % 4
+    ]
     records: dict[str, dict[str, object]] = {}
     for arm_name in order:
         records[arm_name] = _run_arm(
@@ -117,7 +132,9 @@ def run(config: dict[str, Any], *, api_key: str):
     normalized = validate_config(config)
     cases = materialize_cases(config)
     by_arm: dict[str, list[dict[str, object]]] = {arm: [] for arm in _ARM_BY_NAME}
-    with ThreadPoolExecutor(max_workers=int(config["model_backend"]["max_workers"])) as executor:
+    with ThreadPoolExecutor(
+        max_workers=int(config["model_backend"]["max_workers"])
+    ) as executor:
         futures = [
             executor.submit(_run_case, case, config=config, api_key=api_key)
             for case in cases
