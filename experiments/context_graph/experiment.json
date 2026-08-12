@@ -1,0 +1,63 @@
+{
+  "version": "context-graph-scaffold-v0.1",
+  "status": "preregistered-scaffold",
+  "objective": "Measure cross-agent relational discovery from a provenance-bearing evidence graph without belief leakage.",
+  "conditions": [
+    "isolated",
+    "shared_evidence"
+  ],
+  "context_policy": {
+    "max_hops": 2,
+    "min_confidence": 0.70
+  },
+  "fixture": {
+    "agents": [
+      "agent-a",
+      "agent-b",
+      "agent-c"
+    ],
+    "canonical_facts": [
+      {
+        "subject": "asset-alpha",
+        "predicate": "uses",
+        "object": "bridge-x"
+      },
+      {
+        "subject": "asset-beta",
+        "predicate": "uses",
+        "object": "bridge-x"
+      },
+      {
+        "subject": "asset-gamma",
+        "predicate": "uses",
+        "object": "bridge-y"
+      }
+    ],
+    "queries": [
+      {
+        "query_id": "q-shared-bridge",
+        "agent_id": "agent-a",
+        "left": "asset-alpha",
+        "right": "asset-beta",
+        "predicate": "uses"
+      }
+    ]
+  },
+  "metrics": [
+    "recall",
+    "false_positive_rate",
+    "exact_query_rate",
+    "cross_agent_answers",
+    "provenance_completeness",
+    "contradiction_visibility",
+    "belief_contamination"
+  ],
+  "success_gates": {
+    "shared_recall_min": 1.0,
+    "isolated_recall_max": 0.0,
+    "shared_false_positive_rate_max": 0.0,
+    "shared_provenance_completeness_min": 1.0,
+    "cross_agent_answers_min": 1,
+    "belief_contamination_max": 0
+  }
+}
