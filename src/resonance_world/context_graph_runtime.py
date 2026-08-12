@@ -10,7 +10,8 @@ The dependency direction is intentionally one-way::
     Resonance World -> resonance_contextgraph
     resonance_contextgraph -X-> Resonance World
 
-Install the optional ``contextgraph`` extra to activate this facade.
+Install the optional ``contextgraph`` extra to activate this facade. The extra resolves
+through the immutable standalone release tag recorded below.
 """
 
 from __future__ import annotations
@@ -28,13 +29,19 @@ from .context_graph_adapter import (
 )
 
 STANDALONE_REPOSITORY = "ElephantRock/Resonance-ContextGraph"
+STANDALONE_RELEASE = "v0.1.0"
+STANDALONE_RELEASE_COMMIT = "b896891108fd954869a8cd0423f6e8440ab0cdc0"
 STANDALONE_TESTED_COMMIT = "55ce7bb435b3d4a1ff888474a5ca76ccff843150"
-ARCHITECTURAL_PARITY_RUN = 31638124103
+STANDALONE_RELEASE_WORKFLOW_RUN = 31641381598
+ARCHITECTURAL_PARITY_RUN = 31638854949
 LEGACY_WORLD_MODULE_STATUS = "scientific-compatibility-fixture"
 
 __all__ = [
     "ARCHITECTURAL_PARITY_RUN",
     "LEGACY_WORLD_MODULE_STATUS",
+    "STANDALONE_RELEASE",
+    "STANDALONE_RELEASE_COMMIT",
+    "STANDALONE_RELEASE_WORKFLOW_RUN",
     "STANDALONE_REPOSITORY",
     "STANDALONE_TESTED_COMMIT",
     "build_evidence_store",
