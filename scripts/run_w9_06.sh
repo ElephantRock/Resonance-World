@@ -56,7 +56,7 @@ python -m resonance_world.w8_native_replacement_execution \
   --campaign-config "$MARKET_CONFIG" \
   --output "$W8_REPLACEMENT"
 
-python -m resonance_world.w9_long_horizon \
+python -m resonance_world.w9_long_horizon_execution \
   --phase discovery \
   --source-dir "$BASE_SOURCE" \
   --market-config "$MARKET_CONFIG" \
@@ -69,7 +69,7 @@ import json
 from pathlib import Path
 
 result = json.loads(Path('output/w9/w9-06-long-horizon.json').read_text())
-assert result['version'] == 'w9-06-long-horizon-result-v0.1', result
+assert result['version'] == 'w9-06-long-horizon-result-v0.2', result
 assert result['phase'] == 'discovery', result
 assert result['selected_mechanisms'] == [], result
 assert result['structural_status'] == 'selected_W9_equals_W7_and_noP_control', result
@@ -78,12 +78,16 @@ assert result['alias_map'] == {
     'W9_without_portfolio_development': 'selected_W9',
 }, result
 selected = result['arms']['selected_W9']
+w8 = result['arms']['W8_neutral_full_regulatory_charter']
 assert selected == result['arms']['W7_unrestricted'], result
 assert selected == result['arms']['W9_without_portfolio_development'], result
 assert selected['compute']['incremental_source_development_compute'] == 0.0, selected
 assert selected['developmental_efficiency'] is None, selected
 assert result['gates']['developmental_efficiency_at_least_20pct_better_than_W8'] is False, result
 assert result['accounting']['source_development_unit'] == 'resident_agent_cycle', result
+assert w8['compute']['coalition_mission_execution_compute'] == 36864.0, w8
+assert w8['compute']['mission_execution_compute'] == 135168.0, w8
+assert result['accounting_corrections']['w8_coalition_mission_execution']['trial_blocks_per_cycle'] == 3, result
 assert 'practice_by_skill' not in json.dumps(result, sort_keys=True), result
 
 summary = {
@@ -100,7 +104,7 @@ summary = {
         'total_efficiency_final': selected['total_efficiency_final'],
     },
     'w8_neutral': {
-        key: result['arms']['W8_neutral_full_regulatory_charter'][key]
+        key: w8[key]
         for key in (
             'mean_organization_success_pct',
             'mean_source_loss_pp',
