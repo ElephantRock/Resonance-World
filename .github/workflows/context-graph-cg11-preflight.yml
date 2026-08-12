@@ -17,7 +17,7 @@ concurrency:
 
 env:
   PROTOCOL_FREEZE_SHA: 4b336f824f3bbcbfde425de1920dfabd6d23b738
-  EVALUATOR_FREEZE_SHA: 7915ad5254804df3526bbd78c755d562c7d4b4d4
+  EVALUATOR_FREEZE_SHA: fdc7368d90e5deeb5c770ad2101eca8e3f37e721
 
 jobs:
   preflight:
