@@ -1,0 +1,62 @@
+name: W9-04 Coalition Factorial
+
+on:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  w9-coalition:
+    if: github.head_ref == 'w9/coalition-mechanisms'
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    services:
+      postgres:
+        image: pgvector/pgvector:pg16
+        env:
+          POSTGRES_DB: resonance
+          POSTGRES_USER: resonance
+          POSTGRES_PASSWORD: resonance
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U resonance -d resonance"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      FIELD_SHA: 2a85739603ebac86f451b90733229782c0d45ce0
+      DSN: postgresql://resonance:resonance@localhost:5432/resonance
+      PGHOST: localhost
+      PGPORT: "5432"
+      PGUSER: resonance
+      PGPASSWORD: resonance
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git ../field
+          git -C ../field checkout "$FIELD_SHA"
+          test "$(git -C ../field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+      - name: Install World and Field
+        run: python -m pip install -e '../field[dev]' -e .
+      - name: Ensure PostgreSQL client
+        run: |
+          if ! command -v psql >/dev/null 2>&1; then
+            sudo apt-get update
+            sudo apt-get install -y postgresql-client
+          fi
+      - name: Execute W9-04 factorial
+        env:
+          FIELD_DIR: ${{ github.workspace }}/../field
+        run: bash scripts/run_w9_04.sh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: w9-04-coalition-evidence
+          path: output/w9
+          if-no-files-found: error
+          retention-days: 90
