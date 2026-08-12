@@ -60,13 +60,17 @@
     "retry_contract_errors": true,
     "contract_retry_prompt_hardening": true,
     "unique_request_id_per_attempt": true,
-    "format_template_action_source": "first_registered_strategy",
     "timeout_seconds": 60.0,
     "max_attempts": 12,
     "retry_backoff_cap_seconds": 30.0,
     "max_workers": 3,
     "arm_order": "retained_first_when_field_index_even_else_reset_first",
     "strategy_order": "specialist_first_when_field_index_plus_mission_index_even_else_balanced_first"
+  },
+  "provider_format_template": {
+    "action_example_source": "first_registered_strategy",
+    "scientific_user_prompt_unchanged": true,
+    "purpose": "avoid out-of-vocabulary OBSERVE examples in strategy-valued JSON contracts"
   },
   "institutional_memory": {
     "formation_depth": 48,
