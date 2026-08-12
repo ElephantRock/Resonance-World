@@ -1,0 +1,94 @@
+{
+  "experiment": "piano-society-runtime-v0-phase3-social",
+  "preregistration_revision": "glm5.2-social-dyads-v1",
+  "campaign_locked": true,
+  "field_revision": "cc8dbcedf6366f687c9acc7050b5654c1867bd8e",
+  "required_model_snapshot": "glm-5.2",
+  "validated_prerequisites": {
+    "acknowledgement_validated": true,
+    "controller_broadcast_validated": true,
+    "phase2b_world_revision": "9aed50abfc2d3500ac6b0fa082d03bb0a2c64606",
+    "phase2b_field_revision": "54913b4ede896589b03dae5fd1f7ee653d9e6acc",
+    "phase2b_artifact_digest": "sha256:6fdc5d0ddf1aa693c81801b78aae4f71f4807215d27960d19bbc9d2c0b62a7e2",
+    "phase2c_world_revision": "cbbd480100acf437e4af562876c381b38931222f",
+    "phase2c_field_revision": "f9ce80dd51cc3bd3adf9b810972f832263b3fe87",
+    "phase2c_artifact_digest": "sha256:f330a4d5153327a3bca37ea9e30ab8fd7eb3f167f0cb474f708ef0e4fc5a698b"
+  },
+  "model_backend": {
+    "provider": "zai",
+    "endpoint": "coding_chat_completions",
+    "base_url": "https://api.z.ai/api/coding/paas/v4",
+    "thinking": "disabled",
+    "do_sample": false,
+    "temperature": 0.0,
+    "provider_seed_supported": false,
+    "retry_timeout": true,
+    "timeout_seconds": 60.0,
+    "max_attempts": 6,
+    "max_workers": 3,
+    "arm_order": "counterbalanced_by_case_seed_parity",
+    "agent_order_within_round": "ascending_agent_index"
+  },
+  "institutional_protocol": "ten agents are arranged as five dyads; each role has an authoritative action mandate; round one publishes speech plans to a ten-agent board; round two executes after reading nine peer plans",
+  "agent_count": 10,
+  "pair_count": 5,
+  "calls_per_agent": 4,
+  "max_output_tokens_per_call": 128,
+  "action_vocabulary": ["OBSERVE", "REQUEST_TOOL", "SLEEP"],
+  "arms": ["decentralized", "piano"],
+  "joint_cases": [
+    {
+      "case_id": "allocation-alpha",
+      "case_seed": 7001,
+      "role_actions": ["OBSERVE", "SLEEP", "REQUEST_TOOL", "OBSERVE", "SLEEP", "REQUEST_TOOL", "OBSERVE", "SLEEP", "REQUEST_TOOL", "OBSERVE"]
+    },
+    {
+      "case_id": "allocation-beta",
+      "case_seed": 7002,
+      "role_actions": ["SLEEP", "REQUEST_TOOL", "OBSERVE", "SLEEP", "REQUEST_TOOL", "OBSERVE", "SLEEP", "REQUEST_TOOL", "OBSERVE", "SLEEP"]
+    },
+    {
+      "case_id": "allocation-gamma",
+      "case_seed": 7003,
+      "role_actions": ["REQUEST_TOOL", "OBSERVE", "SLEEP", "REQUEST_TOOL", "OBSERVE", "SLEEP", "REQUEST_TOOL", "OBSERVE", "SLEEP", "REQUEST_TOOL"]
+    },
+    {
+      "case_id": "allocation-delta",
+      "case_seed": 7004,
+      "role_actions": ["OBSERVE", "REQUEST_TOOL", "SLEEP", "OBSERVE", "REQUEST_TOOL", "SLEEP", "OBSERVE", "REQUEST_TOOL", "SLEEP", "OBSERVE"]
+    },
+    {
+      "case_id": "allocation-epsilon",
+      "case_seed": 7005,
+      "role_actions": ["SLEEP", "OBSERVE", "REQUEST_TOOL", "SLEEP", "OBSERVE", "REQUEST_TOOL", "SLEEP", "OBSERVE", "REQUEST_TOOL", "SLEEP"]
+    },
+    {
+      "case_id": "allocation-zeta",
+      "case_seed": 7006,
+      "role_actions": ["REQUEST_TOOL", "SLEEP", "OBSERVE", "REQUEST_TOOL", "SLEEP", "OBSERVE", "REQUEST_TOOL", "SLEEP", "OBSERVE", "REQUEST_TOOL"]
+    }
+  ],
+  "required_joint_cases": 6,
+  "primary_metrics": [
+    "dyad_failure_rate",
+    "agent_role_failure_rate"
+  ],
+  "secondary_metrics": [
+    "joint_case_completion_rate",
+    "cross_channel_contradiction_rate",
+    "intent_action_divergence_rate",
+    "outcome_report_mismatch_rate",
+    "unsupported_success_claim_rate",
+    "mean_input_tokens",
+    "mean_output_tokens",
+    "mean_model_latency_ms"
+  ],
+  "advancement_gate": {
+    "max_dyad_failure_delta": -0.40,
+    "max_agent_role_failure_delta": -0.40,
+    "min_joint_case_completion_delta": 0.50,
+    "max_contradiction_delta": -0.25,
+    "max_outcome_report_mismatch_delta": 0.05,
+    "max_primary_sign_test_p": 0.05
+  }
+}
