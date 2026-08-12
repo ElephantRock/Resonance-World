@@ -167,7 +167,27 @@ def _run_arm(
     if any(skill not in domains for skill in selected_strata):
         raise ValueError("portfolio plan contains a skill outside the pinned Field domains")
 
-    def portfolio_domain_index(seed_value: int, cycle: int, domain_count: int) -> int:
+    def portfolio_domain_index(*args: object) -> int:
+        """Preserve Field domain selection except for the frozen extra-cycle schedule.
+
+        The pinned lifecycle runner calls ``_domain_index(seed, cycle, domain_count)``.
+        Some Field invariant helpers bind the imported symbol as a unary cycle callback;
+        support that equivalent calling convention using this arm's already-frozen seed
+        and domain count. Both paths resolve to the same deterministic domain index.
+        """
+
+        if len(args) == 3:
+            seed_value = int(args[0])
+            cycle = int(args[1])
+            domain_count = int(args[2])
+        elif len(args) == 1:
+            seed_value = seed
+            cycle = int(args[0])
+            domain_count = len(domains)
+        else:
+            raise TypeError(
+                "W9 portfolio domain hook expects cycle or (seed, cycle, domain_count)"
+            )
         if cycle < base_cycles or mode != "portfolio":
             return original_domain_index(seed_value, cycle, domain_count)
         target_skill = selected_strata[(cycle - base_cycles) % len(selected_strata)]
