@@ -101,15 +101,21 @@ def _payload(arm: str, record: dict[str, object]) -> dict[str, object]:
     }
 
 
-def test_repository_preregistration_is_locked_to_pinned_campaign() -> None:
+def test_repository_preregistration_is_locked_to_zai_revision() -> None:
     path = Path("experiments/piano_society/phase2_config.json")
     config = json.loads(path.read_text(encoding="utf-8"))
     normalized = validate_config(config)
 
     assert normalized["campaign_locked"] is True
-    assert normalized["required_model_snapshot"] == "gpt-4.1-mini-2025-04-14"
-    assert normalized["field_revision"] == "bff92d11b4c62c3e6b950696d5fd5ebf7ad2caa5"
+    assert normalized["required_model_snapshot"] == "glm-4-32b-0414-128k"
+    assert normalized["field_revision"] == "5fd619d9b2170b4344b6872798db4f09fc35924b"
     assert normalized["required_pairs"] == 60
+    assert config["preregistration_revision"] == "zai-v1"
+    backend = config["model_backend"]
+    assert backend["provider"] == "zai"
+    assert backend["temperature"] == 0.0
+    assert backend["provider_seed_supported"] is False
+    assert backend["trial_seed_role"] == "pair_identifier_only"
 
 
 def test_locked_pair_analysis_is_mechanical_and_can_pass_gate() -> None:
