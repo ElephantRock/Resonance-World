@@ -1,0 +1,124 @@
+name: Context Graph CG-10 Balanced Stopping Calibration
+
+on:
+  push:
+    branches: ["experiment/context-graph"]
+    paths:
+      - ".github/workflows/context-graph-cg10.yml"
+      - "experiments/context_graph/run_cg10_balanced_stopping.py"
+      - "experiments/context_graph/cg10-balanced-stopping-calibration.json"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: context-graph-cg10-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prove predecessor scientific records remain frozen
+        run: |
+          git diff --exit-code 1c56bf2533aa164e40a0073c5bc4bdeb32083510 HEAD -- \
+            experiments/context_graph/cg5-w3-active-measurement-result.json
+          git diff --exit-code 2b502624cc3d948775fd21153158fb10ee3d7d21 HEAD -- \
+            experiments/context_graph/cg7-w3-measurement-economy-result.json
+          git diff --exit-code ee5f4df1d06cb426db3a7819bedc7f0eef7bb62d HEAD -- \
+            experiments/context_graph/cg9-w3-balanced-frontier-result.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Download already-unblinded CG-5 source
+        uses: actions/download-artifact@v4
+        with:
+          name: context-graph-cg5-fresh-source
+          path: source-cg5
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31622647635
+      - name: Download already-unblinded CG-7 source
+        uses: actions/download-artifact@v4
+        with:
+          name: context-graph-cg7-fresh-source
+          path: source-cg7
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31625645587
+      - name: Download already-unblinded CG-9 source
+        uses: actions/download-artifact@v4
+        with:
+          name: context-graph-cg9-fresh-source
+          path: source-cg9
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31629717950
+      - name: Lint and compile exploratory calibrator
+        run: |
+          ruff check experiments/context_graph/run_cg10_balanced_stopping.py
+          python -m py_compile experiments/context_graph/run_cg10_balanced_stopping.py
+      - name: Verify stopping and outcome-law isolation
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import inspect
+          from experiments.context_graph.run_cg10_balanced_stopping import (
+              choose_stop,
+              stopping_observables,
+          )
+          from resonance_world.w4a_joint_learning import JointEnvironment
+
+          stopping_source = inspect.getsource(stopping_observables) + inspect.getsource(choose_stop)
+          assert ".states" not in stopping_source
+          forbidden = {
+              "graph", "context_graph", "evidence", "claims",
+              "relationship_state", "organization_memory", "acquisition_state",
+          }
+          params = set(inspect.signature(JointEnvironment.evaluate).parameters)
+          assert not forbidden.intersection(params), params
+          PY
+      - name: Run exploratory cross-cohort stopping calibration
+        run: |
+          PYTHONPATH=. python experiments/context_graph/run_cg10_balanced_stopping.py \
+            --config experiments/context_graph/cg10-balanced-stopping-calibration.json \
+            --cg5-capsules source-cg5/world/output/cg5-source/capsules.private.jsonl \
+            --cg5-summary source-cg5/world/output/cg5-source/w3-01-source-summary.json \
+            --cg7-capsules source-cg7/world/output/cg7-source/capsules.private.jsonl \
+            --cg7-summary source-cg7/world/output/cg7-source/w3-01-source-summary.json \
+            --cg9-capsules source-cg9/world/output/cg9-source/capsules.private.jsonl \
+            --cg9-summary source-cg9/world/output/cg9-source/w3-01-source-summary.json \
+            --cg9-reference experiments/context_graph/cg9-w3-balanced-frontier-result.json \
+            --output output/context_graph/cg10-balanced-stopping-calibration-result.json
+      - name: Enforce control replay and exploratory boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(
+              Path("output/context_graph/cg10-balanced-stopping-calibration-result.json").read_text()
+          )
+          replay = result["integrity"]["cg9_common_control_replay"]
+          assert replay["cg9_fixed6_within_1e_12"], replay
+          assert replay["cg9_uniform60_within_1e_12"], replay
+          assert result["confirmatory_claim"] is False
+          assert result["integrity"]["cohort_overlap"] == 0
+          assert result["integrity"]["stopping_evaluator_truth_inputs"] == 0
+          assert result["integrity"]["outcome_law_graph_inputs"] == 0
+          print(json.dumps(result["selection"], indent=2, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: context-graph-cg10-calibration
+          path: output/context_graph/cg10-balanced-stopping-calibration-result.json
+          if-no-files-found: warn
+          retention-days: 90
