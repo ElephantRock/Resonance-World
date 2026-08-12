@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 env:
-  PIANO_FIELD_SHA: 79fb6231352aa207e67210eff794030b628f8b23
+  PIANO_FIELD_SHA: d9fb7400c499feb78da11fb333e326b9563bf4ea
 
 jobs:
   phase-zero:
@@ -86,7 +86,7 @@ jobs:
           value = json.loads(Path('output/piano_society/phase1/result.json').read_text())
           assert value['phase'] == 'live-contract-smoke'
           assert value['scientific_claim_allowed'] is False
-          assert value['field_revision'] == '79fb6231352aa207e67210eff794030b628f8b23'
+          assert value['field_revision'] == 'd9fb7400c499feb78da11fb333e326b9563bf4ea'
           PY
       - uses: actions/upload-artifact@v4
         with:
@@ -135,7 +135,7 @@ jobs:
           assert value['campaign_locked'] is True
           assert value['model_snapshot'] == 'glm-5.2'
           assert value['required_pairs'] == 60
-          assert value['field_revision'] == '79fb6231352aa207e67210eff794030b628f8b23'
+          assert value['field_revision'] == 'd9fb7400c499feb78da11fb333e326b9563bf4ea'
           PY
           cp experiments/piano_society/phase2_config.json output/piano_society/phase2/
           cp experiments/piano_society/PHASE2_PREREGISTRATION.md output/piano_society/phase2/
