@@ -37,6 +37,7 @@ export_source_rows() {
   local arm_predicate="$2"
   local raw_dir="$3"
   local destination="$4"
+  local normalize_arm="${5:-false}"
   mkdir -p "$raw_dir" "$destination"
 
   psql "$DSN" --csv -c "
@@ -83,6 +84,31 @@ export_source_rows() {
     ORDER BY r.seed, b.task_id, b.bidder_agent_id
   " > "$raw_dir/bids.csv"
 
+  # The standing source exporter intentionally accepts only its historical
+  # `immortal_control` arm label. W9 development runs are still immortal native
+  # Field populations; normalize only this CSV schema label before invoking the
+  # unchanged exporter. Run IDs, seeds, environment, metrics, outcomes, tasks,
+  # bids, and all scientific state remain untouched.
+  if [[ "$normalize_arm" == "true" ]]; then
+    python - "$raw_dir/runs.csv" <<'PY'
+import csv
+import sys
+from pathlib import Path
+
+path = Path(sys.argv[1])
+with path.open(newline='', encoding='utf-8') as handle:
+    rows = list(csv.DictReader(handle))
+if not rows:
+    raise SystemExit('development source export selected no runs')
+for row in rows:
+    row['arm_label'] = 'immortal_control'
+with path.open('w', newline='', encoding='utf-8') as handle:
+    writer = csv.DictWriter(handle, fieldnames=list(rows[0]))
+    writer.writeheader()
+    writer.writerows(rows)
+PY
+  fi
+
   python -m resonance_world.w4_source_export \
     "$raw_dir/runs.csv" \
     "$raw_dir/outcomes.csv" \
@@ -114,13 +140,15 @@ export_source_rows \
   "$DEVELOPMENT_CAMPAIGN" \
   "r.arm_label LIKE 'w9-compute-control-seed%'" \
   "$RAW/control" \
-  "$CONTROL_SOURCE"
+  "$CONTROL_SOURCE" \
+  true
 
 export_source_rows \
   "$DEVELOPMENT_CAMPAIGN" \
   "r.arm_label LIKE 'w9-portfolio-seed%'" \
   "$RAW/portfolio" \
-  "$PORTFOLIO_SOURCE"
+  "$PORTFOLIO_SOURCE" \
+  true
 
 python -m resonance_world.w9_portfolio \
   --phase discovery \
