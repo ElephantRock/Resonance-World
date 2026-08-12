@@ -1,0 +1,177 @@
+name: PIANO Society Phase 5C Frozen Constructor
+
+on:
+  push:
+    branches:
+      - experiment/piano-society-phase5c-decision-relevant-memory
+    paths:
+      - experiments/piano_society/phase5c_constructor_config.json
+      - experiments/piano_society/phase5c_constructor.py
+      - tests/test_piano_society_phase5c_constructor.py
+      - .github/workflows/piano-society-phase5c-frozen-constructor.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  FIELD_SHA: e877bf03dbf6681ce7cbd98d984e73c032e911aa
+  SOURCE_RUN: "31652358960"
+  SOURCE_ARTIFACT_ID: "9163101495"
+  SOURCE_ARTIFACT: piano-society-phase5c-frozen-source
+  SOURCE_ARTIFACT_DIGEST: sha256:2caf65e6f2839f243ad0c6e59f7d12ad196f48ddf79aab7c3cca42b0904f22f6
+  SOURCE_CAPSULE_SHA256: b44926d70fe91ae3ad546351bd42096ad54a10d7d50eb954060e1bc56dcd1ea8
+  SOURCE_CANDIDATE_SHA256: a750b8b110a26a60e74a4561493c3359b29524cca2ebec1061bccff6cb3ad0b7
+
+jobs:
+  frozen-source-constructor:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - name: Install frozen revisions
+        run: python -m pip install -e 'field[dev]' -e world
+      - name: Verify exact frozen source artifact digest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api repos/ElephantRock/Resonance-World/actions/artifacts/$SOURCE_ARTIFACT_ID --jq .digest)" = "$SOURCE_ARTIFACT_DIGEST"
+      - name: Download exact frozen Phase 5C source
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.SOURCE_ARTIFACT }}
+          path: frozen-source
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: ${{ env.SOURCE_RUN }}
+      - name: Verify frozen source bytes and pool
+        run: |
+          CAPSULE="$(find frozen-source -name capsules.private.jsonl -print -quit)"
+          SUMMARY="$(find frozen-source -name w4-source-summary.json -print -quit)"
+          test -n "$CAPSULE"
+          test -n "$SUMMARY"
+          test "$(sha256sum "$CAPSULE" | awk '{print $1}')" = "$SOURCE_CAPSULE_SHA256"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          summary_path = next(Path('frozen-source').rglob('w4-source-summary.json'))
+          data = json.loads(summary_path.read_text())
+          assert data['field_count'] == 24, data
+          assert data['agent_count'] == 288, data
+          assert data['capsule_sha256'] == 'b44926d70fe91ae3ad546351bd42096ad54a10d7d50eb954060e1bc56dcd1ea8', data
+          assert data['candidate_sha256'] == 'a750b8b110a26a60e74a4561493c3359b29524cca2ebec1061bccff6cb3ad0b7', data
+          assert data['seeds'] == [
+              16001,16103,16217,16333,16447,16561,
+              16673,16787,16889,16993,17107,17209,
+              17317,17431,17539,17653,17761,17863,
+              17977,18089,18203,18313,18427,18539,
+          ], data
+          PY
+      - name: Lint and test constructor contract
+        working-directory: world
+        run: |
+          ruff check --ignore E501,I001 \
+            experiments/piano_society/phase5c_constructor.py \
+            tests/test_piano_society_phase5c_constructor.py
+          pytest -q tests/test_piano_society_phase5c_constructor.py
+      - name: Validate exact constructor preregistration
+        working-directory: world
+        run: |
+          python - <<'PY'
+          import json
+          data = json.load(open('experiments/piano_society/phase5c_constructor_config.json', encoding='utf-8'))
+          assert data['revision'] == 'piano-phase5c-roster-conditional-v1'
+          assert data['no_model_calls'] is True
+          assert data['formation_depth'] == 96
+          assert data['calibration_evaluation_trials_per_policy'] == 512
+          assert data['eligibility'] == {
+              'require_distinct_ordered_policy_assignments': True,
+              'min_role_specific_specialist_advantage': 0.02,
+              'min_cross_coverage_balanced_advantage': 0.02,
+              'min_neutral_forecast_margin': 0.0005,
+              'min_formation_hypothesis_identifiability': 0.005,
+          }
+          assert data['selection'] == {
+              'calibration_units': 4,
+              'calibration_target_role_specific': 2,
+              'calibration_target_cross_coverage': 2,
+              'confirmatory_units': 12,
+              'confirmatory_target_role_specific': 6,
+              'confirmatory_target_cross_coverage': 6,
+              'one_unit_per_field': True,
+          }
+          assert data['calibration_acceptance'] == {
+              'min_mean_retained_minus_neutral_success_rate': 0.03,
+              'min_nonnegative_units': 4,
+              'min_forecast_preference_change_units': 4,
+              'min_target_posterior_match_units': 4,
+          }
+          PY
+      - name: Run unchanged constructor and capture diagnostics
+        working-directory: world
+        shell: bash
+        run: |
+          mkdir -p ../output/phase5c-constructor
+          CAPSULE="$(find ../frozen-source -name capsules.private.jsonl -print -quit)"
+          set +e
+          python -m experiments.piano_society.phase5c_constructor \
+            "$CAPSULE" \
+            experiments/piano_society/phase5c_constructor_config.json \
+            ../output/phase5c-constructor/result.json \
+            > ../output/phase5c-constructor/stdout.log \
+            2> ../output/phase5c-constructor/stderr.log
+          status=$?
+          set -e
+          echo "$status" > ../output/phase5c-constructor/constructor-exit-status.txt
+          cat ../output/phase5c-constructor/stdout.log || true
+          cat ../output/phase5c-constructor/stderr.log >&2 || true
+      - name: Assert diagnostic remained model-free
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+      - name: Upload constructor diagnostic before classification
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase5c-constructor-diagnostic
+          path: output/phase5c-constructor
+          if-no-files-found: error
+          retention-days: 90
+      - name: Classify constructor exit
+        run: |
+          status="$(cat output/phase5c-constructor/constructor-exit-status.txt)"
+          if [ "$status" != "0" ] && [ "$status" != "3" ]; then
+            echo "Constructor runtime defect: exit $status" >&2
+            exit "$status"
+          fi
+          if [ ! -f output/phase5c-constructor/result.json ]; then
+            echo "Constructor did not materialize result.json" >&2
+            exit 4
+          fi
+          python - <<'PY'
+          import json
+          data = json.load(open('output/phase5c-constructor/result.json', encoding='utf-8'))
+          assert data['model_calls'] == 0, data
+          assert data['confirmatory_outcomes_evaluated'] is False, data
+          assert data['confirmatory_selected_count'] == 12, data
+          assert data['confirmatory_target_counts'] == {
+              'role_specific': 6,
+              'cross_coverage': 6,
+          }, data
+          if data['accepted'] is not True:
+              raise SystemExit(3)
+          PY
