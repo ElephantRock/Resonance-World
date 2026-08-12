@@ -10,10 +10,6 @@ from dataclasses import asdict
 from pathlib import Path
 from typing import Any
 
-from experiments.context_graph.run_cg10_balanced_stopping import (
-    choose_stop,
-    stopping_observables,
-)
 from experiments.context_graph.run_cg4m_measurement_sufficiency import (
     _bundle_flat_context,
     _cell_evidence,
@@ -32,12 +28,15 @@ from experiments.context_graph.run_cg5_w3_active_measurement import (
 from experiments.context_graph.run_cg6_adaptive_acquisition import (
     acquire,
     base_field,
-    current_counts,
     estimator,
     missions,
     pair_from_context,
     read_json,
     sha256,
+)
+from experiments.context_graph.run_cg10_balanced_stopping import (
+    choose_stop,
+    stopping_observables,
 )
 from resonance_world.context_graph_w3_endogenous import _oracle_pair
 from resonance_world.w4a_joint_learning import JointEnvironment
@@ -401,7 +400,9 @@ def evaluate(
         ),
         "bootstrap_graph_flat_ci_lower": graph_flat_ci[0],
         "bootstrap_graph_flat_ci_upper": graph_flat_ci[1],
-        "positive_field_graph_flat_lift_count": sum(value > 0 for value in field_graph_flat.values()),
+        "positive_field_graph_flat_lift_count": sum(
+            value > 0 for value in field_graph_flat.values()
+        ),
         "stopped_expected_success_lift_over_shuffled": (
             stopped_metric.mean_expected_success - shuffled_metric.mean_expected_success
         ),
@@ -503,7 +504,8 @@ def evaluate(
         "historical_outcome_rows_consumed_max": 0
         <= int(gates["historical_outcome_rows_consumed_max"]),
         "posthoc_imported_claims_max": 0 <= int(gates["posthoc_imported_claims_max"]),
-        "belief_contamination_max": belief_contamination <= int(gates["belief_contamination_max"]),
+        "belief_contamination_max": belief_contamination
+        <= int(gates["belief_contamination_max"]),
         "outcome_law_graph_inputs_max": outcome_law_graph_inputs
         <= int(gates["outcome_law_graph_inputs_max"]),
         "stopping_evaluator_truth_inputs_max": diagnostics["stopping_evaluator_truth_inputs"]
