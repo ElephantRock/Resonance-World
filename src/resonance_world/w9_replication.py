@@ -190,6 +190,9 @@ def synthesize_replication(
         "seeds": list(EXPECTED_SEEDS),
         "discovery_frozen_prerequisites": DISCOVERY_FROZEN,
         "replication_stage_results": stage_results,
+        "stage_payload_sha256": {
+            name: _canonical_sha256(value) for name, value in stages.items()
+        },
         "nested_outcomes": nested,
         "discovery_frozen_regime_preserved": True,
         "selected_mechanisms": [],
