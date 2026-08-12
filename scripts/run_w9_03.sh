@@ -40,12 +40,12 @@ export_source_rows() {
   mkdir -p "$raw_dir" "$destination"
 
   psql "$DSN" --csv -c "
-    SELECT run_id::text, seed, arm_label, environment::text, metrics::text, completed_at
-    FROM integration_campaign_runs
-    WHERE campaign_name = '$campaign'
-      AND experiment_number = 63
+    SELECT r.run_id::text, r.seed, r.arm_label, r.environment::text, r.metrics::text, r.completed_at
+    FROM integration_campaign_runs r
+    WHERE r.campaign_name = '$campaign'
+      AND r.experiment_number = 63
       AND ($arm_predicate)
-    ORDER BY seed
+    ORDER BY r.seed
   " > "$raw_dir/runs.csv"
 
   psql "$DSN" --csv -c "
