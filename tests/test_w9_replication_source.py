@@ -57,9 +57,9 @@ def test_normalize_source_preserves_private_capsule_bytes(tmp_path: Path):
         encoding="utf-8",
     )
     private = (
-        '{"agent_id":"a","practice_by_skill":{"water_systems":2}}\n'
-        '{"agent_id":"b","practice_by_skill":{"water_systems":3}}\n'
-    ).encode()
+        b'{"agent_id":"a","practice_by_skill":{"water_systems":2}}\n'
+        b'{"agent_id":"b","practice_by_skill":{"water_systems":3}}\n'
+    )
     (raw / "capsules.private.jsonl").write_bytes(private)
     (raw / "source-fields.json").write_text(
         '[{"field_id":"w4-source-seed-4211","seed":4211}]\n',
