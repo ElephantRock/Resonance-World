@@ -1,0 +1,43 @@
+name: PIANO Society Runtime
+
+on:
+  push:
+    branches:
+      - experiment/piano-society-runtime
+    paths:
+      - "experiments/piano_society/**"
+      - "tests/test_piano_society_experiment.py"
+      - ".github/workflows/piano-society-runtime.yml"
+  pull_request:
+    paths:
+      - "experiments/piano_society/**"
+      - "tests/test_piano_society_experiment.py"
+      - ".github/workflows/piano-society-runtime.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  phase-zero:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install development dependencies
+        run: python -m pip install -e '.[dev]'
+      - name: Run focused tests
+        run: pytest -q tests/test_piano_society_experiment.py
+      - name: Run paired instrumentation harness
+        run: |
+          python -m experiments.piano_society.harness \
+            --config experiments/piano_society/config.json \
+            --output output/piano_society/phase0.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase0
+          path: output/piano_society/phase0.json
+          if-no-files-found: error
+          retention-days: 30

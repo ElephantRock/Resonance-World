@@ -1,0 +1,18 @@
+{
+  "experiment": "piano-society-runtime-v0",
+  "seeds": [
+    1729,
+    3253,
+    4787,
+    6361,
+    7919
+  ],
+  "scales": [
+    10,
+    50,
+    100
+  ],
+  "steps_per_agent": 40,
+  "proposal_disagreement_rate": 0.25,
+  "environment_failure_rate": 0.18
+}
