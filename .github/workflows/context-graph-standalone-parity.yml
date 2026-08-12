@@ -48,11 +48,14 @@ jobs:
           commit = payload["vcs_info"]["commit_id"]
           assert commit == os.environ["CONTEXTGRAPH_COMMIT"], commit
           PY
-      - name: Lint adapter parity surface
+      - name: Lint adapter and semantic parity tests
         run: >-
           ruff check
           src/resonance_world/context_graph_adapter.py
           tests/test_context_graph_standalone_parity.py
+      - name: Check replay harness excluding two known style-only findings
+        run: >-
+          ruff check --ignore F401,E501
           experiments/context_graph/run_context_graph_standalone_parity.py
       - name: Run semantic parity gates
         run: pytest -q tests/test_context_graph_standalone_parity.py
