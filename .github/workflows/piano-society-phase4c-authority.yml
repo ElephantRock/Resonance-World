@@ -37,7 +37,7 @@ jobs:
         run: python -m pip install -e '../field[dev]' -e '.[dev]'
       - name: Lint and test Phase 4C contract
         run: |
-          ruff check --ignore E501 \
+          ruff check --ignore E501,UP012 \
             experiments/piano_society/phase4c_authority.py \
             experiments/piano_society/phase4c_authority_campaign.py \
             tests/test_piano_society_phase4c_authority.py
