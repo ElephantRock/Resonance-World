@@ -1,4 +1,4 @@
-"""Execute the locked one-agent PIANO Phase-2 paired campaign."""
+"""Execute the locked one-agent PIANO Phase-2-ZAI paired campaign."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ from uuid import NAMESPACE_URL, uuid5
 
 from resonance.agents import AgentObservation, DefaultPolicyGateway, InMemoryDecisionEventStore
 from resonance.experiments.piano_phase2 import Phase2Arm, Phase2Config, Phase2ExperimentAgent
-from resonance.experiments.piano_phase2_openai import OpenAIChatCompletionsBackend
+from resonance.experiments.piano_phase2_zai import ZAIChatCompletionsBackend
 
 from experiments.piano_society.phase2 import analyze, config_digest, validate_config
 
@@ -34,17 +34,20 @@ def _backend_config(config: dict[str, Any]) -> dict[str, Any]:
     if not isinstance(value, dict):
         raise ValueError("locked Phase-2 config requires model_backend")
     expected = {
-        "provider": "openai",
+        "provider": "zai",
         "endpoint": "chat_completions",
-        "structured_output": "strict_json_schema",
+        "base_url": "https://api.z.ai/api/paas/v4",
+        "structured_output": "json_object_local_schema_validation",
+        "provider_seed_supported": False,
+        "trial_seed_role": "pair_identifier_only",
         "pair_order": "counterbalanced_by_seed_parity",
     }
     for key, required in expected.items():
         if value.get(key) != required:
             raise ValueError(f"model_backend.{key} must equal {required!r}")
     temperature = value.get("temperature")
-    if isinstance(temperature, bool) or not isinstance(temperature, (int, float)):
-        raise ValueError("model_backend.temperature must be numeric")
+    if temperature != 0.0:
+        raise ValueError("Phase-2-ZAI requires model_backend.temperature == 0.0")
     workers = value.get("max_workers")
     if isinstance(workers, bool) or not isinstance(workers, int) or workers <= 0:
         raise ValueError("model_backend.max_workers must be positive")
@@ -75,7 +78,7 @@ def _run_arm(
     max_output_tokens: int,
     temperature: float,
 ) -> dict[str, object]:
-    backend = OpenAIChatCompletionsBackend(
+    backend = ZAIChatCompletionsBackend(
         api_key=api_key,
         model_snapshot=model_snapshot,
         allowed_actions=action_vocabulary,
@@ -93,7 +96,7 @@ def _run_arm(
         events=InMemoryDecisionEventStore(),
         gateway=DefaultPolicyGateway(),
     )
-    agent_id = uuid5(NAMESPACE_URL, f"resonance:piano-phase2:{scenario['scenario_id']}:{seed}")
+    agent_id = uuid5(NAMESPACE_URL, f"resonance:piano-phase2-zai:{scenario['scenario_id']}:{seed}")
     return agent.step(agent_id, _observation(scenario)).to_world_record()
 
 
@@ -208,9 +211,9 @@ def main() -> None:
     parser.add_argument("--output-dir", required=True)
     args = parser.parse_args()
 
-    api_key = os.environ.get("OPENAI_API_KEY", "")
+    api_key = os.environ.get("ZAI_API_KEY", "")
     if not api_key:
-        raise RuntimeError("OPENAI_API_KEY is required for the locked Phase-2 campaign")
+        raise RuntimeError("ZAI_API_KEY is required for the locked Phase-2-ZAI campaign")
     config_path = Path(args.config)
     config = json.loads(config_path.read_text(encoding="utf-8"))
     if not isinstance(config, dict):
