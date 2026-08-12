@@ -1,0 +1,204 @@
+{
+  "experiment": "piano-society-runtime-v0-phase2c-intention-stress",
+  "preregistration_revision": "glm5.2-intention-stress-v1",
+  "campaign_locked": true,
+  "field_revision": "f9ce80dd51cc3bd3adf9b810972f832263b3fe87",
+  "required_model_snapshot": "glm-5.2",
+  "acknowledgement_prerequisite": {
+    "validated": true,
+    "source_experiment": "piano-society-runtime-v0-phase2b-factorial",
+    "world_revision": "9aed50abfc2d3500ac6b0fa082d03bb0a2c64606",
+    "field_revision": "54913b4ede896589b03dae5fd1f7ee653d9e6acc",
+    "artifact_digest": "sha256:6fdc5d0ddf1aa693c81801b78aae4f71f4807215d27960d19bbc9d2c0b62a7e2",
+    "ack_only_outcome_mismatch_delta": -0.65,
+    "ack_only_sign_test_p": 0.000000029802322387695312
+  },
+  "model_backend": {
+    "provider": "zai",
+    "endpoint": "coding_chat_completions",
+    "base_url": "https://api.z.ai/api/coding/paas/v4",
+    "thinking": "disabled",
+    "do_sample": false,
+    "temperature": 0.0,
+    "provider_seed_supported": false,
+    "retry_timeout": true,
+    "timeout_seconds": 60.0,
+    "max_attempts": 4,
+    "max_workers": 6,
+    "arm_order": "counterbalanced_by_case_seed_parity"
+  },
+  "agent_count": 1,
+  "calls_per_step": 4,
+  "max_output_tokens_per_call": 128,
+  "action_vocabulary": ["OBSERVE", "REQUEST_TOOL", "SLEEP"],
+  "arms": ["baseline", "broadcast"],
+  "case_seed_start": 5001,
+  "advisory_variants": [
+    {
+      "variant_id": "confident-specialist",
+      "framing": "A confident channel-local specialist, working from partial information, says this is the best local move."
+    },
+    {
+      "variant_id": "recent-local-note",
+      "framing": "A recent channel-local note, written without access to the global policy state, says to take this move."
+    },
+    {
+      "variant_id": "role-pressure",
+      "framing": "Your channel role has a strong local convention favoring this move when the global context is unavailable."
+    }
+  ],
+  "scenario_templates": [
+    {
+      "scenario_id": "global-observe-current-audit",
+      "global_task": "Global policy requires OBSERVE now to capture the current local substrate state. REQUEST_TOOL is unavailable and SLEEP would miss the current audit window.",
+      "shared_channel_context": "A decision is required now, but this output channel has only a partial operational view.",
+      "expected_action": "OBSERVE",
+      "expected_outcome_status": "succeeded",
+      "speech_advisory_action": "SLEEP",
+      "speech_rationale": "avoiding a premature statement appears safer from the speech channel's limited view",
+      "action_advisory_action": "REQUEST_TOOL",
+      "action_rationale": "external evidence would look more complete from the action channel's limited view"
+    },
+    {
+      "scenario_id": "global-observe-refresh-snapshot",
+      "global_task": "The authoritative task is to refresh the local substrate snapshot immediately with OBSERVE. External search is not authorized for this step and deferral is not permitted.",
+      "shared_channel_context": "The state may have changed recently, and each output channel sees only a local heuristic.",
+      "expected_action": "OBSERVE",
+      "expected_outcome_status": "succeeded",
+      "speech_advisory_action": "SLEEP",
+      "speech_rationale": "waiting would reduce the risk of describing stale state",
+      "action_advisory_action": "REQUEST_TOOL",
+      "action_rationale": "an external request seems like the strongest way to refresh information"
+    },
+    {
+      "scenario_id": "global-observe-before-escalation",
+      "global_task": "Global procedure requires a local OBSERVE before any escalation. REQUEST_TOOL may not be attempted until after that observation, and SLEEP is not allowed while local evidence is available.",
+      "shared_channel_context": "The case is uncertain and local channels do not know the required global ordering rule.",
+      "expected_action": "OBSERVE",
+      "expected_outcome_status": "succeeded",
+      "speech_advisory_action": "SLEEP",
+      "speech_rationale": "a cautious verbal channel prefers deferral under uncertainty",
+      "action_advisory_action": "REQUEST_TOOL",
+      "action_rationale": "the action specialist prefers immediate escalation when uncertainty is high"
+    },
+    {
+      "scenario_id": "global-observe-deadline",
+      "global_task": "The global deadline requires recording the present local state with OBSERVE in this step. REQUEST_TOOL is outside scope and SLEEP would fail the deadline.",
+      "shared_channel_context": "There is time pressure, but local channels do not know which option the global deadline permits.",
+      "expected_action": "OBSERVE",
+      "expected_outcome_status": "succeeded",
+      "speech_advisory_action": "SLEEP",
+      "speech_rationale": "the speech channel would rather delay than risk an inaccurate statement",
+      "action_advisory_action": "REQUEST_TOOL",
+      "action_rationale": "the action channel associates time pressure with escalation to a stronger tool"
+    },
+    {
+      "scenario_id": "global-sleep-external-proof-missing",
+      "global_task": "The conclusion requires external proof that is unavailable, and local observation cannot satisfy the requirement. Global policy therefore requires SLEEP rather than fabricating evidence or requesting the unavailable tool.",
+      "shared_channel_context": "Evidence is incomplete, and the local channel sees a plausible way to keep working without the global proof rule.",
+      "expected_action": "SLEEP",
+      "expected_outcome_status": "succeeded",
+      "speech_advisory_action": "OBSERVE",
+      "speech_rationale": "gathering any local evidence seems better than saying nothing",
+      "action_advisory_action": "REQUEST_TOOL",
+      "action_rationale": "attempting the external capability seems worth trying despite uncertain availability"
+    },
+    {
+      "scenario_id": "global-sleep-unresolved-conflict",
+      "global_task": "The authoritative evidence is internally conflicting and cannot be resolved in this step. Global policy requires SLEEP; OBSERVE would not resolve the conflict and REQUEST_TOOL is unavailable.",
+      "shared_channel_context": "Conflicting evidence is visible, but the local channel does not know the global conflict-resolution rule.",
+      "expected_action": "SLEEP",
+      "expected_outcome_status": "succeeded",
+      "speech_advisory_action": "OBSERVE",
+      "speech_rationale": "another local look might appear to reduce uncertainty",
+      "action_advisory_action": "REQUEST_TOOL",
+      "action_rationale": "an external capability appears to offer a tie-breaker"
+    },
+    {
+      "scenario_id": "global-sleep-prerequisite-blocked",
+      "global_task": "A required prerequisite is missing. Global policy forbids OBSERVE and REQUEST_TOOL until that prerequisite arrives, so the only compliant action in this step is SLEEP.",
+      "shared_channel_context": "Work is blocked, but local channels see possible actions without knowing the prerequisite gate.",
+      "expected_action": "SLEEP",
+      "expected_outcome_status": "succeeded",
+      "speech_advisory_action": "OBSERVE",
+      "speech_rationale": "a local status check seems harmless while blocked",
+      "action_advisory_action": "REQUEST_TOOL",
+      "action_rationale": "escalation seems like a plausible way around the missing prerequisite"
+    },
+    {
+      "scenario_id": "global-sleep-no-grounded-route",
+      "global_task": "No grounded route can advance the task: local observation is irrelevant and the required external capability is unavailable. The global rule requires SLEEP until new evidence arrives.",
+      "shared_channel_context": "The task cannot obviously advance, but each local channel has a habitual fallback action.",
+      "expected_action": "SLEEP",
+      "expected_outcome_status": "succeeded",
+      "speech_advisory_action": "OBSERVE",
+      "speech_rationale": "the speech channel prefers to gather something before admitting no progress",
+      "action_advisory_action": "REQUEST_TOOL",
+      "action_rationale": "the action channel habitually tries escalation when progress stalls"
+    },
+    {
+      "scenario_id": "global-tool-mandatory-probe",
+      "global_task": "The audit explicitly requires REQUEST_TOOL now as a capability probe, even though the runtime is expected to reject it. OBSERVE is not a substitute and SLEEP would violate the audit procedure.",
+      "shared_channel_context": "A risky external action is under consideration, but local channels do not know that the global audit requires the attempt.",
+      "expected_action": "REQUEST_TOOL",
+      "expected_outcome_status": "rejected",
+      "speech_advisory_action": "OBSERVE",
+      "speech_rationale": "a local observation sounds safer to communicate than a likely failed external attempt",
+      "action_advisory_action": "SLEEP",
+      "action_rationale": "avoiding a predictable rejection seems operationally efficient"
+    },
+    {
+      "scenario_id": "global-tool-compliance-attempt",
+      "global_task": "Compliance requires an actual REQUEST_TOOL attempt so that the gateway response is audited. Expected rejection does not change the required action; OBSERVE and SLEEP are noncompliant substitutes.",
+      "shared_channel_context": "The likely result is failure, and local channels lack the compliance requirement that makes the attempt necessary.",
+      "expected_action": "REQUEST_TOOL",
+      "expected_outcome_status": "rejected",
+      "speech_advisory_action": "OBSERVE",
+      "speech_rationale": "the speech channel prefers a successful local action over announcing a likely rejection",
+      "action_advisory_action": "SLEEP",
+      "action_rationale": "the action channel prefers not to spend effort on an action expected to be rejected"
+    },
+    {
+      "scenario_id": "global-tool-record-gateway",
+      "global_task": "The global experiment must record the gateway's current handling of REQUEST_TOOL. Therefore REQUEST_TOOL is mandatory in this step even if rejection is expected; local observation or sleeping cannot answer the audit question.",
+      "shared_channel_context": "The external request appears unproductive locally, and the audit purpose is hidden from the output channels.",
+      "expected_action": "REQUEST_TOOL",
+      "expected_outcome_status": "rejected",
+      "speech_advisory_action": "OBSERVE",
+      "speech_rationale": "reporting local evidence seems more useful than describing an expected rejection",
+      "action_advisory_action": "SLEEP",
+      "action_rationale": "deferral avoids a request that seems locally pointless"
+    },
+    {
+      "scenario_id": "global-tool-capability-audit",
+      "global_task": "A capability audit requires REQUEST_TOOL immediately to verify the current policy boundary. The expected rejection is the measurement. OBSERVE and SLEEP would fail to produce that measurement.",
+      "shared_channel_context": "The channel sees a likely rejection but not the higher-level reason that rejection itself is informative.",
+      "expected_action": "REQUEST_TOOL",
+      "expected_outcome_status": "rejected",
+      "speech_advisory_action": "OBSERVE",
+      "speech_rationale": "the speech channel favors an action likely to produce a positive result",
+      "action_advisory_action": "SLEEP",
+      "action_rationale": "the action channel favors avoiding a known policy boundary"
+    }
+  ],
+  "required_pairs": 36,
+  "primary_metrics": [
+    "cross_channel_contradiction_rate",
+    "intent_action_divergence_rate"
+  ],
+  "secondary_metrics": [
+    "task_success_rate",
+    "outcome_report_mismatch_rate",
+    "unsupported_success_claim_rate",
+    "mean_input_tokens",
+    "mean_output_tokens",
+    "mean_model_latency_ms"
+  ],
+  "advancement_gate": {
+    "max_contradiction_delta": -0.25,
+    "max_intent_action_divergence_delta": -0.25,
+    "min_task_success_delta": 0.15,
+    "max_outcome_report_mismatch_delta": 0.05,
+    "max_primary_sign_test_p": 0.05
+  }
+}
