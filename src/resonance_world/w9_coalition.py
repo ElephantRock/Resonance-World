@@ -12,7 +12,6 @@ from typing import Any, Mapping, Sequence
 from .w8_campaign import (
     W8Population,
     _generate_offers,
-    _market_rosters,
     _mean,
     _mission,
     _standalone_structured_rate,
@@ -131,9 +130,11 @@ def _select_pair(
     structure = _selection_structure(true_structure, decomposition)
     scored: list[tuple[float, str, str, Any, Any]] = []
     for first, second in pairs:
+        first_individual = first.to_individual()
+        second_individual = second.to_individual()
         fixed = _structured_expected(
-            first,
-            second,
+            first_individual,
+            second_individual,
             mission,
             config,
             structure=structure,
@@ -142,8 +143,8 @@ def _select_pair(
             score = fixed
         else:
             swapped = _structured_expected(
-                second,
-                first,
+                second_individual,
+                first_individual,
                 mission,
                 config,
                 structure=structure,
@@ -163,7 +164,6 @@ def _execute_condition(
     window_id: str,
     bits: Mapping[str, bool],
 ) -> dict[str, Any]:
-    rosters = _market_rosters(market, config, window_id)
     mission_rows: list[dict[str, Any]] = []
     for row in config["coalition_missions"]:
         coalition_id = str(row["coalition_id"])
@@ -171,12 +171,14 @@ def _execute_condition(
         lead_org = str(row["lead_organization_id"])
         support_org = str(row["support_organization_id"])
         mission = _mission(dict(row["mission"]))
-        lead_roster = [state.to_individual() for state in rosters.get(lead_org, [])]
-        support_roster = [state.to_individual() for state in rosters.get(support_org, [])]
+        lead_states = list(market.contracted_agents(lead_org, window_id))
+        support_states = list(market.contracted_agents(support_org, window_id))
+        lead_roster = [state.to_individual() for state in lead_states]
+        support_roster = [state.to_individual() for state in support_states]
         salt = f"w9-04:{phase}:{cohort_id}:{coalition_id}"
         pair = _select_pair(
-            lead_roster,
-            support_roster,
+            lead_states,
+            support_states,
             mission,
             config,
             true_structure=true_structure,
@@ -192,7 +194,8 @@ def _execute_condition(
             fallback = False
             selection_score = 0.0
         else:
-            lead, support = pair.first, pair.second
+            lead = pair.first.to_individual()
+            support = pair.second.to_individual()
             swap_bit = 0
             if bool(bits["C"]):
                 fixed = _structured_expected(
