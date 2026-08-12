@@ -1,0 +1,89 @@
+{
+  "version": "context-graph-graduation-record-v0.1",
+  "status": "architectural-graduation-parity-pass",
+  "scientific_claim": false,
+  "standalone_runtime": {
+    "repository": "ElephantRock/Resonance-ContextGraph",
+    "development_branch": "architecture/v0.1",
+    "tested_commit": "55ce7bb435b3d4a1ff888474a5ca76ccff843150",
+    "independent_ci_run": 31637686651,
+    "independent_ci_status": "success",
+    "independence_gate": "standalone src contains no resonance_world dependency or reference"
+  },
+  "world_integration": {
+    "repository": "ElephantRock/Resonance-World",
+    "branch": "experiment/context-graph",
+    "parity_workflow_run": 31638124103,
+    "parity_workflow_head": "24f7977ee0876a3647afdadb4d24cc1f30d28777",
+    "semantic_parity_job_status": "success",
+    "frozen_regression_job_status": "success",
+    "result_artifact_id": 9157806653,
+    "result_artifact_digest": "sha256:3a333eb1b502c78c03e237d9bebe4a6249b13ed9aefee9082b3baa0894e79249",
+    "exact_result_commit": "e19703a40e0070c34a7e8e9f424d5cb0b31db134",
+    "dependency_direction": "Resonance World -> Resonance ContextGraph; reverse dependency forbidden"
+  },
+  "frozen_replay": {
+    "cg5": {
+      "source_workflow": 31622647635,
+      "capsules_sha256": "ec623fa479f9514081d606daf93fa189e16591a233604ffab9427ebcd4c2d53b",
+      "fields": 15,
+      "decisions": 90,
+      "context_mismatches": 0,
+      "mean_expected_success": 0.27763600681086903,
+      "frozen_expected_success": 0.27763600681086903,
+      "mean_context_claims": 47.0,
+      "mean_complete_bundles": 13.0,
+      "supplemental_probe_events": 3240
+    },
+    "cg11": {
+      "source_workflow": 31632483751,
+      "capsules_sha256": "038c1b8b22c685c4e24a516b1f7de6b2f95cc6c24c3f2f1312545fd8463bd25e",
+      "fields": 30,
+      "decisions": 180,
+      "checkpoint_observations_checked": 210,
+      "checkpoint_context_decisions_checked": 1260,
+      "final_context_decisions_checked": 360,
+      "scheduler_steps_checked": 5040,
+      "context_mismatches": 0,
+      "checkpoint_observable_mismatches": 0,
+      "scheduler_mismatches": 0,
+      "stopping_mismatches": 0,
+      "stop_budget_histogram": {
+        "60": 8,
+        "72": 4,
+        "96": 3,
+        "120": 4,
+        "144": 2,
+        "168": 9
+      },
+      "mean_stopping_probe_events": 111.2,
+      "stopped_mean_expected_success": 0.2790790551714306,
+      "fixed6_mean_expected_success": 0.28111686910074246,
+      "mean_context_claims": 47.0,
+      "mean_complete_bundles": 13.0
+    }
+  },
+  "extraction_findings": {
+    "repeated_delivery_semantics": "Frozen W3 can emit the same provenance source_id more than once when participant and scout are the same observer. The standalone adapter preserves source_id as provenance, assigns delivery-unique claim_id values, filters confidence first, and uses last admissible same-observer predicate delivery before cross-observer canonicalization.",
+    "cg11_stopping_contract_discrepancy": {
+      "historical_preregistration_prose": "Stop when the six-mission selected-pair vector matches the immediately preceding checkpoint, otherwise stop at 168.",
+      "executed_frozen_evaluator": "In addition to pair stability, stopping_observables computed minimum selected-role event support and minimum selected-role score margin; choose_stop enforced support >= 0 and score margin >= 0.0. The support threshold is vacuous but the score-margin threshold is not.",
+      "architectural_resolution": "Do not rewrite CG-11 history. The standalone runtime follows the executed frozen evaluator because that implementation generated the confirmatory result, and the discrepancy is documented explicitly."
+    }
+  },
+  "retirement_boundary": {
+    "standalone_semantics_match_frozen_world": true,
+    "world_duplicate_runtime_can_be_deprecated": true,
+    "world_duplicate_runtime_can_be_deleted_now": false,
+    "reason_not_deleted_now": "Deprecation façade and downstream import migration must land first; scientific fixtures and frozen experiment records remain permanently available.",
+    "frozen_experiment_records_must_remain": true,
+    "legacy_world_context_graph_modules_become": "scientific compatibility fixtures, not production runtime ownership"
+  },
+  "causal_boundary": {
+    "hidden_capability_crosses_adapter": false,
+    "belief_mutation_api_in_standalone": false,
+    "contextgraph_object_enters_joint_environment": false,
+    "outcome_law_changed": false
+  },
+  "interpretation": "Architectural graduation is authorized by exact semantic parity, not by a new efficacy claim. Resonance ContextGraph now owns the validated runtime semantics. Resonance World retains immutable scientific provenance and temporary compatibility fixtures until downstream imports are migrated."
+}
