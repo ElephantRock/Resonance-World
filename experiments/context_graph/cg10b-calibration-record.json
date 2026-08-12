@@ -1,0 +1,47 @@
+{
+  "version": "context-graph-cg10b-calibration-record-v0.1",
+  "status": "stopping-rule-selected",
+  "confirmatory_claim": false,
+  "workflow": {
+    "run_id": 31631661848,
+    "head_sha": "a6081d3875279778a075346e7601c1392a594dfd",
+    "artifact_id": 9155337492,
+    "artifact_digest": "sha256:5dd56eaebcfc5752243afb5a2786be9b396ae94e961cd6df954af517f3ef1dcc"
+  },
+  "selected_rule": {
+    "name": "pair_stability_2_cap168",
+    "acquisition": "deterministic uniform round-robin",
+    "minimum_stop_budget": 60,
+    "checkpoints": [48, 60, 72, 96, 120, 144, 168],
+    "criterion": "At or after 60 supplemental events, stop at the first checkpoint whose six-mission selected-pair vector is identical to the immediately preceding checkpoint; if no such checkpoint occurs, stop at 168.",
+    "hard_stop_budget": 168
+  },
+  "cross_cohort_result": {
+    "fields": 54,
+    "mean_probe_events": 109.11111111111111,
+    "median_probe_events": 96.0,
+    "p90_probe_events": 168.0,
+    "stop_budget_histogram": {"60": 11, "72": 9, "96": 9, "120": 8, "144": 4, "168": 13},
+    "forced_cap_fields": 11,
+    "pooled_mean_expected_success": 0.26850082861050256,
+    "pooled_fixed6_expected_success": 0.2669648355588424,
+    "pooled_expected_success_loss_vs_fixed6": -0.0015359930516601894,
+    "pooled_graph_lift_over_cost_matched_flat": 0.04228251159175819,
+    "per_cohort_expected_success_loss_vs_fixed6": {
+      "cg5": -0.0019114766339083378,
+      "cg7": -0.0009956392784239432,
+      "cg9": -0.0016390369210277367
+    }
+  },
+  "integrity": {
+    "cg9_fixed6_common_control_replay": true,
+    "cg9_uniform60_common_control_replay": true,
+    "cohort_overlap": 0,
+    "stopping_evaluator_truth_inputs": 0,
+    "historical_outcome_rows_consumed": 0,
+    "posthoc_imported_claims": 0,
+    "belief_contamination": 0,
+    "outcome_law_graph_inputs": 0
+  },
+  "interpretation": "CG-10 remains a failed exploratory selection because its uncapped rule violated the p90 cost gate. CG-10B is a separate post-hoc repair. Its selected stopping rule is now frozen as the sole stopping architecture eligible for fresh confirmatory testing."
+}
