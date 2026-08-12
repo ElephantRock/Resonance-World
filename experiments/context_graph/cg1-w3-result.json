@@ -1,0 +1,193 @@
+{
+  "config_version": "context-graph-cg1-w3-v0.1",
+  "diagnostics": {
+    "belief_contamination": 0,
+    "field_claim_counts": {
+      "w3-source-seed-121": 144,
+      "w3-source-seed-242": 144,
+      "w3-source-seed-363": 144,
+      "w3-source-seed-484": 144,
+      "w3-source-seed-605": 144
+    },
+    "graph_efficiency_ratio_over_flat": 42.333333333333336,
+    "nonisolated_context_budget_matched": true
+  },
+  "gate_results": {
+    "belief_contamination_max": true,
+    "evaluation_query_count_min": true,
+    "graph_efficiency_ratio_over_flat_min": true,
+    "graph_false_positive_rate_max": true,
+    "graph_provenance_completeness_min": true,
+    "graph_recall_lift_over_flat_min": true,
+    "graph_recall_lift_over_isolated_min": true,
+    "graph_recall_lift_over_shuffled_min": true,
+    "nonisolated_context_budget_matched": true
+  },
+  "passed": true,
+  "phases": {
+    "calibration": {
+      "field_ids": [
+        "w3-source-seed-121",
+        "w3-source-seed-242",
+        "w3-source-seed-363"
+      ],
+      "metrics": {
+        "isolated": {
+          "arm": "isolated",
+          "context_claims": 1132,
+          "context_efficiency": 0.0,
+          "cross_observer_answers": 0,
+          "exact_queries": 0,
+          "exact_query_rate": 0.0,
+          "false_answers": 0,
+          "false_positive_rate": 0.0,
+          "mean_context_claims": 12.577777777777778,
+          "possible_answers": 176,
+          "provenance_completeness": 1.0,
+          "query_count": 90,
+          "recall": 0.0,
+          "true_answers": 0
+        },
+        "pooled_flat": {
+          "arm": "pooled_flat",
+          "context_claims": 4320,
+          "context_efficiency": 0.0016203703703703703,
+          "cross_observer_answers": 7,
+          "exact_queries": 4,
+          "exact_query_rate": 0.044444444444444446,
+          "false_answers": 0,
+          "false_positive_rate": 0.0,
+          "mean_context_claims": 48.0,
+          "possible_answers": 176,
+          "provenance_completeness": 1.0,
+          "query_count": 90,
+          "recall": 0.03977272727272727,
+          "true_answers": 7
+        },
+        "shared_graph": {
+          "arm": "shared_graph",
+          "context_claims": 4320,
+          "context_efficiency": 0.04050925925925926,
+          "cross_observer_answers": 175,
+          "exact_queries": 89,
+          "exact_query_rate": 0.9888888888888889,
+          "false_answers": 0,
+          "false_positive_rate": 0.0,
+          "mean_context_claims": 48.0,
+          "possible_answers": 176,
+          "provenance_completeness": 1.0,
+          "query_count": 90,
+          "recall": 0.9943181818181818,
+          "true_answers": 175
+        },
+        "shuffled_graph": {
+          "arm": "shuffled_graph",
+          "context_claims": 4320,
+          "context_efficiency": 0.008564814814814815,
+          "cross_observer_answers": 37,
+          "exact_queries": 1,
+          "exact_query_rate": 0.011111111111111112,
+          "false_answers": 122,
+          "false_positive_rate": 0.7672955974842768,
+          "mean_context_claims": 48.0,
+          "possible_answers": 176,
+          "provenance_completeness": 1.0,
+          "query_count": 90,
+          "recall": 0.21022727272727273,
+          "true_answers": 37
+        }
+      },
+      "query_count": 90
+    },
+    "evaluation": {
+      "field_ids": [
+        "w3-source-seed-484",
+        "w3-source-seed-605"
+      ],
+      "metrics": {
+        "isolated": {
+          "arm": "isolated",
+          "context_claims": 844,
+          "context_efficiency": 0.0,
+          "cross_observer_answers": 0,
+          "exact_queries": 0,
+          "exact_query_rate": 0.0,
+          "false_answers": 0,
+          "false_positive_rate": 0.0,
+          "mean_context_claims": 14.066666666666666,
+          "possible_answers": 127,
+          "provenance_completeness": 1.0,
+          "query_count": 60,
+          "recall": 0.0,
+          "true_answers": 0
+        },
+        "pooled_flat": {
+          "arm": "pooled_flat",
+          "context_claims": 2880,
+          "context_efficiency": 0.0010416666666666667,
+          "cross_observer_answers": 3,
+          "exact_queries": 2,
+          "exact_query_rate": 0.03333333333333333,
+          "false_answers": 0,
+          "false_positive_rate": 0.0,
+          "mean_context_claims": 48.0,
+          "possible_answers": 127,
+          "provenance_completeness": 1.0,
+          "query_count": 60,
+          "recall": 0.023622047244094488,
+          "true_answers": 3
+        },
+        "shared_graph": {
+          "arm": "shared_graph",
+          "context_claims": 2880,
+          "context_efficiency": 0.044097222222222225,
+          "cross_observer_answers": 127,
+          "exact_queries": 60,
+          "exact_query_rate": 1.0,
+          "false_answers": 0,
+          "false_positive_rate": 0.0,
+          "mean_context_claims": 48.0,
+          "possible_answers": 127,
+          "provenance_completeness": 1.0,
+          "query_count": 60,
+          "recall": 1.0,
+          "true_answers": 127
+        },
+        "shuffled_graph": {
+          "arm": "shuffled_graph",
+          "context_claims": 2880,
+          "context_efficiency": 0.007291666666666667,
+          "cross_observer_answers": 21,
+          "exact_queries": 1,
+          "exact_query_rate": 0.016666666666666666,
+          "false_answers": 78,
+          "false_positive_rate": 0.7878787878787878,
+          "mean_context_claims": 48.0,
+          "possible_answers": 127,
+          "provenance_completeness": 1.0,
+          "query_count": 60,
+          "recall": 0.16535433070866143,
+          "true_answers": 21
+        }
+      },
+      "query_count": 60
+    }
+  },
+  "source": {
+    "artifact_digest": "sha256:8d8c79c8dfe08dea3ff4b1eb07046eae87d6897a00b512fa1138502ba9536342",
+    "artifact_id": 9090615074,
+    "artifact_name": "w3-discovery-source",
+    "calibration_seeds": [121, 242, 363],
+    "evaluation_seeds": [484, 605],
+    "raw_sha256": {
+      "bids.csv": "5da7d7e724606da475d5cef8afa334b5ca716c1f9a1224cc0382a40880306e1d",
+      "outcomes.csv": "ac697ca3fe71533c12f1cb22f7caa62929fbe309984845744e55942f6ce7783f",
+      "runs.csv": "5148eb3441b61b9f8bf5884e98129973e6a99d98d0136e929817fb1bbff70562",
+      "tasks.csv": "e1ba0a45f55f43caa142c64e75c93a7540606c222d0d8cd54022a60ef623b52f"
+    },
+    "repository": "ElephantRock/Resonance-World",
+    "source_head_sha": "6accfd688fd2820571933492f937ba4148caed4b",
+    "workflow_run_id": 31463354353
+  },
+  "version": "context-graph-cg1-w3-result-v0.1"
+}
