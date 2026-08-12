@@ -1,0 +1,100 @@
+name: Context Graph CG-7 Measurement Economy
+
+on:
+  push:
+    branches: ["experiment/context-graph"]
+    paths:
+      - ".github/workflows/context-graph-cg7.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+concurrency:
+  group: context-graph-cg7-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PROTOCOL_FREEZE_SHA: d4a75110871046ef1f18f10f9c9ef6fba0bc3c1c
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prove CG-7 protocol and fresh seeds stayed frozen
+        run: >-
+          git diff --exit-code
+          "$PROTOCOL_FREEZE_SHA" HEAD --
+          configs/context_graph/cg7-fresh-source.json
+          experiments/context_graph/cg7-w3-measurement-economy.json
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Lint and compile frozen evaluator
+        run: |
+          ruff check \
+            experiments/context_graph/run_cg6_adaptive_acquisition.py \
+            experiments/context_graph/run_cg7_w3_measurement_economy.py
+          python -m py_compile \
+            experiments/context_graph/run_cg6_adaptive_acquisition.py \
+            experiments/context_graph/run_cg7_w3_measurement_economy.py
+      - name: Verify uniform acquisition does not require evaluator state
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          from experiments.context_graph.run_cg4m_measurement_sufficiency import EstimatorSpec
+          from experiments.context_graph.run_cg6_adaptive_acquisition import ProbeEvent, choose_cell
+          from resonance_world.context_graph_w3_endogenous import CG4Mission, EndogenousField
+
+          field = EndogenousField(
+              field_id="preflight",
+              states={},
+              claims=(),
+              belief_snapshot={},
+              current_members=frozenset({"agent-a"}),
+              departed_members=frozenset(),
+              coordinator_id="agent-a",
+              as_of=0,
+              emitted_claims=0,
+              duplicate_observation_groups=0,
+              conflicting_observation_groups=0,
+              low_confidence_claims=0,
+          )
+          cell = ("agent-a", "urban_heat")
+          event = ProbeEvent(cell, 0, "event", 1, ())
+          chosen = choose_cell(
+              policy="uniform_round_robin",
+              field=field,
+              claims=[],
+              available={cell: event},
+              mission_rows=[CG4Mission("m", "urban_heat", "water_systems")],
+              spec=EstimatorSpec("w", "wilson_lower", 3, 0.35),
+              min_confidence=0.7,
+              weights={
+                  "selected_role_bonus": 0.0,
+                  "plausible_challenger_bonus": 0.0,
+                  "support_deficit_bonus": 0.0,
+                  "ambiguity_margin": 0.0,
+              },
+          )
+          assert chosen == cell
+          PY
+      - name: Verify outcome-law isolation
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import inspect
+          from resonance_world.w4a_joint_learning import JointEnvironment
+
+          forbidden = {
+              "graph", "context_graph", "evidence", "claims",
+              "relationship_state", "organization_memory", "acquisition_state",
+          }
+          params = set(inspect.signature(JointEnvironment.evaluate).parameters)
+          assert not forbidden.intersection(params), params
+          PY
