@@ -1,0 +1,107 @@
+name: Context Graph CG-4F Failure Analysis
+
+on:
+  push:
+    branches: ["experiment/context-graph"]
+    paths:
+      - ".github/workflows/context-graph-cg4f.yml"
+      - "experiments/context_graph/cg4f-failure-analysis.json"
+      - "experiments/context_graph/run_cg4f_failure_analysis.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  cg4f-autopsy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e '.[dev]'
+      - name: Download pinned W3 discovery source
+        uses: actions/download-artifact@v4
+        with:
+          name: w3-discovery-source
+          path: w3-calibration
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31470831322
+      - name: Download already-unblinded W3 replication source
+        uses: actions/download-artifact@v4
+        with:
+          name: w3-replication-source
+          path: w3-evaluation
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31470831322
+      - name: Verify analysis implementation
+        run: >-
+          ruff check
+          experiments/context_graph/run_cg4f_failure_analysis.py
+      - name: Execute exploratory CG-4F autopsy
+        run: >-
+          python experiments/context_graph/run_cg4f_failure_analysis.py
+          --analysis-config experiments/context_graph/cg4f-failure-analysis.json
+          --cg4-config experiments/context_graph/cg4-w3-endogenous.json
+          --cg4-result experiments/context_graph/cg4-w3-endogenous-result.json
+          --calibration-capsules
+          w3-calibration/output/discovery-source/capsules.private.jsonl
+          --evaluation-capsules
+          w3-evaluation/output/replication-source/capsules.private.jsonl
+          --output output/context_graph/cg4f-failure-analysis-result.json
+      - name: Verify exploratory boundary and original-arm reproduction
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(
+              Path("output/context_graph/cg4f-failure-analysis-result.json").read_text()
+          )
+          frozen = json.loads(
+              Path("experiments/context_graph/cg4-w3-endogenous-result.json").read_text()
+          )
+          assert result["status"] == "exploratory-post-unblinding"
+          assert result["confirmatory_claim"] is False
+          assert frozen["passed"] is False
+          assert result["evaluation"]["summary"]["decision_count"] == 12
+          cal = result["calibration"]["summary"]["arms"]
+          ev = result["evaluation"]["summary"]["arms"]
+          assert abs(
+              cal["original_graph"]["mean_expected_success"]
+              - frozen["calibration"]["metrics"]["endogenous_graph"]["mean_expected_success"]
+          ) < 1e-12
+          assert abs(
+              cal["pooled_flat"]["mean_expected_success"]
+              - frozen["calibration"]["metrics"]["pooled_flat"]["mean_expected_success"]
+          ) < 1e-12
+          assert abs(
+              ev["original_graph"]["mean_expected_success"]
+              - frozen["evaluation"]["metrics"]["endogenous_graph"]["mean_expected_success"]
+          ) < 1e-12
+          assert abs(
+              ev["pooled_flat"]["mean_expected_success"]
+              - frozen["evaluation"]["metrics"]["pooled_flat"]["mean_expected_success"]
+          ) < 1e-12
+          text = Path("output/context_graph/cg4f-failure-analysis-result.json").read_text()
+          assert "practice_by_skill" not in text
+          print(json.dumps(result["evaluation"]["summary"], indent=2, sort_keys=True))
+          print(json.dumps(result["evaluation"]["budget_sweep"], indent=2, sort_keys=True))
+          PY
+      - name: Prove frozen CG-4 files are unchanged
+        run: >-
+          git diff --exit-code --
+          experiments/context_graph/cg4-w3-endogenous.json
+          experiments/context_graph/cg4-w3-endogenous-result.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: context-graph-cg4f-failure-analysis
+          path: output/context_graph/cg4f-failure-analysis-result.json
+          if-no-files-found: error
+          retention-days: 90
