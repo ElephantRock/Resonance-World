@@ -1,0 +1,121 @@
+name: PIANO Society Factorial Phase 2B
+
+on:
+  push:
+    branches:
+      - experiment/piano-society-factorial
+    paths:
+      - "experiments/piano_society/phase2b*"
+      - "experiments/piano_society/PHASE2B_PREREGISTRATION.md"
+      - "tests/test_piano_society_phase2b.py"
+      - ".github/workflows/piano-society-factorial.yml"
+  pull_request:
+    paths:
+      - "experiments/piano_society/phase2b*"
+      - "experiments/piano_society/PHASE2B_PREREGISTRATION.md"
+      - "tests/test_piano_society_phase2b.py"
+      - ".github/workflows/piano-society-factorial.yml"
+
+permissions:
+  contents: read
+
+env:
+  PIANO_FIELD_SHA: 54913b4ede896589b03dae5fd1f7ee653d9e6acc
+
+jobs:
+  validate-factorial-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git ../field
+          git -C ../field checkout "$PIANO_FIELD_SHA"
+          test "$(git -C ../field rev-parse HEAD)" = "$PIANO_FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install World and pinned Field
+        run: python -m pip install -e '../field[dev]' -e '.[dev]'
+      - name: Lint and test Phase 2B contract
+        run: |
+          ruff check experiments/piano_society/phase2b.py experiments/piano_society/phase2b_campaign.py tests/test_piano_society_phase2b.py
+          pytest -q tests/test_piano_society_phase2b.py
+      - name: Validate exact scientific lock
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from experiments.piano_society.phase2b import validate_config
+
+          config = json.loads(Path('experiments/piano_society/phase2b_config.json').read_text())
+          normalized = validate_config(config)
+          assert config['campaign_locked'] is True
+          assert config['preregistration_revision'] == 'glm5.2-factorial-hard-v1'
+          assert config['field_revision'] == '54913b4ede896589b03dae5fd1f7ee653d9e6acc'
+          assert config['required_model_snapshot'] == 'glm-5.2'
+          assert config['max_output_tokens_per_call'] == 128
+          assert config['action_vocabulary'] == ['OBSERVE', 'REQUEST_TOOL', 'SLEEP']
+          assert config['arms'] == ['baseline', 'intention_only', 'ack_only', 'full']
+          assert config['required_pairs'] == 40
+          backend = config['model_backend']
+          assert backend['arm_order'] == 'four_position_latin_square_by_case_index'
+          assert backend['thinking'] == 'disabled'
+          assert backend['do_sample'] is False
+          assert backend['temperature'] == 0.0
+          assert backend['timeout_seconds'] == 60.0
+          assert backend['max_attempts'] == 4
+          assert backend['max_workers'] == 6
+          assert normalized['required_pairs'] == 40
+          PY
+      - name: Emit locked preregistration summary
+        run: |
+          mkdir -p output/piano_society/phase2b-prereg
+          python -m experiments.piano_society.phase2b \
+            --config experiments/piano_society/phase2b_config.json \
+            > output/piano_society/phase2b-prereg/preregistration.json
+          cp experiments/piano_society/phase2b_config.json output/piano_society/phase2b-prereg/
+          cp experiments/piano_society/PHASE2B_PREREGISTRATION.md output/piano_society/phase2b-prereg/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase2b-preregistration
+          path: output/piano_society/phase2b-prereg
+          if-no-files-found: error
+          retention-days: 30
+
+  factorial-campaign:
+    needs: validate-factorial-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require campaign credential
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "::error::ZAI_API_KEY is required for Phase 2B execution"
+            exit 2
+          fi
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git ../field
+          git -C ../field checkout "$PIANO_FIELD_SHA"
+          test "$(git -C ../field rev-parse HEAD)" = "$PIANO_FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen experiment revisions
+        run: python -m pip install -e '../field[dev]' -e '.[dev]'
+      - name: Execute 40-case four-arm factorial campaign
+        run: |
+          python -m experiments.piano_society.phase2b_campaign \
+            --config experiments/piano_society/phase2b_config.json \
+            --output-dir output/piano_society/phase2b-live
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase2b-factorial-live
+          path: output/piano_society/phase2b-live
+          if-no-files-found: error
+          retention-days: 90
