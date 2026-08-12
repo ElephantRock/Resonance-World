@@ -24,6 +24,23 @@ from .w9_integrated import (
 )
 
 
+def _normalized_w8_comparator(
+    population: W8Population,
+    config: Mapping[str, Any],
+    replacement: Mapping[str, Any],
+    *,
+    phase: str,
+) -> dict[str, Any]:
+    """Express W8 development compute in the same resident-agent-cycle unit as W9 P."""
+
+    value = dict(_w8_comparator(population, config, replacement, phase=phase))
+    value["development_compute_units"] = int(value["development_compute_units"]) * int(
+        config["agents_per_field"]
+    )
+    value["development_compute_unit"] = "resident_agent_cycle"
+    return value
+
+
 def run_w9_05_execution(
     base_population: W8Population,
     portfolio_population: W8Population,
@@ -115,7 +132,7 @@ def run_w9_05_execution(
         "upstream_eligibility": eligibility,
         "version": RESULT_VERSION,
         "W7_unrestricted": baseline,
-        "W8_integrated_charter_comparator": _w8_comparator(
+        "W8_integrated_charter_comparator": _normalized_w8_comparator(
             base_population,
             config,
             w8_replacement,
