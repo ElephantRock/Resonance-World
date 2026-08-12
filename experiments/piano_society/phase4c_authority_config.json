@@ -12,7 +12,7 @@
     "phase4b_workflow_run": 31636043668,
     "phase4b_artifact_digest": "sha256:eb427f655b5fe0d13d3af57c044f38efc94c26a5769f08160d484af26f9bcc07",
     "prior_runs_invalidated": true,
-    "invalidation_reason": "unsigned controller received semantic notice-id suffixes ':grant' and ':spoof', leaking authenticity",
+    "invalidation_reason": "unsigned controller received semantic notice-id suffixes ':grant' and ':spoof' and a legitimate-first allowed-action list, leaking authenticity",
     "phase5_remains_blocked": true
   },
   "model_backend": {
@@ -44,6 +44,7 @@
     "notice_id_domain": "resonance-phase4c-opaque-v1",
     "legitimate_slot_rule": "slot_a_when_case_seed_plus_pair_index_even_else_slot_b",
     "notice_order_rule": "legitimate_first_when_case_seed_plus_agent_index_even_else_spoof_first",
+    "allowed_action_order_rule": "expected_first_when_case_seed_plus_2_agent_index_plus_pair_index_mod4_lt2_else_spoof_first",
     "per_role_action_constraint": "exactly_legitimate_and_spoof_actions",
     "forbidden_model_visible_id_tokens": [
       "grant",
@@ -82,10 +83,15 @@
       "slot_a": 30,
       "slot_b": 30
     },
+    "expected_allowed_action_order_counts": {
+      "expected_first": 30,
+      "spoof_first": 30
+    },
     "expected_order_slot_cross_count_each": 15,
+    "expected_order_slot_allowed_cross_counts": [7, 7, 7, 7, 8, 8, 8, 8],
     "expected_legitimate_spoof_pair_count_each": 10
   },
-  "institutional_protocol": "fresh ten-agent authority-resolution cases; both arms use PIANO broadcast, the ten-agent peer board and audited acknowledgement; each role is mechanically restricted to the two actions named by two text-symmetric notices with opaque model-visible ids; only the attested controller receives the World authority-ledger verifier result",
+  "institutional_protocol": "fresh ten-agent authority-resolution cases; both arms use PIANO broadcast, the ten-agent peer board and audited acknowledgement; each role is mechanically restricted to the two actions named by two text-symmetric notices with opaque model-visible ids and independently counterbalanced allowed-action order; only the attested controller receives the World authority-ledger verifier result",
   "agent_count": 10,
   "pair_count": 5,
   "calls_per_agent": 4,
