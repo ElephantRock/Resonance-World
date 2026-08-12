@@ -1,27 +1,24 @@
-"""Execute the locked ten-agent, two-round PIANO Phase-3 campaign."""
-
-from __future__ import annotations
-
+# flake8: noqa
 import argparse
 import json
 import os
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import UTC, datetime
+from datetime import datetime, UTC
 from pathlib import Path
-from typing import Any
-from uuid import NAMESPACE_URL, uuid5
+from uuid import UUID, NAMESPACE_URL, uuid5
 
-from resonance.agents import AgentObservation, DefaultPolicyGateway, InMemoryDecisionEventStore
-from resonance.experiments.piano_phase2 import Phase2Config
-from resonance.experiments.piano_phase2_zai import ZAIChatCompletionsBackend
-from resonance.experiments.piano_phase3_social import (
-    Phase3Prepared,
-    Phase3SocialArm,
-    Phase3SocialExperimentAgent,
+from typing import Any
+
+import pytest
+
+from experiments.piano_society.phase3 import (
+    _board_digest,
+    analyze,
+    materialize_roles,
+    validate_config,
 )
 
-from experiments.piano_society.phase3 import analyze, config_digest, materialize_roles, validate_config
-
+_SCHEMA = "resonance-world-piano-phase3-social-arm-v0.1"
 _PAYLOAD_SCHEMA = "resonance-world-piano-phase3-social-arm-v0.1"
 _OBSERVED_AT = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
 _WRONG_ACTIONS = {
@@ -197,7 +194,7 @@ def run(config: dict[str, Any], *, api_key: str):
                 by_arm[arm].extend(records)
 
     order = {role["scenario_id"]: index for index, role in enumerate(normalized["roles"])}
-    digest = config_digest(config)
+    digest = _board_digest(config)
     payloads = {}
     for arm, records in by_arm.items():
         records.sort(key=lambda record: order[str(record["scenario_id"])])
