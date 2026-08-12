@@ -127,7 +127,11 @@ def _run_pair(
     return records[Phase2Arm.CONTROL], records[Phase2Arm.TREATMENT]
 
 
-def run(config: dict[str, Any], *, api_key: str) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
+def run(
+    config: dict[str, Any],
+    *,
+    api_key: str,
+) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any]]:
     normalized = validate_config(config)
     if not normalized["campaign_locked"]:
         raise ValueError("campaign must be locked before live execution")
@@ -143,7 +147,9 @@ def run(config: dict[str, Any], *, api_key: str) -> tuple[dict[str, Any], dict[s
     temperature = float(backend["temperature"])
     scenarios = [dict(value) for value in config["scenarios"]]
     seeds = [int(value) for value in config["seeds"]]
-    scenario_order = {scenario["scenario_id"]: index for index, scenario in enumerate(scenarios)}
+    scenario_order = {
+        scenario["scenario_id"]: index for index, scenario in enumerate(scenarios)
+    }
 
     control_records: list[dict[str, object]] = []
     treatment_records: list[dict[str, object]] = []
@@ -168,9 +174,14 @@ def run(config: dict[str, Any], *, api_key: str) -> tuple[dict[str, Any], dict[s
             control_records.append(control)
             treatment_records.append(treatment)
 
-    key = lambda record: (scenario_order[str(record["scenario_id"])], int(record["trial_seed"]))
-    control_records.sort(key=key)
-    treatment_records.sort(key=key)
+    def sort_key(record: dict[str, object]) -> tuple[int, int]:
+        return (
+            scenario_order[str(record["scenario_id"])],
+            int(record["trial_seed"]),
+        )
+
+    control_records.sort(key=sort_key)
+    treatment_records.sort(key=sort_key)
     field_revision = normalized["field_revision"]
     digest = config_digest(config)
     control_payload = {
