@@ -8,6 +8,7 @@ capability, evaluator truth, oracle state, and environment outcome laws do not.
 
 from __future__ import annotations
 
+from collections import defaultdict
 from collections.abc import Iterable, Mapping
 
 from resonance_contextgraph import (
@@ -31,14 +32,19 @@ Cell = tuple[str, str]
 Pair = tuple[str, str] | None
 
 
-def to_evidence_claim(claim: LiveClaim) -> EvidenceClaim:
-    """Map one World live-evidence claim to the standalone storage contract.
+def to_evidence_claim(
+    claim: LiveClaim,
+    *,
+    claim_id: str | None = None,
+) -> EvidenceClaim:
+    """Map one observed World claim to the standalone storage contract.
 
-    ``LiveClaim.source_id`` is claim-unique in the frozen endogenous W3 substrate,
-    so it is preserved as both standalone claim identity and original provenance.
+    ``source_id`` remains the original provenance identifier. ``claim_id`` is a
+    transport/storage identity and may carry a deterministic delivery suffix when the
+    frozen World stream repeats the same source identity in append order.
     """
     return EvidenceClaim(
-        claim_id=claim.source_id,
+        claim_id=claim_id or claim.source_id,
         scope_id=claim.field_id,
         subject=claim.subject,
         predicate=claim.predicate,
@@ -53,9 +59,24 @@ def to_evidence_claim(claim: LiveClaim) -> EvidenceClaim:
 
 
 def build_evidence_store(claims: Iterable[LiveClaim]) -> EvidenceStore:
-    """Build an append-only standalone store from observed World evidence only."""
+    """Build an append-only store while preserving repeated delivery order.
+
+    The frozen W3 generator can emit the same ``source_id`` twice when a participant is
+    also selected as the scout for one event. ContextGraph requires unique claim IDs,
+    so repeated deliveries receive deterministic ``#delivery:N`` transport IDs while
+    retaining the unchanged World ``source_id`` as provenance.
+    """
     store = EvidenceStore()
-    store.extend(to_evidence_claim(claim) for claim in claims)
+    deliveries: dict[str, int] = defaultdict(int)
+    for claim in claims:
+        delivery = deliveries[claim.source_id]
+        claim_id = (
+            claim.source_id
+            if delivery == 0
+            else f"{claim.source_id}#delivery:{delivery}"
+        )
+        store.ingest(to_evidence_claim(claim, claim_id=claim_id))
+        deliveries[claim.source_id] += 1
     return store
 
 
