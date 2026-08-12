@@ -20,7 +20,12 @@ from resonance.experiments.piano_phase3_social import (
     Phase3SocialExperimentAgent,
 )
 
-from experiments.piano_society.phase3 import analyze, config_digest, materialize_roles, validate_config
+from experiments.piano_society.phase3 import (
+    analyze,
+    config_digest,
+    materialize_roles,
+    validate_config,
+)
 
 _PAYLOAD_SCHEMA = "resonance-world-piano-phase3-social-arm-v0.1"
 _OBSERVED_AT = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
@@ -89,7 +94,8 @@ def _observation(role: dict[str, Any]) -> AgentObservation:
             ),
             "action_local_cue": (
                 f"A channel-local execution specialist recommends {wrong_b} because it appears "
-                "more useful from this partial view. The specialist cannot see the authoritative mandate."
+                "more useful from this partial view. The specialist cannot see the authoritative "
+                "mandate."
             ),
         },
     )
