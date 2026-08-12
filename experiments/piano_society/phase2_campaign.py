@@ -35,11 +35,14 @@ def _backend_config(config: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("locked Phase-2 config requires model_backend")
     expected = {
         "provider": "zai",
-        "endpoint": "chat_completions",
-        "base_url": "https://api.z.ai/api/paas/v4",
+        "endpoint": "coding_chat_completions",
+        "base_url": "https://api.z.ai/api/coding/paas/v4",
         "structured_output": "json_object_local_schema_validation",
+        "thinking": "disabled",
+        "do_sample": False,
         "provider_seed_supported": False,
         "trial_seed_role": "pair_identifier_only",
+        "model_id_stability": "provider_alias_without_dated_snapshot",
         "pair_order": "counterbalanced_by_seed_parity",
     }
     for key, required in expected.items():
