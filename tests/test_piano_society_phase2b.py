@@ -105,6 +105,7 @@ def test_factorial_analysis_is_mechanical_and_can_pass_registered_gate() -> None
     assert contrasts["ack_only_minus_baseline"]["outcome_report_mismatch_rate"] == -1.0
     assert contrasts["full_minus_baseline"]["cross_channel_contradiction_rate"] == -1.0
     assert contrasts["full_minus_baseline"]["outcome_report_mismatch_rate"] == -1.0
-    assert result["primary_exact_sign_tests"]["intention_effect_on_contradiction"]["p_value_two_sided"] < 0.05
-    assert result["primary_exact_sign_tests"]["ack_effect_on_outcome_mismatch"]["p_value_two_sided"] < 0.05
+    sign_tests = result["primary_exact_sign_tests"]
+    assert sign_tests["intention_effect_on_contradiction"]["p_value_two_sided"] < 0.05
+    assert sign_tests["ack_effect_on_outcome_mismatch"]["p_value_two_sided"] < 0.05
     assert result["advance_to_10_agents"] is True
