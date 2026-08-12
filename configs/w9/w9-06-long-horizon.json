@@ -1,0 +1,24 @@
+{
+  "version": "w9-06-long-horizon-v0.1",
+  "cycles": 24,
+  "neutral_base_budget": 220,
+  "compounding_reward_per_successful_trial": 1,
+  "compounding_max_budget": 500,
+  "required_compute_normalized_growth_fraction": 0.02,
+  "developmental_efficiency_improvement_fraction": 0.20,
+  "stress_schedule": {
+    "demand_shift_cycles": [6, 12, 18],
+    "demand_shift_skill_rotation": 1,
+    "source_shortage_cycles": [8, 16],
+    "source_shortage_field_stride": 1,
+    "withholding_cycles": [10, 20],
+    "withholding_side": "support"
+  },
+  "compute_accounting": {
+    "source_development_unit": "resident_agent_cycle",
+    "mission_execution_unit": "mission_evaluation_trial_or_slot",
+    "organization_coordination_unit": "pair_selection_or_coalition_coordination_decision",
+    "world_regulatory_estimation_unit": "market_offer_or_regulatory_accounting_decision",
+    "zero_source_development_efficiency": null
+  }
+}
