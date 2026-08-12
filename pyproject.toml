@@ -16,6 +16,9 @@ dev = [
   "pytest>=8.3",
   "ruff>=0.9",
 ]
+contextgraph = [
+  "resonance-contextgraph @ git+https://github.com/ElephantRock/Resonance-ContextGraph.git@7aafa8cd7aabbbcdf5e4f37670f275d0bd339bd3",
+]
 
 [tool.hatch.build.targets.wheel]
 packages = ["src/resonance_world"]
