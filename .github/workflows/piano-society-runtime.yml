@@ -6,16 +6,19 @@ on:
       - experiment/piano-society-runtime
     paths:
       - "experiments/piano_society/**"
-      - "tests/test_piano_society_experiment.py"
+      - "tests/test_piano_society*.py"
       - ".github/workflows/piano-society-runtime.yml"
   pull_request:
     paths:
       - "experiments/piano_society/**"
-      - "tests/test_piano_society_experiment.py"
+      - "tests/test_piano_society*.py"
       - ".github/workflows/piano-society-runtime.yml"
 
 permissions:
   contents: read
+
+env:
+  PIANO_FIELD_SHA: f9416d841887476bbbcc97ba12c919c89d626ddc
 
 jobs:
   phase-zero:
@@ -39,5 +42,56 @@ jobs:
         with:
           name: piano-society-phase0
           path: output/piano_society/phase0.json
+          if-no-files-found: error
+          retention-days: 30
+
+  phase-one-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git ../field
+          git -C ../field checkout "$PIANO_FIELD_SHA"
+          test "$(git -C ../field rev-parse HEAD)" = "$PIANO_FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install World and pinned Field
+        run: python -m pip install -e '../field[dev]' -e '.[dev]'
+      - name: Validate World scorer
+        run: |
+          ruff check experiments/piano_society/phase1.py tests/test_piano_society_phase1.py
+          pytest -q tests/test_piano_society_phase1.py
+      - name: Emit Field-owned paired records
+        run: |
+          mkdir -p output/piano_society/phase1
+          python -m resonance.experiments.piano_phase1_fixture \
+            --arm control \
+            --output output/piano_society/phase1/control.json
+          python -m resonance.experiments.piano_phase1_fixture \
+            --arm treatment \
+            --output output/piano_society/phase1/treatment.json
+      - name: Score live contract records
+        run: |
+          python -m experiments.piano_society.phase1 \
+            --control output/piano_society/phase1/control.json \
+            --treatment output/piano_society/phase1/treatment.json \
+            --field-sha "$PIANO_FIELD_SHA" \
+            --output output/piano_society/phase1/result.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          value = json.loads(Path('output/piano_society/phase1/result.json').read_text())
+          assert value['phase'] == 'live-contract-smoke'
+          assert value['scientific_claim_allowed'] is False
+          assert value['field_revision'] == 'f9416d841887476bbbcc97ba12c919c89d626ddc'
+          print(json.dumps(value, indent=2, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase1-contract
+          path: output/piano_society/phase1
           if-no-files-found: error
           retention-days: 30
