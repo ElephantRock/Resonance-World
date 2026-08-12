@@ -43,6 +43,7 @@ def _backend_config(config: dict[str, Any]) -> dict[str, Any]:
         "provider_seed_supported": False,
         "trial_seed_role": "pair_identifier_only",
         "model_id_stability": "provider_alias_without_dated_snapshot",
+        "retry_timeout": True,
         "pair_order": "counterbalanced_by_seed_parity",
     }
     for key, required in expected.items():
@@ -51,6 +52,14 @@ def _backend_config(config: dict[str, Any]) -> dict[str, Any]:
     temperature = value.get("temperature")
     if temperature != 0.0:
         raise ValueError("Phase-2-ZAI requires model_backend.temperature == 0.0")
+    timeout_seconds = value.get("timeout_seconds")
+    if isinstance(timeout_seconds, bool) or not isinstance(timeout_seconds, (int, float)):
+        raise ValueError("model_backend.timeout_seconds must be numeric")
+    if timeout_seconds <= 0:
+        raise ValueError("model_backend.timeout_seconds must be positive")
+    max_attempts = value.get("max_attempts")
+    if isinstance(max_attempts, bool) or not isinstance(max_attempts, int) or max_attempts <= 0:
+        raise ValueError("model_backend.max_attempts must be positive")
     workers = value.get("max_workers")
     if isinstance(workers, bool) or not isinstance(workers, int) or workers <= 0:
         raise ValueError("model_backend.max_workers must be positive")
@@ -80,12 +89,16 @@ def _run_arm(
     action_vocabulary: tuple[str, ...],
     max_output_tokens: int,
     temperature: float,
+    timeout_seconds: float,
+    max_attempts: int,
 ) -> dict[str, object]:
     backend = ZAIChatCompletionsBackend(
         api_key=api_key,
         model_snapshot=model_snapshot,
         allowed_actions=action_vocabulary,
         temperature=temperature,
+        timeout_seconds=timeout_seconds,
+        max_attempts=max_attempts,
     )
     agent = Phase2ExperimentAgent(
         arm=arm,
@@ -112,6 +125,8 @@ def _run_pair(
     action_vocabulary: tuple[str, ...],
     max_output_tokens: int,
     temperature: float,
+    timeout_seconds: float,
+    max_attempts: int,
 ) -> tuple[dict[str, object], dict[str, object]]:
     kwargs = {
         "scenario": scenario,
@@ -121,6 +136,8 @@ def _run_pair(
         "action_vocabulary": action_vocabulary,
         "max_output_tokens": max_output_tokens,
         "temperature": temperature,
+        "timeout_seconds": timeout_seconds,
+        "max_attempts": max_attempts,
     }
     order = (
         (Phase2Arm.CONTROL, Phase2Arm.TREATMENT)
@@ -151,6 +168,8 @@ def run(
     action_vocabulary = tuple(str(value) for value in vocabulary_raw)
     max_output_tokens = int(config["max_output_tokens_per_call"])
     temperature = float(backend["temperature"])
+    timeout_seconds = float(backend["timeout_seconds"])
+    max_attempts = int(backend["max_attempts"])
     scenarios = [dict(value) for value in config["scenarios"]]
     seeds = [int(value) for value in config["seeds"]]
     scenario_order = {
@@ -173,6 +192,8 @@ def run(
                         action_vocabulary=action_vocabulary,
                         max_output_tokens=max_output_tokens,
                         temperature=temperature,
+                        timeout_seconds=timeout_seconds,
+                        max_attempts=max_attempts,
                     )
                 )
         for future in as_completed(futures):
