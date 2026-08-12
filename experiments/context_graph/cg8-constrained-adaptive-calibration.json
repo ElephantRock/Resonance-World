@@ -34,12 +34,12 @@
     "fallback_score": 0.35
   },
   "missions": [
-    {"mission_id": "cg8-heat-water", "lead_skill": "urban_heat", "support_skill": "water_systems"},
-    {"mission_id": "cg8-energy-supply", "lead_skill": "energy_storage", "support_skill": "supply_networks"},
-    {"mission_id": "cg8-health-mobility", "lead_skill": "public_health", "support_skill": "mobility"},
-    {"mission_id": "cg8-water-health", "lead_skill": "water_systems", "support_skill": "public_health"},
-    {"mission_id": "cg8-energy-mobility", "lead_skill": "energy_storage", "support_skill": "mobility"},
-    {"mission_id": "cg8-supply-heat", "lead_skill": "supply_networks", "support_skill": "urban_heat"}
+    {"mission_id": "cg5-heat-water", "lead_skill": "urban_heat", "support_skill": "water_systems"},
+    {"mission_id": "cg5-energy-supply", "lead_skill": "energy_storage", "support_skill": "supply_networks"},
+    {"mission_id": "cg5-health-mobility", "lead_skill": "public_health", "support_skill": "mobility"},
+    {"mission_id": "cg5-water-health", "lead_skill": "water_systems", "support_skill": "public_health"},
+    {"mission_id": "cg5-energy-mobility", "lead_skill": "energy_storage", "support_skill": "mobility"},
+    {"mission_id": "cg5-supply-heat", "lead_skill": "supply_networks", "support_skill": "urban_heat"}
   ],
   "context": {
     "claim_budget_cap": 48,
