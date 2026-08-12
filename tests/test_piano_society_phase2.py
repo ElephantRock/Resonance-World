@@ -101,13 +101,14 @@ def _payload(arm: str, record: dict[str, object]) -> dict[str, object]:
     }
 
 
-def test_repository_preregistration_is_intentionally_unlocked() -> None:
+def test_repository_preregistration_is_locked_to_pinned_campaign() -> None:
     path = Path("experiments/piano_society/phase2_config.json")
     config = json.loads(path.read_text(encoding="utf-8"))
     normalized = validate_config(config)
 
-    assert normalized["campaign_locked"] is False
-    assert normalized["required_model_snapshot"] is None
+    assert normalized["campaign_locked"] is True
+    assert normalized["required_model_snapshot"] == "gpt-4.1-mini-2025-04-14"
+    assert normalized["field_revision"] == "bff92d11b4c62c3e6b950696d5fd5ebf7ad2caa5"
     assert normalized["required_pairs"] == 60
 
 
