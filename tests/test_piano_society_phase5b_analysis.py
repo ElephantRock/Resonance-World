@@ -146,7 +146,7 @@ def test_phase5b_rejects_pair_roster_drift() -> None:
     config, payloads = _payloads()
     broken = copy.deepcopy(payloads["model_retained"])
     broken["records"][0]["replacement_roster_digest"] = "b" * 64
-    with pytest.raises(ValueError, match="same replacement roster"):
+    with pytest.raises(ValueError, match="exact replacement roster"):
         analyze(config, payloads["model_reset"], broken)
 
 
