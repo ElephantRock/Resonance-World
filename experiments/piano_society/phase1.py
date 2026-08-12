@@ -18,7 +18,9 @@ def _mapping(value: object, name: str) -> Mapping[str, Any]:
     return value
 
 
-def _records(payload: Mapping[str, Any], *, expected_arm: str) -> list[Mapping[str, Any]]:
+def _records(
+    payload: Mapping[str, Any], *, expected_arm: str
+) -> list[Mapping[str, Any]]:
     if payload.get("schema") != _FIXTURE_SCHEMA:
         raise ValueError("unsupported Field fixture schema")
     if payload.get("arm") != expected_arm:
@@ -62,7 +64,9 @@ def score_records(records: Sequence[Mapping[str, Any]]) -> dict[str, float | int
 
     observations = len(records)
     speech_labeled = [record for record in records if record.get("speech_action") is not None]
-    intent_labeled = [record for record in records if record.get("intended_action") is not None]
+    intent_labeled = [
+        record for record in records if record.get("intended_action") is not None
+    ]
     expected = [
         record
         for record in records
@@ -78,7 +82,9 @@ def score_records(records: Sequence[Mapping[str, Any]]) -> dict[str, float | int
     )
     unsupported_success = sum(
         bool(record["speech_claims_success"])
-        and not bool(_mapping(record["acknowledgement"], "acknowledgement")["grounded_success"])
+        and not bool(
+            _mapping(record["acknowledgement"], "acknowledgement")["grounded_success"]
+        )
         for record in records
     )
     expectation_failures = sum(
@@ -95,9 +101,13 @@ def score_records(records: Sequence[Mapping[str, Any]]) -> dict[str, float | int
         "cross_channel_contradiction_rate": (
             contradictions / len(speech_labeled) if speech_labeled else 0.0
         ),
-        "intent_action_divergence_rate": divergences / len(intent_labeled) if intent_labeled else 0.0,
+        "intent_action_divergence_rate": (
+            divergences / len(intent_labeled) if intent_labeled else 0.0
+        ),
         "unsupported_success_claim_rate": unsupported_success / observations,
-        "expectation_failure_rate": expectation_failures / len(expected) if expected else 0.0,
+        "expectation_failure_rate": (
+            expectation_failures / len(expected) if expected else 0.0
+        ),
         "execution_success_rate": execution_successes / observations,
     }
 
@@ -108,12 +118,19 @@ def run_pair(
     *,
     field_sha: str,
 ) -> dict[str, Any]:
-    if len(field_sha) != 40 or any(character not in "0123456789abcdef" for character in field_sha):
+    if (
+        len(field_sha) != 40
+        or any(character not in "0123456789abcdef" for character in field_sha)
+    ):
         raise ValueError("field_sha must be a lowercase 40-character Git SHA")
 
     control = _records(control_payload, expected_arm="control")
     treatment = _records(treatment_payload, expected_arm="treatment")
-    if [_pair_key(record) for record in control] != [_pair_key(record) for record in treatment]:
+    if [
+        _pair_key(record) for record in control
+    ] != [
+        _pair_key(record) for record in treatment
+    ]:
         raise ValueError("control and treatment records are not paired by agent/time")
 
     control_score = score_records(control)
@@ -134,7 +151,8 @@ def run_pair(
         "control": control_score,
         "treatment": treatment_score,
         "delta_treatment_minus_control": {
-            metric: treatment_score[metric] - control_score[metric] for metric in metric_names
+            metric: treatment_score[metric] - control_score[metric]
+            for metric in metric_names
         },
     }
 
