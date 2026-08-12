@@ -1,36 +1,50 @@
 {
-  "version": "context-graph-graduation-record-v0.3",
-  "status": "architectural-graduation-parity-pass",
+  "version": "context-graph-graduation-record-v0.4",
+  "status": "architectural-graduation-release-pass",
   "scientific_claim": false,
   "standalone_runtime": {
     "repository": "ElephantRock/Resonance-ContextGraph",
     "development_branch": "architecture/v0.1",
-    "tested_commit": "55ce7bb435b3d4a1ff888474a5ca76ccff843150",
+    "initial_tested_commit": "55ce7bb435b3d4a1ff888474a5ca76ccff843150",
     "independent_ci_run": 31637686651,
     "independent_ci_status": "success",
-    "independence_gate": "standalone src contains no resonance_world dependency or reference"
+    "independence_gate": "standalone src contains no resonance_world dependency or reference",
+    "graduation_pull_request": 4,
+    "release": "v0.1.0",
+    "release_commit": "b896891108fd954869a8cd0423f6e8440ab0cdc0",
+    "release_workflow_run": 31641381598,
+    "release_workflow_status": "success",
+    "release_id": 369532222,
+    "wheel_asset_id": 512077052,
+    "wheel_sha256": "47390e868a7b886ad47eacbb44ab761450c27578245487e47ed5773c8ecf4d35",
+    "sdist_asset_id": 512077053,
+    "sdist_sha256": "02da9af186d320ce2ebc9a44d43711ae1f9c1551c4912700f49ad09a5274566a"
   },
   "world_integration": {
     "repository": "ElephantRock/Resonance-World",
     "branch": "experiment/context-graph",
-    "parity_workflow_run": 31638124103,
-    "parity_workflow_head": "24f7977ee0876a3647afdadb4d24cc1f30d28777",
-    "semantic_parity_job_status": "success",
-    "frozen_regression_job_status": "success",
-    "result_artifact_id": 9157806653,
-    "result_artifact_digest": "sha256:3a333eb1b502c78c03e237d9bebe4a6249b13ed9aefee9082b3baa0894e79249",
-    "exact_result_commit": "e19703a40e0070c34a7e8e9f424d5cb0b31db134",
     "dependency_direction": "Resonance World -> Resonance ContextGraph; reverse dependency forbidden",
+    "dependency_spec": "resonance-contextgraph @ git+https://github.com/ElephantRock/Resonance-ContextGraph.git@v0.1.0",
     "runtime_facade": "src/resonance_world/context_graph_runtime.py",
     "adapter": "src/resonance_world/context_graph_adapter.py",
     "adapter_uses_structural_producer_protocols": true,
     "adapter_imports_legacy_world_contextgraph": false,
+    "historical_parity_workflow_run": 31638124103,
+    "historical_parity_workflow_head": "24f7977ee0876a3647afdadb4d24cc1f30d28777",
+    "historical_result_artifact_id": 9157806653,
+    "historical_result_artifact_digest": "sha256:3a333eb1b502c78c03e237d9bebe4a6249b13ed9aefee9082b3baa0894e79249",
     "final_decoupled_validation_run": 31638854949,
     "final_decoupled_validation_head": "e104f8872531065416271a11736fc4b991d163b3",
-    "final_decoupled_semantic_parity_status": "success",
-    "final_decoupled_frozen_regression_status": "success",
     "final_decoupled_result_artifact_id": 9158072713,
-    "final_decoupled_result_artifact_digest": "sha256:4d5f0d8f9a15a1e72b958e407e1709b74d09bdd475a91c72a23114e088ea189d"
+    "final_decoupled_result_artifact_digest": "sha256:4d5f0d8f9a15a1e72b958e407e1709b74d09bdd475a91c72a23114e088ea189d",
+    "release_validation_run": 31641586497,
+    "release_validation_head": "f57243d4f99e9f9a56ed1de87caab672d75b714f",
+    "release_tag_resolution_status": "success",
+    "release_semantic_parity_status": "success",
+    "release_frozen_regression_status": "success",
+    "release_result_artifact_id": 9159096838,
+    "release_result_artifact_digest": "sha256:8873e567bde88712aa5f274fd4a934f0f743675dda37b4f4e8f69b325872330f",
+    "release_result_commit": "2f85327d557310f933db4adda8e01ab5813a2e41"
   },
   "frozen_replay": {
     "cg5": {
@@ -83,6 +97,8 @@
   },
   "retirement_boundary": {
     "standalone_semantics_match_frozen_world": true,
+    "standalone_stable_release_exists": true,
+    "world_dependency_uses_stable_release_tag": true,
     "world_duplicate_runtime_can_be_deprecated": true,
     "production_runtime_path_uses_legacy_world_contextgraph": false,
     "world_duplicate_runtime_can_be_deleted_now": false,
@@ -96,5 +112,5 @@
     "contextgraph_object_enters_joint_environment": false,
     "outcome_law_changed": false
   },
-  "interpretation": "Architectural graduation is authorized by exact semantic parity, not by a new efficacy claim. Resonance ContextGraph owns the validated runtime semantics. Resonance World's production-facing integration no longer imports the historical ContextGraph implementation; World retains that implementation only as immutable scientific compatibility infrastructure."
+  "interpretation": "Architectural graduation is complete through a stable v0.1.0 release. Resonance ContextGraph main owns the validated runtime semantics, and Resonance World resolves the integration through the immutable release tag. The release itself adds no new efficacy claim; exact CG-5/CG-11 replay remains the architectural parity proof."
 }
