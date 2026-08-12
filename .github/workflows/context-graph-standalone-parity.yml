@@ -18,7 +18,8 @@ permissions:
   actions: read
 
 env:
-  CONTEXTGRAPH_COMMIT: 55ce7bb435b3d4a1ff888474a5ca76ccff843150
+  CONTEXTGRAPH_RELEASE: "v0.1.0"
+  CONTEXTGRAPH_RELEASE_COMMIT: b896891108fd954869a8cd0423f6e8440ab0cdc0
   CG5_RUN_ID: "31622647635"
   CG11_RUN_ID: "31632483751"
 
@@ -34,9 +35,9 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install World with pinned standalone ContextGraph
+      - name: Install World with released standalone ContextGraph
         run: python -m pip install -e '.[dev,contextgraph]'
-      - name: Prove standalone dependency is pinned to the graduated commit
+      - name: Prove standalone dependency resolves through released tag
         run: |
           python - <<'PY'
           import importlib.metadata
@@ -47,8 +48,11 @@ jobs:
           dist = importlib.metadata.distribution("resonance-contextgraph")
           direct = Path(dist._path) / "direct_url.json"
           payload = json.loads(direct.read_text())
-          commit = payload["vcs_info"]["commit_id"]
-          assert commit == os.environ["CONTEXTGRAPH_COMMIT"], commit
+          vcs = payload["vcs_info"]
+          commit = vcs["commit_id"]
+          requested = vcs.get("requested_revision")
+          assert requested == os.environ["CONTEXTGRAPH_RELEASE"], requested
+          assert commit == os.environ["CONTEXTGRAPH_RELEASE_COMMIT"], commit
           PY
       - name: Lint adapter, facade, and semantic parity surface
         run: |
@@ -89,7 +93,7 @@ jobs:
         with:
           python-version: "3.12"
           cache: pip
-      - name: Install World with pinned standalone ContextGraph
+      - name: Install World with released standalone ContextGraph
         run: python -m pip install -e '.[dev,contextgraph]'
       - name: Download immutable CG-5 fresh source
         uses: actions/download-artifact@v4
@@ -111,7 +115,7 @@ jobs:
             "ec623fa479f9514081d606daf93fa189e16591a233604ffab9427ebcd4c2d53b"
           test "$(sha256sum source/cg11/world/output/cg11-source/capsules.private.jsonl | awk '{print $1}')" = \
             "038c1b8b22c685c4e24a516b1f7de6b2f95cc6c24c3f2f1312545fd8463bd25e"
-      - name: Replay frozen CG-5 and CG-11 semantics through standalone package
+      - name: Replay frozen CG-5 and CG-11 semantics through released package
         run: |
           PYTHONPATH=. python experiments/context_graph/run_context_graph_standalone_parity_v2.py \
             --cg5-capsules source/cg5/world/output/cg5-source/capsules.private.jsonl \
@@ -122,7 +126,7 @@ jobs:
             --cg11-summary source/cg11/world/output/cg11-source/w3-01-source-summary.json \
             --cg11-config experiments/context_graph/cg11-w3-balanced-stopping.json \
             --cg11-frozen-result experiments/context_graph/cg11-w3-balanced-stopping-result.json \
-            --contextgraph-commit "$CONTEXTGRAPH_COMMIT" \
+            --contextgraph-commit "$CONTEXTGRAPH_RELEASE_COMMIT" \
             --output output/context_graph/context-graph-standalone-parity-result.json
       - name: Enforce architectural retirement gate
         run: |
@@ -133,6 +137,7 @@ jobs:
           path = Path("output/context_graph/context-graph-standalone-parity-result.json")
           result = json.loads(path.read_text())
           assert result["passed"] is True
+          assert result["contextgraph_commit"] == "b896891108fd954869a8cd0423f6e8440ab0cdc0"
           assert result["cg5"]["passed"] is True
           assert result["cg11"]["passed"] is True
           assert result["cg5"]["context_mismatches"] == 0
