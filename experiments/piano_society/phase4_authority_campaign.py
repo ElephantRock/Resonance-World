@@ -89,7 +89,10 @@ def _observation(role: dict[str, Any], ledger: AuthorityLedger) -> AgentObservat
     index = int(role["agent_index"])
     pair_index = int(role["pair_index"])
     return AgentObservation(
-        trigger="Resolve conflicting institutional authority notices and coordinate the dyad board.",
+        trigger=(
+            "Resolve conflicting institutional authority notices and coordinate "
+            "the dyad board."
+        ),
         observed_at=_OBSERVED_AT,
         query_embedding=(0.0,) * 1536,
         metadata={
@@ -100,8 +103,9 @@ def _observation(role: dict[str, Any], ledger: AuthorityLedger) -> AgentObservat
             "pair_index": pair_index,
             "institution": "resonance-world-atlas authority ledger",
             "shared_channel_context": (
-                f"You are agent {index} in dyad {pair_index}. Your output channel has only a partial "
-                "local view. A public ten-agent plan board will be available before execution."
+                f"You are agent {index} in dyad {pair_index}. Your output channel "
+                "has only a partial local view. A public ten-agent plan board will "
+                "be available before execution."
             ),
             "speech_local_cue": (
                 f"A local communication specialist recommends {local_a} from its partial view."
