@@ -1,4 +1,4 @@
-"""Execution wrapper for W9-06 with corrected W8 coalition trial accounting."""
+"""Execution wrapper for corrected W9-06 full-compute accounting."""
 
 from __future__ import annotations
 
@@ -11,31 +11,40 @@ from . import w8_campaign as w8
 from . import w9_long_horizon as base
 from .w9_integrated import _phase_seeds, _read_json, _write_json
 
-RESULT_VERSION = "w9-06-long-horizon-result-v0.2"
+RESULT_VERSION = "w9-06-long-horizon-result-v0.3"
 
 
-def _correct_w8_coalition_mission_compute(
+def _correct_w8_coalition_compute(
     arm: Mapping[str, Any],
     config: Mapping[str, Any],
 ) -> dict[str, Any]:
-    """Count the three frozen W8 coalition assay trial blocks in mission compute."""
+    """Count W8 coalition assay trials and standalone comparator selections."""
 
     value = json.loads(json.dumps(arm))
     horizon = int(config["long_horizon"]["cycles"])
     trials = int(config["service_trials"])
-    coalition_compute = float(3 * horizon * trials)
+    coalition_mission_compute = float(3 * horizon * trials)
+    standalone_coordination_compute = float(2 * horizon)
+    total_added = coalition_mission_compute + standalone_coordination_compute
 
     compute = value["compute"]
-    compute["coalition_mission_execution_compute"] = coalition_compute
+    compute["coalition_mission_execution_compute"] = coalition_mission_compute
+    compute["standalone_comparator_pair_selection_compute"] = (
+        standalone_coordination_compute
+    )
     compute["mission_execution_compute"] = (
-        float(compute["mission_execution_compute"]) + coalition_compute
+        float(compute["mission_execution_compute"]) + coalition_mission_compute
+    )
+    compute["organization_coordination_compute"] = (
+        float(compute["organization_coordination_compute"])
+        + standalone_coordination_compute
     )
     compute["incremental_total_measured_compute"] = (
-        float(compute["incremental_total_measured_compute"]) + coalition_compute
+        float(compute["incremental_total_measured_compute"]) + total_added
     )
     compute["final_total_measured_compute_including_cycle0_embodied"] = (
         float(compute["final_total_measured_compute_including_cycle0_embodied"])
-        + coalition_compute
+        + total_added
     )
 
     mission_compute = float(compute["mission_execution_compute"])
@@ -66,7 +75,7 @@ def run_w9_06_execution(
     *,
     phase: str,
 ) -> dict[str, Any]:
-    """Run W9-06 and correct the W8 comparator's full mission-compute accounting."""
+    """Run W9-06 and correct the W8 comparator's full-compute accounting."""
 
     result = base.run_w9_06(
         population,
@@ -78,20 +87,23 @@ def run_w9_06_execution(
     merged = base._merged_config(market_config, long_horizon_config)
     w8_arm = result["arms"]["W8_neutral_full_regulatory_charter"]
     result["arms"]["W8_neutral_full_regulatory_charter"] = (
-        _correct_w8_coalition_mission_compute(w8_arm, merged)
+        _correct_w8_coalition_compute(w8_arm, merged)
     )
+    horizon = int(merged["long_horizon"]["cycles"])
+    trials = int(merged["service_trials"])
     result["version"] = RESULT_VERSION
     result["accounting_corrections"] = {
         "w8_coalition_mission_execution": {
             "trial_blocks_per_cycle": 3,
-            "cycles": int(merged["long_horizon"]["cycles"]),
-            "trials_per_block": int(merged["service_trials"]),
-            "mission_execution_compute_added": float(
-                3
-                * int(merged["long_horizon"]["cycles"])
-                * int(merged["service_trials"])
-            ),
-        }
+            "cycles": horizon,
+            "trials_per_block": trials,
+            "mission_execution_compute_added": float(3 * horizon * trials),
+        },
+        "w8_standalone_comparator_pair_selection": {
+            "pair_selections_per_cycle": 2,
+            "cycles": horizon,
+            "organization_coordination_compute_added": float(2 * horizon),
+        },
     }
     return result
 
