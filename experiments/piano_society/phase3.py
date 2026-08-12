@@ -78,6 +78,9 @@ def materialize_roles(config: Mapping[str, Any]) -> list[dict[str, Any]]:
         for agent_index, action_raw in enumerate(actions):
             action = str(action_raw)
             action_counts[action] += 1
+            counterpart_index = (
+                agent_index + 1 if agent_index % 2 == 0 else agent_index - 1
+            )
             roles.append(
                 {
                     "joint_case_id": case_id,
@@ -86,7 +89,7 @@ def materialize_roles(config: Mapping[str, Any]) -> list[dict[str, Any]]:
                     "trial_seed": case_seed * 100 + agent_index,
                     "agent_index": agent_index,
                     "pair_index": agent_index // 2,
-                    "counterpart_index": agent_index + 1 if agent_index % 2 == 0 else agent_index - 1,
+                    "counterpart_index": counterpart_index,
                     "expected_action": action,
                     "expected_outcome_status": expected_outcome(action),
                 }
@@ -180,7 +183,9 @@ def validate_config(config: Mapping[str, Any]) -> dict[str, Any]:
     }
 
 
-def _canonical_board(entries: Sequence[Mapping[str, object]]) -> tuple[dict[str, object], ...]:
+def _canonical_board(
+    entries: Sequence[Mapping[str, object]],
+) -> tuple[dict[str, object], ...]:
     result = []
     for entry in entries:
         result.append(
@@ -410,8 +415,13 @@ def analyze(
 
     d_dyads, _ = _social_units(decentralized, normalized)
     p_dyads, _ = _social_units(piano, normalized)
-    d_agents = [_agent_failure(decentralized[role["scenario_id"]]) for role in normalized["roles"]]
-    p_agents = [_agent_failure(piano[role["scenario_id"]]) for role in normalized["roles"]]
+    d_agents = [
+        _agent_failure(decentralized[role["scenario_id"]])
+        for role in normalized["roles"]
+    ]
+    p_agents = [
+        _agent_failure(piano[role["scenario_id"]]) for role in normalized["roles"]
+    ]
     dyad_sign = _exact_sign_test(d_dyads, p_dyads)
     agent_sign = _exact_sign_test(d_agents, p_agents)
 
@@ -419,8 +429,10 @@ def analyze(
     advance = (
         delta["dyad_failure_rate"] <= float(gate["max_dyad_failure_delta"])
         and delta["agent_role_failure_rate"] <= float(gate["max_agent_role_failure_delta"])
-        and delta["joint_case_completion_rate"] >= float(gate["min_joint_case_completion_delta"])
-        and delta["cross_channel_contradiction_rate"] <= float(gate["max_contradiction_delta"])
+        and delta["joint_case_completion_rate"]
+        >= float(gate["min_joint_case_completion_delta"])
+        and delta["cross_channel_contradiction_rate"]
+        <= float(gate["max_contradiction_delta"])
         and delta["outcome_report_mismatch_rate"]
         <= float(gate["max_outcome_report_mismatch_delta"])
         and dyad_sign["p_value_two_sided"] <= float(gate["max_primary_sign_test_p"])
@@ -459,15 +471,21 @@ def main() -> None:
     config = json.loads(Path(args.config).read_text(encoding="utf-8"))
     normalized = validate_config(config)
     if args.decentralized is None and args.piano is None:
-        print(json.dumps({
-            "experiment": _CONFIG_EXPERIMENT,
-            "campaign_locked": True,
-            "field_revision": normalized["field_revision"],
-            "model_snapshot": normalized["required_model_snapshot"],
-            "joint_cases": 6,
-            "agent_records_per_arm": 60,
-            "config_digest": normalized["config_digest"],
-        }, indent=2, sort_keys=True))
+        print(
+            json.dumps(
+                {
+                    "experiment": _CONFIG_EXPERIMENT,
+                    "campaign_locked": True,
+                    "field_revision": normalized["field_revision"],
+                    "model_snapshot": normalized["required_model_snapshot"],
+                    "joint_cases": 6,
+                    "agent_records_per_arm": 60,
+                    "config_digest": normalized["config_digest"],
+                },
+                indent=2,
+                sort_keys=True,
+            )
+        )
         return
     if args.decentralized is None or args.piano is None:
         raise ValueError("both Phase-3 arm payloads are required")
