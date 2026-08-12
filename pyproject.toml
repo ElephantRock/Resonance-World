@@ -20,6 +20,9 @@ contextgraph = [
   "resonance-contextgraph @ git+https://github.com/ElephantRock/Resonance-ContextGraph.git@7aafa8cd7aabbbcdf5e4f37670f275d0bd339bd3",
 ]
 
+[tool.hatch.metadata]
+allow-direct-references = true
+
 [tool.hatch.build.targets.wheel]
 packages = ["src/resonance_world"]
 
