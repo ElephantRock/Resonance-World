@@ -11,8 +11,9 @@ import argparse
 import hashlib
 import json
 from collections import defaultdict
+from collections.abc import Callable
 from pathlib import Path
-from typing import Any, Callable
+from typing import Any
 
 from resonance_world.context_graph_w3_endogenous import (
     CG4Mission,
@@ -217,9 +218,7 @@ def _context_stats(
         respect_temporal_order=True,
     )
     bundles = _observation_bundles(context, min_confidence=min_confidence)
-    complete_sources = {
-        claim.source_id for bundle in bundles for claim in bundle[-1]
-    }
+    complete_sources = {claim.source_id for bundle in bundles for claim in bundle[-1]}
     live_claims = [
         claim
         for claim in context
@@ -262,10 +261,7 @@ def _context_stats(
         for bundle in bundles
         if bundle[2] in candidates and bundle[3] in mission.required_skills
     ]
-    covered = {
-        (bundle[2], bundle[3])
-        for bundle in required
-    }
+    covered = {(bundle[2], bundle[3]) for bundle in required}
     return {
         "context_claims": len(context),
         "candidate_count": len(candidates),
@@ -656,11 +652,17 @@ def main(argv: list[str] | None = None) -> int:
         raise AssertionError("hidden capsule skill state leaked into CG-4F output")
     args.output.parent.mkdir(parents=True, exist_ok=True)
     args.output.write_text(text, encoding="utf-8")
-    print(json.dumps({
-        "calibration": result["calibration"]["summary"],
-        "evaluation": result["evaluation"]["summary"],
-        "evaluation_budget_sweep": result["evaluation"]["budget_sweep"],
-    }, indent=2, sort_keys=True))
+    print(
+        json.dumps(
+            {
+                "calibration": result["calibration"]["summary"],
+                "evaluation": result["evaluation"]["summary"],
+                "evaluation_budget_sweep": result["evaluation"]["budget_sweep"],
+            },
+            indent=2,
+            sort_keys=True,
+        )
+    )
     return 0
 
 
