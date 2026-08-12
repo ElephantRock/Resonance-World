@@ -9,7 +9,6 @@ import argparse
 import copy
 import json
 import statistics
-from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
 
