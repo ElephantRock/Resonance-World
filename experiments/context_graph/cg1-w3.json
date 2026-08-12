@@ -1,0 +1,55 @@
+{
+  "version": "context-graph-cg1-w3-v0.1",
+  "status": "preregistered-before-heldout-execution",
+  "objective": "Test whether topology-aware retrieval over W3 raw event evidence improves held-out cross-agent relational discovery beyond isolated, flat-pooled, and topology-shuffled controls.",
+  "source": {
+    "repository": "ElephantRock/Resonance-World",
+    "workflow_run_id": 31463354353,
+    "artifact_id": 9090615074,
+    "artifact_name": "w3-discovery-source",
+    "artifact_digest": "sha256:8d8c79c8dfe08dea3ff4b1eb07046eae87d6897a00b512fa1138502ba9536342",
+    "source_head_sha": "6accfd688fd2820571933492f937ba4148caed4b",
+    "calibration_seeds": [121, 242, 363],
+    "evaluation_seeds": [484, 605],
+    "raw_sha256": {
+      "runs.csv": "5148eb3441b61b9f8bf5884e98129973e6a99d98d0136e929817fb1bbff70562",
+      "outcomes.csv": "ac697ca3fe71533c12f1cb22f7caa62929fbe309984845744e55942f6ce7783f",
+      "tasks.csv": "e1ba0a45f55f43caa142c64e75c93a7540606c222d0d8cd54022a60ef623b52f",
+      "bids.csv": "5da7d7e724606da475d5cef8afa334b5ca716c1f9a1224cc0382a40880306e1d"
+    }
+  },
+  "conditions": [
+    "isolated",
+    "pooled_flat",
+    "shared_graph",
+    "shuffled_graph"
+  ],
+  "evidence_contract": {
+    "allowed_raw_inputs": ["runs.csv", "outcomes.csv", "tasks.csv", "bids.csv"],
+    "forbidden_treatment_inputs": ["pair-edges.jsonl", "pair-state.private.jsonl"],
+    "graph_path": ["winner", "completed", "task", "requested_by", "requester"],
+    "belief_update_from_retrieval": false
+  },
+  "queries": {
+    "family": "shared_requester_served_by_winner_pair",
+    "max_per_field": 30,
+    "selection": "deterministic_hash_order_before_scoring"
+  },
+  "context": {
+    "claim_budget": 48,
+    "max_hops": 2,
+    "pooled_flat_policy": "direct seed mentions followed by deterministic non-topological fill",
+    "shared_graph_policy": "round-robin two-hop winner-task-requester traversal followed by deterministic fill",
+    "shuffled_graph_policy": "same traversal and budget after deterministic requester-edge permutation"
+  },
+  "success_gates": {
+    "evaluation_query_count_min": 50,
+    "graph_recall_lift_over_isolated_min": 0.40,
+    "graph_recall_lift_over_flat_min": 0.15,
+    "graph_recall_lift_over_shuffled_min": 0.05,
+    "graph_efficiency_ratio_over_flat_min": 1.25,
+    "graph_false_positive_rate_max": 0.0,
+    "graph_provenance_completeness_min": 1.0,
+    "belief_contamination_max": 0
+  }
+}
