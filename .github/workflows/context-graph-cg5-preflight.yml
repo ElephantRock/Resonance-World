@@ -1,0 +1,59 @@
+name: Context Graph CG-5 Preflight
+
+on:
+  push:
+    branches: ["experiment/context-graph"]
+    paths:
+      - ".github/workflows/context-graph-cg5-preflight.yml"
+      - "experiments/context_graph/run_cg5_w3_active_measurement.py"
+      - "pyproject.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Lint CG-5 evaluator
+        run: ruff check experiments/context_graph/run_cg5_w3_active_measurement.py
+      - name: Import and check topology-only shuffle
+        run: |
+          python - <<'PY'
+          import inspect
+          from experiments.context_graph.run_cg5_w3_active_measurement import (
+              shuffle_participant_topology,
+          )
+          from resonance_world.context_graph_w3_endogenous import LiveClaim
+          from resonance_world.w4a_joint_learning import JointEnvironment
+
+          claims = (
+              LiveClaim("field", "a", "membership_state", "active", "registry", "ma", "registry", 1, 0.99, True),
+              LiveClaim("field", "b", "membership_state", "active", "registry", "mb", "registry", 1, 0.99, True),
+              LiveClaim("field", "event", "participant", "a", "a", "ep", "live_probe", 2, 0.95, True),
+              LiveClaim("field", "event", "skill", "urban_heat", "a", "es", "live_probe", 2, 0.95, True),
+              LiveClaim("field", "event", "outcome", "success", "a", "eo", "live_probe", 2, 0.95, True),
+          )
+          shuffled = shuffle_participant_topology(claims, frozenset({"a", "b"}))
+          assert shuffled[0] == claims[0]
+          assert shuffled[1] == claims[1]
+          assert shuffled[2].object == "b"
+          assert shuffled[2].source_id == claims[2].source_id
+          parameters = set(inspect.signature(JointEnvironment.evaluate).parameters)
+          assert not parameters.intersection({"graph", "context_graph", "evidence", "claims"})
+          PY
+      - name: Prove CG-5 protocol stayed frozen
+        run: >-
+          git diff --exit-code
+          2e55d858192e59e5bfbd18b937c73a937f41a054 HEAD --
+          configs/context_graph/cg5-fresh-source.json
+          experiments/context_graph/cg5-w3-active-measurement.json
