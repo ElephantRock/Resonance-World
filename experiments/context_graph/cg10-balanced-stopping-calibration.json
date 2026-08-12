@@ -1,0 +1,94 @@
+{
+  "version": "context-graph-cg10-balanced-stopping-calibration-v0.1",
+  "status": "exploratory-posthoc-cross-cohort",
+  "confirmatory_claim": false,
+  "scientific_question": "Can balanced round-robin acquisition stop using only observable decision stability and evidence support, preserving fixed-six decision quality while reducing measurement cost?",
+  "cohorts": {
+    "cg5": {"run_id": 31622647635, "source_artifact_id": 9151913749},
+    "cg7": {"run_id": 31625645587, "source_artifact_id": 9153047036},
+    "cg9": {"run_id": 31629717950, "source_artifact_id": 9154661686}
+  },
+  "measurement": {
+    "policy": "uniform_round_robin",
+    "checkpoints": [48, 60, 72, 96, 120, 144, 168, 192, 216],
+    "minimum_stop_budget": 60,
+    "fixed_six_reference": 216,
+    "maximum_events_per_current_agent_skill": 6
+  },
+  "stopping_candidates": [
+    {
+      "name": "pair_stability_2",
+      "stable_checkpoint_count": 2,
+      "minimum_selected_role_event_support": 0,
+      "minimum_selected_role_score_margin": 0.0
+    },
+    {
+      "name": "pair_stability_2_support3",
+      "stable_checkpoint_count": 2,
+      "minimum_selected_role_event_support": 3,
+      "minimum_selected_role_score_margin": 0.0
+    },
+    {
+      "name": "pair_stability_3_support3",
+      "stable_checkpoint_count": 3,
+      "minimum_selected_role_event_support": 3,
+      "minimum_selected_role_score_margin": 0.0
+    },
+    {
+      "name": "pair_stability_2_support3_margin003",
+      "stable_checkpoint_count": 2,
+      "minimum_selected_role_event_support": 3,
+      "minimum_selected_role_score_margin": 0.03
+    }
+  ],
+  "selection_rule": {
+    "pooled_expected_success_loss_vs_fixed6_max": 0.01,
+    "per_cohort_expected_success_loss_vs_fixed6_max": 0.02,
+    "pooled_graph_lift_over_cost_matched_flat_min": 0.02,
+    "mean_probe_events_max": 120.0,
+    "p90_probe_events_max": 168.0,
+    "complexity_order": [
+      "pair_stability_2",
+      "pair_stability_2_support3",
+      "pair_stability_3_support3",
+      "pair_stability_2_support3_margin003"
+    ],
+    "selection_order": "lowest_mean_probe_events_then_complexity_order"
+  },
+  "estimator": {
+    "name": "wilson_lower_80_min3",
+    "kind": "wilson_lower",
+    "minimum_independent_event_support": 3,
+    "fallback_score": 0.3333333333333333,
+    "z": 1.2815515655446004
+  },
+  "society": {
+    "initial_roster_size": 8,
+    "turnover_count": 4,
+    "initial_probes_per_skill": 2,
+    "initial_skills_per_agent": 3,
+    "observation_noise_rate": 0.18,
+    "observer_noise_rate": 0.18,
+    "rumor_count": 2,
+    "min_confidence": 0.7,
+    "maximum_events_per_current_agent_skill": 6
+  },
+  "context": {"claim_budget_cap": 48},
+  "missions": [
+    {"mission_id": "cg10-heat-water", "lead_skill": "urban_heat", "support_skill": "water_systems"},
+    {"mission_id": "cg10-energy-supply", "lead_skill": "energy_storage", "support_skill": "supply_networks"},
+    {"mission_id": "cg10-health-mobility", "lead_skill": "public_health", "support_skill": "mobility"},
+    {"mission_id": "cg10-heat-mobility", "lead_skill": "urban_heat", "support_skill": "mobility"},
+    {"mission_id": "cg10-water-health", "lead_skill": "water_systems", "support_skill": "public_health"},
+    {"mission_id": "cg10-supply-heat", "lead_skill": "supply_networks", "support_skill": "urban_heat"}
+  ],
+  "integrity_requirements": {
+    "stopping_evaluator_truth_inputs": 0,
+    "historical_outcome_rows_consumed": 0,
+    "posthoc_imported_claims": 0,
+    "belief_contamination": 0,
+    "outcome_law_graph_inputs": 0,
+    "cohort_overlap": 0
+  },
+  "interpretation_boundary": "CG-10 calibration is exploratory because all three cohorts were previously unblinded. Evaluator capability and expected outcomes may score candidate rules after stopping, but may not enter acquisition or stopping decisions. A selected rule is only a hypothesis for a separately frozen fresh-cohort experiment."
+}
