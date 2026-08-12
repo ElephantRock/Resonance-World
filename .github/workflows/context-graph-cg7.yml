@@ -176,7 +176,7 @@ jobs:
             cd field
             python -m resonance.experiments.lifecycle_step_cli \
               --config "$GITHUB_WORKSPACE/world/configs/context_graph/cg7-fresh-source.json" \
-              --experiment 64 \
+              --experiment 63 \
               --code-sha "$FIELD_SHA" \
               --dsn "$DSN" \
               --output-dir "$GITHUB_WORKSPACE/source-step"
@@ -190,7 +190,7 @@ jobs:
             SELECT run_id::text, seed, arm_label, environment::text, metrics::text, completed_at
             FROM integration_campaign_runs
             WHERE campaign_name = '$CAMPAIGN'
-              AND experiment_number = 64
+              AND experiment_number = 63
               AND arm_label = 'immortal_control'
             ORDER BY seed
           " > raw/runs.csv
@@ -201,7 +201,7 @@ jobs:
             FROM integration_campaign_outcomes o
             JOIN integration_campaign_runs r ON r.run_id = o.run_id
             WHERE r.campaign_name = '$CAMPAIGN'
-              AND r.experiment_number = 64
+              AND r.experiment_number = 63
               AND r.arm_label = 'immortal_control'
             ORDER BY r.seed, o.cycle
           " > raw/outcomes.csv
@@ -211,7 +211,7 @@ jobs:
             JOIN integration_campaign_runs r ON r.run_id = o.run_id
             JOIN market_tasks t ON t.task_id = o.task_id
             WHERE r.campaign_name = '$CAMPAIGN'
-              AND r.experiment_number = 64
+              AND r.experiment_number = 63
               AND r.arm_label = 'immortal_control'
             ORDER BY r.seed, t.task_id
           " > raw/tasks.csv
@@ -222,7 +222,7 @@ jobs:
             JOIN integration_campaign_runs r ON r.run_id = o.run_id
             JOIN market_bids b ON b.task_id = o.task_id
             WHERE r.campaign_name = '$CAMPAIGN'
-              AND r.experiment_number = 64
+              AND r.experiment_number = 63
               AND r.arm_label = 'immortal_control'
             ORDER BY r.seed, b.task_id, b.bidder_agent_id
           " > raw/bids.csv
