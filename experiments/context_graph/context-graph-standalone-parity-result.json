@@ -1,0 +1,54 @@
+{
+  "cg11": {
+    "checkpoint_context_decisions_checked": 1260,
+    "checkpoint_observable_mismatches": 0,
+    "checkpoint_observations_checked": 210,
+    "context_mismatches": 0,
+    "decisions": 180,
+    "fields": 30,
+    "final_context_decisions_checked": 360,
+    "fixed6_mean_expected_success": 0.28111686910074246,
+    "mean_complete_bundles": 13.0,
+    "mean_context_claims": 47.0,
+    "mean_stopping_probe_events": 111.2,
+    "passed": true,
+    "scheduler_mismatches": 0,
+    "scheduler_steps_checked": 5040,
+    "stop_budget_histogram": {
+      "120": 4,
+      "144": 2,
+      "168": 9,
+      "60": 8,
+      "72": 4,
+      "96": 3
+    },
+    "stopped_mean_expected_success": 0.2790790551714306,
+    "stopping_mismatches": 0
+  },
+  "cg11_stopping_contract_note": "Executed frozen evaluator required stable pair vector and a non-negative minimum selected-role score margin. The preregistration prose described pair stability alone; architectural parity follows executed behavior and records this discrepancy explicitly.",
+  "cg5": {
+    "context_mismatches": 0,
+    "decisions": 90,
+    "fields": 15,
+    "frozen_expected_success": 0.27763600681086903,
+    "mean_complete_bundles": 13.0,
+    "mean_context_claims": 47.0,
+    "mean_expected_success": 0.27763600681086903,
+    "passed": true,
+    "supplemental_probe_events": 3240
+  },
+  "contextgraph_commit": "55ce7bb435b3d4a1ff888474a5ca76ccff843150",
+  "passed": true,
+  "retirement_gate": {
+    "frozen_experiment_records_must_remain": true,
+    "standalone_semantics_match_frozen_world": true,
+    "world_duplicate_runtime_can_be_deprecated": true
+  },
+  "scientific_claim": false,
+  "source_experiments": {
+    "cg11": "frozen-confirmatory-pass-replay-only",
+    "cg5": "frozen-confirmatory-pass-replay-only"
+  },
+  "status": "architectural-parity-pass",
+  "version": "context-graph-standalone-parity-v0.2"
+}
