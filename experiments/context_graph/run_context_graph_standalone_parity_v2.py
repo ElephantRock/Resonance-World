@@ -15,6 +15,11 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+from experiments.context_graph.run_cg6_adaptive_acquisition import (
+    base_field,
+    estimator,
+    missions,
+)
 from experiments.context_graph.run_cg10_balanced_stopping import (
     choose_stop,
     stopping_observables,
@@ -26,11 +31,6 @@ from experiments.context_graph.run_context_graph_standalone_parity import (
     _compare_context,
     _read_json,
     _scheduler_parity,
-)
-from experiments.context_graph.run_cg6_adaptive_acquisition import (
-    base_field,
-    estimator,
-    missions,
 )
 from resonance_world.context_graph_adapter import (
     checkpoint_from_live_contexts,
