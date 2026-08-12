@@ -3,8 +3,6 @@ from __future__ import annotations
 import json
 from pathlib import Path
 
-import pytest
-
 from resonance_world.w6_mobility import PortableAgentState
 from resonance_world.w8_campaign import W8Population, _generate_offers
 from resonance_world.w9_portfolio import (
@@ -220,7 +218,9 @@ def test_functional_allocator_is_invariant_to_private_practice() -> None:
         agent_id: PortableAgentState(
             agent_id=state.agent_id,
             home_field_id=state.home_field_id,
-            practice_by_skill=tuple((skill, value + 50) for skill, value in state.practice_by_skill),
+            practice_by_skill=tuple(
+                (skill, value + 50) for skill, value in state.practice_by_skill
+            ),
             evidence_refs=state.evidence_refs,
         )
         for agent_id, state in second.portable_by_id.items()
