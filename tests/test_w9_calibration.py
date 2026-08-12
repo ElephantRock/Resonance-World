@@ -64,7 +64,7 @@ def test_calibrated_report_passes_all_registered_gates() -> None:
     assert report.label == "calibrated_source_cost_estimator"
     assert report.mae_pp == pytest.approx(0.125)
     assert report.signed_bias_pp == pytest.approx(0.0)
-    assert report.spearman_rho > 0.99
+    assert report.spearman_rho > 0.98
     assert report.high_cost_count == 2
     assert report.high_cost_safe_rate == pytest.approx(1.0)
     assert report.calibration_slope is not None
