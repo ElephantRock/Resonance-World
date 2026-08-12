@@ -19,7 +19,12 @@ from resonance.experiments.piano_phase2_intention_stress import (
 )
 from resonance.experiments.piano_phase2_zai import ZAIChatCompletionsBackend
 
-from experiments.piano_society.phase2c import analyze, config_digest, materialize_cases, validate_config
+from experiments.piano_society.phase2c import (
+    analyze,
+    config_digest,
+    materialize_cases,
+    validate_config,
+)
 
 _PAYLOAD_SCHEMA = "resonance-world-piano-phase2c-intention-stress-arm-v0.1"
 _OBSERVED_AT = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
