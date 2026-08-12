@@ -11,6 +11,17 @@ from dataclasses import dataclass
 from resonance.experiments.piano_phase2 import ModelBackend, ModelReply, ModelRequest
 
 _STRATEGIES = ("specialist", "balanced", "continuity")
+_STRATEGY_DEFINITIONS = {
+    "specialist": (
+        "select the strongest lead-skill member and then the strongest remaining "
+        "support-skill member"
+    ),
+    "balanced": "select the pair maximizing joint lead/support coverage",
+    "continuity": (
+        "reuse the organization's prior successful pair only if both members remain in the "
+        "current roster, otherwise fall back to balanced"
+    ),
+}
 
 
 @dataclass(frozen=True, slots=True)
@@ -140,18 +151,15 @@ class InstitutionalPianoController:
     ) -> InstitutionalPlan:
         self.reset_usage()
         allowed = ", ".join(self.config.strategy_order)
-        definitions = (
-            "specialist=select the strongest lead-skill member and then the strongest "
-            "remaining support-skill member; "
-            "balanced=select the pair maximizing joint lead/support coverage; "
-            "continuity=reuse the organization's prior successful pair only if both members "
-            "remain in the current roster, otherwise fall back to balanced."
+        definitions = "; ".join(
+            f"{strategy}={_STRATEGY_DEFINITIONS[strategy]}"
+            for strategy in self.config.strategy_order
         )
         context = (
             f"Mission: {mission_text}\n"
             f"Current replacement roster: {roster_text}\n"
             f"Inherited organization procedure history: {memory_text}\n"
-            f"Strategy semantics: {definitions}\n"
+            f"Strategy semantics: {definitions}.\n"
             f"Available strategies in registered presentation order: {allowed}."
         )
 
