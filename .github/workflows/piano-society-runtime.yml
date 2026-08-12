@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 env:
-  PIANO_FIELD_SHA: 5fd619d9b2170b4344b6872798db4f09fc35924b
+  PIANO_FIELD_SHA: 79fb6231352aa207e67210eff794030b628f8b23
 
 jobs:
   phase-zero:
@@ -86,7 +86,7 @@ jobs:
           value = json.loads(Path('output/piano_society/phase1/result.json').read_text())
           assert value['phase'] == 'live-contract-smoke'
           assert value['scientific_claim_allowed'] is False
-          assert value['field_revision'] == '5fd619d9b2170b4344b6872798db4f09fc35924b'
+          assert value['field_revision'] == '79fb6231352aa207e67210eff794030b628f8b23'
           PY
       - uses: actions/upload-artifact@v4
         with:
@@ -133,9 +133,9 @@ jobs:
               Path('output/piano_society/phase2/preregistration.json').read_text()
           )
           assert value['campaign_locked'] is True
-          assert value['model_snapshot'] == 'glm-4-32b-0414-128k'
+          assert value['model_snapshot'] == 'glm-5.2'
           assert value['required_pairs'] == 60
-          assert value['field_revision'] == '5fd619d9b2170b4344b6872798db4f09fc35924b'
+          assert value['field_revision'] == '79fb6231352aa207e67210eff794030b628f8b23'
           PY
           cp experiments/piano_society/phase2_config.json output/piano_society/phase2/
           cp experiments/piano_society/PHASE2_PREREGISTRATION.md output/piano_society/phase2/
@@ -154,28 +154,34 @@ jobs:
       ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
     steps:
       - uses: actions/checkout@v4
-      - name: Require campaign credential
+      - name: Resolve campaign execution location
         run: |
           if [ -z "$ZAI_API_KEY" ]; then
-            echo "::error::ZAI_API_KEY repository secret is required for Phase 2-ZAI execution"
-            exit 2
+            echo "ZAI_API_KEY is not available in Resonance-World; live execution is delegated to Resonance-Field Actions."
+          else
+            echo "ZAI_API_KEY is available; World may execute the same frozen campaign."
           fi
       - name: Checkout pinned Resonance Field
+        if: ${{ env.ZAI_API_KEY != '' }}
         run: |
           git clone https://github.com/ElephantRock/Resonance-Field.git ../field
           git -C ../field checkout "$PIANO_FIELD_SHA"
           test "$(git -C ../field rev-parse HEAD)" = "$PIANO_FIELD_SHA"
       - uses: actions/setup-python@v5
+        if: ${{ env.ZAI_API_KEY != '' }}
         with:
           python-version: "3.12"
       - name: Install World and pinned Field
+        if: ${{ env.ZAI_API_KEY != '' }}
         run: python -m pip install -e '../field[dev]' -e '.[dev]'
       - name: Execute 60 paired model-backed episodes
+        if: ${{ env.ZAI_API_KEY != '' }}
         run: |
           python -m experiments.piano_society.phase2_campaign \
             --config experiments/piano_society/phase2_config.json \
             --output-dir output/piano_society/phase2-live
       - uses: actions/upload-artifact@v4
+        if: ${{ env.ZAI_API_KEY != '' }}
         with:
           name: piano-society-phase2-zai-live
           path: output/piano_society/phase2-live
