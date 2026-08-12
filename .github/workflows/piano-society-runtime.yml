@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 env:
-  PIANO_FIELD_SHA: f9416d841887476bbbcc97ba12c919c89d626ddc
+  PIANO_FIELD_SHA: 4758f5771a74cf8e0c7805def3063d783f13678d
 
 jobs:
   phase-zero:
@@ -86,12 +86,60 @@ jobs:
           value = json.loads(Path('output/piano_society/phase1/result.json').read_text())
           assert value['phase'] == 'live-contract-smoke'
           assert value['scientific_claim_allowed'] is False
-          assert value['field_revision'] == 'f9416d841887476bbbcc97ba12c919c89d626ddc'
-          print(json.dumps(value, indent=2, sort_keys=True))
+          assert value['field_revision'] == '4758f5771a74cf8e0c7805def3063d783f13678d'
           PY
       - uses: actions/upload-artifact@v4
         with:
           name: piano-society-phase1-contract
           path: output/piano_society/phase1
+          if-no-files-found: error
+          retention-days: 30
+
+  phase-two-preregistration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git ../field
+          git -C ../field checkout "$PIANO_FIELD_SHA"
+          test "$(git -C ../field rev-parse HEAD)" = "$PIANO_FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install World and pinned Field
+        run: python -m pip install -e '../field[dev]' -e '.[dev]'
+      - name: Validate Phase 2 implementation and analysis contract
+        run: |
+          ruff check experiments/piano_society/phase2.py
+          pytest -q tests/test_piano_society_phase2.py
+          python - <<'PY'
+          from resonance.experiments.piano_phase2 import Phase2ExperimentAgent
+          assert Phase2ExperimentAgent is not None
+          PY
+      - name: Validate unlocked preregistration
+        run: |
+          mkdir -p output/piano_society/phase2
+          python -m experiments.piano_society.phase2 \
+            --config experiments/piano_society/phase2_config.json \
+            > output/piano_society/phase2/preregistration.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          value = json.loads(
+              Path('output/piano_society/phase2/preregistration.json').read_text()
+          )
+          assert value['campaign_locked'] is False
+          assert value['model_snapshot'] is None
+          assert value['required_pairs'] == 60
+          assert value['field_revision'] == '4758f5771a74cf8e0c7805def3063d783f13678d'
+          PY
+          cp experiments/piano_society/phase2_config.json output/piano_society/phase2/
+          cp experiments/piano_society/PHASE2_PREREGISTRATION.md output/piano_society/phase2/
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase2-preregistration
+          path: output/piano_society/phase2
           if-no-files-found: error
           retention-days: 30
