@@ -43,6 +43,25 @@ jobs:
           github-token: ${{ secrets.GITHUB_TOKEN }}
           repository: ElephantRock/Resonance-World
           run-id: 31470831322
+      - name: Prepare runtime source metadata from frozen result
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          config = json.loads(
+              Path("experiments/context_graph/cg4-w3-endogenous.json").read_text()
+          )
+          result = json.loads(
+              Path("experiments/context_graph/cg4-w3-endogenous-result.json").read_text()
+          )
+          config["sources"]["evaluation"]["capsules_sha256"] = (
+              result["sources"]["evaluation"]["capsules_sha256"]
+          )
+          path = Path("output/context_graph/cg4m-cg4-runtime.json")
+          path.parent.mkdir(parents=True, exist_ok=True)
+          path.write_text(json.dumps(config, sort_keys=True), encoding="utf-8")
+          PY
       - name: Verify CG-4M implementation
         run: >-
           ruff check
@@ -51,7 +70,7 @@ jobs:
         run: >-
           python experiments/context_graph/run_cg4m_measurement_sufficiency.py
           --config experiments/context_graph/cg4m-measurement-sufficiency.json
-          --cg4-config experiments/context_graph/cg4-w3-endogenous.json
+          --cg4-config output/context_graph/cg4m-cg4-runtime.json
           --cg4-result experiments/context_graph/cg4-w3-endogenous-result.json
           --cg4f-findings experiments/context_graph/cg4f-findings.json
           --calibration-capsules
