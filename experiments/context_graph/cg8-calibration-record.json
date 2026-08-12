@@ -1,0 +1,195 @@
+{
+  "budgets": {
+    "120": {
+      "constrained_estimate_truth_pearson": 0.3938261159983575,
+      "constrained_expected_success": 0.25481077089852294,
+      "constrained_expected_success_loss_vs_fixed6": 0.012462318968761765,
+      "constrained_expected_success_retention_vs_fixed6": 0.9533723392244615,
+      "constrained_graph_minus_flat": 0.03192081601905611,
+      "constrained_minus_uniform": -0.018325543777700626,
+      "constrained_per_cohort_loss_vs_fixed6": {
+        "cg5": 0.01771851224988924,
+        "cg7": 0.007206125687634346
+      },
+      "constrained_positive_field_graph_lift_count": 23,
+      "constrained_probe_cost_fraction_vs_fixed6": 0.5555555555555556,
+      "constraint": {
+        "all_fields_cell_count": [48],
+        "maximum_final_supplemental_allocation_imbalance": 1,
+        "maximum_peak_supplemental_allocation_imbalance": 1,
+        "maximum_supplemental_events_per_cell": 3,
+        "minimum_supplemental_events_per_cell": 2
+      },
+      "failed_checks": ["lift_over_cost_matched_uniform"],
+      "uniform_cohort_expected_success": {
+        "cg5": 0.28555634458748586,
+        "cg7": 0.2607162847649613
+      },
+      "uniform_expected_success": 0.27313631467622357
+    },
+    "60": {
+      "constrained_estimate_truth_pearson": 0.3253507050461383,
+      "constrained_expected_success": 0.2551469383210127,
+      "constrained_expected_success_loss_vs_fixed6": 0.012126151546272002,
+      "constrained_expected_success_retention_vs_fixed6": 0.9546301067859346,
+      "constrained_graph_minus_flat": 0.038901347357609944,
+      "constrained_minus_uniform": -0.014356544251909964,
+      "constrained_per_cohort_loss_vs_fixed6": {
+        "cg5": 0.015541360988245989,
+        "cg7": 0.008710942104298042
+      },
+      "constrained_positive_field_graph_lift_count": 24,
+      "constrained_probe_cost_fraction_vs_fixed6": 0.2777777777777778,
+      "constraint": {
+        "all_fields_cell_count": [48],
+        "maximum_final_supplemental_allocation_imbalance": 1,
+        "maximum_peak_supplemental_allocation_imbalance": 1,
+        "maximum_supplemental_events_per_cell": 2,
+        "minimum_supplemental_events_per_cell": 1
+      },
+      "failed_checks": ["lift_over_cost_matched_uniform"],
+      "uniform_cohort_expected_success": {
+        "cg5": 0.2711169260879674,
+        "cg7": 0.267890039057878
+      },
+      "uniform_expected_success": 0.26950348257292267
+    },
+    "72": {
+      "constrained_estimate_truth_pearson": 0.3356774568951312,
+      "constrained_expected_success": 0.25575147220161903,
+      "constrained_expected_success_loss_vs_fixed6": 0.011521617665665673,
+      "constrained_expected_success_retention_vs_fixed6": 0.9568919651754437,
+      "constrained_graph_minus_flat": 0.03882219612558105,
+      "constrained_minus_uniform": -0.009602043828503104,
+      "constrained_per_cohort_loss_vs_fixed6": {
+        "cg5": 0.014332293227033333,
+        "cg7": 0.008710942104298042
+      },
+      "constrained_positive_field_graph_lift_count": 25,
+      "constrained_probe_cost_fraction_vs_fixed6": 0.3333333333333333,
+      "constraint": {
+        "all_fields_cell_count": [48],
+        "maximum_final_supplemental_allocation_imbalance": 1,
+        "maximum_peak_supplemental_allocation_imbalance": 1,
+        "maximum_supplemental_events_per_cell": 2,
+        "minimum_supplemental_events_per_cell": 1
+      },
+      "failed_checks": ["lift_over_cost_matched_uniform"],
+      "uniform_cohort_expected_success": {
+        "cg5": 0.285169078383176,
+        "cg7": 0.2455379536770682
+      },
+      "uniform_expected_success": 0.26535351603012214
+    },
+    "84": {
+      "constrained_estimate_truth_pearson": 0.3597614944804393,
+      "constrained_expected_success": 0.2550103983672263,
+      "constrained_expected_success_loss_vs_fixed6": 0.012262691500058431,
+      "constrained_expected_success_retention_vs_fixed6": 0.9541192437063248,
+      "constrained_graph_minus_flat": 0.037652773694500874,
+      "constrained_minus_uniform": -0.009606247117182276,
+      "constrained_per_cohort_loss_vs_fixed6": {
+        "cg5": 0.01415520714096613,
+        "cg7": 0.010370175859150815
+      },
+      "constrained_positive_field_graph_lift_count": 23,
+      "constrained_probe_cost_fraction_vs_fixed6": 0.3888888888888889,
+      "constraint": {
+        "all_fields_cell_count": [48],
+        "maximum_final_supplemental_allocation_imbalance": 1,
+        "maximum_peak_supplemental_allocation_imbalance": 1,
+        "maximum_supplemental_events_per_cell": 2,
+        "minimum_supplemental_events_per_cell": 1
+      },
+      "failed_checks": ["lift_over_cost_matched_uniform"],
+      "uniform_cohort_expected_success": {
+        "cg5": 0.282187438550254,
+        "cg7": 0.24704585241856314
+      },
+      "uniform_expected_success": 0.26461664548440855
+    },
+    "96": {
+      "constrained_estimate_truth_pearson": 0.36977736001544104,
+      "constrained_expected_success": 0.2539693331134739,
+      "constrained_expected_success_loss_vs_fixed6": 0.013303756753810791,
+      "constrained_expected_success_retention_vs_fixed6": 0.9502241068847717,
+      "constrained_graph_minus_flat": 0.03369269564484559,
+      "constrained_minus_uniform": -0.010149295236985378,
+      "constrained_per_cohort_loss_vs_fixed6": {
+        "cg5": 0.015861784018585956,
+        "cg7": 0.010745729489035738
+      },
+      "constrained_positive_field_graph_lift_count": 23,
+      "constrained_probe_cost_fraction_vs_fixed6": 0.4444444444444444,
+      "constraint": {
+        "all_fields_cell_count": [48],
+        "maximum_final_supplemental_allocation_imbalance": 0,
+        "maximum_peak_supplemental_allocation_imbalance": 1,
+        "maximum_supplemental_events_per_cell": 2,
+        "minimum_supplemental_events_per_cell": 2
+      },
+      "failed_checks": ["lift_over_cost_matched_uniform"],
+      "uniform_cohort_expected_success": {
+        "cg5": 0.2802675461609005,
+        "cg7": 0.24796971054001812
+      },
+      "uniform_expected_success": 0.2641186283504593
+    }
+  },
+  "cohorts": {
+    "cg5_fields": 15,
+    "cg7_fields": 15,
+    "decisions_per_policy": 180,
+    "pooled_fields": 30
+  },
+  "confirmatory_claim": false,
+  "fixed_six": {
+    "estimate_truth_pearson": 0.5348454771634381,
+    "graph_lift_over_cost_matched_flat": 0.046045427234320535,
+    "mean_graph_expected_success": 0.2672730898672847,
+    "mean_graph_regret": 0.1543806734684058,
+    "mean_selected_role_true_gap": 0.13799136453481747,
+    "mean_supplemental_probe_events": 216.0
+  },
+  "integrity": {
+    "acquisition_evaluator_truth_inputs": 0,
+    "belief_contamination_from_retrieval": 0,
+    "belief_updates_from_retrieval": 0,
+    "cohort_overlap": 0,
+    "evaluator_truth_available_to_acquisition_policy": false,
+    "historical_outcome_rows_consumed": 0,
+    "outcome_law_graph_inputs": 0,
+    "posthoc_imported_claims": 0
+  },
+  "interpretation_boundary": "CG-8 enforced max supplemental allocation imbalance <=1 at every step, but every constrained-decision budget underperformed its cost-matched uniform round-robin baseline. All frozen selection checks passed except lift over cost-matched uniform, so no fresh CG-8 cohort may be generated. Balanced acquisition is supported as a robustness constraint; adaptive ranking within balanced tiers is not supported.",
+  "predecessor_replay": {
+    "cg5": {
+      "event_count_exact": true,
+      "expected_within_1e_12": true,
+      "fixed6_event_count": 3240,
+      "fixed6_expected_delta": 5.551115123125783e-17,
+      "fixed6_flat_delta": 5.551115123125783e-17,
+      "flat_within_1e_12": true
+    },
+    "cg7": {
+      "event_count_exact": true,
+      "fixed6_event_count": 3240,
+      "fixed6_expected_delta": 5.551115123125783e-17,
+      "fixed6_expected_within_1e_12": true,
+      "uniform72_expected_delta": 2.7755575615628914e-17,
+      "uniform72_expected_within_1e_12": true
+    }
+  },
+  "selection": {
+    "selected_budget": null,
+    "selection_passed": false
+  },
+  "status": "no-constrained-adaptive-architecture-selected",
+  "version": "context-graph-cg8-calibration-record-v0.1",
+  "workflow": {
+    "artifact_digest": "sha256:c0f8d6bbb2ff6ae7cbfb849702b9a02155449f78d5da404e3baeb3437ed54666",
+    "artifact_id": 9153619828,
+    "head_sha": "5d1eba40951d0e1d9781f2b947c3b0e010f0f8ed",
+    "run_id": 31627204728
+  }
+}
