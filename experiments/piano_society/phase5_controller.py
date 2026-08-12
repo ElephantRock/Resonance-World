@@ -166,8 +166,8 @@ class InstitutionalPianoController:
         intention_reply = self._call(
             "intention",
             "Choose one concise organization-level routing intention and the strategy that "
-            "best represents it. Do not infer any hidden mission regime. "
-            f"{context}\nReturn fields intention and intended_action.",
+            "best represents it. Use only the visible mission, current roster, and procedure "
+            f"history. {context}\nReturn fields intention and intended_action.",
         )
         intention = _required_string(intention_reply, "intention")
         intended_strategy = _required_strategy(
