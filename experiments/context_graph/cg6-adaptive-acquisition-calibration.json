@@ -1,0 +1,93 @@
+{
+  "version": "context-graph-cg6-adaptive-acquisition-calibration-v0.1",
+  "status": "exploratory-calibration-on-already-unblinded-cg5-cohort",
+  "confirmatory_claim": false,
+  "objective": "Find the lowest-cost evidence-acquisition policy that preserves most of CG-5's decision quality while retaining a topology advantage over an evidence-using flat baseline. The acquisition policy may use mission requirements and reconciled observed evidence only; evaluator capability is diagnostics-only.",
+  "interpretation_boundary": "This calibration reuses the already-unblinded CG-5 fresh cohort and therefore cannot support a new confirmatory claim. Its only purpose is to freeze one acquisition architecture and budget for a later untouched CG-6 cohort.",
+  "frozen_predecessor": {
+    "cg5_protocol_commit": "2e55d858192e59e5bfbd18b937c73a937f41a054",
+    "cg5_result_commit": "1c56bf2533aa164e40a0073c5bc4bdeb32083510",
+    "cg5_source_workflow_run": 31622647635,
+    "cg5_source_artifact_name": "context-graph-cg5-fresh-source",
+    "cg5_capsules_sha256": "ec623fa479f9514081d606daf93fa189e16591a233604ffab9427ebcd4c2d53b"
+  },
+  "society": {
+    "initial_roster_size": 8,
+    "turnover_count": 4,
+    "initial_probes_per_skill": 2,
+    "initial_skills_per_agent": 3,
+    "observation_noise_rate": 0.18,
+    "rumor_count": 2,
+    "min_confidence": 0.7,
+    "observer_noise_rate": 0.18,
+    "maximum_events_per_current_agent_skill": 6,
+    "common_random_probe_rule": "All acquisition policies draw from the same deterministic supplemental event table used by the CG-5 fixed-six replay: event ids are cg4m-probe:<field>:<agent>:<skill>:<event_index>, and timestamps are the positions those events occupy in the full fixed-six traversal. Policies differ only in which events they acquire."
+  },
+  "estimator": {
+    "name": "wilson80_min3",
+    "kind": "wilson_lower",
+    "z": 1.2815515655446004,
+    "minimum_independent_event_support": 3,
+    "fallback_score": 0.35
+  },
+  "missions": [
+    {"mission_id": "cg6-heat-water", "lead_skill": "urban_heat", "support_skill": "water_systems"},
+    {"mission_id": "cg6-energy-supply", "lead_skill": "energy_storage", "support_skill": "supply_networks"},
+    {"mission_id": "cg6-health-mobility", "lead_skill": "public_health", "support_skill": "mobility"},
+    {"mission_id": "cg6-water-health", "lead_skill": "water_systems", "support_skill": "public_health"},
+    {"mission_id": "cg6-energy-mobility", "lead_skill": "energy_storage", "support_skill": "mobility"},
+    {"mission_id": "cg6-supply-heat", "lead_skill": "supply_networks", "support_skill": "urban_heat"}
+  ],
+  "context": {
+    "claim_budget_cap": 48,
+    "retrieval": "CG-5 revised coverage graph with event reconciliation and complete three-claim evidence bundles.",
+    "flat_baseline": "CG-5 bundle-aware flat retrieval over the exact same acquired evidence and matched context budget."
+  },
+  "acquisition": {
+    "budget_candidates": [48, 72, 96, 120],
+    "policies": ["uniform_round_robin", "uncertainty_only", "decision_adaptive"],
+    "uniform_round_robin": "At each acquisition step, probe an available agent-skill cell with the smallest reconciled event count; break ties by a deterministic field/agent/skill hash. This is the cost-matched non-adaptive measurement baseline.",
+    "uncertainty_only": "At each step, choose the available cell with the widest 80-percent Wilson interval; add a support-deficit term for cells below three independent events; break ties deterministically. Mission pair selection is not consulted.",
+    "decision_adaptive": "At each step, compute conservative CG-5 pair choices from current reconciled evidence. Prioritize cells by Wilson interval width, minimum-support deficit, whether the cell is in a currently selected mission role, and whether its optimistic Wilson bound can plausibly challenge the incumbent conservative role score. Evaluator capability and oracle pairs are forbidden inputs.",
+    "decision_adaptive_weights": {
+      "selected_role_bonus": 2.0,
+      "plausible_challenger_bonus": 2.0,
+      "support_deficit_bonus": 0.35,
+      "ambiguity_margin": 0.05
+    },
+    "fixed_six_replay": "Acquire every remaining event required to reach six reconciled events in every current agent-skill cell. This must reproduce the CG-5 supplemental event count and serves as the measurement-cost reference."
+  },
+  "evaluation": {
+    "field_count": 15,
+    "decisions_per_policy": 90,
+    "primary_metric": "mean expected mission success under revised coverage retrieval",
+    "cost_metric": "mean supplemental probe events per Field",
+    "secondary_metrics": [
+      "mean regret",
+      "mean selected-role true gap",
+      "estimate-truth Pearson correlation",
+      "coverage-graph lift over cost-matched bundle-flat",
+      "positive Field count for graph-minus-flat",
+      "probe-cost fraction versus fixed-six replay",
+      "decision quality per supplemental probe"
+    ]
+  },
+  "selection_rule": {
+    "candidate_scope": "decision_adaptive budgets only",
+    "complexity_order": [48, 72, 96, 120],
+    "required_expected_success_retention_vs_fixed_six": 0.95,
+    "maximum_absolute_expected_success_loss_vs_fixed_six": 0.015,
+    "minimum_graph_lift_over_cost_matched_flat": 0.015,
+    "minimum_positive_field_graph_lift_count": 9,
+    "maximum_selected_role_true_gap_increase_vs_fixed_six": 0.025,
+    "maximum_probe_cost_fraction_vs_fixed_six": 0.60,
+    "choice": "Choose the first decision_adaptive budget in complexity_order satisfying every requirement. If none qualifies, CG-6 calibration selects no architecture and no fresh confirmatory cohort may be generated. No post-hoc substitution with uncertainty-only or uniform policies is allowed."
+  },
+  "integrity": {
+    "historical_outcome_rows_consumed": 0,
+    "posthoc_imported_claims": 0,
+    "belief_updates_from_retrieval": 0,
+    "outcome_law_graph_inputs": 0,
+    "evaluator_truth_available_to_acquisition_policy": false
+  }
+}
