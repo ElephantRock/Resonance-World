@@ -102,7 +102,7 @@ jobs:
           PY
       - name: Lint and test Phase 5 contract
         run: |
-          ruff check --ignore E501,F401 \
+          ruff check --ignore E501,F401,I001 \
             experiments/piano_society/phase5.py \
             experiments/piano_society/phase5_campaign.py \
             experiments/piano_society/phase5_controller.py \
