@@ -16,7 +16,6 @@ from resonance_contextgraph import (
     CompiledContext,
     ContextCompiler,
     ContextRequest,
-    EstimatorSpec as ContextEstimatorSpec,
     EvidenceClaim,
     EvidenceStore,
     MeasurementCell,
@@ -24,6 +23,7 @@ from resonance_contextgraph import (
     PairStabilityStopper,
     StopDecision,
 )
+from resonance_contextgraph import EstimatorSpec as ContextEstimatorSpec
 
 from .context_graph_w3_endogenous import CG4Mission, LiveClaim
 
