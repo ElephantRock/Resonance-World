@@ -1,0 +1,162 @@
+{
+  "experiment": "piano-society-runtime-v0-phase5-institutional-memory",
+  "preregistration_revision": "glm5.2-institutional-memory-v1",
+  "campaign_locked": true,
+  "field_revision": "e877bf03dbf6681ce7cbd98d984e73c032e911aa",
+  "required_model_snapshot": "glm-5.2",
+  "validated_prerequisites": {
+    "phase4c_world_revision": "b2da04a1cd3ab5fb07dc781cd8b7bb93fab4b0d1",
+    "phase4c_workflow_run": 31638087507,
+    "phase4c_artifact_id": 9158432521,
+    "phase4c_artifact_digest": "sha256:465c5d07c7e98a33dccedf24c0fb504a82ad54632590ec1fce8eddd1cf57279e",
+    "phase4c_advance_to_phase5": true,
+    "phase4c_role_failure_delta": -0.48333333333333334,
+    "phase4c_spoof_capture_delta": -0.48333333333333334
+  },
+  "source_lock": {
+    "workflow_run": 31641437682,
+    "world_revision": "6ed54f7d432a090ccaf58c720a6bd375a08b30af",
+    "artifact_id": 9159028914,
+    "artifact_name": "piano-society-phase5-frozen-source",
+    "artifact_digest": "sha256:f055667945b1cd1a430e1a83f4e0fd933e1438db1fed45392bf4384209628ffe",
+    "capsule_sha256": "c41c50165c0fb93d49848bb44b0fcd58172402fa52f7f05fd5f3456222b78c0d",
+    "candidate_sha256": "49f1830454677be49457e908a832769b9119d02e83f9c7bf9d45d776530b50c1",
+    "field_count": 8,
+    "agent_count": 96,
+    "calibration_fields": [
+      "w4-source-seed-12017",
+      "w4-source-seed-12119"
+    ],
+    "confirmatory_fields": [
+      "w4-source-seed-12227",
+      "w4-source-seed-12329",
+      "w4-source-seed-12433",
+      "w4-source-seed-12539",
+      "w4-source-seed-12641",
+      "w4-source-seed-12743"
+    ]
+  },
+  "mission_search_lock": {
+    "artifact_id": 9159035534,
+    "artifact_name": "piano-society-phase5-mission-search",
+    "artifact_digest": "sha256:d952c7ed7140cf016eb2a37d495f0d386066f06946a1501ce24eb44a5e27dfb7",
+    "revision": "piano-phase5-mission-search-v1",
+    "model_calls": 0,
+    "candidate_count": 60,
+    "selected_unit_count": 8,
+    "mean_selected_historical_best_lift_over_binary_mean": 0.04150390625,
+    "nonnegative_selected_units": 8,
+    "accepted": true
+  },
+  "model_backend": {
+    "provider": "zai",
+    "endpoint": "coding_chat_completions",
+    "base_url": "https://api.z.ai/api/coding/paas/v4",
+    "thinking": "disabled",
+    "do_sample": false,
+    "temperature": 0.0,
+    "provider_seed_supported": false,
+    "retry_timeout": true,
+    "retry_contract_errors": true,
+    "contract_retry_prompt_hardening": true,
+    "unique_request_id_per_attempt": true,
+    "timeout_seconds": 60.0,
+    "max_attempts": 12,
+    "retry_backoff_cap_seconds": 30.0,
+    "max_workers": 3,
+    "arm_order": "retained_first_when_field_index_even_else_reset_first",
+    "strategy_order": "specialist_first_when_field_index_plus_mission_index_even_else_balanced_first"
+  },
+  "institutional_memory": {
+    "formation_depth": 48,
+    "formation_strategy_order": ["specialist", "balanced"],
+    "turnover_fraction": 1.0,
+    "evaluation_updates_memory": false,
+    "model_visible_memory": "current_context_raw_attempts_successes_rates_only",
+    "model_visible_last_successful_pair": false,
+    "model_visible_historical_best_label": false,
+    "reset_memory_shape": "same_schema_zero_attempts_zero_successes_null_rates",
+    "environment_reads_memory": false,
+    "strategy_vocabulary": ["specialist", "balanced"],
+    "evaluation_trials_per_unit": 128,
+    "grounded_success_threshold": 0.5
+  },
+  "skill_aliases": {
+    "urban_heat": "skill-a",
+    "water_systems": "skill-b",
+    "energy_storage": "skill-c",
+    "supply_networks": "skill-d",
+    "public_health": "skill-e",
+    "mobility": "skill-f"
+  },
+  "missions": [
+    {
+      "mission_id": "route-a",
+      "context": "route-a",
+      "lead_skill": "public_health",
+      "support_skill": "mobility",
+      "hidden_regime": "balanced",
+      "public_lead_skill": "skill-e",
+      "public_support_skill": "skill-f"
+    },
+    {
+      "mission_id": "route-b",
+      "context": "route-b",
+      "lead_skill": "water_systems",
+      "support_skill": "urban_heat",
+      "hidden_regime": "balanced",
+      "public_lead_skill": "skill-b",
+      "public_support_skill": "skill-a"
+    },
+    {
+      "mission_id": "route-c",
+      "context": "route-c",
+      "lead_skill": "public_health",
+      "support_skill": "supply_networks",
+      "hidden_regime": "specialist",
+      "public_lead_skill": "skill-e",
+      "public_support_skill": "skill-d"
+    },
+    {
+      "mission_id": "route-d",
+      "context": "route-d",
+      "lead_skill": "supply_networks",
+      "support_skill": "public_health",
+      "hidden_regime": "specialist",
+      "public_lead_skill": "skill-d",
+      "public_support_skill": "skill-e"
+    }
+  ],
+  "arms": ["memory_reset", "memory_retained"],
+  "confirmatory_field_count": 6,
+  "missions_per_field": 4,
+  "required_paired_units": 24,
+  "calls_per_arm_unit": 4,
+  "max_output_tokens_per_call": 128,
+  "strategy_order_counts": {
+    "specialist_first": 12,
+    "balanced_first": 12
+  },
+  "arm_order_counts": {
+    "memory_retained_first": 12,
+    "memory_reset_first": 12
+  },
+  "presentation_arm_cross_count_each": 6,
+  "primary_metric": "mission_success_rate",
+  "secondary_metrics": [
+    "historical_best_strategy_selection_rate",
+    "cross_channel_contradiction_rate",
+    "intent_action_divergence_rate",
+    "outcome_report_mismatch_rate",
+    "unsupported_success_claim_rate",
+    "mean_input_tokens",
+    "mean_output_tokens",
+    "mean_model_latency_ms"
+  ],
+  "advancement_gate": {
+    "min_mean_retained_minus_reset_success_rate": 0.03,
+    "max_primary_sign_test_p": 0.05,
+    "min_nonnegative_field_effects": 4,
+    "max_outcome_report_mismatch_delta": 0.05
+  }
+}
