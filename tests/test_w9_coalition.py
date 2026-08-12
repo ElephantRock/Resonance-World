@@ -6,7 +6,6 @@ from resonance_world.w6_mobility import PortableAgentState
 from resonance_world.w8_campaign import W8Population
 from resonance_world.w9_coalition import FACTORS, _conditions, run_w9_04
 
-
 SKILLS = (
     "urban_heat",
     "water_systems",
@@ -52,9 +51,21 @@ def _config() -> dict[str, object]:
             "nondecomposable_cross_max": 0.92,
         },
         "organizations": [
-            {"organization_id": "org-alpha", "lead_skill": "energy_storage", "support_skill": "mobility"},
-            {"organization_id": "org-beta", "lead_skill": "water_systems", "support_skill": "public_health"},
-            {"organization_id": "org-gamma", "lead_skill": "supply_networks", "support_skill": "urban_heat"},
+            {
+                "organization_id": "org-alpha",
+                "lead_skill": "energy_storage",
+                "support_skill": "mobility",
+            },
+            {
+                "organization_id": "org-beta",
+                "lead_skill": "water_systems",
+                "support_skill": "public_health",
+            },
+            {
+                "organization_id": "org-gamma",
+                "lead_skill": "supply_networks",
+                "support_skill": "urban_heat",
+            },
         ],
         "coalition_missions": [
             {
@@ -62,42 +73,72 @@ def _config() -> dict[str, object]:
                 "structure": "decomposable",
                 "lead_organization_id": "org-alpha",
                 "support_organization_id": "org-beta",
-                "mission": {"mission_id": "d-ab", "context": "d-ab", "lead_skill": "energy_storage", "support_skill": "public_health"},
+                "mission": {
+                    "mission_id": "d-ab",
+                    "context": "d-ab",
+                    "lead_skill": "energy_storage",
+                    "support_skill": "public_health",
+                },
             },
             {
                 "coalition_id": "decomp-beta-gamma",
                 "structure": "decomposable",
                 "lead_organization_id": "org-beta",
                 "support_organization_id": "org-gamma",
-                "mission": {"mission_id": "d-bg", "context": "d-bg", "lead_skill": "water_systems", "support_skill": "urban_heat"},
+                "mission": {
+                    "mission_id": "d-bg",
+                    "context": "d-bg",
+                    "lead_skill": "water_systems",
+                    "support_skill": "urban_heat",
+                },
             },
             {
                 "coalition_id": "decomp-gamma-alpha",
                 "structure": "decomposable",
                 "lead_organization_id": "org-gamma",
                 "support_organization_id": "org-alpha",
-                "mission": {"mission_id": "d-ga", "context": "d-ga", "lead_skill": "supply_networks", "support_skill": "mobility"},
+                "mission": {
+                    "mission_id": "d-ga",
+                    "context": "d-ga",
+                    "lead_skill": "supply_networks",
+                    "support_skill": "mobility",
+                },
             },
             {
                 "coalition_id": "joint-alpha-beta",
                 "structure": "nondecomposable",
                 "lead_organization_id": "org-alpha",
                 "support_organization_id": "org-beta",
-                "mission": {"mission_id": "j-ab", "context": "j-ab", "lead_skill": "mobility", "support_skill": "water_systems"},
+                "mission": {
+                    "mission_id": "j-ab",
+                    "context": "j-ab",
+                    "lead_skill": "mobility",
+                    "support_skill": "water_systems",
+                },
             },
             {
                 "coalition_id": "joint-beta-gamma",
                 "structure": "nondecomposable",
                 "lead_organization_id": "org-beta",
                 "support_organization_id": "org-gamma",
-                "mission": {"mission_id": "j-bg", "context": "j-bg", "lead_skill": "public_health", "support_skill": "supply_networks"},
+                "mission": {
+                    "mission_id": "j-bg",
+                    "context": "j-bg",
+                    "lead_skill": "public_health",
+                    "support_skill": "supply_networks",
+                },
             },
             {
                 "coalition_id": "joint-gamma-alpha",
                 "structure": "nondecomposable",
                 "lead_organization_id": "org-gamma",
                 "support_organization_id": "org-alpha",
-                "mission": {"mission_id": "j-ga", "context": "j-ga", "lead_skill": "urban_heat", "support_skill": "energy_storage"},
+                "mission": {
+                    "mission_id": "j-ga",
+                    "context": "j-ga",
+                    "lead_skill": "urban_heat",
+                    "support_skill": "energy_storage",
+                },
             },
         ],
     }
@@ -184,4 +225,5 @@ def test_diversity_factor_is_expressible_in_two_field_diagnostics() -> None:
     result = run_w9_04(_population(), _config(), phase="discovery")
     for diagnostic in result["diagnostic_field_pair_results"].values():
         assert len(diagnostic["field_ids"]) == 2
-        assert diagnostic["main_effects"]["V"]["main_effect_pp"] == diagnostic["main_effects"]["V"]["main_effect_pp"]
+        me_v = diagnostic["main_effects"]["V"]["main_effect_pp"]
+        assert me_v == me_v
