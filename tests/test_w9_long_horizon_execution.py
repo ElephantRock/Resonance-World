@@ -5,7 +5,7 @@ import pytest
 from resonance_world import w9_long_horizon_execution as execution
 
 
-def test_selected_source_diagnostics_are_counted_and_recomputed():
+def test_selected_source_and_benchmark_diagnostics_are_counted_and_recomputed():
     arm = {
         "compute": {
             "mission_execution_compute": 100.0,
@@ -18,18 +18,27 @@ def test_selected_source_diagnostics_are_counted_and_recomputed():
         "service_efficiency": 0.5,
         "total_efficiency_final": 0.1,
         "compute_normalized_world_stock_growth": -0.5,
+        "stock_series": [
+            {"external_agent_count": 1},
+            {"external_agent_count": 2},
+        ],
     }
-    config = {"long_horizon": {"cycles": 2}, "service_trials": 4}
+    config = {
+        "long_horizon": {"cycles": 2},
+        "service_trials": 4,
+        "benchmark_missions": [{"skill": "a"}, {"skill": "b"}],
+    }
 
     corrected = execution._correct_selected_compute(arm, config, field_count=2)
 
     assert arm["compute"]["mission_execution_compute"] == 100.0
     assert corrected["compute"]["source_diagnostic_mission_execution_compute"] == 32.0
-    assert corrected["compute"]["mission_execution_compute"] == 132.0
-    assert corrected["compute"]["incremental_total_measured_compute"] == 232.0
-    assert corrected["compute"]["final_total_measured_compute_including_cycle0_embodied"] == 332.0
-    assert corrected["service_efficiency"] == pytest.approx(50.0 / 132.0)
-    assert corrected["total_efficiency_final"] == pytest.approx(30.0 / 332.0)
+    assert corrected["compute"]["benchmark_stock_mission_execution_compute"] == 12.0
+    assert corrected["compute"]["mission_execution_compute"] == 144.0
+    assert corrected["compute"]["incremental_total_measured_compute"] == 244.0
+    assert corrected["compute"]["final_total_measured_compute_including_cycle0_embodied"] == 344.0
+    assert corrected["service_efficiency"] == pytest.approx(50.0 / 144.0)
+    assert corrected["total_efficiency_final"] == pytest.approx(30.0 / 344.0)
 
 
 def test_w8_all_reviewed_compute_operations_are_counted():
@@ -54,6 +63,8 @@ def test_w8_all_reviewed_compute_operations_are_counted():
             "stress_schedule": {"withholding_cycles": [0, 1, 4]},
         },
         "service_trials": 4,
+        "benchmark_missions": [{"skill": "a"}, {"skill": "b"}],
+        "integrated_charter": {"reserve_cap": 0},
     }
 
     corrected = execution._correct_w8_compute(
@@ -65,17 +76,28 @@ def test_w8_all_reviewed_compute_operations_are_counted():
 
     assert corrected["compute"]["coalition_mission_execution_compute"] == 24.0
     assert corrected["compute"]["source_diagnostic_mission_execution_compute"] == 24.0
+    assert corrected["compute"]["benchmark_stock_mission_execution_compute"] == 10.0
     assert corrected["compute"]["standalone_comparator_pair_selection_compute"] == 4.0
     assert corrected["compute"]["withholding_substitution_coordination_compute"] == 2.0
     assert corrected["compute"]["neutral_budget_update_regulatory_compute"] == 6.0
     assert corrected["compute"]["successor_activation_check_regulatory_compute"] == 4.0
-    assert corrected["compute"]["mission_execution_compute"] == 58.0
+    assert corrected["compute"]["mission_execution_compute"] == 68.0
     assert corrected["compute"]["organization_coordination_compute"] == 9.0
     assert corrected["compute"]["world_regulatory_estimation_compute"] == 15.0
-    assert corrected["compute"]["incremental_total_measured_compute"] == 84.0
-    assert corrected["compute"]["final_total_measured_compute_including_cycle0_embodied"] == 94.0
-    assert corrected["service_efficiency"] == pytest.approx(5.0 / 58.0)
-    assert corrected["total_efficiency_final"] == pytest.approx(3.0 / 94.0)
+    assert corrected["compute"]["incremental_total_measured_compute"] == 94.0
+    assert corrected["compute"]["final_total_measured_compute_including_cycle0_embodied"] == 104.0
+    assert corrected["service_efficiency"] == pytest.approx(5.0 / 68.0)
+    assert corrected["total_efficiency_final"] == pytest.approx(3.0 / 104.0)
+
+
+def test_w8_benchmark_accounting_fails_closed_if_org_stock_can_reach_width():
+    config = {
+        "long_horizon": {"cycles": 2},
+        "benchmark_missions": [{"skill": "a"}, {"skill": "b"}],
+        "integrated_charter": {"reserve_cap": 1},
+    }
+    with pytest.raises(ValueError, match="exact organization-accessible counts"):
+        execution._w8_benchmark_stock_slots(config, field_count=2)
 
 
 def test_execution_wrapper_refreshes_selected_growth_gate(monkeypatch):
@@ -91,6 +113,7 @@ def test_execution_wrapper_refreshes_selected_growth_gate(monkeypatch):
         "service_efficiency": 1.0,
         "total_efficiency_final": 1.0,
         "compute_normalized_world_stock_growth": 0.5,
+        "stock_series": [{"external_agent_count": 0}],
     }
     w8 = {
         "compute": {
@@ -135,6 +158,8 @@ def test_execution_wrapper_refreshes_selected_growth_gate(monkeypatch):
                 "stress_schedule": {"withholding_cycles": [0]},
             },
             "service_trials": 1,
+            "benchmark_missions": [{"skill": "a"}],
+            "integrated_charter": {"reserve_cap": 0},
             "organizations": [{"organization_id": "o"}],
         },
     )
@@ -148,13 +173,15 @@ def test_execution_wrapper_refreshes_selected_growth_gate(monkeypatch):
         phase="discovery",
     )
 
-    assert result["version"] == "w9-06-long-horizon-result-v0.5"
+    assert result["version"] == "w9-06-long-horizon-result-v0.6"
     assert result["arms"]["selected_W9"] == result["arms"]["W7_unrestricted"]
     assert result["arms"]["selected_W9"] == result["arms"]["W9_without_portfolio_development"]
     assert result["gates"]["compute_normalized_world_stock_growth_gt_2pct"] is False
     assert result["long_horizon_gate"] is False
     assert result["classification"] == "sustainable_but_non_generative_allocation"
     assert result["accounting_corrections"]["selected_source_frontier_diagnostics"]["mission_execution_compute_added"] == 2.0
+    assert result["accounting_corrections"]["selected_benchmark_stock_assays"]["mission_execution_compute_added"] == 3.0
+    assert result["accounting_corrections"]["w8_benchmark_stock_assays"]["mission_execution_compute_added"] == 3.0
     assert result["accounting_corrections"]["w8_neutral_budget_updates"]["world_regulatory_estimation_compute_added"] == 1.0
     assert result["accounting_corrections"]["w8_successor_activation_checks"]["world_regulatory_estimation_compute_added"] == 1.0
     assert result["accounting_corrections"]["w8_withholding_substitution"]["organization_coordination_compute_added"] == 1.0
