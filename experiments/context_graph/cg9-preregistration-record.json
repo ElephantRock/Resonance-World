@@ -1,0 +1,16 @@
+{
+  "version": "context-graph-cg9-preregistration-record-v0.1",
+  "status": "ready-for-fresh-unblinding",
+  "protocol_freeze_commit": "444eaf4d764e6d1aa5b52aba707d3b64ff6581eb",
+  "evaluator_freeze_commit": "4671f46f9ae2039872b5d0e81135a132ead05a3a",
+  "preflight_workflow_commit": "fd2e8c2839b84ddc9cc6342853448b2e1d7c4e50",
+  "preflight_run_id": 31629576524,
+  "preflight_status": "success-before-fresh-generation",
+  "fresh_fields_generated_before_record": 0,
+  "primary_budget": 60,
+  "frontier_budgets": [48, 60, 72, 96, 120],
+  "noninferiority_margin": -0.015,
+  "fresh_field_count": 24,
+  "expected_decisions": 144,
+  "interpretation_boundary": "Only the 60-event arm is primary. Prespecified frontier arms cannot rescue a failed primary gate. CG-6 and CG-8 adaptive acquisition remain failed."
+}
