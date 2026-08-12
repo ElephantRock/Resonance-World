@@ -6,9 +6,9 @@ from pathlib import Path
 import pytest
 
 from resonance_world.w9_calibration_execution import (
-    _public_skill_probability,
     build_prediction_manifest,
     evaluate_prediction_manifest,
+    _public_skill_probability,
 )
 
 
@@ -152,7 +152,9 @@ def test_prepare_materializes_predictions_without_private_capsules(tmp_path: Pat
     assert manifest["manifest_sha256"]
 
 
-def test_public_skill_probability_reuses_frozen_selector_and_source_range(tmp_path: Path) -> None:
+def test_public_skill_probability_reuses_frozen_selector_and_source_range(
+    tmp_path: Path,
+) -> None:
     source = tmp_path / "source"
     _write_public_source(source)
     candidate = json.loads((source / "candidates.jsonl").read_text().splitlines()[0])
