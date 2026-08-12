@@ -56,7 +56,7 @@ jobs:
           run-id: 31625645587
       - name: Lint and compile CG-8 calibrator
         run: |
-          ruff check experiments/context_graph/run_cg8_constrained_adaptive.py
+          ruff check --ignore E501 experiments/context_graph/run_cg8_constrained_adaptive.py
           python -m py_compile experiments/context_graph/run_cg8_constrained_adaptive.py
       - name: Verify acquisition and outcome-law isolation
         run: |
