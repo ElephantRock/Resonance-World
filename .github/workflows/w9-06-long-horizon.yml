@@ -11,6 +11,10 @@ jobs:
     if: github.head_ref == 'w9/long-horizon-efficiency'
     runs-on: ubuntu-latest
     timeout-minutes: 180
+    strategy:
+      fail-fast: false
+      matrix:
+        reproduction: [primary, independent]
     services:
       postgres:
         image: pgvector/pgvector:pg16
@@ -56,7 +60,7 @@ jobs:
         run: bash scripts/run_w9_06.sh
       - uses: actions/upload-artifact@v4
         with:
-          name: w9-06-long-horizon-evidence
+          name: w9-06-long-horizon-${{ matrix.reproduction }}
           path: output/w9
           if-no-files-found: error
           retention-days: 90
