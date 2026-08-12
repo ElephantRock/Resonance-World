@@ -17,7 +17,7 @@ _STRATEGIES = ("specialist", "balanced", "continuity")
 class InstitutionalControllerConfig:
     trial_seed: int
     required_model_snapshot: str
-    strategy_order: tuple[str, str, str]
+    strategy_order: tuple[str, ...]
     max_output_tokens_per_call: int = 128
 
     def __post_init__(self) -> None:
@@ -25,8 +25,10 @@ class InstitutionalControllerConfig:
             raise ValueError("trial_seed must be non-negative")
         if not self.required_model_snapshot.strip():
             raise ValueError("required_model_snapshot must not be empty")
-        if len(self.strategy_order) != 3 or set(self.strategy_order) != set(_STRATEGIES):
-            raise ValueError("strategy_order must be a permutation of the frozen strategies")
+        if not self.strategy_order or len(set(self.strategy_order)) != len(self.strategy_order):
+            raise ValueError("strategy_order must contain unique strategies")
+        if any(strategy not in _STRATEGIES for strategy in self.strategy_order):
+            raise ValueError("strategy_order contains an unsupported W5 strategy")
         if self.max_output_tokens_per_call <= 0:
             raise ValueError("max_output_tokens_per_call must be positive")
 
