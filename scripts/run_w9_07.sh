@@ -20,6 +20,7 @@ DEVELOPMENT_CAMPAIGN="w9-portfolio-development-discovery-v0.1"
 
 SOURCE_STEP="$OUT/source-step"
 RAW="$OUT/raw"
+SOURCE_RAW="$OUT/source-raw"
 SOURCE="$OUT/source"
 CONTROL_SOURCE="$OUT/w9-03-control-source"
 PORTFOLIO_SOURCE="$OUT/w9-03-portfolio-source"
@@ -42,9 +43,8 @@ W8_LONG_PLAN="$OUT/w9-06-w8-replacement-plan.json"
 W8_LONG_REPLACEMENT="$OUT/w9-06-w8-native-replacement.json"
 LONG_RESULT="$OUT/w9-06-long-horizon.json"
 SYNTHESIS="$OUT/w9-07-replication.json"
-MANIFEST="$OUT/w9-07-manifest.json"
 
-mkdir -p "$SOURCE_STEP" "$RAW" "$SOURCE" "$CONTROL_SOURCE" "$PORTFOLIO_SOURCE"
+mkdir -p "$SOURCE_STEP" "$RAW" "$SOURCE_RAW" "$CONTROL_SOURCE" "$PORTFOLIO_SOURCE"
 
 export_source_rows() {
   local campaign="$1"
@@ -159,21 +159,33 @@ PY
     --output-dir "$SOURCE_STEP"
 )
 
+# Preserve the raw source export byte-for-byte as provenance evidence. The stage
+# input below normalizes only run-specific public provenance hashes; scientific
+# public features and all private source state remain unchanged.
 export_source_rows \
   "$SOURCE_CAMPAIGN" \
   "r.arm_label = 'immortal_control'" \
   "$RAW/base" \
-  "$SOURCE"
+  "$SOURCE_RAW"
+python -m resonance_world.w9_replication_source \
+  --input-dir "$SOURCE_RAW" \
+  --output-dir "$SOURCE"
 
 python - <<'PY'
 import json
 from pathlib import Path
 
-summary = json.loads(Path('output/w9/replication/source/w4-source-summary.json').read_text())
+raw = Path('output/w9/replication/source-raw')
+source = Path('output/w9/replication/source')
+summary = json.loads((raw / 'w4-source-summary.json').read_text())
+normalization = json.loads((source / 'w9-07-source-normalization.json').read_text())
 assert summary['field_count'] == 5, summary
 assert summary['agent_count'] == 60, summary
 assert summary['seeds'] == [4211, 4331, 4451, 4571, 4691], summary
-assert 'practice_by_skill' not in Path('output/w9/replication/source/candidates.jsonl').read_text()
+assert normalization['version'] == 'w9-07-semantic-public-provenance-v0.1', normalization
+assert normalization['candidate_count'] == 60, normalization
+assert (raw / 'capsules.private.jsonl').read_bytes() == (source / 'capsules.private.jsonl').read_bytes()
+assert 'practice_by_skill' not in (source / 'candidates.jsonl').read_text()
 PY
 
 # W9-00B: independent confirmation of the discovery-frozen public estimator.
