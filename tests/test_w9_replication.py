@@ -1,3 +1,5 @@
+import copy
+
 import pytest
 
 from resonance_world import w9_replication as replication
@@ -81,6 +83,23 @@ def test_replication_cannot_rescue_failed_discovery_constituents():
     assert result["replication_stage_results"]["W9-04"]["discovery_frozen_K"] == ["none"]
     assert result["selected_mechanisms"] == []
     assert len(result["scientific_payload_sha256"]) == 64
+
+
+def test_scientific_fingerprint_excludes_stage_only_provenance():
+    first = _stages()
+    second = copy.deepcopy(first)
+    first["calibration"]["provenance_only"] = "raw-a"
+    second["calibration"]["provenance_only"] = "raw-b"
+
+    first_result = replication.synthesize_replication(**first)
+    second_result = replication.synthesize_replication(**second)
+
+    assert first_result["scientific_payload_sha256"] == second_result["scientific_payload_sha256"]
+    assert (
+        first_result["stage_payload_sha256"]["W9-00B"]
+        != second_result["stage_payload_sha256"]["W9-00B"]
+    )
+    assert first_result["replication_stage_results"] == second_result["replication_stage_results"]
 
 
 def test_replication_rejects_regime_reselection():
