@@ -1,4 +1,7 @@
-"""Pre-inference deterministic capability calibration for PIANO Phase 5."""
+"""Pre-inference deterministic capability calibration for PIANO Phase 5.
+
+Fresh Field sources enter through Experiment 063; this module performs no model calls.
+"""
 
 from __future__ import annotations
 
