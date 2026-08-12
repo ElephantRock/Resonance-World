@@ -107,6 +107,21 @@ def normalize_source(input_dir: str | Path, output_dir: str | Path) -> dict[str,
         ),
         encoding="utf-8",
     )
+    normalized_candidate_sha256 = hashlib.sha256(candidate_path.read_bytes()).hexdigest()
+
+    # The semantic-view source bundle must remain internally self-consistent after
+    # candidates.jsonl is rewritten. The raw sibling export retains its original
+    # summary and therefore its original provenance checksum.
+    summary_path = target / "w4-source-summary.json"
+    if summary_path.exists():
+        summary = json.loads(summary_path.read_text(encoding="utf-8"))
+        if not isinstance(summary, dict):
+            raise ValueError("W9-07 source summary must be a JSON object")
+        summary["candidate_sha256"] = normalized_candidate_sha256
+        summary_path.write_text(
+            json.dumps(summary, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
 
     # The transform is provenance-only by construction. Fail closed if any
     # scientific public field changed or if the private capsule bytes changed.
@@ -123,7 +138,7 @@ def normalize_source(input_dir: str | Path, output_dir: str | Path) -> dict[str,
         "candidate_count": len(normalized),
         "field_ids": sorted({str(row["field_id"]) for row in normalized}),
         "raw_candidates_sha256": hashlib.sha256(raw_candidate_path.read_bytes()).hexdigest(),
-        "normalized_candidates_sha256": hashlib.sha256(candidate_path.read_bytes()).hexdigest(),
+        "normalized_candidates_sha256": normalized_candidate_sha256,
         "normalized_scientific_payload_sha256": _sha256(
             [
                 _scientific_public_payload(row)
@@ -133,6 +148,8 @@ def normalize_source(input_dir: str | Path, output_dir: str | Path) -> dict[str,
                 )
             ]
         ),
+        "stage_input_role": "deterministic_semantic_public_view",
+        "raw_provenance_role": "preserved_sibling_source_export",
     }
     (target / "w9-07-source-normalization.json").write_text(
         json.dumps(manifest, indent=2, sort_keys=True) + "\n",
