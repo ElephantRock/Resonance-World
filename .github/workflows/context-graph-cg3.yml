@@ -1,0 +1,87 @@
+name: Context Graph CG-3 Decision Causality
+
+on:
+  push:
+    branches: ["experiment/context-graph"]
+    paths:
+      - ".github/workflows/context-graph-cg3.yml"
+      - "experiments/context_graph/cg3-w5-decision.json"
+      - "experiments/context_graph/run_cg3_w5_decision.py"
+      - "src/resonance_world/context_graph_w5_decision.py"
+      - "tests/test_context_graph_w5_decision.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  cg3-calibration:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e '.[dev]'
+      - name: Download pinned W5 discovery source only
+        uses: actions/download-artifact@v4
+        with:
+          name: w5-discovery-source
+          path: w5-calibration
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31479913325
+      - name: Verify CG-3 implementation
+        run: >-
+          ruff check
+          src/resonance_world/context_graph_w5_decision.py
+          tests/test_context_graph_w5_decision.py
+          experiments/context_graph/run_cg3_w5_decision.py
+      - name: Run CG-3 semantic tests
+        run: pytest -q tests/test_context_graph_w5_decision.py
+      - name: Enforce decision-layer treatment boundary
+        run: |
+          test -f w5-calibration/raw/runs.csv
+          test -f w5-calibration/raw/outcomes.csv
+          test -f w5-calibration/output/discovery-source/capsules.private.jsonl
+          ! grep -q "w5-discovery.json" src/resonance_world/context_graph_w5_decision.py
+          ! grep -q "w5-07-replication.json" src/resonance_world/context_graph_w5_decision.py
+          ! grep -q "institutional_memory_effect" src/resonance_world/context_graph_w5_decision.py
+      - name: Execute CG-3 calibration only
+        run: >-
+          python experiments/context_graph/run_cg3_w5_decision.py
+          --config experiments/context_graph/cg3-w5-decision.json
+          --missions configs/w5/institution-missions.json
+          --calibration-source-dir w5-calibration
+          --output output/context_graph/cg3-w5-decision-calibration.json
+      - name: Enforce calibration-only boundary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(
+              Path("output/context_graph/cg3-w5-decision-calibration.json").read_text()
+          )
+          config = json.loads(
+              Path("experiments/context_graph/cg3-w5-decision.json").read_text()
+          )
+          source = result["sources"]["calibration"]
+          pin = config["sources"]["calibration"]
+          assert source["raw_sha256"] == pin["raw_sha256"], (source, pin)
+          assert source["capsules_sha256"] == pin["capsules_sha256"], (source, pin)
+          assert result["evaluation"] is None
+          assert result["passed"] is None
+          text = Path("output/context_graph/cg3-w5-decision-calibration.json").read_text()
+          assert "practice_by_skill" not in text
+          print(json.dumps(result["calibration"], indent=2, sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: context-graph-cg3-calibration
+          path: output/context_graph/cg3-w5-decision-calibration.json
+          if-no-files-found: error
+          retention-days: 90
