@@ -1,0 +1,192 @@
+name: PIANO Society Phase 5 Memory
+
+on:
+  push:
+    branches:
+      - experiment/piano-society-phase5-institutional-memory
+    paths:
+      - experiments/piano_society/phase5_config.json
+      - experiments/piano_society/phase5.py
+      - experiments/piano_society/phase5_campaign.py
+      - experiments/piano_society/phase5_controller.py
+      - experiments/piano_society/phase5_zai.py
+      - experiments/piano_society/PHASE5_PREREGISTRATION.md
+      - tests/test_piano_society_phase5.py
+      - tests/test_piano_society_phase5_controller.py
+      - .github/workflows/piano-society-phase5-memory.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  PIANO_FIELD_SHA: e877bf03dbf6681ce7cbd98d984e73c032e911aa
+  SOURCE_RUN_ID: "31641437682"
+  SOURCE_CAPSULE_SHA: c41c50165c0fb93d49848bb44b0fcd58172402fa52f7f05fd5f3456222b78c0d
+  SEARCH_ARTIFACT_SHA: sha256:d952c7ed7140cf016eb2a37d495f0d386066f06946a1501ce24eb44a5e27dfb7
+
+jobs:
+  validate-memory-lock:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git ../field
+          git -C ../field checkout "$PIANO_FIELD_SHA"
+          test "$(git -C ../field rev-parse HEAD)" = "$PIANO_FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen experiment revisions
+        run: python -m pip install -e '../field[dev]' -e '.[dev]'
+      - name: Download exact frozen Phase 5 source
+        uses: actions/download-artifact@v4
+        with:
+          name: piano-society-phase5-frozen-source
+          path: frozen-source
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: ${{ env.SOURCE_RUN_ID }}
+      - name: Download registered Phase 5 mission search
+        uses: actions/download-artifact@v4
+        with:
+          name: piano-society-phase5-mission-search
+          path: frozen-search
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: ${{ env.SOURCE_RUN_ID }}
+      - name: Verify frozen prerequisite bytes without reading confirmatory organizations
+        run: |
+          test "$(sha256sum frozen-source/output/source/capsules.private.jsonl | cut -d' ' -f1)" = "$SOURCE_CAPSULE_SHA"
+          test "$(sha256sum frozen-source/output/source/candidates.private.jsonl | cut -d' ' -f1)" = "49f1830454677be49457e908a832769b9119d02e83f9c7bf9d45d776530b50c1"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          config = json.loads(Path('experiments/piano_society/phase5_config.json').read_text())
+          search = json.loads(Path('frozen-search/result.json').read_text())
+          assert config['campaign_locked'] is True
+          assert config['source_lock']['workflow_run'] == 31641437682
+          assert config['source_lock']['artifact_id'] == 9159028914
+          assert config['source_lock']['artifact_digest'] == (
+              'sha256:f055667945b1cd1a430e1a83f4e0fd933e1438db1fed45392bf4384209628ffe'
+          )
+          assert config['mission_search_lock']['artifact_id'] == 9159035534
+          assert config['mission_search_lock']['artifact_digest'] == (
+              'sha256:d952c7ed7140cf016eb2a37d495f0d386066f06946a1501ce24eb44a5e27dfb7'
+          )
+          assert search['accepted'] is True
+          assert search['model_calls'] == 0
+          assert search['candidate_count'] == 60
+          assert search['selected_unit_count'] == 8
+          assert search['mean_selected_historical_best_lift_over_binary_mean'] == 0.04150390625
+          assert search['nonnegative_selected_units'] == 8
+          selected = [
+              (row['lead_skill'], row['support_skill'], row['regime'])
+              for row in search['selected']
+          ]
+          assert selected == [
+              ('public_health', 'mobility', 'balanced'),
+              ('water_systems', 'urban_heat', 'balanced'),
+              ('public_health', 'supply_networks', 'specialist'),
+              ('supply_networks', 'public_health', 'specialist'),
+          ]
+          assert search['confirmatory_fields_untouched'] == config['source_lock']['confirmatory_fields']
+          assert config['provider_format_template'] == {
+              'action_example_source': 'first_registered_strategy',
+              'scientific_user_prompt_unchanged': True,
+              'purpose': 'avoid out-of-vocabulary OBSERVE examples in strategy-valued JSON contracts',
+          }
+          PY
+      - name: Lint and test Phase 5 contract
+        run: |
+          ruff check --ignore E501,F401 \
+            experiments/piano_society/phase5.py \
+            experiments/piano_society/phase5_campaign.py \
+            experiments/piano_society/phase5_controller.py \
+            experiments/piano_society/phase5_zai.py \
+            tests/test_piano_society_phase5.py \
+            tests/test_piano_society_phase5_controller.py
+          pytest -q \
+            tests/test_piano_society_phase5.py \
+            tests/test_piano_society_phase5_controller.py
+      - name: Validate exact Phase 5 scientific lock
+        run: |
+          mkdir -p output/piano_society/phase5-preregistration
+          python -m experiments.piano_society.phase5 \
+            --config experiments/piano_society/phase5_config.json \
+            > output/piano_society/phase5-preregistration/lock.json
+          python - <<'PY'
+          import json
+          data = json.load(open('output/piano_society/phase5-preregistration/lock.json'))
+          assert data['campaign_locked'] is True
+          assert data['field_revision'] == 'e877bf03dbf6681ce7cbd98d984e73c032e911aa'
+          assert data['model_snapshot'] == 'glm-5.2'
+          assert data['source_capsule_sha256'] == (
+              'c41c50165c0fb93d49848bb44b0fcd58172402fa52f7f05fd5f3456222b78c0d'
+          )
+          assert data['required_paired_units'] == 24
+          PY
+          cp experiments/piano_society/phase5_config.json \
+            output/piano_society/phase5-preregistration/
+          cp experiments/piano_society/PHASE5_PREREGISTRATION.md \
+            output/piano_society/phase5-preregistration/
+          cp frozen-search/result.json \
+            output/piano_society/phase5-preregistration/mission-search-result.json
+      - name: Assert validation has no model credential
+        run: test -z "${ZAI_API_KEY:-}"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase5-preregistration
+          path: output/piano_society/phase5-preregistration
+          if-no-files-found: error
+          retention-days: 90
+
+  institutional-memory-campaign:
+    needs: validate-memory-lock
+    runs-on: ubuntu-latest
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require campaign credential
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "::error::ZAI_API_KEY is required for Phase 5 execution"
+            exit 2
+          fi
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git ../field
+          git -C ../field checkout "$PIANO_FIELD_SHA"
+          test "$(git -C ../field rev-parse HEAD)" = "$PIANO_FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install frozen experiment revisions
+        run: python -m pip install -e '../field[dev]' -e '.[dev]'
+      - name: Download exact frozen Phase 5 source
+        uses: actions/download-artifact@v4
+        with:
+          name: piano-society-phase5-frozen-source
+          path: frozen-source
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: ${{ env.SOURCE_RUN_ID }}
+      - name: Verify exact source capsule
+        run: |
+          test "$(sha256sum frozen-source/output/source/capsules.private.jsonl | cut -d' ' -f1)" = "$SOURCE_CAPSULE_SHA"
+      - name: Execute 24 paired institutional-memory units
+        run: |
+          python -m experiments.piano_society.phase5_campaign \
+            --config experiments/piano_society/phase5_config.json \
+            --capsules frozen-source/output/source/capsules.private.jsonl \
+            --output-dir output/piano_society/phase5-memory-live
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase5-memory-live
+          path: output/piano_society/phase5-memory-live
+          if-no-files-found: error
+          retention-days: 90
