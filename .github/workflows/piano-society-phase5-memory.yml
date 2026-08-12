@@ -60,7 +60,7 @@ jobs:
       - name: Verify frozen prerequisite bytes without reading confirmatory organizations
         run: |
           test "$(sha256sum frozen-source/output/source/capsules.private.jsonl | cut -d' ' -f1)" = "$SOURCE_CAPSULE_SHA"
-          test "$(sha256sum frozen-source/output/source/candidates.private.jsonl | cut -d' ' -f1)" = "49f1830454677be49457e908a832769b9119d02e83f9c7bf9d45d776530b50c1"
+          test "$(sha256sum frozen-source/output/source/candidates.jsonl | cut -d' ' -f1)" = "49f1830454677be49457e908a832769b9119d02e83f9c7bf9d45d776530b50c1"
           python - <<'PY'
           import json
           from pathlib import Path
