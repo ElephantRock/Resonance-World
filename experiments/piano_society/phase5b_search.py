@@ -20,6 +20,10 @@ from experiments.piano_society.phase5b_transfer_memory import (
 )
 
 _STRATEGIES = ("specialist", "balanced")
+_REVISION_DEPTH = {
+    "piano-phase5b-transfer-search-v1": 48,
+    "piano-phase5b-transfer-search-v2": 96,
+}
 
 
 def _read(path: str | Path) -> dict[str, Any]:
@@ -143,7 +147,8 @@ def _unit(
 
 def search(capsules_path: str | Path, config_path: str | Path) -> dict[str, Any]:
     config = _read(config_path)
-    if config.get("revision") != "piano-phase5b-transfer-search-v1":
+    revision = str(config.get("revision", ""))
+    if revision not in _REVISION_DEPTH:
         raise ValueError("unsupported Phase-5B transfer-search revision")
     if config.get("no_model_calls") is not True:
         raise ValueError("Phase-5B transfer search must prohibit model calls")
@@ -165,8 +170,8 @@ def search(capsules_path: str | Path, config_path: str | Path) -> dict[str, Any]
         raise ValueError("Phase-5B regime/strategy vocabulary differs from lock")
     depth = int(config["formation_depth"])
     trials = int(config["evaluation_trials_per_policy"])
-    if depth != 48 or trials != 256:
-        raise ValueError("Phase-5B formation/evaluation constants differ from lock")
+    if depth != _REVISION_DEPTH[revision] or trials != 256:
+        raise ValueError("Phase-5B formation/evaluation constants differ from revision lock")
 
     designs = w5._load_designs(capsules_path, calibration_fields, 4)
     candidates: list[dict[str, Any]] = []
@@ -280,6 +285,8 @@ def search(capsules_path: str | Path, config_path: str | Path) -> dict[str, Any]
     )
     return {
         "phase": "pre-inference-deterministic-transfer-search",
+        "revision": revision,
+        "formation_depth": depth,
         "model_calls": 0,
         "calibration_fields": calibration_fields,
         "confirmatory_fields_untouched": untouched,
