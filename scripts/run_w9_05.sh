@@ -49,7 +49,9 @@ with psycopg.connect(
 PY
 )
 
-python -m resonance_world.w8_execution prepare \
+# Use W8's already-validated mathematically exact fast path for comparator planning.
+# This changes no W8 allocation, threshold, tie-break, or final matched evaluation.
+python -m resonance_world.w8_fastpath prepare \
   --phase discovery \
   --source-dir "$BASE_SOURCE" \
   --config "$CONFIG" \
