@@ -14,8 +14,9 @@ keeps graph access from silently becoming omniscience.
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, field
-from typing import Iterable, Literal
+from typing import Literal
 
 ContextPolicy = Literal["isolated", "shared_evidence"]
 
