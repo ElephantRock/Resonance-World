@@ -5,7 +5,8 @@ from __future__ import annotations
 import argparse
 import json
 from pathlib import Path
-from typing import Any, Mapping
+from typing import Any
+from collections.abc import Mapping
 
 from . import w8_campaign as w8
 from . import w9_long_horizon as base
