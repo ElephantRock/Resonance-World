@@ -1,5 +1,5 @@
 {
-  "version": "context-graph-graduation-record-v0.2",
+  "version": "context-graph-graduation-record-v0.3",
   "status": "architectural-graduation-parity-pass",
   "scientific_claim": false,
   "standalone_runtime": {
@@ -28,7 +28,9 @@
     "final_decoupled_validation_run": 31638854949,
     "final_decoupled_validation_head": "e104f8872531065416271a11736fc4b991d163b3",
     "final_decoupled_semantic_parity_status": "success",
-    "final_decoupled_frozen_regression_status": "success"
+    "final_decoupled_frozen_regression_status": "success",
+    "final_decoupled_result_artifact_id": 9158072713,
+    "final_decoupled_result_artifact_digest": "sha256:4d5f0d8f9a15a1e72b958e407e1709b74d09bdd475a91c72a23114e088ea189d"
   },
   "frozen_replay": {
     "cg5": {
