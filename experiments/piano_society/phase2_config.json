@@ -1,8 +1,8 @@
 {
   "experiment": "piano-society-runtime-v0-phase2",
-  "preregistration_revision": "zai-coding-glm5.2-v2",
+  "preregistration_revision": "zai-coding-glm5.2-v3",
   "campaign_locked": true,
-  "field_revision": "79fb6231352aa207e67210eff794030b628f8b23",
+  "field_revision": "d9fb7400c499feb78da11fb333e326b9563bf4ea",
   "required_model_snapshot": "glm-5.2",
   "model_backend": {
     "provider": "zai",
@@ -15,6 +15,9 @@
     "provider_seed_supported": false,
     "trial_seed_role": "pair_identifier_only",
     "model_id_stability": "provider_alias_without_dated_snapshot",
+    "timeout_seconds": 60.0,
+    "max_attempts": 4,
+    "retry_timeout": true,
     "pair_order": "counterbalanced_by_seed_parity",
     "max_workers": 6
   },
