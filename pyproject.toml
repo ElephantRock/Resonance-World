@@ -33,6 +33,7 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 "experiments/context_graph/run_cg4m_measurement_sufficiency.py" = ["E501"]
+"experiments/context_graph/run_cg5_w3_active_measurement.py" = ["E501"]
 "src/resonance_world/context_graph_w3_endogenous.py" = ["F402"]
 "src/resonance_world/w4_relationship.py" = ["E501"]
 "src/resonance_world/w6_mobility_campaign.py" = ["E501"]
