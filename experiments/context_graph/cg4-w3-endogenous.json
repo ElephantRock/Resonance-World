@@ -1,0 +1,86 @@
+{
+  "version": "context-graph-cg4-w3-endogenous-v0.1",
+  "status": "calibration-only-before-w3-replication-unblinding",
+  "objective": "Test whether a context graph formed online from partial, duplicated, noisy, stale, and conflicting agent observations improves later partner selection under an unchanged W4 outcome law.",
+  "scientific_boundary": "W3 capsule practice is evaluator-hidden world state used only to generate live probe outcomes and oracle evaluation. CG-4 imports no historical W3 task, outcome, bid, pair-edge, or relationship evidence. Retrieval never mutates per-agent beliefs, and JointEnvironment receives no graph input.",
+  "experiment": {
+    "arms": [
+      "local_only",
+      "pooled_flat",
+      "endogenous_graph",
+      "shuffled_graph",
+      "stale_graph",
+      "conflicted_graph",
+      "oracle"
+    ],
+    "initial_roster_size": 8,
+    "turnover_count": 4,
+    "probes_per_skill": 2,
+    "skills_per_agent": 3,
+    "observation_noise_rate": 0.18,
+    "rumor_count": 2,
+    "min_confidence": 0.7,
+    "context_budget": 48,
+    "evaluation_trials_per_decision": 512,
+    "turnover_rule": "After the pre-turnover live probe phase, the four initial members with the highest observed canonical probe-success counts depart; ties are resolved by agent_id. Four deterministic reserve agents then join.",
+    "evidence_rule": "Every probe emits an append-only three-edge observation bundle (event-participant, event-skill, event-outcome) from the participant and a rotating scout. Participant reports are correct at confidence 0.95. Scout reports are confidence 0.85 unless a deterministic 0.18 noise event flips the observed outcome, in which case confidence is 0.45. Membership state is emitted as append-only registry events; low-confidence post-turnover active rumors are emitted for departed members.",
+    "calibration_missions": [
+      {"mission_id": "cg4-cal-heat-water", "lead_skill": "urban_heat", "support_skill": "water_systems"},
+      {"mission_id": "cg4-cal-energy-supply", "lead_skill": "energy_storage", "support_skill": "supply_networks"},
+      {"mission_id": "cg4-cal-health-mobility", "lead_skill": "public_health", "support_skill": "mobility"}
+    ],
+    "evaluation_missions": [
+      {"mission_id": "cg4-rep-heat-mobility", "lead_skill": "urban_heat", "support_skill": "mobility"},
+      {"mission_id": "cg4-rep-water-health", "lead_skill": "water_systems", "support_skill": "public_health"},
+      {"mission_id": "cg4-rep-energy-mobility", "lead_skill": "energy_storage", "support_skill": "mobility"},
+      {"mission_id": "cg4-rep-supply-heat", "lead_skill": "supply_networks", "support_skill": "urban_heat"}
+    ]
+  },
+  "metrics": [
+    "mission_success_rate",
+    "mean_expected_success",
+    "mean_regret",
+    "oracle_pair_rate",
+    "invalid_selection_rate",
+    "context_claims",
+    "provenance_completeness",
+    "duplicate_observation_groups",
+    "conflicting_observation_groups",
+    "low_confidence_claims",
+    "belief_contamination",
+    "historical_outcome_rows_consumed",
+    "outcome_law_graph_inputs"
+  ],
+  "sources": {
+    "calibration": {
+      "repository": "ElephantRock/Resonance-World",
+      "workflow_run_id": 31470831322,
+      "artifact_id": 9093287947,
+      "artifact_name": "w3-discovery-source",
+      "artifact_digest": "sha256:f8b06644271478c3b7abc3b8cdbefab39273a69b8a35bb268f9ed5fb3cc9676f",
+      "source_head_sha": "2c063b592da4983acbda0768ac1234081f3cc7e4",
+      "capsules_sha256": "208618d636e83a616417f948db11b48bcdfd6f3accff4770bae169fb60657e3b",
+      "field_ids": [
+        "w3-source-seed-121",
+        "w3-source-seed-242",
+        "w3-source-seed-363",
+        "w3-source-seed-484",
+        "w3-source-seed-605"
+      ]
+    },
+    "evaluation": {
+      "repository": "ElephantRock/Resonance-World",
+      "workflow_run_id": 31470831322,
+      "artifact_id": 9093317770,
+      "artifact_name": "w3-replication-source",
+      "artifact_digest": "sha256:5306141f2508e9e985968df2e9902b9d7e4d09a1b59f194a6bec070ada0a00a7",
+      "source_head_sha": "2c063b592da4983acbda0768ac1234081f3cc7e4",
+      "field_ids": [
+        "w3-source-seed-726",
+        "w3-source-seed-847",
+        "w3-source-seed-968"
+      ]
+    }
+  },
+  "success_gates": {}
+}
