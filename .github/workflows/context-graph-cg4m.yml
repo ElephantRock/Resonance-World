@@ -1,0 +1,99 @@
+name: Context Graph CG-4M Measurement Sufficiency
+
+on:
+  push:
+    branches: ["experiment/context-graph"]
+    paths:
+      - ".github/workflows/context-graph-cg4m.yml"
+      - "experiments/context_graph/cg4m-measurement-sufficiency.json"
+      - "experiments/context_graph/run_cg4m_measurement_sufficiency.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  cg4m-measurement:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e '.[dev]'
+      - name: Download pinned W3 discovery source
+        uses: actions/download-artifact@v4
+        with:
+          name: w3-discovery-source
+          path: w3-calibration
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31470831322
+      - name: Download already-unblinded W3 replication source
+        uses: actions/download-artifact@v4
+        with:
+          name: w3-replication-source
+          path: w3-evaluation
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31470831322
+      - name: Verify CG-4M implementation
+        run: >-
+          ruff check
+          experiments/context_graph/run_cg4m_measurement_sufficiency.py
+      - name: Execute exploratory CG-4M
+        run: >-
+          python experiments/context_graph/run_cg4m_measurement_sufficiency.py
+          --config experiments/context_graph/cg4m-measurement-sufficiency.json
+          --cg4-config experiments/context_graph/cg4-w3-endogenous.json
+          --cg4-result experiments/context_graph/cg4-w3-endogenous-result.json
+          --cg4f-findings experiments/context_graph/cg4f-findings.json
+          --calibration-capsules
+          w3-calibration/output/discovery-source/capsules.private.jsonl
+          --evaluation-capsules
+          w3-evaluation/output/replication-source/capsules.private.jsonl
+          --output output/context_graph/cg4m-measurement-sufficiency-result.json
+      - name: Verify exploratory boundary and integrity
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(
+              Path("output/context_graph/cg4m-measurement-sufficiency-result.json").read_text()
+          )
+          assert result["status"] == "exploratory-post-unblinding-complete"
+          assert result["confirmatory_claim"] is False
+          assert result["frozen_cg4_status"] == "failed-and-unchanged"
+          integrity = result["integrity"]
+          assert integrity["historical_outcome_rows_consumed"] == 0
+          assert integrity["posthoc_imported_claims"] == 0
+          assert integrity["belief_contamination_from_retrieval"] == 0
+          assert integrity["outcome_law_graph_inputs"] == 0
+          assert integrity["turnover_roster_changed_by_supplemental_probes"] == 0
+          assert integrity["event_identity_reconciliation"] is True
+          assert integrity["bundle_aware_flat_complete_units"] is True
+          text = Path(
+              "output/context_graph/cg4m-measurement-sufficiency-result.json"
+          ).read_text()
+          assert "practice_by_skill" not in text
+          print(json.dumps(result["architecture_selection"], indent=2, sort_keys=True))
+          PY
+      - name: Prove frozen CG-4 and CG-4F records are unchanged
+        run: >-
+          git diff --exit-code
+          5212285732b514e18e06bd52f9c42f90549c3f33 HEAD --
+          experiments/context_graph/cg4-w3-endogenous.json
+          experiments/context_graph/cg4-w3-endogenous-result.json
+          experiments/context_graph/cg4f-findings.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: context-graph-cg4m-measurement-sufficiency
+          path: output/context_graph/cg4m-measurement-sufficiency-result.json
+          if-no-files-found: error
+          retention-days: 90
