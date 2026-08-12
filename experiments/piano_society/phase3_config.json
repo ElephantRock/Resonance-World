@@ -1,8 +1,8 @@
 {
   "experiment": "piano-society-runtime-v0-phase3-social",
-  "preregistration_revision": "glm5.2-social-dyads-v1",
+  "preregistration_revision": "glm5.2-social-dyads-v2-provider-robustness",
   "campaign_locked": true,
-  "field_revision": "cc8dbcedf6366f687c9acc7050b5654c1867bd8e",
+  "field_revision": "c16d5ffd8fc8543eff0e401ddcdbca2b6bfb6ecd",
   "required_model_snapshot": "glm-5.2",
   "validated_prerequisites": {
     "acknowledgement_validated": true,
@@ -14,6 +14,14 @@
     "phase2c_field_revision": "f9ce80dd51cc3bd3adf9b810972f832263b3fe87",
     "phase2c_artifact_digest": "sha256:f330a4d5153327a3bca37ea9e30ab8fd7eb3f167f0cb474f708ef0e4fc5a698b"
   },
+  "v1_invalidation_record": {
+    "world_revision": "7f6868aa01fdef0a28103ee33a2639a5256c757e",
+    "workflow_run": 31624267333,
+    "first_attempt_failure": "Z.AI HTTP 429 rate limit after six attempts",
+    "unchanged_rerun_failure": "Z.AI structured-output contract error: intention object missing intended_action",
+    "complete_artifact_generated": false,
+    "scientific_scoring_performed": false
+  },
   "model_backend": {
     "provider": "zai",
     "endpoint": "coding_chat_completions",
@@ -23,8 +31,10 @@
     "temperature": 0.0,
     "provider_seed_supported": false,
     "retry_timeout": true,
+    "retry_contract_errors": true,
     "timeout_seconds": 60.0,
-    "max_attempts": 6,
+    "max_attempts": 8,
+    "retry_backoff_cap_seconds": 30.0,
     "max_workers": 3,
     "arm_order": "counterbalanced_by_case_seed_parity",
     "agent_order_within_round": "ascending_agent_index"
