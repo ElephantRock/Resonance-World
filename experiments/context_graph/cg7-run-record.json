@@ -1,0 +1,81 @@
+{
+  "version": "context-graph-cg7-run-record-v0.1",
+  "scientific_status": "failed-one-preregistered-noninferiority-gate",
+  "protocol_freeze_commit": "d4a75110871046ef1f18f10f9c9ef6fba0bc3c1c",
+  "evaluator_preflight_commit": "1c5e900c4e7bdb405ea612c3490386d3448d803e",
+  "evaluator_preflight_run": 31625209370,
+  "evaluator_preflight_status": "success-before-fresh-generation",
+  "first_unblinding_attempt": {
+    "workflow_commit": "95bc396124d75f476bc1010b5864191d1b606ecf",
+    "workflow_run_id": 31625399820,
+    "status": "infrastructure-failure-before-source-generation",
+    "failure_step": "Generate fifteen untouched CG-7 source Fields",
+    "failure_cause": "Pinned Resonance Field requires new checkpointless lifecycle campaigns to start at Experiment 063; the intended execution slot 064 is checkpoint-dependent.",
+    "raw_export_started": false,
+    "capsules_materialized": false,
+    "evaluation_started": false,
+    "scientific_parameters_changed_after_failure": false
+  },
+  "compatibility_correction": {
+    "record_commit": "5870b387a8ed47e0e1e65d584b1e04c0dc54079a",
+    "workflow_commit": "348429fddcbc156143709010cf1a6bd3961d0f3b",
+    "change": "Lifecycle execution/filter slot only: 064 -> 063. Frozen source config, campaign, seeds, environment, missions, acquisition budgets/rules, estimator, context policy, bootstrap seeds, gates, and evaluator unchanged.",
+    "protocol_text_changed": false
+  },
+  "fresh_confirmatory_run": {
+    "workflow_run_id": 31625645587,
+    "workflow_head_sha": "348429fddcbc156143709010cf1a6bd3961d0f3b",
+    "preflight": "success",
+    "fresh_source_job": "success",
+    "frozen_evaluator_execution": "success",
+    "machine_result_integrity": "success",
+    "gate_enforcement": "scientific-failure",
+    "failed_gates": ["bootstrap_noninferiority_ci_lower_min"],
+    "passed_gate_count": 26,
+    "total_gate_count": 27
+  },
+  "fresh_source_artifact": {
+    "id": 9153047036,
+    "name": "context-graph-cg7-fresh-source",
+    "zip_digest": "sha256:0ba8accad0d5f2ee3f6501913378c066709bcb442087bde86a1482b78859c782",
+    "capsules_sha256": "35f89d7f0559bb87b2aac9a82f4f28bc37d68ffeef986cde59f27ec887747f1b"
+  },
+  "result_artifact": {
+    "id": 9153062390,
+    "name": "context-graph-cg7-result",
+    "zip_digest": "sha256:ae2cd496de70243cfc2d4238c948ad2f828845c3ebee0e9e183b75e83a497ad4"
+  },
+  "result_file": "experiments/context_graph/cg7-w3-measurement-economy-result.json",
+  "result_commit": "2b502624cc3d948775fd21153158fb10ee3d7d21",
+  "primary_result": {
+    "uniform72_expected_success": 0.24553795367706818,
+    "fixed6_expected_success": 0.25691017292370033,
+    "point_difference_uniform72_minus_fixed6": -0.011372219246632148,
+    "noninferiority_margin": -0.015,
+    "field_clustered_95_ci": [-0.02931092791458301, 0.007965141839401793],
+    "noninferiority_confirmed": false,
+    "uniform72_probe_cost_fraction_vs_fixed6": 0.3333333333333333,
+    "uniform72_probe_cost_reduction_vs_fixed6": 0.6666666666666667
+  },
+  "topology_result": {
+    "uniform72_graph_expected_success": 0.24553795367706818,
+    "uniform72_flat_expected_success": 0.21186980493396035,
+    "graph_minus_flat": 0.033668148743107834,
+    "field_clustered_95_ci": [0.011903020743392069, 0.05623564161038773],
+    "positive_fields": 11,
+    "uniform72_shuffled_expected_success": 0.21161928978044312,
+    "graph_minus_shuffled": 0.03391866389662507
+  },
+  "integrity": {
+    "fresh_seed_overlap_with_prior": 0,
+    "belief_contamination": 0,
+    "historical_outcome_rows_consumed": 0,
+    "posthoc_imported_claims": 0,
+    "supplemental_probe_roster_changes": 0,
+    "outcome_law_graph_inputs": 0,
+    "acquisition_evaluator_truth_inputs": 0,
+    "matched_context_claims": true,
+    "matched_complete_bundle_counts": true
+  },
+  "interpretation_boundary": "CG-7 does not confirm that 72 uniform probes are non-inferior to fixed-six at the preregistered 1.5 percentage-point margin because the clustered lower confidence bound is -2.93 percentage points. The point estimate and all other economy gates were favorable, and the 72-probe graph independently retained a replicated topology advantage over cost-matched flat and shuffled controls. CG-6 adaptive acquisition remains failed; CG-7 is not evidence for adaptive acquisition."
+}
