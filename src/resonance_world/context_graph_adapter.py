@@ -19,10 +19,13 @@ from resonance_contextgraph import (
     ContextRequest,
     EvidenceClaim,
     EvidenceStore,
+    EventReconciler,
     MeasurementCell,
     MissionSpec,
     PairStabilityStopper,
     StopDecision,
+    checkpoint_observation,
+    group_cell_evidence,
 )
 from resonance_contextgraph import EstimatorSpec as ContextEstimatorSpec
 
@@ -98,6 +101,15 @@ def validated_estimator() -> ContextEstimatorSpec:
     )
 
 
+def _compiler_for_claims(
+    claims: Iterable[LiveClaim],
+    *,
+    estimator: ContextEstimatorSpec,
+) -> tuple[EvidenceStore, ContextCompiler]:
+    store = build_evidence_store(claims)
+    return store, ContextCompiler(store, estimator=estimator)
+
+
 def compile_live_context(
     *,
     claims: Iterable[LiveClaim],
@@ -110,7 +122,7 @@ def compile_live_context(
 ) -> CompiledContext:
     """Compile a World mission context without exposing evaluator state."""
     spec = estimator or validated_estimator()
-    compiler = ContextCompiler(build_evidence_store(claims), estimator=spec)
+    _store, compiler = _compiler_for_claims(claims, estimator=spec)
     return compiler.compile(
         ContextRequest(
             scope_id=field_id,
@@ -145,6 +157,65 @@ def pair_from_live_context(
     return context.best_pair(spec), context
 
 
+def checkpoint_from_live_contexts(
+    *,
+    claims: Iterable[LiveClaim],
+    field_id: str,
+    as_of: int,
+    missions: Iterable[CG4Mission],
+    supplemental_budget: int,
+    claim_budget: int = 48,
+    min_confidence: float = 0.7,
+    estimator: ContextEstimatorSpec | None = None,
+) -> CheckpointObservation:
+    """Build the complete executed CG-11 stopping observable.
+
+    The frozen evaluator computed pair stability, selected-role support, and selected
+    score margin. The non-negative margin threshold can delay a stop even when the
+    pair vector is stable, so all three observables are preserved here.
+    """
+    spec = estimator or validated_estimator()
+    store, compiler = _compiler_for_claims(claims, estimator=spec)
+    latest_membership = store.latest_membership(
+        scope_id=field_id,
+        as_of=as_of,
+        min_confidence=min_confidence,
+    )
+    candidates = {
+        claim.subject
+        for claim in latest_membership.values()
+        if claim.object == "active"
+    }
+    admissible_claims = store.claims(
+        scope_id=field_id,
+        as_of=as_of,
+        min_confidence=min_confidence,
+    )
+    events = EventReconciler().reconcile(
+        admissible_claims,
+        min_confidence=min_confidence,
+    )
+    full_evidence = group_cell_evidence(events, candidates=candidates)
+    contexts = tuple(
+        compiler.compile(
+            ContextRequest(
+                scope_id=field_id,
+                mission=to_mission_spec(mission),
+                as_of=as_of,
+                claim_budget=claim_budget,
+                min_confidence=min_confidence,
+            )
+        )
+        for mission in missions
+    )
+    return checkpoint_observation(
+        budget=supplemental_budget,
+        contexts=contexts,
+        full_evidence=full_evidence,
+        estimator=spec,
+    )
+
+
 def next_balanced_cell(
     *,
     field_id: str,
@@ -165,16 +236,18 @@ def next_balanced_cell(
 
 
 def choose_stopping_point(
-    history: Iterable[tuple[int, tuple[str, ...]]],
+    history: Iterable[CheckpointObservation | tuple[int, tuple[str, ...]]],
     *,
     checkpoints: tuple[int, ...] = (48, 60, 72, 96, 120, 144, 168),
     minimum_budget: int = 60,
     hard_cap: int = 168,
 ) -> StopDecision:
-    """Apply the CG-11 observable pair-stability stopping rule."""
+    """Apply the executed CG-11 observable stopping rule."""
     observations = tuple(
-        CheckpointObservation(budget=budget, pair_vector=pair_vector)
-        for budget, pair_vector in history
+        row
+        if isinstance(row, CheckpointObservation)
+        else CheckpointObservation(budget=row[0], pair_vector=row[1])
+        for row in history
     )
     if not observations:
         raise ValueError("stopping history cannot be empty")
