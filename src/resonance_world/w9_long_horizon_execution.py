@@ -11,7 +11,7 @@ from . import w8_campaign as w8
 from . import w9_long_horizon as base
 from .w9_integrated import _phase_seeds, _read_json, _write_json
 
-RESULT_VERSION = "w9-06-long-horizon-result-v0.4"
+RESULT_VERSION = "w9-06-long-horizon-result-v0.5"
 
 
 def _recompute_efficiencies(value: dict[str, Any]) -> None:
@@ -79,12 +79,21 @@ def _correct_w8_compute(
     coalition_mission_compute = float(3 * horizon * trials)
     source_diagnostic_compute = float((horizon + 1) * field_count * trials)
     standalone_coordination_compute = float(2 * horizon)
+    withholding_cycles = {
+        int(cycle)
+        for cycle in config["long_horizon"]["stress_schedule"]["withholding_cycles"]
+        if 0 <= int(cycle) < horizon
+    }
+    withholding_substitution_compute = float(len(withholding_cycles))
     budget_update_compute = float(horizon * organization_count)
+    successor_activation_check_compute = float(horizon * field_count)
     total_added = (
         coalition_mission_compute
         + source_diagnostic_compute
         + standalone_coordination_compute
+        + withholding_substitution_compute
         + budget_update_compute
+        + successor_activation_check_compute
     )
 
     compute = value["compute"]
@@ -93,7 +102,13 @@ def _correct_w8_compute(
     compute["standalone_comparator_pair_selection_compute"] = (
         standalone_coordination_compute
     )
+    compute["withholding_substitution_coordination_compute"] = (
+        withholding_substitution_compute
+    )
     compute["neutral_budget_update_regulatory_compute"] = budget_update_compute
+    compute["successor_activation_check_regulatory_compute"] = (
+        successor_activation_check_compute
+    )
     compute["mission_execution_compute"] = (
         float(compute["mission_execution_compute"])
         + coalition_mission_compute
@@ -102,9 +117,12 @@ def _correct_w8_compute(
     compute["organization_coordination_compute"] = (
         float(compute["organization_coordination_compute"])
         + standalone_coordination_compute
+        + withholding_substitution_compute
     )
     compute["world_regulatory_estimation_compute"] = (
-        float(compute["world_regulatory_estimation_compute"]) + budget_update_compute
+        float(compute["world_regulatory_estimation_compute"])
+        + budget_update_compute
+        + successor_activation_check_compute
     )
     compute["incremental_total_measured_compute"] = (
         float(compute["incremental_total_measured_compute"]) + total_added
@@ -177,6 +195,11 @@ def run_w9_06_execution(
     )
     _refresh_selected_gate(result, long_horizon_config)
 
+    withholding_cycles = {
+        int(cycle)
+        for cycle in merged["long_horizon"]["stress_schedule"]["withholding_cycles"]
+        if 0 <= int(cycle) < horizon
+    }
     result["version"] = RESULT_VERSION
     result["accounting_corrections"] = {
         "selected_source_frontier_diagnostics": {
@@ -208,12 +231,21 @@ def run_w9_06_execution(
             "cycles": horizon,
             "organization_coordination_compute_added": float(2 * horizon),
         },
+        "w8_withholding_substitution": {
+            "withholding_cycles": sorted(withholding_cycles),
+            "organization_coordination_compute_added": float(len(withholding_cycles)),
+        },
         "w8_neutral_budget_updates": {
             "updates_per_cycle": organization_count,
             "cycles": horizon,
             "world_regulatory_estimation_compute_added": float(
                 horizon * organization_count
             ),
+        },
+        "w8_successor_activation_checks": {
+            "checks_per_cycle": field_count,
+            "cycles": horizon,
+            "world_regulatory_estimation_compute_added": float(horizon * field_count),
         },
     }
     return result
