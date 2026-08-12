@@ -1,6 +1,6 @@
 {
   "version": "context-graph-cg4-w3-endogenous-v0.1",
-  "status": "calibration-only-before-w3-replication-unblinding",
+  "status": "preregistered-before-w3-replication-unblinding",
   "objective": "Test whether a context graph formed online from partial, duplicated, noisy, stale, and conflicting agent observations improves later partner selection under an unchanged W4 outcome law.",
   "scientific_boundary": "W3 capsule practice is evaluator-hidden world state used only to generate live probe outcomes and oracle evaluation. CG-4 imports no historical W3 task, outcome, bid, pair-edge, or relationship evidence. Retrieval never mutates per-agent beliefs, and JointEnvironment receives no graph input.",
   "experiment": {
@@ -82,5 +82,25 @@
       ]
     }
   },
-  "success_gates": {}
+  "success_gates": {
+    "evaluation_decision_count_min": 12,
+    "emitted_claims_min": 1500,
+    "duplicate_observation_groups_min": 200,
+    "conflicting_observation_groups_min": 20,
+    "low_confidence_claims_min": 100,
+    "graph_success_lift_over_flat_min": 0.03,
+    "graph_expected_success_lift_over_flat_min": 0.03,
+    "graph_expected_success_lift_over_shuffled_min": 0.10,
+    "graph_regret_improvement_over_flat_min": 0.03,
+    "graph_invalid_selection_rate_max": 0.05,
+    "graph_provenance_completeness_min": 1.0,
+    "graph_oracle_expected_gap_max": 0.20,
+    "stale_invalid_selection_rate_min": 0.40,
+    "conflicted_invalid_selection_rate_min": 0.25,
+    "posthoc_imported_claims_max": 0,
+    "historical_outcome_rows_consumed_max": 0,
+    "belief_contamination_max": 0,
+    "outcome_law_graph_inputs_max": 0,
+    "nonisolated_context_budget_matched": true
+  }
 }
