@@ -1,0 +1,64 @@
+{
+  "version": "context-graph-cg10b-tail-capped-stopping-calibration-v0.1",
+  "status": "exploratory-posthoc-repair-after-cg10",
+  "confirmatory_claim": false,
+  "scientific_question": "Does the CG-10 pair-stability stopping signal retain its cross-cohort decision quality when its long tail is forcibly capped at 168 balanced supplemental probes per Field?",
+  "exposed_by": {
+    "cg10_record_commit": "3b20e83f811db6b7bb082d356a948cd54c4ba988",
+    "cg10_workflow_run": 31631378410,
+    "mechanism": "CG-10 pair_stability_2 passed every selection check except p90 probe cost because six Fields never stabilized before 216."
+  },
+  "measurement": {
+    "policy": "uniform_round_robin",
+    "checkpoints": [48, 60, 72, 96, 120, 144, 168],
+    "minimum_stop_budget": 60,
+    "hard_stop_budget": 168,
+    "fixed_six_reference": 216,
+    "maximum_events_per_current_agent_skill": 6
+  },
+  "stopping_candidates": [
+    {
+      "name": "pair_stability_2_cap168",
+      "stable_checkpoint_count": 2,
+      "minimum_selected_role_event_support": 0,
+      "minimum_selected_role_score_margin": 0.0
+    }
+  ],
+  "selection_rule": {
+    "pooled_expected_success_loss_vs_fixed6_max": 0.01,
+    "per_cohort_expected_success_loss_vs_fixed6_max": 0.02,
+    "pooled_graph_lift_over_cost_matched_flat_min": 0.02,
+    "mean_probe_events_max": 120.0,
+    "p90_probe_events_max": 168.0,
+    "complexity_order": ["pair_stability_2_cap168"],
+    "selection_order": "single_predeclared_repair"
+  },
+  "estimator": {
+    "name": "wilson80_min3",
+    "kind": "wilson_lower",
+    "minimum_independent_event_support": 3,
+    "fallback_score": 0.35,
+    "z": 1.2815515655446004
+  },
+  "society": {
+    "initial_roster_size": 8,
+    "turnover_count": 4,
+    "initial_probes_per_skill": 2,
+    "initial_skills_per_agent": 3,
+    "observation_noise_rate": 0.18,
+    "observer_noise_rate": 0.18,
+    "rumor_count": 2,
+    "min_confidence": 0.7,
+    "maximum_events_per_current_agent_skill": 6
+  },
+  "context": {"claim_budget_cap": 48},
+  "missions": [
+    {"mission_id": "cg9-heat-water", "lead_skill": "urban_heat", "support_skill": "water_systems"},
+    {"mission_id": "cg9-energy-supply", "lead_skill": "energy_storage", "support_skill": "supply_networks"},
+    {"mission_id": "cg9-health-mobility", "lead_skill": "public_health", "support_skill": "mobility"},
+    {"mission_id": "cg9-water-health", "lead_skill": "water_systems", "support_skill": "public_health"},
+    {"mission_id": "cg9-energy-mobility", "lead_skill": "energy_storage", "support_skill": "mobility"},
+    {"mission_id": "cg9-supply-heat", "lead_skill": "supply_networks", "support_skill": "urban_heat"}
+  ],
+  "interpretation_boundary": "CG-10B is a single post-hoc repair tested only on already-unblinded CG-5/CG-7/CG-9 cohorts. It may justify a separately frozen fresh-cohort hypothesis but cannot retroactively rescue CG-10."
+}
