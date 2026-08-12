@@ -1,0 +1,92 @@
+{
+  "version": "context-graph-cg4m-result-v0.1",
+  "status": "exploratory-post-unblinding-complete",
+  "confirmatory_claim": false,
+  "workflow": {
+    "run_id": 31621085298,
+    "head_sha": "99acbe3997a2338cae26f650799775706fe92fc4",
+    "artifact_id": 9151247914,
+    "artifact_name": "context-graph-cg4m-measurement-sufficiency",
+    "artifact_digest": "sha256:c95881670f91e9830e28e1c1b7a3369a3e5be4577867f0c1c25ff6cc64d4c8ca",
+    "artifact_created_at": "2026-08-12T17:08:21Z"
+  },
+  "frozen_predecessors": {
+    "cg4_gate_commit": "58102fe4d317ac6aa0b52e015fda8a377e55f0d7",
+    "cg4_result_commit": "18b95b1ed91605e969d34c359af6af39512f8d9a",
+    "cg4f_findings_commit": "5212285732b514e18e06bd52f9c42f90549c3f33",
+    "status": "unchanged"
+  },
+  "measurement_selection": {
+    "candidate": "target6+wilson80_min3",
+    "independent_reconciled_events_per_current_agent_skill": 6,
+    "estimator": "80-percent Wilson lower bound",
+    "minimum_independent_event_support": 3,
+    "fallback_score": 0.35,
+    "all_lower_complexity_candidates_rejected_on": "calibration",
+    "calibration": {
+      "estimate_truth_pearson": 0.5748400489742538,
+      "baseline_estimate_truth_pearson": 0.3167440184334113,
+      "mean_expected_success": 0.34336522895351457,
+      "baseline_mean_expected_success": 0.262185492242738,
+      "expected_success_improvement": 0.08117973671077655,
+      "mean_regret": 0.07411865342393037,
+      "baseline_mean_regret": 0.15529839013470692,
+      "mean_selected_role_true_gap": 0.05897169831875983,
+      "baseline_mean_selected_role_true_gap": 0.13334424637512265,
+      "selected_single_success_rate": 0.0,
+      "supplemental_events_added": 1080,
+      "supplemental_claims_added": 6480,
+      "duplicate_observer_bundles_collapsed": 1500
+    },
+    "evaluation": {
+      "estimate_truth_pearson": 0.47252845782676434,
+      "baseline_estimate_truth_pearson": 0.27828929568412586,
+      "mean_expected_success": 0.3351457922077015,
+      "baseline_mean_expected_success": 0.21999628787850511,
+      "expected_success_improvement": 0.1151495043291964,
+      "mean_regret": 0.07906408941394859,
+      "baseline_mean_regret": 0.19421359374314498,
+      "mean_selected_role_true_gap": 0.07268596483309113,
+      "baseline_mean_selected_role_true_gap": 0.181672355244025,
+      "selected_single_success_rate": 0.0,
+      "supplemental_events_added": 648,
+      "supplemental_claims_added": 3888,
+      "duplicate_observer_bundles_collapsed": 900
+    }
+  },
+  "retrieval_at_48_claims": {
+    "calibration": {
+      "bundle_flat_expected_success": 0.18812604209375966,
+      "coverage_graph_expected_success": 0.21733633428661608,
+      "coverage_graph_lift": 0.029210292192856424,
+      "hybrid_graph_expected_success": 0.2388421812978377,
+      "bundle_flat_complete_bundles_mean": 13.0,
+      "coverage_graph_complete_bundles_mean": 13.0
+    },
+    "evaluation": {
+      "bundle_flat_expected_success": 0.2268877701822852,
+      "coverage_graph_expected_success": 0.2949770739558288,
+      "coverage_graph_lift": 0.06808930377354358,
+      "hybrid_graph_expected_success": 0.2881413594221503,
+      "bundle_flat_complete_bundles_mean": 13.0,
+      "coverage_graph_complete_bundles_mean": 13.0
+    }
+  },
+  "cg5_design_choice": {
+    "measurement": "target6+wilson80_min3",
+    "retrieval": "coverage_graph",
+    "context_budget_claims": 48,
+    "rationale": "Both coverage_graph and hybrid_graph cleared bundle-aware flat on both exploratory splits at 48 claims. The original selector implementation always preferred coverage once it qualified, while the written config only specified a coverage preference for near ties. Because the cohort is already unblinded, no new confirmatory claim is made from this arm choice. Coverage_graph is frozen for CG-5 as the simpler topology-only design; hybrid_graph remains an exploratory comparator and will not be substituted after fresh-cohort generation.",
+    "active_measurement_boundary": "The selected architecture is not passive endogenous memory: it actively acquires enough independent post-turnover probes to reach six reconciled events per current agent/skill before the decision assay."
+  },
+  "integrity": {
+    "historical_outcome_rows_consumed": 0,
+    "posthoc_imported_claims": 0,
+    "belief_contamination_from_retrieval": 0,
+    "outcome_law_graph_inputs": 0,
+    "turnover_roster_changed_by_supplemental_probes": 0,
+    "event_identity_reconciliation": true,
+    "bundle_aware_flat_complete_units": true
+  },
+  "interpretation_boundary": "CG-4M is exploratory measurement engineering on already-unblinded societies. It establishes a design candidate and measurement sufficiency regime only. Confirmation requires a newly generated untouched cohort after the CG-5 protocol is frozen."
+}
