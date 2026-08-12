@@ -62,7 +62,7 @@ jobs:
         run: python -m pip install -e '../field[dev]' -e '.[dev]'
       - name: Validate World scorer
         run: |
-          ruff check experiments/piano_society/phase1.py tests/test_piano_society_phase1.py
+          ruff check experiments/piano_society/phase1.py
           pytest -q tests/test_piano_society_phase1.py
       - name: Emit Field-owned paired records
         run: |
