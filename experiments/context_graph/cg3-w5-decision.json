@@ -1,6 +1,6 @@
 {
   "version": "context-graph-cg3-w5-decision-v0.1",
-  "status": "calibration-only-before-replication-unblinding",
+  "status": "preregistered-before-replication-unblinding",
   "objective": "Test whether graph-conditioned cross-Field partner selection causes better downstream mission outcomes under an unchanged W4 environment law.",
   "scientific_boundary": "CG-3 changes only the evidence context used to select a remote lead/support pair. JointEnvironment receives only IndividualState, JointMission, role actions, and a seed. W5's replicated null for productive institutional memory is not reinterpreted.",
   "experiment": {
@@ -73,5 +73,17 @@
       ]
     }
   },
-  "success_gates": {}
+  "success_gates": {
+    "evaluation_decision_count_min": 12,
+    "graph_success_lift_over_flat_min": 0.03,
+    "graph_success_lift_over_shuffled_min": 0.03,
+    "graph_regret_improvement_over_flat_min": 0.03,
+    "graph_invalid_selection_rate_max": 0.0,
+    "graph_provenance_completeness_min": 1.0,
+    "graph_oracle_success_gap_max": 0.05,
+    "stale_invalid_selection_rate_min": 0.25,
+    "conflicted_invalid_selection_rate_min": 0.25,
+    "belief_contamination_max": 0,
+    "outcome_law_graph_inputs_max": 0
+  }
 }
