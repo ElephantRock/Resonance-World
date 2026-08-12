@@ -4,14 +4,13 @@ from pathlib import Path
 
 import pytest
 
-from experiments.piano_society.phase3 import _board_digest, expected_outcome
+from experiments.piano_society.phase3 import _board_digest, config_digest, expected_outcome
 from experiments.piano_society.phase4_authority_v2 import (
     analyze,
     materialize_authority_roles,
     scientific_projection_digest,
     validate_config,
 )
-from experiments.piano_society.phase3 import config_digest
 
 
 def _config() -> dict[str, object]:
