@@ -1,0 +1,77 @@
+name: Context Graph CG-9 Preflight
+
+on:
+  push:
+    branches: ["experiment/context-graph"]
+    paths:
+      - ".github/workflows/context-graph-cg9-preflight.yml"
+      - "experiments/context_graph/run_cg9_w3_balanced_frontier.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: context-graph-cg9-preflight-${{ github.ref }}
+  cancel-in-progress: false
+
+env:
+  PROTOCOL_FREEZE_SHA: 444eaf4d764e6d1aa5b52aba707d3b64ff6581eb
+  EVALUATOR_FREEZE_SHA: 4671f46f9ae2039872b5d0e81135a132ead05a3a
+
+jobs:
+  preflight:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Prove CG-9 protocol and fresh seeds stayed frozen
+        run: >-
+          git diff --exit-code
+          "$PROTOCOL_FREEZE_SHA" HEAD --
+          configs/context_graph/cg9-fresh-source.json
+          experiments/context_graph/cg9-w3-balanced-frontier.json
+      - name: Prove evaluator stayed frozen
+        run: >-
+          git diff --exit-code
+          "$EVALUATOR_FREEZE_SHA" HEAD --
+          experiments/context_graph/run_cg9_w3_balanced_frontier.py
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Lint and compile frozen evaluator
+        run: |
+          ruff check experiments/context_graph/run_cg9_w3_balanced_frontier.py
+          python -m py_compile experiments/context_graph/run_cg9_w3_balanced_frontier.py
+      - name: Verify frozen acquisition and outcome-law isolation
+        run: |
+          PYTHONPATH=. python - <<'PY'
+          import inspect
+          import json
+          from pathlib import Path
+
+          from experiments.context_graph.run_cg6_adaptive_acquisition import choose_cell
+          from resonance_world.w4a_joint_learning import JointEnvironment
+
+          config = json.loads(
+              Path("experiments/context_graph/cg9-w3-balanced-frontier.json").read_text()
+          )
+          assert config["acquisition"]["policy"] == "uniform_round_robin"
+          assert config["acquisition"]["primary_budget"] == 60
+          assert config["evaluation"]["bootstrap"]["noninferiority_margin"] == -0.015
+          source = inspect.getsource(choose_cell)
+          uniform_block = source.split('if policy == "uniform_round_robin":', 1)[1].split(
+              'if policy == "uncertainty_only":', 1
+          )[0]
+          assert ".states" not in uniform_block
+          forbidden = {
+              "graph", "context_graph", "evidence", "claims",
+              "relationship_state", "organization_memory", "acquisition_state",
+          }
+          params = set(inspect.signature(JointEnvironment.evaluate).parameters)
+          assert not forbidden.intersection(params), params
+          PY
