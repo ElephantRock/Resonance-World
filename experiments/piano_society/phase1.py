@@ -108,12 +108,19 @@ def run_pair(
     *,
     field_sha: str,
 ) -> dict[str, Any]:
-    if len(field_sha) != 40 or any(character not in "0123456789abcdef" for character in field_sha):
+    if (
+        len(field_sha) != 40
+        or any(character not in "0123456789abcdef" for character in field_sha)
+    ):
         raise ValueError("field_sha must be a lowercase 40-character Git SHA")
 
     control = _records(control_payload, expected_arm="control")
     treatment = _records(treatment_payload, expected_arm="treatment")
-    if [_pair_key(record) for record in control] != [_pair_key(record) for record in treatment]:
+    if [
+        _pair_key(record) for record in control
+    ] != [
+        _pair_key(record) for record in treatment
+    ]:
         raise ValueError("control and treatment records are not paired by agent/time")
 
     control_score = score_records(control)
@@ -134,7 +141,8 @@ def run_pair(
         "control": control_score,
         "treatment": treatment_score,
         "delta_treatment_minus_control": {
-            metric: treatment_score[metric] - control_score[metric] for metric in metric_names
+            metric: treatment_score[metric] - control_score[metric]
+            for metric in metric_names
         },
     }
 
