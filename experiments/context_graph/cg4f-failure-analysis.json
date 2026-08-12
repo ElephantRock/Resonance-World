@@ -1,0 +1,60 @@
+{
+  "version": "context-graph-cg4f-failure-analysis-v0.1",
+  "status": "exploratory-post-unblinding",
+  "objective": "Explain why the preregistered CG-4 endogenous graph advantage over pooled flat retrieval reversed on the already-unblinded W3 replication cohort, without modifying the frozen CG-4 configuration or result.",
+  "scientific_boundary": "CG-4F is exploratory diagnosis only. W3 replication Fields 726/847/968 are already unblinded and may not be used to establish a new confirmatory effect. The frozen files cg4-w3-endogenous.json and cg4-w3-endogenous-result.json remain immutable.",
+  "source_experiment": {
+    "config": "experiments/context_graph/cg4-w3-endogenous.json",
+    "result": "experiments/context_graph/cg4-w3-endogenous-result.json",
+    "preregistered_gate_commit": "58102fe4d317ac6aa0b52e015fda8a377e55f0d7",
+    "unblinding_commit": "297c28054fc2245d84f475359dd20b52416c3541",
+    "result_commit": "18b95b1ed91605e969d34c359af6af39512f8d9a"
+  },
+  "hypotheses": [
+    {
+      "id": "H1-single-observation-truncation",
+      "question": "Does the graph compiler lose generalization because it retains only one highest-confidence observation bundle per candidate/required-skill cell before residual fill?",
+      "diagnostic": "Compare original graph contexts with event-deduplicated repeated-observation graph contexts under the same 48-claim budget."
+    },
+    {
+      "id": "H2-optimistic-missing-evidence-prior",
+      "question": "Does the selector overvalue candidate/skill cells with no complete observation because missing evidence receives a 0.5 estimate?",
+      "diagnostic": "Count zero-evidence selected roles and compare the original estimator with a skeptical Beta(1,2) prior on the same graph context."
+    },
+    {
+      "id": "H3-context-budget-starvation",
+      "question": "Is the 48-claim budget too small for topology-first retrieval once evidence is generated online?",
+      "diagnostic": "Run matched graph/flat expected-success budget curves at 24, 48, 72, 96, and 144 claims."
+    },
+    {
+      "id": "H4-live-signal-insufficiency",
+      "question": "Does the live evidence stream itself contain too little signal for reliable partner selection, regardless of compiler?",
+      "diagnostic": "Evaluate a full-eligible-evidence upper-bound selector with no context budget and compare its oracle gap with the 48-claim graph."
+    }
+  ],
+  "decision_trace_fields": [
+    "field_id",
+    "mission_id",
+    "lead_skill",
+    "support_skill",
+    "oracle_pair",
+    "oracle_expected_success",
+    "selected_pair_by_arm",
+    "expected_success_by_arm",
+    "regret_by_arm",
+    "complete_bundle_count_by_arm",
+    "required_bundle_count_by_arm",
+    "covered_candidate_skill_cells_by_arm",
+    "selected_role_evidence_by_arm"
+  ],
+  "diagnostic_variants": [
+    "original_graph",
+    "repeat_event_graph",
+    "skeptical_prior_graph",
+    "repeat_event_skeptical",
+    "full_evidence",
+    "full_evidence_skeptical"
+  ],
+  "budget_sweep": [24, 48, 72, 96, 144],
+  "interpretation_rule": "Treat variant improvements only as mechanism evidence and design input for a future new-cohort experiment. Do not retroactively change CG-4 gates, status, or scientific conclusion."
+}
