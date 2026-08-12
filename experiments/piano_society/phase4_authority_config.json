@@ -1,9 +1,18 @@
 {
   "experiment": "piano-society-runtime-v0-phase4-authority",
-  "preregistration_revision": "glm5.2-authority-provenance-v1",
+  "preregistration_revision": "glm5.2-authority-provenance-v2-transport",
   "campaign_locked": true,
-  "field_revision": "fe416fe5d04d9db8e43bce7f923f522d7164cc7c",
+  "field_revision": "e877bf03dbf6681ce7cbd98d984e73c032e911aa",
   "required_model_snapshot": "glm-5.2",
+  "transport_amendment": {
+    "scientific_design_unchanged_from": "glm5.2-authority-provenance-v1",
+    "v1_world_revision": "984bc86e4e27d6fbdbd1a226008d4d8d9359c421",
+    "v1_workflow_run": 31630549743,
+    "v1_complete_scientific_artifacts": 0,
+    "v1_invalidated": true,
+    "v1_failure_class": "provider_structured_output_contract_exhaustion",
+    "scientific_user_prompts_unchanged": true
+  },
   "validated_prerequisites": {
     "acknowledgement_validated": true,
     "controller_broadcast_validated": true,
@@ -24,8 +33,10 @@
     "provider_seed_supported": false,
     "retry_timeout": true,
     "retry_contract_errors": true,
+    "contract_retry_prompt_hardening": true,
+    "unique_request_id_per_attempt": true,
     "timeout_seconds": 60.0,
-    "max_attempts": 8,
+    "max_attempts": 12,
     "retry_backoff_cap_seconds": 30.0,
     "max_workers": 3,
     "arm_order": "counterbalanced_by_case_seed_parity",
