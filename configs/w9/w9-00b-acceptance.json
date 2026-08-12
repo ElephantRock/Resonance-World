@@ -1,0 +1,20 @@
+{
+  "version": "w9-00b-acceptance-v0.1",
+  "pr": 78,
+  "exact_head_sha": "226ed3d14227b09406adc162a48a59c2198fa6dd",
+  "merge_sha": "7bda5f55e664f0003ed7eee7cec930f1e868aea7",
+  "workflow_run": 31550487685,
+  "artifact_id": 9124074894,
+  "artifact_digest": "sha256:e35bf59bebac8d2001a3c3e6a81b1f632d62257a5c71fed6dac4f3e6982a61ac",
+  "normalized_scientific_payload_sha256": "ea6eb70b3e72ee5b4c90425d5ed77a9ff25e1d2a2d4c25b8231eb55909947a78",
+  "classification": "calibrated_source_cost_estimator",
+  "principal_observation_count": 120,
+  "mae_pp": 0.2832602348748846,
+  "signed_bias_pp": -0.1605426728259532,
+  "spearman_rho": 0.7594820900342301,
+  "high_cost_safe_rate": 0.9333333333333333,
+  "calibration_slope": 0.9518272274711025,
+  "calibration_intercept": 0.1798937562422811,
+  "fieldwise_results_are_diagnostic_only": true,
+  "authorizes_w9_01_principal_claim": true
+}
