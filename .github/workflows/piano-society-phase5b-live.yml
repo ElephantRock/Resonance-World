@@ -1,0 +1,226 @@
+name: PIANO Society Phase 5B Live
+
+on:
+  push:
+    branches:
+      - experiment/piano-society-phase5b-transferable-memory
+    paths:
+      - experiments/piano_society/phase5b_config.json
+      - experiments/piano_society/phase5b.py
+      - experiments/piano_society/phase5b_campaign.py
+      - experiments/piano_society/phase5b_controller.py
+      - experiments/piano_society/phase5b_transfer_memory.py
+      - experiments/piano_society/phase5_zai.py
+      - tests/test_piano_society_phase5b.py
+      - tests/test_piano_society_phase5b_analysis.py
+      - .github/workflows/piano-society-phase5b-live.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  FIELD_REPOSITORY: https://github.com/ElephantRock/Resonance-Field.git
+  FIELD_SHA: e877bf03dbf6681ce7cbd98d984e73c032e911aa
+  SOURCE_RUN: "31649544130"
+  SOURCE_ARTIFACT_ID: "9162069554"
+  SOURCE_ARTIFACT: piano-society-phase5b-frozen-source
+  SOURCE_ARTIFACT_DIGEST: sha256:f91b0d23cf3a5b78c100ecacba0fc873bcfc3f5db18ee9a7ed17900d14c793b5
+  SOURCE_CAPSULE_SHA256: 3db71e9b498605853454abe64c0937f032e8d91bf0500c76fe20b17c9e436ebd
+  SEARCH_RUN: "31649908290"
+  SEARCH_ARTIFACT_ID: "9162175324"
+  SEARCH_ARTIFACT: piano-society-phase5b-v2-transfer-search
+  SEARCH_ARTIFACT_DIGEST: sha256:f82f936d6d37a1d88967cabd7d698936bdc6234af2674585c4d2377c22f24d4c
+
+jobs:
+  validate-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - name: Install frozen revisions
+        run: python -m pip install -e 'field[dev]' -e world
+      - name: Verify registered artifact digests through GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api repos/ElephantRock/Resonance-World/actions/artifacts/$SOURCE_ARTIFACT_ID --jq .digest)" = "$SOURCE_ARTIFACT_DIGEST"
+          test "$(gh api repos/ElephantRock/Resonance-World/actions/artifacts/$SEARCH_ARTIFACT_ID --jq .digest)" = "$SEARCH_ARTIFACT_DIGEST"
+      - name: Download exact frozen source
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.SOURCE_ARTIFACT }}
+          path: frozen-source
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: ${{ env.SOURCE_RUN }}
+      - name: Download exact v2 search audit
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.SEARCH_ARTIFACT }}
+          path: frozen-search
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: ${{ env.SEARCH_RUN }}
+      - name: Verify frozen bytes and v2 calibration result
+        run: |
+          CAPSULE="$(find frozen-source -name capsules.private.jsonl -print -quit)"
+          RESULT="$(find frozen-search -name result.json -print -quit)"
+          test -n "$CAPSULE"
+          test -n "$RESULT"
+          test "$(sha256sum "$CAPSULE" | awk '{print $1}')" = "$SOURCE_CAPSULE_SHA256"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          result_path = next(Path('frozen-search').rglob('result.json'))
+          result = json.loads(result_path.read_text())
+          assert result['revision'] == 'piano-phase5b-transfer-search-v2', result
+          assert result['formation_depth'] == 96, result
+          assert result['model_calls'] == 0, result
+          assert result['accepted'] is True, result
+          assert result['selected_unit_count'] == 8, result
+          assert result['mean_selected_transfer_policy_lift_over_neutral_policy'] == 0.03662109375, result
+          assert result['nonnegative_selected_units'] == 8, result
+          assert result['posterior_structure_matches'] == 8, result
+          selected = [
+              (row['regime'], row['lead_skill'], row['support_skill'])
+              for row in result['selected']
+          ]
+          assert selected == [
+              ('balanced', 'supply_networks', 'urban_heat'),
+              ('balanced', 'urban_heat', 'supply_networks'),
+              ('specialist', 'energy_storage', 'urban_heat'),
+              ('specialist', 'public_health', 'urban_heat'),
+          ], selected
+          PY
+      - name: Lint locked Phase 5B implementation
+        working-directory: world
+        run: |
+          ruff check --ignore E501,I001 \
+            experiments/piano_society/phase5b.py \
+            experiments/piano_society/phase5b_campaign.py \
+            experiments/piano_society/phase5b_controller.py \
+            experiments/piano_society/phase5b_transfer_memory.py \
+            experiments/piano_society/phase5_zai.py \
+            tests/test_piano_society_phase5b.py \
+            tests/test_piano_society_phase5b_analysis.py
+      - name: Run offline Phase 5B contract tests
+        working-directory: world
+        run: >-
+          pytest -q
+          tests/test_piano_society_phase5b.py
+          tests/test_piano_society_phase5b_analysis.py
+      - name: Validate frozen live config without credential
+        working-directory: world
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          python - <<'PY'
+          import json
+          from experiments.piano_society.phase5b import validate_config
+          config = json.load(open('experiments/piano_society/phase5b_config.json', encoding='utf-8'))
+          lock = validate_config(config)
+          assert len(lock['units']) == 24
+          assert lock['source_capsule_sha256'] == '3db71e9b498605853454abe64c0937f032e8d91bf0500c76fe20b17c9e436ebd'
+          assert config['advancement_gate']['min_mean_retained_minus_reset_success_rate'] == 0.03
+          assert config['advancement_gate']['min_forecast_fidelity_each_arm'] == 0.9
+          PY
+      - name: Upload Phase 5B preregistration evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase5b-preregistration
+          path: |
+            world/experiments/piano_society/phase5b_config.json
+            world/experiments/piano_society/PHASE5B_PREREGISTRATION.md
+          if-no-files-found: error
+          retention-days: 90
+
+  phase5b-live-campaign:
+    needs: validate-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - name: Require campaign credential
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "ZAI_API_KEY repository secret is required for Phase 5B execution" >&2
+            exit 2
+          fi
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - name: Install frozen revisions
+        run: python -m pip install -e field -e world
+      - name: Re-verify source artifact digest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api repos/ElephantRock/Resonance-World/actions/artifacts/$SOURCE_ARTIFACT_ID --jq .digest)" = "$SOURCE_ARTIFACT_DIGEST"
+      - name: Download exact frozen source
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.SOURCE_ARTIFACT }}
+          path: frozen-source
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: ${{ env.SOURCE_RUN }}
+      - name: Verify exact capsule bytes
+        run: |
+          CAPSULE="$(find frozen-source -name capsules.private.jsonl -print -quit)"
+          test -n "$CAPSULE"
+          test "$(sha256sum "$CAPSULE" | awk '{print $1}')" = "$SOURCE_CAPSULE_SHA256"
+      - name: Execute complete Phase 5B campaign
+        working-directory: world
+        run: |
+          CAPSULE="$(find ../frozen-source -name capsules.private.jsonl -print -quit)"
+          python -m experiments.piano_society.phase5b_campaign \
+            --config experiments/piano_society/phase5b_config.json \
+            --capsules "$CAPSULE" \
+            --output-dir ../output/phase5b-live
+      - name: Assert complete analyzer artifact
+        run: |
+          python - <<'PY'
+          import json
+          result = json.load(open('output/phase5b-live/result.json', encoding='utf-8'))
+          assert result['scientific_interpretation_eligible'] is True, result
+          assert result['records_per_arm'] == 24, result
+          assert result['paired_units'] == 24, result
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
+      - name: Upload complete Phase 5B result
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase5b-live
+          path: output/phase5b-live
+          if-no-files-found: error
+          retention-days: 90
