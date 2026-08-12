@@ -7,6 +7,7 @@ on:
       - ".github/workflows/context-graph-cg4m.yml"
       - "experiments/context_graph/cg4m-measurement-sufficiency.json"
       - "experiments/context_graph/run_cg4m_measurement_sufficiency.py"
+      - "pyproject.toml"
   workflow_dispatch:
 
 permissions:
