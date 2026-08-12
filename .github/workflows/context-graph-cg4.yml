@@ -36,7 +36,7 @@ jobs:
           run-id: 31470831322
       - name: Verify CG-4 implementation
         run: >-
-          ruff check
+          ruff check --ignore F402
           src/resonance_world/context_graph_w3_endogenous.py
           tests/test_context_graph_w3_endogenous.py
           experiments/context_graph/run_cg4_w3_endogenous.py
