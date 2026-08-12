@@ -1,99 +1,105 @@
 # Phase 1 — Live Resonance Field Contract
 
-Status: **contract identified; live implementation not yet added**
+Status: **live contract implemented; deterministic cross-repo smoke test wired; scientific policy experiment not yet run**
 
-Field reference inspected: `ElephantRock/Resonance-Field@e3f924eb33dcc811e208600cc8928d2b97d07f5d`
+Pinned Field revision: `ElephantRock/Resonance-Field@f9416d841887476bbbcc97ba12c919c89d626ddc`
 
-## Why Phase 0 cannot simply be pointed at Resonance Field
+## Implemented Field boundary
 
-The current Resonance Field public agent boundary is intentionally narrow:
+The companion Field branch `experiment/piano-agent-runtime` now provides an experimental adapter that composes around the existing production `AgentRuntime` rather than replacing its execution semantics.
 
-```python
-class AgentPolicy(Protocol):
-    def choose(self, agent_id: UUID, context: DecisionContext) -> ActionRequest: ...
+A Field-owned `PianoPolicy` emits a `PianoProposal` containing:
+
+- raw high-level intention text;
+- raw speech proposal text;
+- the normal Field `ActionRequest`;
+- structured `intended_action` and `speech_action` labels for mechanical scoring;
+- an explicit `speech_claims_success` flag; and
+- optional expected outcome status/effects.
+
+The existing Field runtime still performs retrieval, policy gating, execution, side effects, and decision-event tracing. Only after that normal step completes does the experimental adapter derive an `ExecutionAcknowledgement`.
+
+The exported World record uses the production `DecisionEvent.action_payload`, so Field's existing audit redaction remains authoritative and raw action secrets are not exported.
+
+## Why structured labels were added
+
+Natural-language intention and speech alone would require an LLM judge to infer whether channels contradict one another. That would reintroduce evaluator entanglement into the primary metric.
+
+Phase 1 therefore freezes explicit action labels beside the raw text. World can mechanically compute:
+
+- speech/action contradiction;
+- intention/action divergence;
+- unsupported success claims; and
+- expected-vs-observed execution failure.
+
+Raw text remains available for later secondary semantic analysis, but it is not required for the primary coherence score.
+
+## Cross-repo contract smoke
+
+The pinned Field revision includes a deterministic Field-owned paired fixture. It emits three control records and three treatment records through the actual `AgentRuntime` action/gateway/event path.
+
+Resonance World:
+
+1. checks out the exact pinned Field SHA;
+2. installs both repositories;
+3. asks Field to emit the control and treatment records;
+4. validates the exported schema;
+5. requires identical agent/time pairing across arms;
+6. scores the records mechanically; and
+7. uploads the control, treatment, and scored result as a CI artifact.
+
+This run is deliberately marked:
+
+```text
+phase = live-contract-smoke
+scientific_claim_allowed = false
 ```
 
-`AgentRuntime.step()` then gates and executes the `ActionRequest` and returns a
-`StepResult` containing the request, policy evaluation, action outcome, and decision
-event.
-
-That interface is appropriate for the current Field architecture, but it exposes only
-one action proposal. A live PIANO experiment needs to observe at least two independently
-produced channels before arbitration (for example speech/social output and physical or
-substrate action) and then feed execution acknowledgement back into the experimental
-cognitive state.
-
-Using World-side guesses to reconstruct those hidden proposals would make the metric
-circular and is therefore prohibited.
-
-## Minimal experimental port
-
-The smallest useful Field-side experimental contract is conceptually:
-
-```python
-@dataclass(frozen=True, slots=True)
-class ProposalBundle:
-    state_revision: int
-    cognitive_intent: str
-    speech_proposal: str
-    action_request: ActionRequest
-
-
-@dataclass(frozen=True, slots=True)
-class ExecutionAck:
-    state_revision: int
-    request_id: UUID
-    outcome: ActionOutcome
-
-
-class CognitiveExperimentPort(Protocol):
-    def propose(self, agent_id: UUID, context: DecisionContext) -> ProposalBundle: ...
-    def acknowledge(self, agent_id: UUID, ack: ExecutionAck) -> None: ...
-```
-
-The exact production API does not need to look like this. These are the minimum
-observables required by the experiment.
-
-## Arm semantics
-
-### Baseline
-
-- cognitive, speech, and action proposals are allowed to diverge;
-- no shared intention is broadcast before output generation;
-- success language may be generated without consulting the execution acknowledgement.
-
-### Treatment
-
-- the same observation, model snapshot, tools, seed, and compute budget are used;
-- a shared controller intention conditions the observable output channels;
-- the execution acknowledgement updates experimental state before any success claim is
-  emitted.
+The deterministic fixture proves boundary integrity and instrumentation only. Its treatment advantage is constructed and must not be cited as evidence that PIANO improves real Resonance agents.
 
 ## Ownership
 
-Resonance Field must continue to own:
+Resonance Field continues to own:
 
-- agent cognition,
-- `ActionRequest` creation,
-- policy gating,
-- action execution,
-- local state mutation.
+- agent cognition and proposal generation;
+- `ActionRequest` creation;
+- policy gating;
+- action execution;
+- local state mutation; and
+- execution acknowledgement derivation.
 
-Resonance World may own only:
+Resonance World owns only:
 
-- paired-arm orchestration,
-- seed/scenario freezing,
-- telemetry collection,
-- metric computation,
+- paired-arm orchestration;
+- revision/seed/scenario freezing;
+- exported-record validation;
+- metric computation; and
 - cross-run comparison.
 
-The World experiment must not import or mutate Field-private cognitive state.
+World must not reconstruct or mutate Field-private cognitive state.
 
-## Next implementation gate
+## Next scientific gate
 
-A genuine Phase 1 run requires a **companion experimental change in Resonance Field**
-(or an already-public equivalent port) that exposes the proposal bundle and execution
-acknowledgement without changing production semantics.
+The next experiment is a **one-agent model-backed paired protocol**, not a scale-up.
 
-Until that exists, Phase 0 remains instrumentation validation only. Do not report its
-synthetic deltas as evidence that PIANO improves Resonance Field agents.
+Both arms must freeze the same:
+
+- Field revision;
+- model snapshot;
+- observation sequence;
+- substrate/world state;
+- primitive action vocabulary;
+- gateway policy;
+- tool availability;
+- compute/token budget; and
+- seeds where the model/runtime exposes deterministic seeding.
+
+### Control
+
+Speech and action proposals are generated without a shared high-level intention constraint, and success language is not required to consult execution acknowledgement.
+
+### Treatment
+
+A shared controller intention conditions both observable proposal channels, and any success claim must be generated only after execution acknowledgement is incorporated.
+
+The experiment remains at one agent until repeated paired runs produce stable measurements and the scoring protocol is frozen. Only then may it progress to 10 agents, followed by 50 and 100 if the predeclared gates continue to pass.
