@@ -41,18 +41,46 @@ def test_additive_factorial_has_zero_pairwise_interactions():
         assert interactions[key]["structurally_zero_because_K_none"] is True
 
 
+def test_w8_comparator_compute_is_normalized_to_resident_agent_cycles(monkeypatch):
+    monkeypatch.setattr(
+        execution,
+        "_w8_comparator",
+        lambda *args, **kwargs: {
+            "development_compute_units": 23,
+            "development_credit_spend": 276,
+        },
+    )
+    result = execution._normalized_w8_comparator(
+        SimpleNamespace(),
+        {"agents_per_field": 12},
+        {},
+        phase="discovery",
+    )
+    assert result["development_compute_units"] == 276
+    assert result["development_compute_unit"] == "resident_agent_cycle"
+    assert result["development_credit_spend"] == 276
+
+
 def test_empty_upstream_eligibility_selects_w7_and_cannot_claim_source_reduction(monkeypatch):
     def fake_arm(_base, _portfolio, _config, *, phase, bits):
         del phase
         return _fake_arm(bits)
 
     monkeypatch.setattr(execution, "_arm_result", fake_arm)
-    monkeypatch.setattr(execution, "_w8_comparator", lambda *args, **kwargs: {"comparator": True})
+    monkeypatch.setattr(
+        execution,
+        "_w8_comparator",
+        lambda *args, **kwargs: {
+            "development_compute_units": 23,
+            "development_credit_spend": 276,
+        },
+    )
     population = SimpleNamespace(
         portable_by_id={"a": object(), "b": object()},
         portable_by_field={"f": (object(), object())},
     )
     config = {
+        "agents_per_field": 12,
         "upstream_eligibility": {"C": False, "L": False, "P": False, "K": []},
         "effect_band_pp": 2.0,
         "source_loss_bound_pp": 2.0,
@@ -72,3 +100,4 @@ def test_empty_upstream_eligibility_selects_w7_and_cannot_claim_source_reduction
     assert result["gates"]["source_loss_at_most_2pp"] is False
     assert result["gates"]["source_loss_reduction_at_least_50pct"] is False
     assert result["integrated_static_gate"] is False
+    assert result["W8_integrated_charter_comparator"]["development_compute_units"] == 276
