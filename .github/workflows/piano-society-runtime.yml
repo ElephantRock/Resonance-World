@@ -18,7 +18,7 @@ permissions:
   contents: read
 
 env:
-  PIANO_FIELD_SHA: 4758f5771a74cf8e0c7805def3063d783f13678d
+  PIANO_FIELD_SHA: bff92d11b4c62c3e6b950696d5fd5ebf7ad2caa5
 
 jobs:
   phase-zero:
@@ -86,7 +86,7 @@ jobs:
           value = json.loads(Path('output/piano_society/phase1/result.json').read_text())
           assert value['phase'] == 'live-contract-smoke'
           assert value['scientific_claim_allowed'] is False
-          assert value['field_revision'] == '4758f5771a74cf8e0c7805def3063d783f13678d'
+          assert value['field_revision'] == 'bff92d11b4c62c3e6b950696d5fd5ebf7ad2caa5'
           PY
       - uses: actions/upload-artifact@v4
         with:
@@ -112,13 +112,15 @@ jobs:
         run: python -m pip install -e '../field[dev]' -e '.[dev]'
       - name: Validate Phase 2 implementation and analysis contract
         run: |
-          ruff check experiments/piano_society/phase2.py
+          ruff check experiments/piano_society/phase2.py experiments/piano_society/phase2_campaign.py
           pytest -q tests/test_piano_society_phase2.py
           python - <<'PY'
           from resonance.experiments.piano_phase2 import Phase2ExperimentAgent
+          from resonance.experiments.piano_phase2_openai import OpenAIChatCompletionsBackend
           assert Phase2ExperimentAgent is not None
+          assert OpenAIChatCompletionsBackend is not None
           PY
-      - name: Validate unlocked preregistration
+      - name: Validate locked preregistration
         run: |
           mkdir -p output/piano_society/phase2
           python -m experiments.piano_society.phase2 \
@@ -130,10 +132,10 @@ jobs:
           value = json.loads(
               Path('output/piano_society/phase2/preregistration.json').read_text()
           )
-          assert value['campaign_locked'] is False
-          assert value['model_snapshot'] is None
+          assert value['campaign_locked'] is True
+          assert value['model_snapshot'] == 'gpt-4.1-mini-2025-04-14'
           assert value['required_pairs'] == 60
-          assert value['field_revision'] == '4758f5771a74cf8e0c7805def3063d783f13678d'
+          assert value['field_revision'] == 'bff92d11b4c62c3e6b950696d5fd5ebf7ad2caa5'
           PY
           cp experiments/piano_society/phase2_config.json output/piano_society/phase2/
           cp experiments/piano_society/PHASE2_PREREGISTRATION.md output/piano_society/phase2/
@@ -143,3 +145,39 @@ jobs:
           path: output/piano_society/phase2
           if-no-files-found: error
           retention-days: 30
+
+  phase-two-campaign:
+    needs: phase-two-preregistration
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      OPENAI_API_KEY: ${{ secrets.OPENAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Require campaign credential
+        run: |
+          if [ -z "$OPENAI_API_KEY" ]; then
+            echo "::error::OPENAI_API_KEY repository secret is required for Phase 2 execution"
+            exit 2
+          fi
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone https://github.com/ElephantRock/Resonance-Field.git ../field
+          git -C ../field checkout "$PIANO_FIELD_SHA"
+          test "$(git -C ../field rev-parse HEAD)" = "$PIANO_FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install World and pinned Field
+        run: python -m pip install -e '../field[dev]' -e '.[dev]'
+      - name: Execute 60 paired model-backed episodes
+        run: |
+          python -m experiments.piano_society.phase2_campaign \
+            --config experiments/piano_society/phase2_config.json \
+            --output-dir output/piano_society/phase2-live
+      - uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase2-live
+          path: output/piano_society/phase2-live
+          if-no-files-found: error
+          retention-days: 90
