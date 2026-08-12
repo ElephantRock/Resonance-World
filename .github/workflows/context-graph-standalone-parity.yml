@@ -8,12 +8,17 @@ on:
       - "pyproject.toml"
       - "src/resonance_world/context_graph_adapter.py"
       - "tests/test_context_graph_standalone_parity.py"
-      - "experiments/context_graph/run_context_graph_standalone_cg11_parity.py"
+      - "experiments/context_graph/run_context_graph_standalone_parity.py"
   workflow_dispatch:
 
 permissions:
   contents: read
   actions: read
+
+env:
+  CONTEXTGRAPH_COMMIT: 7aafa8cd7aabbbcdf5e4f37670f275d0bd339bd3
+  CG5_RUN_ID: "31622647635"
+  CG11_RUN_ID: "31632483751"
 
 jobs:
   semantic-parity:
@@ -34,19 +39,21 @@ jobs:
           python - <<'PY'
           import importlib.metadata
           import json
+          import os
           from pathlib import Path
 
           dist = importlib.metadata.distribution("resonance-contextgraph")
           direct = Path(dist._path) / "direct_url.json"
           payload = json.loads(direct.read_text())
           commit = payload["vcs_info"]["commit_id"]
-          assert commit == "7aafa8cd7aabbbcdf5e4f37670f275d0bd339bd3", commit
+          assert commit == os.environ["CONTEXTGRAPH_COMMIT"], commit
           PY
       - name: Lint adapter parity surface
         run: >-
           ruff check
           src/resonance_world/context_graph_adapter.py
           tests/test_context_graph_standalone_parity.py
+          experiments/context_graph/run_context_graph_standalone_parity.py
       - name: Run semantic parity gates
         run: pytest -q tests/test_context_graph_standalone_parity.py
       - name: Re-prove outcome-law isolation
@@ -63,3 +70,75 @@ jobs:
           params = set(inspect.signature(JointEnvironment.evaluate).parameters)
           assert not forbidden.intersection(params), params
           PY
+
+  frozen-regression:
+    needs: semantic-parity
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with pinned standalone ContextGraph
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Download immutable CG-5 fresh source
+        uses: actions/download-artifact@v4
+        with:
+          name: context-graph-cg5-fresh-source
+          path: source/cg5
+          github-token: ${{ github.token }}
+          run-id: ${{ env.CG5_RUN_ID }}
+      - name: Download immutable CG-11 fresh source
+        uses: actions/download-artifact@v4
+        with:
+          name: context-graph-cg11-fresh-source
+          path: source/cg11
+          github-token: ${{ github.token }}
+          run-id: ${{ env.CG11_RUN_ID }}
+      - name: Verify frozen source capsules before replay
+        run: |
+          test "$(sha256sum source/cg5/world/output/cg5-source/capsules.private.jsonl | awk '{print $1}')" = \
+            "ec623fa479f9514081d606daf93fa189e16591a233604ffab9427ebcd4c2d53b"
+          test "$(sha256sum source/cg11/world/output/cg11-source/capsules.private.jsonl | awk '{print $1}')" = \
+            "038c1b8b22c685c4e24a516b1f7de6b2f95cc6c24c3f2f1312545fd8463bd25e"
+      - name: Replay frozen CG-5 and CG-11 semantics through standalone package
+        run: |
+          PYTHONPATH=. python experiments/context_graph/run_context_graph_standalone_parity.py \
+            --cg5-capsules source/cg5/world/output/cg5-source/capsules.private.jsonl \
+            --cg5-summary source/cg5/world/output/cg5-source/w3-01-source-summary.json \
+            --cg5-config experiments/context_graph/cg5-w3-active-measurement.json \
+            --cg5-frozen-result experiments/context_graph/cg5-w3-active-measurement-result.json \
+            --cg11-capsules source/cg11/world/output/cg11-source/capsules.private.jsonl \
+            --cg11-summary source/cg11/world/output/cg11-source/w3-01-source-summary.json \
+            --cg11-config experiments/context_graph/cg11-w3-balanced-stopping.json \
+            --cg11-frozen-result experiments/context_graph/cg11-w3-balanced-stopping-result.json \
+            --contextgraph-commit "$CONTEXTGRAPH_COMMIT" \
+            --output output/context_graph/context-graph-standalone-parity-result.json
+      - name: Enforce architectural retirement gate
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("output/context_graph/context-graph-standalone-parity-result.json")
+          result = json.loads(path.read_text())
+          assert result["passed"] is True
+          assert result["cg5"]["passed"] is True
+          assert result["cg11"]["passed"] is True
+          assert result["cg5"]["context_mismatches"] == 0
+          assert result["cg11"]["context_mismatches"] == 0
+          assert result["cg11"]["scheduler_mismatches"] == 0
+          assert result["cg11"]["stopping_mismatches"] == 0
+          assert result["retirement_gate"]["world_duplicate_runtime_can_be_deprecated"] is True
+          assert "practice_by_skill" not in path.read_text()
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: context-graph-standalone-parity-result
+          path: output/context_graph/context-graph-standalone-parity-result.json
+          if-no-files-found: error
+          retention-days: 90
