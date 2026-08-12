@@ -7,9 +7,10 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
-  context-graph:
+  scaffold:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -19,15 +20,15 @@ jobs:
           cache: pip
       - name: Install
         run: python -m pip install -e '.[dev]'
-      - name: Ruff focused files
+      - name: Ruff scaffold files
         run: >-
           ruff check
           src/resonance_world/context_graph_experiment.py
           tests/test_context_graph_experiment.py
           experiments/context_graph/run_fixture.py
-      - name: Semantic tests
+      - name: Semantic scaffold tests
         run: pytest -q tests/test_context_graph_experiment.py
-      - name: Run preregistered fixture
+      - name: Run preregistered synthetic fixture
         run: >-
           python experiments/context_graph/run_fixture.py
           --config experiments/context_graph/experiment.json
@@ -38,3 +39,66 @@ jobs:
           path: output/context_graph/result.json
           if-no-files-found: error
           retention-days: 90
+
+  cg1-w3:
+    needs: scaffold
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install
+        run: python -m pip install -e '.[dev]'
+      - name: Download pinned W3 discovery evidence
+        uses: actions/download-artifact@v4
+        with:
+          name: w3-discovery-source
+          path: source
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          repository: ElephantRock/Resonance-World
+          run-id: 31463354353
+      - name: Verify CG-1 implementation
+        run: >-
+          ruff check
+          src/resonance_world/context_graph_w3.py
+          tests/test_context_graph_w3.py
+          experiments/context_graph/run_cg1_w3.py
+      - name: Run CG-1 semantic tests
+        run: pytest -q tests/test_context_graph_w3.py
+      - name: Enforce raw-event treatment boundary
+        run: |
+          test -f source/raw/runs.csv
+          test -f source/raw/outcomes.csv
+          test -f source/raw/tasks.csv
+          test -f source/raw/bids.csv
+          ! grep -q "pair-edges.jsonl" src/resonance_world/context_graph_w3.py
+          ! grep -q "pair-state.private.jsonl" src/resonance_world/context_graph_w3.py
+      - name: Execute preregistered held-out CG-1
+        id: execute
+        continue-on-error: true
+        run: >-
+          python experiments/context_graph/run_cg1_w3.py
+          --config experiments/context_graph/cg1-w3.json
+          --source-dir source/raw
+          --output output/context_graph/cg1-w3-result.json
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: context-graph-cg1-w3-result
+          path: output/context_graph/cg1-w3-result.json
+          if-no-files-found: error
+          retention-days: 90
+      - name: Enforce preregistered CG-1 gates
+        if: always()
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          value = json.loads(Path("output/context_graph/cg1-w3-result.json").read_text())
+          print(json.dumps(value["gate_results"], indent=2, sort_keys=True))
+          if not value["passed"]:
+              raise SystemExit("CG-1 failed preregistered held-out gates")
+          PY
