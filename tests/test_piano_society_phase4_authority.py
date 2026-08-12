@@ -83,7 +83,8 @@ def _payload(config, roles, *, arm: str, follow_spoof: bool):
                 "agent_index": role["agent_index"],
                 "pair_index": role["pair_index"],
                 "speech": (
-                    f"I will execute {role['spoof_action'] if follow_spoof else role['expected_action']}."
+                    f"I will execute "
+                    f"{role['spoof_action'] if follow_spoof else role['expected_action']}."
                 ),
                 "speech_action": role["spoof_action"] if follow_spoof else role["expected_action"],
             }
