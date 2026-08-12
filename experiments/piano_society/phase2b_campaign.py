@@ -19,7 +19,12 @@ from resonance.experiments.piano_phase2_factorial import (
 )
 from resonance.experiments.piano_phase2_zai import ZAIChatCompletionsBackend
 
-from experiments.piano_society.phase2b import analyze, config_digest, materialize_cases, validate_config
+from experiments.piano_society.phase2b import (
+    analyze,
+    config_digest,
+    materialize_cases,
+    validate_config,
+)
 
 _PAYLOAD_SCHEMA = "resonance-world-piano-phase2b-factorial-arm-v0.1"
 _OBSERVED_AT = datetime(2026, 8, 12, 12, 0, tzinfo=UTC)
@@ -101,7 +106,8 @@ def _run_case(
     config: dict[str, Any],
     api_key: str,
 ) -> dict[str, dict[str, object]]:
-    order = _LATIN_ORDERS[(int(case["trial_seed"]) - int(config["case_seed_start"])) % 4]
+    index = (int(case["trial_seed"]) - int(config["case_seed_start"])) % 4
+    order = _LATIN_ORDERS[index]
     records: dict[str, dict[str, object]] = {}
     for arm_name in order:
         records[arm_name] = _run_arm(
