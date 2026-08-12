@@ -4,12 +4,17 @@ This module is intentionally one-way: Resonance World may depend on the standalo
 ``resonance_contextgraph`` package, but ContextGraph must never import Resonance World.
 Only observed evidence and public mission/query state cross the boundary. Hidden
 capability, evaluator truth, oracle state, and environment outcome laws do not.
+
+The adapter uses structural producer protocols rather than importing the historical
+World ContextGraph implementation. This keeps the graduated runtime path independent
+from the scientific compatibility fixtures that remain in ``experiments/context_graph``.
 """
 
 from __future__ import annotations
 
 from collections import defaultdict
 from collections.abc import Iterable, Mapping
+from typing import Protocol
 
 from resonance_contextgraph import (
     BalancedRoundRobin,
@@ -29,14 +34,35 @@ from resonance_contextgraph import (
 )
 from resonance_contextgraph import EstimatorSpec as ContextEstimatorSpec
 
-from .context_graph_w3_endogenous import CG4Mission, LiveClaim
-
 Cell = tuple[str, str]
 Pair = tuple[str, str] | None
 
 
+class ObservedClaim(Protocol):
+    """Minimum producer-side observation shape accepted by the adapter."""
+
+    field_id: str
+    subject: str
+    predicate: str
+    object: str
+    observed_by: str
+    source_id: str
+    source_class: str
+    observed_at: int
+    confidence: float
+    direct: bool
+
+
+class PublicMission(Protocol):
+    """Minimum public mission shape accepted by the adapter."""
+
+    mission_id: str
+    lead_skill: str
+    support_skill: str
+
+
 def to_evidence_claim(
-    claim: LiveClaim,
+    claim: ObservedClaim,
     *,
     claim_id: str | None = None,
 ) -> EvidenceClaim:
@@ -44,7 +70,7 @@ def to_evidence_claim(
 
     ``source_id`` remains the original provenance identifier. ``claim_id`` is a
     transport/storage identity and may carry a deterministic delivery suffix when the
-    frozen World stream repeats the same source identity in append order.
+    producer stream repeats the same source identity in append order.
     """
     return EvidenceClaim(
         claim_id=claim_id or claim.source_id,
@@ -61,13 +87,13 @@ def to_evidence_claim(
     )
 
 
-def build_evidence_store(claims: Iterable[LiveClaim]) -> EvidenceStore:
+def build_evidence_store(claims: Iterable[ObservedClaim]) -> EvidenceStore:
     """Build an append-only store while preserving repeated delivery order.
 
     The frozen W3 generator can emit the same ``source_id`` twice when a participant is
     also selected as the scout for one event. ContextGraph requires unique claim IDs,
     so repeated deliveries receive deterministic ``#delivery:N`` transport IDs while
-    retaining the unchanged World ``source_id`` as provenance.
+    retaining the unchanged producer ``source_id`` as provenance.
     """
     store = EvidenceStore()
     deliveries: dict[str, int] = defaultdict(int)
@@ -83,7 +109,7 @@ def build_evidence_store(claims: Iterable[LiveClaim]) -> EvidenceStore:
     return store
 
 
-def to_mission_spec(mission: CG4Mission) -> MissionSpec:
+def to_mission_spec(mission: PublicMission) -> MissionSpec:
     return MissionSpec(
         mission_id=mission.mission_id,
         lead_skill=mission.lead_skill,
@@ -102,7 +128,7 @@ def validated_estimator() -> ContextEstimatorSpec:
 
 
 def _compiler_for_claims(
-    claims: Iterable[LiveClaim],
+    claims: Iterable[ObservedClaim],
     *,
     estimator: ContextEstimatorSpec,
 ) -> tuple[EvidenceStore, ContextCompiler]:
@@ -112,10 +138,10 @@ def _compiler_for_claims(
 
 def compile_live_context(
     *,
-    claims: Iterable[LiveClaim],
+    claims: Iterable[ObservedClaim],
     field_id: str,
     as_of: int,
-    mission: CG4Mission,
+    mission: PublicMission,
     claim_budget: int = 48,
     min_confidence: float = 0.7,
     estimator: ContextEstimatorSpec | None = None,
@@ -136,10 +162,10 @@ def compile_live_context(
 
 def pair_from_live_context(
     *,
-    claims: Iterable[LiveClaim],
+    claims: Iterable[ObservedClaim],
     field_id: str,
     as_of: int,
-    mission: CG4Mission,
+    mission: PublicMission,
     claim_budget: int = 48,
     min_confidence: float = 0.7,
     estimator: ContextEstimatorSpec | None = None,
@@ -159,10 +185,10 @@ def pair_from_live_context(
 
 def checkpoint_from_live_contexts(
     *,
-    claims: Iterable[LiveClaim],
+    claims: Iterable[ObservedClaim],
     field_id: str,
     as_of: int,
-    missions: Iterable[CG4Mission],
+    missions: Iterable[PublicMission],
     supplemental_budget: int,
     claim_budget: int = 48,
     min_confidence: float = 0.7,
