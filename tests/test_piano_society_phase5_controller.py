@@ -99,7 +99,7 @@ def test_phase5_binary_strategy_order_is_explicit_in_every_planning_prompt() -> 
         assert "Available strategies in registered presentation order: balanced, specialist" in (
             request.prompt
         )
-    assert all("hidden mission regime" not in request.prompt.lower() for request in backend.requests)
+        assert "regime=" not in request.prompt.lower()
 
 
 def test_phase5_controller_rejects_duplicate_or_unknown_strategy_vocabularies() -> None:
