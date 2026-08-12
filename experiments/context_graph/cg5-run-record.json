@@ -1,0 +1,43 @@
+{
+  "version": "context-graph-cg5-run-record-v0.1",
+  "scientific_status": "passed-all-preregistered-gates",
+  "protocol_freeze_commit": "2e55d858192e59e5bfbd18b937c73a937f41a054",
+  "evaluator_preflight_run": 31622212338,
+  "evaluator_preflight_status": "success-before-fresh-generation",
+  "unblinding_workflow_commit": "34faaacac8194dc93b84f9183be320f2c0a5c30b",
+  "first_source_run": {
+    "workflow_run_id": 31622366174,
+    "status": "infrastructure-failure-before-capsule-materialization-or-evaluation",
+    "fresh_field_generation": "completed",
+    "raw_export": "completed",
+    "failure_step": "Materialize fresh private capsules",
+    "failure_cause": "workflow relative-path error",
+    "scientific_parameters_changed_after_failure": false
+  },
+  "confirmatory_run": {
+    "workflow_run_id": 31622647635,
+    "workflow_head_sha": "511c393dd8d1ca98b4dd8f9d1b966c27b80b5a80",
+    "workflow_change_from_first_run": "filesystem paths and PYTHONPATH only; frozen source config, seeds, estimator, context policy, missions, gates, and evaluator logic unchanged",
+    "fresh_source_job": "success",
+    "frozen_evaluator_execution": "success",
+    "machine_result_passed": true,
+    "all_preregistered_gate_values": true,
+    "workflow_conclusion": "failure-after-scientific-result",
+    "workflow_failure_cause": "shell here-document indentation/syntax error in the non-scientific result-integrity step; the intended assertions were independently satisfied by the uploaded result",
+    "gate_enforcement_step": "skipped because the preceding shell syntax error marked the job failed"
+  },
+  "fresh_source_artifact": {
+    "id": 9151913749,
+    "name": "context-graph-cg5-fresh-source",
+    "zip_digest": "sha256:3c2341440879f64b9eab55d76d0bb89dcaf0b01f7710b87fab3cb419b19a0351",
+    "capsules_sha256": "ec623fa479f9514081d606daf93fa189e16591a233604ffab9427ebcd4c2d53b"
+  },
+  "result_artifact": {
+    "id": 9151923169,
+    "name": "context-graph-cg5-result",
+    "zip_digest": "sha256:4f5af04d26cc6ce0d8a00cd95320407de6eeffa5a2cd4e92c1681e0c52b636cb"
+  },
+  "result_file": "experiments/context_graph/cg5-w3-active-measurement-result.json",
+  "result_commit": "1c56bf2533aa164e40a0073c5bc4bdeb32083510",
+  "interpretation_boundary": "CG-5 confirms the revised coverage graph only in the preregistered active-measurement regime: six independent reconciled post-turnover probe events per current agent/skill cell. It does not overturn CG-4's failure for sparse passive endogenous evidence."
+}
