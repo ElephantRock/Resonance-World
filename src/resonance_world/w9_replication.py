@@ -183,21 +183,26 @@ def synthesize_replication(
         },
     }
 
-    result: dict[str, Any] = {
+    # This payload contains only decision-relevant scientific synthesis. Full
+    # stage hashes are intentionally kept outside it as provenance fingerprints.
+    scientific_payload: dict[str, Any] = {
         "version": RESULT_VERSION,
         "phase": "replication",
         "status": "replication_complete",
         "seeds": list(EXPECTED_SEEDS),
         "discovery_frozen_prerequisites": DISCOVERY_FROZEN,
         "replication_stage_results": stage_results,
-        "stage_payload_sha256": {
-            name: _canonical_sha256(value) for name, value in stages.items()
-        },
         "nested_outcomes": nested,
         "discovery_frozen_regime_preserved": True,
         "selected_mechanisms": [],
     }
-    result["scientific_payload_sha256"] = _canonical_sha256(result)
+    result: dict[str, Any] = {
+        **scientific_payload,
+        "stage_payload_sha256": {
+            name: _canonical_sha256(value) for name, value in stages.items()
+        },
+        "scientific_payload_sha256": _canonical_sha256(scientific_payload),
+    }
     if "practice_by_skill" in json.dumps(result, sort_keys=True):
         raise AssertionError("private practice leaked into W9-07 synthesis")
     return result
