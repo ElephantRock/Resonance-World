@@ -1,0 +1,19 @@
+{
+  "version": "context-graph-cg7-execution-deviation-v0.1",
+  "status": "infrastructure-compatibility-correction-before-source-generation",
+  "protocol_freeze_commit": "d4a75110871046ef1f18f10f9c9ef6fba0bc3c1c",
+  "first_unblinding_workflow_commit": "95bc396124d75f476bc1010b5864191d1b606ecf",
+  "first_unblinding_run": 31625399820,
+  "failed_job": 94210460934,
+  "failure_step": "Generate fifteen untouched CG-7 source Fields",
+  "failure": "Pinned Resonance Field lifecycle runner rejected --experiment 64 without an input checkpoint: only Experiment 063 may start a new lifecycle campaign without a checkpoint.",
+  "source_generation_completed": false,
+  "raw_export_started": false,
+  "capsules_materialized": false,
+  "evaluation_started": false,
+  "private_source_inspected": false,
+  "compatibility_correction": "Execute the identical frozen CG-7 source configuration as lifecycle Experiment 063 and filter exported rows by experiment_number=63. Experiment 063 is the pinned Field baseline/bootstrap entrypoint used by CG-5 for independent source generation. The campaign name, 15 fresh seeds, Field SHA, environment, missions, acquisition budgets and rules, estimator, context policy, bootstrap seeds, success gates, and evaluator remain unchanged.",
+  "scientific_parameters_changed": false,
+  "protocol_text_changed": false,
+  "deviation_boundary": "The preregistration retains experiment_number=64 as the originally intended execution slot. This record transparently documents the execution-slot compatibility correction made after the runner rejected that slot and before any source Field was generated."
+}
