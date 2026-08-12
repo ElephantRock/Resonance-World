@@ -12,10 +12,13 @@ import resonance_world.context_graph_adapter as adapter
 import resonance_world.context_graph_runtime as runtime
 
 
-def test_runtime_facade_points_to_tested_standalone_release_candidate() -> None:
+def test_runtime_facade_points_to_released_standalone_runtime() -> None:
     assert runtime.STANDALONE_REPOSITORY == "ElephantRock/Resonance-ContextGraph"
+    assert runtime.STANDALONE_RELEASE == "v0.1.0"
+    assert runtime.STANDALONE_RELEASE_COMMIT == "b896891108fd954869a8cd0423f6e8440ab0cdc0"
     assert runtime.STANDALONE_TESTED_COMMIT == "55ce7bb435b3d4a1ff888474a5ca76ccff843150"
-    assert runtime.ARCHITECTURAL_PARITY_RUN == 31638124103
+    assert runtime.STANDALONE_RELEASE_WORKFLOW_RUN == 31641381598
+    assert runtime.ARCHITECTURAL_PARITY_RUN == 31638854949
     assert runtime.LEGACY_WORLD_MODULE_STATUS == "scientific-compatibility-fixture"
 
 
