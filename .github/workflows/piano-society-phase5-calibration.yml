@@ -1,4 +1,4 @@
-name: PIANO Society Phase 5 Calibration
+name: PIANO Society Phase 5 Source and Mission Search
 
 on:
   push:
@@ -6,8 +6,8 @@ on:
       - experiment/piano-society-phase5-institutional-memory
     paths:
       - experiments/piano_society/phase5_source_config.json
-      - experiments/piano_society/phase5_missions_candidate.json
-      - experiments/piano_society/phase5_calibration.py
+      - experiments/piano_society/phase5_mission_search_config.json
+      - experiments/piano_society/phase5_mission_search.py
       - .github/workflows/piano-society-phase5-calibration.yml
   workflow_dispatch:
 
@@ -23,7 +23,7 @@ env:
   PGPASSWORD: resonance
 
 jobs:
-  deterministic-capability-calibration:
+  freeze-source-and-search-missions:
     runs-on: ubuntu-latest
     timeout-minutes: 50
     services:
@@ -140,23 +140,36 @@ jobs:
           assert data['agent_count'] == 96, data
           assert data['seeds'] == [12017, 12119, 12227, 12329, 12433, 12539, 12641, 12743], data
           PY
-      - name: Lint calibration code
+      - name: Freeze exact source artifact before calibration
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase5-frozen-source
+          path: |
+            output/source
+            raw
+            source-step
+          if-no-files-found: error
+          retention-days: 90
+      - name: Lint mission-search contract
         working-directory: world
-        run: ruff check --ignore E501 experiments/piano_society/phase5_calibration.py
-      - name: Run deterministic pre-inference capability calibration
+        run: >-
+          ruff check --ignore E501
+          experiments/piano_society/phase5_mission_search.py
+      - name: Run registered deterministic mission search
         working-directory: world
         run: |
-          mkdir -p ../output/calibration
-          python -m experiments.piano_society.phase5_calibration \
+          mkdir -p ../output/mission-search
+          python -m experiments.piano_society.phase5_mission_search \
             ../output/source/capsules.private.jsonl \
-            experiments/piano_society/phase5_missions_candidate.json \
-            ../output/calibration/result.json
+            experiments/piano_society/phase5_mission_search_config.json \
+            ../output/mission-search/result.json
       - name: Assert no model credential or model execution
+        if: success()
         run: |
           test -z "${ZAI_API_KEY:-}"
           python - <<'PY'
           import json
-          data = json.load(open('output/calibration/result.json', encoding='utf-8'))
+          data = json.load(open('output/mission-search/result.json', encoding='utf-8'))
           assert data['model_calls'] == 0
           assert data['accepted'] is True
           assert data['confirmatory_fields_untouched'] == [
@@ -165,13 +178,11 @@ jobs:
               'w4-source-seed-12641', 'w4-source-seed-12743'
           ]
           PY
-      - uses: actions/upload-artifact@v4
+      - name: Upload mission-search audit
+        if: always()
+        uses: actions/upload-artifact@v4
         with:
-          name: piano-society-phase5-calibration
-          path: |
-            output/source
-            output/calibration
-            raw
-            source-step
-          if-no-files-found: error
+          name: piano-society-phase5-mission-search
+          path: output/mission-search
+          if-no-files-found: warn
           retention-days: 90
