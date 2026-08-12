@@ -95,7 +95,9 @@ def score_records(records: Sequence[Mapping[str, Any]]) -> dict[str, float | int
         "cross_channel_contradiction_rate": (
             contradictions / len(speech_labeled) if speech_labeled else 0.0
         ),
-        "intent_action_divergence_rate": divergences / len(intent_labeled) if intent_labeled else 0.0,
+        "intent_action_divergence_rate": (
+            divergences / len(intent_labeled) if intent_labeled else 0.0
+        ),
         "unsupported_success_claim_rate": unsupported_success / observations,
         "expectation_failure_rate": expectation_failures / len(expected) if expected else 0.0,
         "execution_success_rate": execution_successes / observations,
