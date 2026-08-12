@@ -32,6 +32,7 @@ target-version = "py312"
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
+"experiments/context_graph/run_cg10_balanced_stopping.py" = ["B007"]
 "experiments/context_graph/run_cg4m_measurement_sufficiency.py" = ["E501"]
 "experiments/context_graph/run_cg5_w3_active_measurement.py" = ["E501"]
 "src/resonance_world/context_graph_w3_endogenous.py" = ["F402"]
