@@ -1,8 +1,16 @@
 {
   "experiment": "piano-society-runtime-v0-phase2",
-  "campaign_locked": false,
-  "field_revision": "4758f5771a74cf8e0c7805def3063d783f13678d",
-  "required_model_snapshot": null,
+  "campaign_locked": true,
+  "field_revision": "bff92d11b4c62c3e6b950696d5fd5ebf7ad2caa5",
+  "required_model_snapshot": "gpt-4.1-mini-2025-04-14",
+  "model_backend": {
+    "provider": "openai",
+    "endpoint": "chat_completions",
+    "structured_output": "strict_json_schema",
+    "temperature": 0.7,
+    "pair_order": "counterbalanced_by_seed_parity",
+    "max_workers": 6
+  },
   "agent_count": 1,
   "calls_per_step": 4,
   "max_output_tokens_per_call": 128,
