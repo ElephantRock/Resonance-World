@@ -1,19 +1,14 @@
-"""Deterministic observer-side analysis for the preregistered O2 corpus.
+"""Pure deterministic longitudinal analysis for the preregistered O2 corpus.
 
-The module consumes admissible event history only. It never accepts evaluator Plane K,
-final result labels, template identities, or hidden scientific state.
+This module operates only on already reconstructed admissible event records. Evidence
+transport and runtime integration remain outside the production package boundary.
 """
 
 from __future__ import annotations
 
 import json
 from collections import Counter, defaultdict
-from dataclasses import asdict, dataclass
 from typing import Any
-
-from resonance_contextgraph import EvidenceStore
-
-from .context_graph_adapter import to_evidence_claim
 
 NOT_IDENTIFIABLE = "not_observationally_identifiable"
 NEGATIVE_CONTROLS = (
@@ -61,73 +56,6 @@ def canonical_bytes(value: Any) -> bytes:
     return (
         json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False) + "\n"
     ).encode()
-
-
-@dataclass(frozen=True, slots=True)
-class _ObservedClaim:
-    field_id: str
-    subject: str
-    predicate: str
-    object: str
-    observed_by: str
-    source_id: str
-    source_class: str
-    observed_at: int
-    confidence: float
-    direct: bool
-
-
-def _encoded(value: Any) -> str:
-    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-
-
-def _decoded(value: str) -> Any:
-    return json.loads(value)
-
-
-def ingest_history(history: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
-    """Round-trip one Plane-E history through the accepted ContextGraph evidence store."""
-    if history.get("schema") != "o2-plane-e-history-v0.1":
-        raise ValueError("unsupported O2 Plane-E history schema")
-    history_id = str(history["history_id"])
-    events = history.get("events")
-    if not isinstance(events, list) or not events:
-        raise ValueError("O2 Plane-E history requires events")
-
-    store = EvidenceStore()
-    for event in events:
-        if not isinstance(event, dict):
-            raise ValueError("O2 event must be an object")
-        event_id = str(event["event_id"])
-        ordinal = int(event["ordinal"])
-        for field, value in sorted(event.items()):
-            source_id = f"o2:{history_id}:{event_id}:{field}"
-            observed = _ObservedClaim(
-                field_id=history_id,
-                subject=event_id,
-                predicate=f"o2.event.{field}",
-                object=_encoded(value),
-                observed_by="resonance-world:o2-observer",
-                source_id=source_id,
-                source_class="world-observation",
-                observed_at=ordinal,
-                confidence=1.0,
-                direct=True,
-            )
-            store.ingest(to_evidence_claim(observed, delivery=0))
-
-    claims = [asdict(claim) for claim in store.claims(scope_id=history_id)]
-    reconstructed: dict[str, dict[str, Any]] = defaultdict(dict)
-    for claim in claims:
-        predicate = str(claim["predicate"])
-        if not predicate.startswith("o2.event."):
-            raise ValueError("unexpected O2 ContextGraph predicate")
-        field = predicate.removeprefix("o2.event.")
-        reconstructed[str(claim["subject"])][field] = _decoded(str(claim["object"]))
-
-    rows = list(reconstructed.values())
-    rows.sort(key=lambda row: (int(row["ordinal"]), str(row["event_id"])))
-    return claims, rows
 
 
 def _answer(value: Any, support: list[str]) -> dict[str, Any]:
