@@ -1,0 +1,81 @@
+name: H0 Pre-Outcome Apparatus Lock
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  H0_BRANCH: h0/historical-substrate-activation-safety
+
+jobs:
+  materialize:
+    if: github.head_ref == 'h0/historical-substrate-activation-safety' || github.ref_name == 'h0/historical-substrate-activation-safety'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Freeze exact candidate identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate="$(git rev-parse HEAD)"
+          expected="${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$candidate" = "$expected"
+          echo "$candidate" > h0-apparatus-revision.txt
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Materialize H0 fixtures only
+        run: python scripts/materialize_h0_fixtures.py --output-root output/h0
+
+      - name: Verify preregistered apparatus structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('output/h0')
+          manifest = json.loads((root / 'materialization-manifest.json').read_text())
+          fixtures = json.loads((root / 'meta/fixture-manifest.json').read_text())
+          queries = json.loads((root / 'meta/query-manifest.json').read_text())
+          evidence = json.loads((root / 'plane_e/evidence.json').read_text())
+          key = json.loads((root / 'plane_k/evaluator.json').read_text())
+          assert fixtures['base_revision'] == '039657c198f9c1bc5158031f579d74a40717828f'
+          assert fixtures['evidence_event_count'] == 9
+          assert fixtures['query_count'] == 4
+          assert len(queries['queries']) == 4
+          assert evidence['decision_cutoff'] == 20
+          assert len(evidence['evidence_events']) == 9
+          assert len(key['forbidden_direct_edges']) == 4
+          assert manifest['roots']['plane_e']['file_count'] == 1
+          assert manifest['roots']['plane_k']['file_count'] == 1
+          assert manifest['roots']['meta']['file_count'] == 2
+          assert all(
+              str(row['event_id']).startswith('h0-')
+              and str(row['organization_id']).startswith('h0-')
+              and str(row['subject_id']).startswith('h0-')
+              for row in evidence['evidence_events']
+          )
+          PY
+
+      - name: Upload pre-outcome lock manifests only
+        uses: actions/upload-artifact@v4
+        with:
+          name: h0-preoutcome-apparatus-manifests
+          path: |
+            output/h0/materialization-manifest.json
+            output/h0/meta/*.json
+            h0-apparatus-revision.txt
+          if-no-files-found: error
+          retention-days: 90
