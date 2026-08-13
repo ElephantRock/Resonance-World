@@ -55,6 +55,17 @@
     "postmerge_contextgraph_integration_run": 31657484267,
     "postmerge_contextgraph_integration": "pass"
   },
+  "branch_scoped_h2": {
+    "preregistration_issue": 143,
+    "branch": "experiment/h2-turnover",
+    "status": "accepted",
+    "accepted_exact_head": "e2ec159b691be92d37db35029c2c893eb56a760d",
+    "validation_run": 31755088489,
+    "classification": "historical_substrate_turnover_persistence_pass",
+    "result_sha256": "8f2fdc632f0f4e6c2ffb9bc5109ab88f99e4ae7fcc81f0f4cfed6ac738fd1753",
+    "production_historical_substrate_enabled": false,
+    "scope": "bounded research-treatment harness only"
+  },
   "ownership_boundary": {
     "dependency_direction": "Resonance World -> Resonance ContextGraph",
     "reverse_dependency_forbidden": true,

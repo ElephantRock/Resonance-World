@@ -1,0 +1,7 @@
+extend = "pyproject.toml"
+
+[lint.extend-per-file-ignores]
+"scripts/materialize_h2_fixtures.py" = ["E501"]
+"scripts/run_h2_turnover.py" = ["I001"]
+"scripts/verify_h2_lock.py" = ["E501"]
+"scripts/accept_h2_turnover.py" = ["I001"]
