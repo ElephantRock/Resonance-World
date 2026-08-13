@@ -84,11 +84,17 @@ def _transport_claim_id(source_id: str, delivery: int) -> str:
 def to_evidence_claim(
     claim: ObservedClaim,
     *,
-    claim_id: str | None = None,
+    delivery: int,
 ) -> EvidenceClaim:
-    """Map one observed World claim to the standalone storage contract."""
+    """Map one observed delivery to the standalone storage contract.
+
+    ``delivery`` is intentionally mandatory. A raw producer ``source_id`` can legitimately
+    recur, so a stateless mapper cannot infer a collision-free transport identity. Batch
+    callers should prefer :func:`build_evidence_store`, which allocates per-source delivery
+    ordinals deterministically; streaming callers must maintain the equivalent ordinal.
+    """
     return EvidenceClaim(
-        claim_id=claim_id or _transport_claim_id(claim.source_id, 0),
+        claim_id=_transport_claim_id(claim.source_id, delivery),
         scope_id=claim.field_id,
         subject=claim.subject,
         predicate=claim.predicate,
@@ -108,12 +114,7 @@ def build_evidence_store(claims: Iterable[ObservedClaim]) -> EvidenceStore:
     deliveries: dict[str, int] = defaultdict(int)
     for claim in claims:
         delivery = deliveries[claim.source_id]
-        store.ingest(
-            to_evidence_claim(
-                claim,
-                claim_id=_transport_claim_id(claim.source_id, delivery),
-            )
-        )
+        store.ingest(to_evidence_claim(claim, delivery=delivery))
         deliveries[claim.source_id] += 1
     return store
 
