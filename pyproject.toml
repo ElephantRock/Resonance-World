@@ -38,6 +38,9 @@ target-version = "py312"
 select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
+"scripts/materialize_o1_benchmarks.py" = ["E302", "F403", "F405"]
+"scripts/accept_o1_reconstruction.py" = ["E302", "F403", "F405"]
+"scripts/o1_accept_metrics.py" = ["E302"]
 "src/resonance_world/w4_relationship.py" = ["E501"]
 "src/resonance_world/w6_mobility_campaign.py" = ["E501"]
 "src/resonance_world/w8_campaign.py" = ["E501", "E701", "E702", "I001", "UP035"]
