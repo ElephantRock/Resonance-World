@@ -7,6 +7,7 @@ import argparse
 import hashlib
 from pathlib import Path
 
+from resonance_world.context_graph_runtime import HISTORICAL_SUBSTRATE_ENABLED, INTEGRATION_MODE, STANDALONE_RELEASE_COMMIT
 from resonance_world.o2_acceptance import CLASS_PASS, REPRO_CONTRACT, evaluate_o2
 from resonance_world.o2_utility import canonical_bytes
 
@@ -21,7 +22,6 @@ def main() -> int:
     parser.add_argument("--candidate-head", required=True)
     parser.add_argument("--output-dir", required=True, type=Path)
     args = parser.parse_args()
-
     result, manifest = evaluate_o2(
         lock_path=args.lock,
         lock_verification_path=args.lock_verification,
@@ -30,6 +30,9 @@ def main() -> int:
         pre_key_manifest_path=args.pre_key_manifest,
         candidate_head=args.candidate_head,
         reproducibility_contract=REPRO_CONTRACT,
+        integration_mode=INTEGRATION_MODE,
+        historical_substrate_enabled=HISTORICAL_SUBSTRATE_ENABLED,
+        standalone_release_commit=STANDALONE_RELEASE_COMMIT,
     )
     args.output_dir.mkdir(parents=True, exist_ok=True)
     result_path = args.output_dir / "o2-result.json"
