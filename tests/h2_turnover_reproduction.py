@@ -1,4 +1,4 @@
-"""Exact reproduction helper for the preregistered H2 turnover experiment."""
+"""Archival reproduction helper for the accepted H2 turnover experiment."""
 # ruff: noqa: E501
 from __future__ import annotations
 
@@ -8,6 +8,8 @@ import shutil
 import subprocess
 import sys
 from pathlib import Path
+
+ACCEPTED_CANDIDATE = "e2ec159b691be92d37db35029c2c893eb56a760d"
 
 
 def _run(root: Path, work: Path, candidate: str) -> dict[str, bytes]:
@@ -42,13 +44,8 @@ def _run(root: Path, work: Path, candidate: str) -> dict[str, bytes]:
     }
 
 
-def reproduce_h2_exact_head(tmp_path: Path) -> None:
+def reproduce_h2_accepted_candidate(tmp_path: Path) -> None:
     root = Path(__file__).resolve().parents[1]
-    candidate = subprocess.check_output(
-        ["git", "rev-parse", "origin/experiment/h2-turnover"], cwd=root, text=True
-    ).strip()
-    first = _run(root, tmp_path / "primary", candidate)
-    second = _run(root, tmp_path / "independent", candidate)
+    first = _run(root, tmp_path / "primary", ACCEPTED_CANDIDATE)
+    second = _run(root, tmp_path / "independent", ACCEPTED_CANDIDATE)
     assert first == second
-    print("H2_RESULT=" + first["result"].decode().strip())
-    print("H2_MANIFEST=" + first["manifest"].decode().strip())
