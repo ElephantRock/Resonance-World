@@ -27,6 +27,8 @@ FROZEN_WORLD_BASE = "2b618ae277d6b34028f91886ace7aad1839f11c9"
 CONTEXTGRAPH_COMMIT = "b896891108fd954869a8cd0423f6e8440ab0cdc0"
 SEEDS = (7001, 7103, 7207, 7309, 7411)
 CONDITIONS = ("communication-0", "communication-1")
+LEAD_SKILL = "planning"
+SUPPORT_SKILL = "verification"
 EXPECTED_UNITS = len(SEEDS) * len(CONDITIONS)
 EXPECTED_EPISODES_PER_UNIT = 24
 EXPECTED_EPISODES = EXPECTED_UNITS * EXPECTED_EPISODES_PER_UNIT
@@ -72,7 +74,39 @@ def _per_unit_matches(
     return all_match, rows
 
 
-def _evidence_gate(evidence: dict[str, Any], raw_bytes: bytes) -> tuple[bool, dict[str, object]]:
+def _expected_evidence_from_trace(
+    observed_trace: dict[str, Any],
+) -> dict[tuple[str, str], dict[str, object]]:
+    expected: dict[tuple[str, str], dict[str, object]] = {}
+    for unit in observed_trace.get("units", []):
+        condition = str(unit.get("communication_condition"))
+        seed = int(unit.get("seed"))
+        scope = f"o0:{condition}:{seed}"
+        for ordinal, episode in enumerate(unit.get("episodes", []), start=1):
+            subject = str(episode.get("mission_id"))
+            values = {
+                "event_type": EVENT_TYPE,
+                "context": episode.get("context"),
+                "lead_skill": LEAD_SKILL,
+                "support_skill": SUPPORT_SKILL,
+                "participant_a": episode.get("agent_a"),
+                "action_a": episode.get("action_a"),
+                "participant_b": episode.get("agent_b"),
+                "action_b": episode.get("action_b"),
+                "outcome": "success" if episode.get("success") is True else "failure",
+            }
+            key = (scope, subject)
+            if key in expected:
+                raise ValueError(f"duplicate expected O0 event identity: {key}")
+            expected[key] = {"observed_at": ordinal, "values": values}
+    return expected
+
+
+def _evidence_gate(
+    evidence: dict[str, Any],
+    raw_bytes: bytes,
+    observed_trace: dict[str, Any],
+) -> tuple[bool, dict[str, object]]:
     claims = evidence.get("claims", [])
     predicates = Counter(str(claim.get("predicate")) for claim in claims)
     claim_ids = [str(claim.get("claim_id")) for claim in claims]
@@ -82,11 +116,13 @@ def _evidence_gate(evidence: dict[str, Any], raw_bytes: bytes) -> tuple[bool, di
     for claim in claims:
         grouped[(str(claim.get("scope_id")), str(claim.get("subject")))].append(claim)
 
+    expected_events = _expected_evidence_from_trace(observed_trace)
     expected_scopes = {f"o0:{condition}:{seed}" for condition in CONDITIONS for seed in SEEDS}
     scopes = {str(claim.get("scope_id")) for claim in claims}
     event_groups_complete = len(grouped) == EXPECTED_EPISODES
     provenance_valid = True
     source_identity_valid = True
+    trace_values_valid = set(grouped) == set(expected_events)
     ordinal_events: dict[str, dict[int, set[str]]] = defaultdict(lambda: defaultdict(set))
 
     for (scope, subject), rows in grouped.items():
@@ -99,6 +135,16 @@ def _evidence_gate(evidence: dict[str, Any], raw_bytes: bytes) -> tuple[bool, di
             continue
         observed_at = next(iter(observed_values))
         ordinal_events[scope][observed_at].add(subject)
+
+        expected_event = expected_events.get((scope, subject))
+        if expected_event is None:
+            trace_values_valid = False
+        else:
+            trace_values_valid = trace_values_valid and observed_at == expected_event["observed_at"]
+            expected_values = expected_event["values"]
+            actual_values = {str(row.get("predicate")): row.get("object") for row in rows}
+            trace_values_valid = trace_values_valid and actual_values == expected_values
+
         for row in rows:
             predicate = str(row.get("predicate"))
             expected_source = f"{scope}:{subject}:{predicate}"
@@ -113,14 +159,6 @@ def _evidence_gate(evidence: dict[str, Any], raw_bytes: bytes) -> tuple[bool, di
                 and row.get("valid_from") is None
                 and row.get("valid_until") is None
             )
-        event_type_rows = [row for row in rows if row.get("predicate") == "event_type"]
-        outcome_rows = [row for row in rows if row.get("predicate") == "outcome"]
-        provenance_valid = provenance_valid and (
-            len(event_type_rows) == 1
-            and event_type_rows[0].get("object") == EVENT_TYPE
-            and len(outcome_rows) == 1
-            and outcome_rows[0].get("object") in {"success", "failure"}
-        )
 
     ordinals_valid = set(ordinal_events) == expected_scopes
     for scope in expected_scopes:
@@ -155,6 +193,7 @@ def _evidence_gate(evidence: dict[str, Any], raw_bytes: bytes) -> tuple[bool, di
         "event_groups_complete": event_groups_complete,
         "provenance_valid": provenance_valid,
         "source_identity_valid": source_identity_valid,
+        "trace_values_valid": trace_values_valid,
         "ordinals_valid": ordinals_valid,
         "hidden_state_hits": hidden_hits,
     }
@@ -163,11 +202,13 @@ def _evidence_gate(evidence: dict[str, Any], raw_bytes: bytes) -> tuple[bool, di
         and len(claims) == EXPECTED_CLAIMS
         and len(set(claim_ids)) == EXPECTED_CLAIMS
         and len(set(source_ids)) == EXPECTED_CLAIMS
+        and len(expected_events) == EXPECTED_EPISODES
         and scopes == expected_scopes
         and predicates == Counter({predicate: EXPECTED_EPISODES for predicate in PREDICATES})
         and event_groups_complete
         and provenance_valid
         and source_identity_valid
+        and trace_values_valid
         and ordinals_valid
         and not hidden_hits
     )
@@ -251,7 +292,7 @@ def main() -> int:
 
     hook_compatibility, hook_units = _per_unit_matches(frozen, candidate)
     live_non_interference, live_units = _per_unit_matches(candidate, observed)
-    evidence_complete, evidence_details = _evidence_gate(evidence, evidence_bytes)
+    evidence_complete, evidence_details = _evidence_gate(evidence, evidence_bytes, observed)
     static_isolation, isolation_details = _static_isolation_gate()
 
     trace_shapes_valid = all(
@@ -327,7 +368,7 @@ def main() -> int:
             "agent-c": {"planning": 1, "verification": 9},
             "agent-d": {"planning": 1, "verification": 9},
         },
-        "mission_skills": {"lead": "planning", "support": "verification"},
+        "mission_skills": {"lead": LEAD_SKILL, "support": SUPPORT_SKILL},
         "expected_counts": {
             "units_per_arm": EXPECTED_UNITS,
             "episodes_per_unit": EXPECTED_EPISODES_PER_UNIT,
