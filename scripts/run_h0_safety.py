@@ -12,17 +12,19 @@ from typing import Any
 
 from resonance_contextgraph import EvidenceStore
 
+from resonance_world.authority import AuthorityGrant, AuthorityLedger
 from resonance_world.context_graph_adapter import to_evidence_claim
-from resonance_world.historical_substrate import bounded_historical_evidence
+from resonance_world.historical_substrate import (
+    HISTORICAL_CONTROLLER_CONSUMER,
+    HISTORICAL_FORBIDDEN_CONSUMERS,
+    HistoricalAccessForbidden,
+    bounded_historical_evidence,
+)
 
 NOT_IDENTIFIABLE = "not_observationally_identifiable"
 CONTEXTGRAPH_RELEASE_COMMIT = "b896891108fd954869a8cd0423f6e8440ab0cdc0"
-FORBIDDEN_ROUTES = (
-    "contextgraph_to_world_outcome_law",
-    "contextgraph_to_field_capability_state",
-    "contextgraph_to_automatic_authority",
-    "contextgraph_to_automatic_policy",
-)
+AUTHORITY_SCENARIO_ID = "h0-current-world-authority-v1"
+RESTRICTED_ACTION = "restricted-action"
 
 
 def canonical_bytes(value: Any) -> bytes:
@@ -131,9 +133,48 @@ def query_access(
         predicate=str(spec["predicate"]),
         decision_cutoff=int(spec["decision_cutoff"]),
         result_limit=int(spec["result_limit"]),
+        consumer=HISTORICAL_CONTROLLER_CONSUMER,
         enabled=enabled,
         evidence_release_commit=CONTEXTGRAPH_RELEASE_COMMIT,
     )
+
+
+def exercise_forbidden_consumers(
+    records: list[dict[str, Any]], spec: dict[str, Any]
+) -> list[dict[str, str]]:
+    sentinels: list[dict[str, str]] = []
+    for consumer in sorted(HISTORICAL_FORBIDDEN_CONSUMERS):
+        try:
+            bounded_historical_evidence(
+                records,
+                query_id=str(spec["query_id"]),
+                requesting_organization_id=str(spec["organization_id"]),
+                predicate=str(spec["predicate"]),
+                decision_cutoff=int(spec["decision_cutoff"]),
+                result_limit=int(spec["result_limit"]),
+                consumer=consumer,
+                enabled=True,
+                evidence_release_commit=CONTEXTGRAPH_RELEASE_COMMIT,
+            )
+        except HistoricalAccessForbidden as exc:
+            sentinels.append(
+                {
+                    "route": consumer,
+                    "status": "rejected",
+                    "error_code": exc.code,
+                    "exception_type": type(exc).__name__,
+                }
+            )
+        else:
+            sentinels.append(
+                {
+                    "route": consumer,
+                    "status": "allowed",
+                    "error_code": "none",
+                    "exception_type": "none",
+                }
+            )
+    return sentinels
 
 
 def controller_decision(bundle: dict[str, Any]) -> dict[str, Any]:
@@ -143,25 +184,51 @@ def controller_decision(bundle: dict[str, Any]) -> dict[str, Any]:
         "schema": "h0-controller-decision-v0.1",
         "bundle_id": str(bundle["bundle_id"]),
         "actor_id": actor_id,
+        "authority_notice_id": actor_id,
         "action_id": opaque("action", "restricted"),
-        "action": "restricted-action",
+        "action": RESTRICTED_ACTION,
         "interpretation": "historical-evidence-informed-proposal",
     }
     return {**base, "decision_id": digest_id("h0-decision-", base)}
 
 
-def world_verify_current_authority(actor_id: str) -> bool:
-    return actor_id == opaque("actor", "current")
+def current_world_authority(
+    organization_id: str,
+) -> tuple[AuthorityLedger, dict[str, str]]:
+    ledger = AuthorityLedger()
+    current_notice_id = opaque("actor", "current")
+    grant = AuthorityGrant(
+        organization_id=organization_id,
+        scenario_id=AUTHORITY_SCENARIO_ID,
+        action=RESTRICTED_ACTION,
+        notice_id=current_notice_id,
+    )
+    digest = ledger.register(grant)
+    return ledger, {
+        "current_notice_id": current_notice_id,
+        "registered_grant_digest": digest,
+    }
 
 
-def world_adjudicate(decision: dict[str, Any]) -> dict[str, Any]:
-    authorized = world_verify_current_authority(str(decision["actor_id"]))
+def world_adjudicate(
+    decision: dict[str, Any],
+    *,
+    organization_id: str,
+    authority_ledger: AuthorityLedger,
+) -> dict[str, Any]:
+    verification = authority_ledger.verify(
+        notice_id=str(decision["authority_notice_id"]),
+        organization_id=organization_id,
+        scenario_id=AUTHORITY_SCENARIO_ID,
+        action=str(decision["action"]),
+    )
     return {
         "schema": "h0-world-consequence-v0.1",
         "decision_id": str(decision["decision_id"]),
         "action_id": str(decision["action_id"]),
-        "authorized": authorized,
-        "executed": authorized,
+        "authorized": verification.verified,
+        "executed": verification.verified,
+        "authority_verification": verification.canonical_record(),
     }
 
 
@@ -176,15 +243,28 @@ def execution_ack(decision: dict[str, Any], consequence: dict[str, Any]) -> dict
     return {**base, "ack_id": digest_id("h0-ack-", base)}
 
 
-def baseline_trajectory() -> dict[str, Any]:
+def baseline_trajectory(
+    *,
+    organization_id: str,
+    authority_ledger: AuthorityLedger,
+    current_notice_id: str,
+) -> dict[str, Any]:
     decision = {
         "schema": "h0-baseline-decision-v0.1",
         "decision_id": opaque("baseline", "decision"),
-        "actor_id": opaque("actor", "current"),
+        "actor_id": current_notice_id,
+        "authority_notice_id": current_notice_id,
         "action_id": opaque("baseline", "action"),
-        "action": "baseline-action",
+        "action": RESTRICTED_ACTION,
     }
-    return {"decision": decision, "consequence": world_adjudicate(decision)}
+    return {
+        "decision": decision,
+        "consequence": world_adjudicate(
+            decision,
+            organization_id=organization_id,
+            authority_ledger=authority_ledger,
+        ),
+    }
 
 
 def main() -> int:
@@ -209,23 +289,41 @@ def main() -> int:
         bundles[query_id] = query_access(records, spec, enabled=True)
 
     authority_bundle = bundles[purpose_to_query["authority-separation"]]
+    organization_id = str(authority_bundle["requesting_organization_id"])
+    authority_ledger, current_authority = current_world_authority(organization_id)
+
     decision = controller_decision(authority_bundle)
-    consequence = world_adjudicate(decision)
+    consequence = world_adjudicate(
+        decision,
+        organization_id=organization_id,
+        authority_ledger=authority_ledger,
+    )
     ack = execution_ack(decision, consequence)
 
+    current_notice_id = current_authority["current_notice_id"]
     current_actor_control = {
         "schema": "h0-controller-decision-v0.1",
         "decision_id": opaque("control", "current-decision"),
         "bundle_id": None,
-        "actor_id": opaque("actor", "current"),
+        "actor_id": current_notice_id,
+        "authority_notice_id": current_notice_id,
         "action_id": opaque("control", "current-action"),
-        "action": "restricted-action",
+        "action": RESTRICTED_ACTION,
         "interpretation": "current-authority-control",
     }
+    current_consequence = world_adjudicate(
+        current_actor_control,
+        organization_id=organization_id,
+        authority_ledger=authority_ledger,
+    )
 
     cutoff = int(plane_e["decision_cutoff"])
     visible_claims = [row for row in records if int(row["observed_at"]) <= cutoff]
-    baseline = baseline_trajectory()
+    baseline = baseline_trajectory(
+        organization_id=organization_id,
+        authority_ledger=authority_ledger,
+        current_notice_id=current_notice_id,
+    )
     result = {
         "schema": "h0-researcher-output-v0.1",
         "contextgraph_claims": visible_claims,
@@ -234,16 +332,19 @@ def main() -> int:
         "disabled_query_denials": denials,
         "purpose_to_query": purpose_to_query,
         "authority_path": {
+            "world_authority_registry": current_authority,
             "decision": decision,
             "consequence": consequence,
             "execution_acknowledgement": ack,
-            "current_actor_control_consequence": world_adjudicate(current_actor_control),
+            "current_actor_control_consequence": current_consequence,
         },
-        "direct_edge_sentinels": [
-            {"route": route, "status": "rejected"} for route in FORBIDDEN_ROUTES
-        ],
+        "direct_edge_sentinels": exercise_forbidden_consumers(records, queries[0]),
         "observer_only_baseline_trajectory": baseline,
-        "access_disabled_no_retrieval_trajectory": baseline_trajectory(),
+        "access_disabled_no_retrieval_trajectory": baseline_trajectory(
+            organization_id=organization_id,
+            authority_ledger=authority_ledger,
+            current_notice_id=current_notice_id,
+        ),
         "negative_controls": {
             "private_field_fact": NOT_IDENTIFIABLE,
             "future_outcome": NOT_IDENTIFIABLE,
