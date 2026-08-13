@@ -1,0 +1,44 @@
+{
+  "version": "world-contextgraph-integration-v0.1.0",
+  "status": "observer-only-release-adoption-candidate",
+  "scientific_claim": false,
+  "north_star_issue": 111,
+  "base_world_commit": "689ea7b9e0630bf16960b5a0239e65766a285f3c",
+  "integration_mode": "observer-only",
+  "historical_substrate_enabled": false,
+  "participant_query_access": false,
+  "contextgraph_release": {
+    "repository": "ElephantRock/Resonance-ContextGraph",
+    "tag": "v0.1.0",
+    "install_revision": "b896891108fd954869a8cd0423f6e8440ab0cdc0",
+    "release_commit": "b896891108fd954869a8cd0423f6e8440ab0cdc0",
+    "graduation_pr": 4,
+    "release_workflow_run": 31641381598,
+    "release_id": 369532222,
+    "wheel_sha256": "47390e868a7b886ad47eacbb44ab761450c27578245487e47ed5773c8ecf4d35",
+    "sdist_sha256": "02da9af186d320ce2ebc9a44d43711ae1f9c1551c4912700f49ad09a5274566a"
+  },
+  "world_release_parity": {
+    "source_branch": "experiment/context-graph",
+    "validation_run": 31641586497,
+    "validation_head": "f57243d4f99e9f9a56ed1de87caab672d75b714f",
+    "artifact_id": 9159096838,
+    "artifact_sha256": "8873e567bde88712aa5f274fd4a934f0f743675dda37b4f4e8f69b325872330f",
+    "semantic_parity": "pass",
+    "frozen_cg5_cg11_replay": "pass",
+    "outcome_law_isolation": "pass"
+  },
+  "ownership_boundary": {
+    "dependency_direction": "Resonance World -> Resonance ContextGraph",
+    "reverse_dependency_forbidden": true,
+    "hidden_capability_crosses_adapter": false,
+    "belief_mutation_owned_by_contextgraph": false,
+    "contextgraph_enters_environment_outcome_law": false,
+    "contextgraph_causal_output_to_participants": false,
+    "contextgraph_owns_institutional_policy": false,
+    "legacy_world_contextgraph_code_in_this_branch": false,
+    "historical_scientific_records_remain_on_research_branch": true
+  },
+  "scientific_provenance_note": "CG-11 architectural parity follows the executed frozen evaluator. That evaluator enforced pair stability plus a non-negative minimum selected-role score margin, while the preregistration prose described pair stability alone. The historical record is not rewritten.",
+  "purpose": "Minimal observer-only production adoption. This branch imports the released runtime contract without importing the ContextGraph research campaign into World main and without enabling participant access to accumulated history."
+}

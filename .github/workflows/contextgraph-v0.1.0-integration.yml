@@ -1,0 +1,136 @@
+name: ContextGraph v0.1.0 Integration
+
+on:
+  push:
+    branches: ["main", "integration/contextgraph-v0.1.0"]
+    paths:
+      - ".github/workflows/contextgraph-v0.1.0-integration.yml"
+      - "pyproject.toml"
+      - "src/resonance_world/**"
+      - "tests/test_context_graph_runtime.py"
+      - "docs/contextgraph-v0.1.0-integration.json"
+      - "docs/contextgraph-v0.1.0-integration.md"
+  pull_request:
+    paths:
+      - ".github/workflows/contextgraph-v0.1.0-integration.yml"
+      - "pyproject.toml"
+      - "src/resonance_world/**"
+      - "tests/test_context_graph_runtime.py"
+      - "docs/contextgraph-v0.1.0-integration.json"
+      - "docs/contextgraph-v0.1.0-integration.md"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  CONTEXTGRAPH_TAG: v0.1.0
+  CONTEXTGRAPH_COMMIT: b896891108fd954869a8cd0423f6e8440ab0cdc0
+
+jobs:
+  release-contract:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Prove dependency installs from immutable released commit
+        run: |
+          python - <<'PY'
+          import importlib.metadata
+          import json
+          import os
+          from pathlib import Path
+
+          dist = importlib.metadata.distribution("resonance-contextgraph")
+          payload = json.loads((Path(dist._path) / "direct_url.json").read_text())
+          vcs = payload["vcs_info"]
+          assert vcs["requested_revision"] == os.environ["CONTEXTGRAPH_COMMIT"], vcs
+          assert vcs["commit_id"] == os.environ["CONTEXTGRAPH_COMMIT"], vcs
+          PY
+      - name: Enforce minimal adoption boundary
+        run: |
+          test ! -d experiments/context_graph
+          ! grep -R --line-number --fixed-strings "context_graph_w3" \
+            src/resonance_world/context_graph_adapter.py \
+            src/resonance_world/context_graph_runtime.py
+          ! grep -R --line-number --fixed-strings "practice_by_skill" \
+            src/resonance_world/context_graph_adapter.py \
+            src/resonance_world/context_graph_runtime.py
+      - name: Enforce observer-only production boundary
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          allowed = {
+              Path("src/resonance_world/context_graph_adapter.py"),
+              Path("src/resonance_world/context_graph_runtime.py"),
+          }
+          forbidden_tokens = (
+              "context_graph_adapter",
+              "context_graph_runtime",
+              "resonance_contextgraph",
+          )
+          violations = []
+          for path in Path("src/resonance_world").rglob("*.py"):
+              if path in allowed:
+                  continue
+              text = path.read_text()
+              hits = [token for token in forbidden_tokens if token in text]
+              if hits:
+                  violations.append((str(path), hits))
+          assert not violations, violations
+          PY
+      - name: Validate adoption provenance
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          record = json.loads(Path("docs/contextgraph-v0.1.0-integration.json").read_text())
+          release = record["contextgraph_release"]
+          boundary = record["ownership_boundary"]
+          assert record["scientific_claim"] is False
+          assert record["north_star_issue"] == 111
+          assert record["integration_mode"] == "observer-only"
+          assert record["historical_substrate_enabled"] is False
+          assert record["participant_query_access"] is False
+          assert release["tag"] == "v0.1.0"
+          assert release["install_revision"] == "b896891108fd954869a8cd0423f6e8440ab0cdc0"
+          assert release["release_commit"] == "b896891108fd954869a8cd0423f6e8440ab0cdc0"
+          assert record["world_release_parity"]["frozen_cg5_cg11_replay"] == "pass"
+          assert boundary["reverse_dependency_forbidden"] is True
+          assert boundary["hidden_capability_crosses_adapter"] is False
+          assert boundary["contextgraph_enters_environment_outcome_law"] is False
+          assert boundary["contextgraph_causal_output_to_participants"] is False
+          assert boundary["contextgraph_owns_institutional_policy"] is False
+          assert boundary["legacy_world_contextgraph_code_in_this_branch"] is False
+          PY
+      - name: Lint integration surface
+        run: |
+          ruff check src/resonance_world/context_graph_adapter.py
+          ruff check src/resonance_world/context_graph_runtime.py
+          ruff check tests/test_context_graph_runtime.py
+      - name: Test integration contract
+        run: pytest -q tests/test_context_graph_runtime.py
+      - name: Re-prove World outcome-law isolation
+        run: |
+          python - <<'PY'
+          import inspect
+          from resonance_world.w4a_joint_learning import JointEnvironment
+
+          forbidden = {
+              "graph", "context_graph", "evidence", "claims",
+              "relationship_state", "organization_memory",
+              "acquisition_state", "stopping_state",
+          }
+          params = set(inspect.signature(JointEnvironment.evaluate).parameters)
+          assert not forbidden.intersection(params), params
+          PY
