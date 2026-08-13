@@ -10,6 +10,7 @@ permissions:
 env:
   FROZEN_WORLD_BASE: 2b618ae277d6b34028f91886ace7aad1839f11c9
   CONTEXTGRAPH_COMMIT: b896891108fd954869a8cd0423f6e8440ab0cdc0
+  CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
 
 jobs:
   o0-reproduction:
@@ -24,7 +25,10 @@ jobs:
       - name: Checkout exact O0 candidate head
         uses: actions/checkout@v4
         with:
+          ref: ${{ env.CANDIDATE_HEAD }}
           fetch-depth: 0
+      - name: Verify exact candidate head
+        run: test "$(git rev-parse HEAD)" = "$CANDIDATE_HEAD"
       - name: Checkout frozen pre-O0 World base
         uses: actions/checkout@v4
         with:
@@ -92,7 +96,7 @@ jobs:
               --candidate-trace output/o0/candidate-baseline-trace.json \
               --observatory-trace output/o0/observatory-trace.json \
               --evidence output/o0/contextgraph-evidence.json \
-              --candidate-head "$GITHUB_SHA" \
+              --candidate-head "$CANDIDATE_HEAD" \
               --result-output output/o0/o0-result.json \
               --manifest-output output/o0/o0-manifest.json
       - name: Upload O0 authoritative artifact
