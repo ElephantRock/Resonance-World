@@ -26,8 +26,11 @@ def main() -> int:
     parser.add_argument("--candidate-head", required=True)
     parser.add_argument("--output-dir", required=True, type=Path)
     args = parser.parse_args()
+
+    amended_lock = args.lock.with_name("apparatus-lock-v0.2.json")
+    effective_lock = amended_lock if amended_lock.exists() else args.lock
     result, manifest = evaluate_o2(
-        lock_path=args.lock,
+        lock_path=effective_lock,
         lock_verification_path=args.lock_verification,
         corpus_root=args.corpus_root,
         research_output=args.research_output,
@@ -38,6 +41,7 @@ def main() -> int:
         historical_substrate_enabled=HISTORICAL_SUBSTRATE_ENABLED,
         standalone_release_commit=STANDALONE_RELEASE_COMMIT,
     )
+    manifest["effective_apparatus_lock"] = effective_lock.name
     args.output_dir.mkdir(parents=True, exist_ok=True)
     result_path = args.output_dir / "o2-result.json"
     result_path.write_bytes(canonical_bytes(result))

@@ -37,6 +37,7 @@ def event_support(
         "per_member_success_trajectory",
         "carrier_set_by_interval",
         "contribution_vector",
+        "contribution_vector_by_interval",
         "maximum_contributing_members",
         "maximum_contribution_share",
     }:
