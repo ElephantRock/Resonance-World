@@ -102,7 +102,9 @@ def _evidence_gate(evidence: dict[str, Any], raw_bytes: bytes) -> tuple[bool, di
         for row in rows:
             predicate = str(row.get("predicate"))
             expected_source = f"{scope}:{subject}:{predicate}"
-            source_identity_valid = source_identity_valid and row.get("source_id") == expected_source
+            source_identity_valid = (
+                source_identity_valid and row.get("source_id") == expected_source
+            )
             provenance_valid = provenance_valid and (
                 row.get("observed_by") == OBSERVER_ID
                 and row.get("source_class") == SOURCE_CLASS
@@ -255,7 +257,10 @@ def main() -> int:
     trace_shapes_valid = all(
         payload.get("schema") == "o0-world-trace-v0.1"
         and len(payload.get("units", [])) == EXPECTED_UNITS
-        and all(len(unit.get("episodes", [])) == EXPECTED_EPISODES_PER_UNIT for unit in payload["units"])
+        and all(
+            len(unit.get("episodes", [])) == EXPECTED_EPISODES_PER_UNIT
+            for unit in payload["units"]
+        )
         for payload in (frozen, candidate, observed)
     )
 
