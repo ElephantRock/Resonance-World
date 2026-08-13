@@ -5,10 +5,82 @@ from __future__ import annotations
 
 import argparse
 import json
+from collections import defaultdict
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
-from resonance_world.o2_utility import analyze_events, analyze_r0, canonical_bytes, ingest_history
+from resonance_contextgraph import EvidenceStore
+
+from resonance_world.context_graph_adapter import to_evidence_claim
+from resonance_world.o2_utility import analyze_events, analyze_r0, canonical_bytes
+
+
+@dataclass(frozen=True, slots=True)
+class _ObservedClaim:
+    field_id: str
+    subject: str
+    predicate: str
+    object: str
+    observed_by: str
+    source_id: str
+    source_class: str
+    observed_at: int
+    confidence: float
+    direct: bool
+
+
+def encoded(value: Any) -> str:
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
+
+
+def decoded(value: str) -> Any:
+    return json.loads(value)
+
+
+def ingest_history(history: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    """Round-trip one admissible O2 history through the accepted evidence store."""
+    if history.get("schema") != "o2-plane-e-history-v0.1":
+        raise ValueError("unsupported O2 Plane-E history schema")
+    history_id = str(history["history_id"])
+    events = history.get("events")
+    if not isinstance(events, list) or not events:
+        raise ValueError("O2 Plane-E history requires events")
+
+    store = EvidenceStore()
+    for event in events:
+        if not isinstance(event, dict):
+            raise ValueError("O2 event must be an object")
+        event_id = str(event["event_id"])
+        ordinal = int(event["ordinal"])
+        for field, value in sorted(event.items()):
+            source_id = f"o2:{history_id}:{event_id}:{field}"
+            observed = _ObservedClaim(
+                field_id=history_id,
+                subject=event_id,
+                predicate=f"o2.event.{field}",
+                object=encoded(value),
+                observed_by="resonance-world:o2-observer",
+                source_id=source_id,
+                source_class="world-observation",
+                observed_at=ordinal,
+                confidence=1.0,
+                direct=True,
+            )
+            store.ingest(to_evidence_claim(observed, delivery=0))
+
+    claims = [asdict(claim) for claim in store.claims(scope_id=history_id)]
+    reconstructed: dict[str, dict[str, Any]] = defaultdict(dict)
+    for claim in claims:
+        predicate = str(claim["predicate"])
+        if not predicate.startswith("o2.event."):
+            raise ValueError("unexpected O2 evidence predicate")
+        field = predicate.removeprefix("o2.event.")
+        reconstructed[str(claim["subject"])][field] = decoded(str(claim["object"]))
+
+    rows = list(reconstructed.values())
+    rows.sort(key=lambda row: (int(row["ordinal"]), str(row["event_id"])))
+    return claims, rows
 
 
 def read_object(path: Path) -> dict[str, Any]:
