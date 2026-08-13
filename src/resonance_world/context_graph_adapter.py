@@ -1,46 +1,3 @@
-"""Observer-only adapter from Resonance World evidence to ContextGraph.
-
-This module is intentionally one-way: Resonance World may depend on the standalone
-``resonance_contextgraph`` package, but ContextGraph must never import Resonance World.
-Only observed evidence and public mission/query state cross the boundary. Hidden
-capability, evaluator truth, oracle state, agent belief mutation, participant decision
-state, and environment outcome laws do not.
-
-The v0.1.0 production integration is an Observatory substrate only. No World actor or
-organization consumes ContextGraph output through this module in the Observatory phase.
-The adapter uses structural producer protocols rather than importing the historical
-World ContextGraph implementation, keeping the graduated runtime independent from the
-scientific compatibility fixtures retained on the research branch.
-"""
-
-from __future__ import annotations
-
-from collections import defaultdict
-from collections.abc import Iterable, Mapping
-from typing import Protocol
-from urllib.parse import quote
-
-from resonance_contextgraph import (
-    BalancedRoundRobin,
-    CheckpointObservation,
-    CompiledContext,
-    ContextCompiler,
-    ContextRequest,
-    EventReconciler,
-    EvidenceClaim,
-    EvidenceStore,
-    MeasurementCell,
-    MissionSpec,
-    PairStabilityStopper,
-    StopDecision,
-    checkpoint_observation,
-    group_cell_evidence,
-)
-from resonance_contextgraph import EstimatorSpec as ContextEstimatorSpec
-
-Cell = tuple[str, str]
-Pair = tuple[str, str] | None
-_TRANSPORT_NAMESPACE = "rw-contextgraph-delivery:v1"
 
 
 class ObservedClaim(Protocol):
@@ -84,7 +41,7 @@ def _transport_claim_id(source_id: str, delivery: int) -> str:
 def to_evidence_claim(
     claim: ObservedClaim,
     *,
-    delivery: int,
+    delivery: int = 0,
 ) -> EvidenceClaim:
     """Map one observed delivery to the standalone storage contract.
 
