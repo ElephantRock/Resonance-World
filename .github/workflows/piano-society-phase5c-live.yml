@@ -1,0 +1,265 @@
+name: PIANO Society Phase 5C Live
+
+on:
+  push:
+    branches:
+      - experiment/piano-society-phase5c-decision-relevant-memory
+    paths:
+      - experiments/piano_society/phase5c_config.json
+      - experiments/piano_society/phase5c.py
+      - experiments/piano_society/phase5c_campaign.py
+      - experiments/piano_society/PHASE5C_PREREGISTRATION.md
+      - experiments/piano_society/phase5b_controller.py
+      - experiments/piano_society/phase5b_transfer_memory.py
+      - experiments/piano_society/phase5_zai.py
+      - tests/test_piano_society_phase5c_analysis.py
+      - tests/test_piano_society_phase5c_constructor.py
+      - .github/workflows/piano-society-phase5c-live.yml
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  actions: read
+
+env:
+  FIELD_REPOSITORY: https://github.com/ElephantRock/Resonance-Field.git
+  FIELD_SHA: e877bf03dbf6681ce7cbd98d984e73c032e911aa
+  SOURCE_RUN: "31652358960"
+  SOURCE_ARTIFACT_ID: "9163101495"
+  SOURCE_ARTIFACT: piano-society-phase5c-frozen-source
+  SOURCE_ARTIFACT_DIGEST: sha256:2caf65e6f2839f243ad0c6e59f7d12ad196f48ddf79aab7c3cca42b0904f22f6
+  SOURCE_CAPSULE_SHA256: b44926d70fe91ae3ad546351bd42096ad54a10d7d50eb954060e1bc56dcd1ea8
+  GEOMETRY_RUN: "31652891403"
+  GEOMETRY_ARTIFACT_ID: "9163248092"
+  GEOMETRY_ARTIFACT: piano-society-phase5c-geometry-audit
+  GEOMETRY_ARTIFACT_DIGEST: sha256:c30535d8d14e93e35605db5690a7abda08e42f0ffcff1a49354dfc1b4a42ed2c
+  CONSTRUCTOR_RUN: "31653068347"
+  CONSTRUCTOR_ARTIFACT_ID: "9163310926"
+  CONSTRUCTOR_ARTIFACT: piano-society-phase5c-v2-constructor-audit
+  CONSTRUCTOR_ARTIFACT_DIGEST: sha256:e4a7c0dcf11d7d3288d1a97acd13b8814752b1629cd9fde997f093c63601a13d
+
+jobs:
+  validate-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - name: Install frozen revisions
+        run: python -m pip install -e 'field[dev]' -e world
+      - name: Verify bound artifact digests through GitHub
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api repos/ElephantRock/Resonance-World/actions/artifacts/$SOURCE_ARTIFACT_ID --jq .digest)" = "$SOURCE_ARTIFACT_DIGEST"
+          test "$(gh api repos/ElephantRock/Resonance-World/actions/artifacts/$GEOMETRY_ARTIFACT_ID --jq .digest)" = "$GEOMETRY_ARTIFACT_DIGEST"
+          test "$(gh api repos/ElephantRock/Resonance-World/actions/artifacts/$CONSTRUCTOR_ARTIFACT_ID --jq .digest)" = "$CONSTRUCTOR_ARTIFACT_DIGEST"
+      - name: Download exact frozen source
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.SOURCE_ARTIFACT }}
+          path: frozen-source
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: ${{ env.SOURCE_RUN }}
+      - name: Download exact geometry audit
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.GEOMETRY_ARTIFACT }}
+          path: frozen-geometry
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: ${{ env.GEOMETRY_RUN }}
+      - name: Download exact v2 constructor audit
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.CONSTRUCTOR_ARTIFACT }}
+          path: frozen-constructor
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: ${{ env.CONSTRUCTOR_RUN }}
+      - name: Verify frozen bytes and reconstruct live-unit lock
+        working-directory: world
+        run: |
+          CAPSULE="$(find ../frozen-source -name capsules.private.jsonl -print -quit)"
+          test -n "$CAPSULE"
+          test "$(sha256sum "$CAPSULE" | awk '{print $1}')" = "$SOURCE_CAPSULE_SHA256"
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          def digest(value):
+              return hashlib.sha256(
+                  json.dumps(value, sort_keys=True, separators=(',', ':')).encode()
+              ).hexdigest()
+
+          config = json.load(open('experiments/piano_society/phase5c_config.json', encoding='utf-8'))
+          geometry = json.loads(next(Path('../frozen-geometry').rglob('result.json')).read_text())
+          constructor = json.loads(next(Path('../frozen-constructor').rglob('result.json')).read_text())
+          assert geometry['model_calls'] == 0, geometry
+          assert geometry['memory_training_performed'] is False, geometry
+          assert geometry['mission_outcomes_evaluated'] is False, geometry
+          feasible = {(row['role_specific'], row['cross_coverage']) for row in geometry['feasible_twelve_unit_balances']}
+          assert (5, 7) in feasible and (6, 6) not in feasible, feasible
+          assert constructor['revision'] == 'piano-phase5c-roster-conditional-v2', constructor
+          assert constructor['model_calls'] == 0, constructor
+          assert constructor['accepted'] is True, constructor
+          assert constructor['confirmatory_outcomes_evaluated'] is False, constructor
+          assert constructor['calibration_mean_retained_minus_neutral_success_rate'] == 0.0302734375, constructor
+          assert constructor['calibration_nonnegative_units'] == 4, constructor
+          assert constructor['calibration_forecast_preference_change_units'] == 4, constructor
+          assert constructor['calibration_target_posterior_match_units'] == 4, constructor
+          assert digest(constructor['calibration_selected']) == '39fde62a3bb1f1b4e45e117d90b9be293d88d29db84571ec93fb9137af22dd7b'
+          assert digest(constructor['calibration_units']) == 'a23bf1502db3cb44faf4301c08bdb3ba0425750fbacfeaf404c0734f14a4a79c'
+          assert digest(constructor['confirmatory_selected_pre_outcome']) == 'eb8e5437da47bc8eea2b66607eaca4de8648ab3e98b39d97c4e111a76c237868'
+          selected = constructor['confirmatory_selected_pre_outcome']
+          units = config['units']
+          assert len(selected) == len(units) == 12
+          aliases = config['skill_aliases']
+          keys = (
+              'field_id', 'lead_skill', 'support_skill', 'target_hypothesis',
+              'hidden_regime', 'target_policy', 'neutral_preferred_policy',
+              'constructor_score', 'neutral_forecast_margin', 'decision_leverage',
+          )
+          for index, (source, unit) in enumerate(zip(selected, units, strict=True)):
+              assert unit['unit_id'] == f"route-{chr(97 + index)}", unit
+              for key in keys:
+                  assert unit[key] == source[key], (key, unit, source)
+              assert unit['public_lead_skill'] == aliases[source['lead_skill']], unit
+              assert unit['public_support_skill'] == aliases[source['support_skill']], unit
+          assert sum(unit['target_hypothesis'] == 'role_specific' for unit in units) == 5
+          assert sum(unit['target_hypothesis'] == 'cross_coverage' for unit in units) == 7
+          PY
+      - name: Lint locked Phase 5C implementation
+        working-directory: world
+        run: |
+          ruff check --ignore E501,I001 \
+            experiments/piano_society/phase5c.py \
+            experiments/piano_society/phase5c_campaign.py \
+            experiments/piano_society/phase5b_controller.py \
+            experiments/piano_society/phase5b_transfer_memory.py \
+            experiments/piano_society/phase5_zai.py \
+            tests/test_piano_society_phase5c_analysis.py \
+            tests/test_piano_society_phase5c_constructor.py
+      - name: Run offline Phase 5C contract tests
+        working-directory: world
+        run: >-
+          pytest -q
+          tests/test_piano_society_phase5b.py
+          tests/test_piano_society_phase5c_constructor.py
+          tests/test_piano_society_phase5c_analysis.py
+      - name: Validate exact live config without credential
+        working-directory: world
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          python - <<'PY'
+          import json
+          from experiments.piano_society.phase5c import validate_config
+          config = json.load(open('experiments/piano_society/phase5c_config.json', encoding='utf-8'))
+          lock = validate_config(config)
+          assert len(lock['units']) == 12
+          assert config['institutional_model_memory']['evaluation_trials_per_unit'] == 256
+          assert config['advancement_gate']['min_mean_retained_minus_reset_success_rate'] == 0.03
+          assert config['advancement_gate']['required_reset_neutral_forecast_match_units'] == 12
+          assert config['advancement_gate']['min_forecast_preference_change_units'] == 10
+          PY
+      - name: Upload Phase 5C preregistration evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase5c-preregistration
+          path: |
+            world/experiments/piano_society/phase5c_config.json
+            world/experiments/piano_society/PHASE5C_PREREGISTRATION.md
+          if-no-files-found: error
+          retention-days: 90
+
+  phase5c-live-campaign:
+    needs: validate-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - name: Require campaign credential
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "ZAI_API_KEY repository secret is required for Phase 5C execution" >&2
+            exit 2
+          fi
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          path: world
+      - name: Checkout pinned Resonance Field
+        run: |
+          git clone "$FIELD_REPOSITORY" field
+          git -C field checkout "$FIELD_SHA"
+          test "$(git -C field rev-parse HEAD)" = "$FIELD_SHA"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+          cache-dependency-path: |
+            world/pyproject.toml
+            field/pyproject.toml
+      - name: Install frozen revisions
+        run: python -m pip install -e field -e world
+      - name: Re-verify source artifact digest
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          test "$(gh api repos/ElephantRock/Resonance-World/actions/artifacts/$SOURCE_ARTIFACT_ID --jq .digest)" = "$SOURCE_ARTIFACT_DIGEST"
+      - name: Download exact frozen source
+        uses: actions/download-artifact@v4
+        with:
+          name: ${{ env.SOURCE_ARTIFACT }}
+          path: frozen-source
+          github-token: ${{ github.token }}
+          repository: ElephantRock/Resonance-World
+          run-id: ${{ env.SOURCE_RUN }}
+      - name: Verify exact capsule bytes
+        run: |
+          CAPSULE="$(find frozen-source -name capsules.private.jsonl -print -quit)"
+          test -n "$CAPSULE"
+          test "$(sha256sum "$CAPSULE" | awk '{print $1}')" = "$SOURCE_CAPSULE_SHA256"
+      - name: Execute complete Phase 5C campaign
+        working-directory: world
+        run: |
+          CAPSULE="$(find ../frozen-source -name capsules.private.jsonl -print -quit)"
+          python -m experiments.piano_society.phase5c_campaign \
+            --config experiments/piano_society/phase5c_config.json \
+            --capsules "$CAPSULE" \
+            --output-dir ../output/phase5c-live
+      - name: Assert complete analyzer artifact
+        run: |
+          python - <<'PY'
+          import json
+          result = json.load(open('output/phase5c-live/result.json', encoding='utf-8'))
+          assert result['scientific_interpretation_eligible'] is True, result
+          assert result['records_per_arm'] == 12, result
+          assert result['paired_units'] == 12, result
+          assert result['capability_test_not_prevalence_estimate'] is True, result
+          print(json.dumps(result, indent=2, sort_keys=True))
+          PY
+      - name: Upload complete Phase 5C result
+        uses: actions/upload-artifact@v4
+        with:
+          name: piano-society-phase5c-live
+          path: output/phase5c-live
+          if-no-files-found: error
+          retention-days: 90
