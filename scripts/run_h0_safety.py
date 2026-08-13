@@ -13,8 +13,10 @@ from typing import Any
 from resonance_contextgraph import EvidenceStore
 
 from resonance_world.context_graph_adapter import to_evidence_claim
+from resonance_world.historical_substrate import bounded_historical_evidence
 
 NOT_IDENTIFIABLE = "not_observationally_identifiable"
+CONTEXTGRAPH_RELEASE_COMMIT = "b896891108fd954869a8cd0423f6e8440ab0cdc0"
 FORBIDDEN_ROUTES = (
     "contextgraph_to_world_outcome_law",
     "contextgraph_to_field_capability_state",
@@ -60,8 +62,11 @@ class _ObservedClaim:
     direct: bool
 
 
-def ingest_plane_e(plane_e: dict[str, Any]) -> tuple[EvidenceStore, list[dict[str, Any]]]:
+def ingest_plane_e(plane_e: dict[str, Any]) -> tuple[list[dict[str, Any]], int]:
     store = EvidenceStore()
+    organizations = sorted(
+        {str(row["organization_id"]) for row in plane_e["evidence_events"]}
+    )
     for event in plane_e["evidence_events"]:
         payload = {
             "organization_id": event["organization_id"],
@@ -82,37 +87,15 @@ def ingest_plane_e(plane_e: dict[str, Any]) -> tuple[EvidenceStore, list[dict[st
             direct=bool(event["direct"]),
         )
         store.ingest(to_evidence_claim(observed, delivery=0))
-    claims = []
-    for org_id in sorted({str(row["organization_id"]) for row in plane_e["evidence_events"]}):
-        claims.extend(asdict(claim) for claim in store.claims(scope_id=org_id))
-    claims.sort(key=lambda row: (str(row["scope_id"]), int(row["observed_at"]), str(row["claim_id"])))
-    return store, claims
 
-
-class HistoricalAccess:
-    def __init__(self, store: EvidenceStore, *, enabled: bool) -> None:
-        self._store = store
-        self._enabled = enabled
-
-    def query(self, spec: dict[str, Any]) -> dict[str, Any]:
-        query_id = str(spec["query_id"])
-        if not self._enabled:
-            return {
-                "schema": "h0-access-denial-v0.1",
-                "query_id": query_id,
-                "status": "historical_access_disabled",
-                "bundle": None,
-            }
-
-        selected: list[dict[str, Any]] = []
-        for claim in self._store.claims(scope_id=str(spec["organization_id"])):
+    records: list[dict[str, Any]] = []
+    claim_count = 0
+    for organization_id in organizations:
+        for claim in store.claims(scope_id=organization_id):
+            claim_count += 1
             row = asdict(claim)
-            if str(row["predicate"]) != str(spec["predicate"]):
-                continue
-            if int(row["observed_at"]) > int(spec["decision_cutoff"]):
-                continue
             decoded = json.loads(str(row["object"]))
-            selected.append(
+            records.append(
                 {
                     "claim_id": str(row["claim_id"]),
                     "evidence_event_id": str(row["subject"]),
@@ -128,20 +111,29 @@ class HistoricalAccess:
                     "direct": bool(row["direct"]),
                 }
             )
-        selected.sort(key=lambda row: (int(row["observed_at"]), str(row["claim_id"])))
-        selected = selected[: int(spec["result_limit"])]
-        base = {
-            "schema": "h0-historical-evidence-bundle-v0.1",
-            "query_id": query_id,
-            "requesting_organization_id": str(spec["organization_id"]),
-            "decision_cutoff": int(spec["decision_cutoff"]),
-            "scope": {"predicate": str(spec["predicate"])},
-            "result_limit": int(spec["result_limit"]),
-            "status": "empty" if not selected else "ok",
-            "evidence": selected,
-            "contextgraph_release_commit": "b896891108fd954869a8cd0423f6e8440ab0cdc0",
-        }
-        return {**base, "bundle_id": digest_id("h0-bundle-", base)}
+    records.sort(
+        key=lambda row: (
+            str(row["organization_id"]),
+            int(row["observed_at"]),
+            str(row["claim_id"]),
+        )
+    )
+    return records, claim_count
+
+
+def query_access(
+    records: list[dict[str, Any]], spec: dict[str, Any], *, enabled: bool
+) -> dict[str, Any]:
+    return bounded_historical_evidence(
+        records,
+        query_id=str(spec["query_id"]),
+        requesting_organization_id=str(spec["organization_id"]),
+        predicate=str(spec["predicate"]),
+        decision_cutoff=int(spec["decision_cutoff"]),
+        result_limit=int(spec["result_limit"]),
+        enabled=enabled,
+        evidence_release_commit=CONTEXTGRAPH_RELEASE_COMMIT,
+    )
 
 
 def controller_decision(bundle: dict[str, Any]) -> dict[str, Any]:
@@ -192,8 +184,7 @@ def baseline_trajectory() -> dict[str, Any]:
         "action_id": opaque("baseline", "action"),
         "action": "baseline-action",
     }
-    consequence = world_adjudicate(decision)
-    return {"decision": decision, "consequence": consequence}
+    return {"decision": decision, "consequence": world_adjudicate(decision)}
 
 
 def main() -> int:
@@ -205,10 +196,8 @@ def main() -> int:
 
     plane_e = read_object(args.plane_e)
     query_doc = read_object(args.queries)
-    store, claims = ingest_plane_e(plane_e)
+    records, claim_count = ingest_plane_e(plane_e)
 
-    disabled = HistoricalAccess(store, enabled=False)
-    enabled = HistoricalAccess(store, enabled=True)
     queries = list(query_doc["queries"])
     bundles: dict[str, Any] = {}
     denials: dict[str, Any] = {}
@@ -216,8 +205,8 @@ def main() -> int:
     for spec in queries:
         query_id = str(spec["query_id"])
         purpose_to_query[str(spec["purpose"])] = query_id
-        denials[query_id] = disabled.query(spec)
-        bundles[query_id] = enabled.query(spec)
+        denials[query_id] = query_access(records, spec, enabled=False)
+        bundles[query_id] = query_access(records, spec, enabled=True)
 
     authority_bundle = bundles[purpose_to_query["authority-separation"]]
     decision = controller_decision(authority_bundle)
@@ -233,17 +222,11 @@ def main() -> int:
         "action": "restricted-action",
         "interpretation": "current-authority-control",
     }
-    current_actor_consequence = world_adjudicate(current_actor_control)
 
     baseline = baseline_trajectory()
-    disabled_no_retrieval = baseline_trajectory()
-
-    direct_edge_sentinels = [
-        {"route": route, "status": "rejected"} for route in FORBIDDEN_ROUTES
-    ]
     result = {
         "schema": "h0-researcher-output-v0.1",
-        "contextgraph_claims": claims,
+        "contextgraph_claim_count": claim_count,
         "bundles": bundles,
         "disabled_query_denials": denials,
         "purpose_to_query": purpose_to_query,
@@ -251,11 +234,13 @@ def main() -> int:
             "decision": decision,
             "consequence": consequence,
             "execution_acknowledgement": ack,
-            "current_actor_control_consequence": current_actor_consequence,
+            "current_actor_control_consequence": world_adjudicate(current_actor_control),
         },
-        "direct_edge_sentinels": direct_edge_sentinels,
+        "direct_edge_sentinels": [
+            {"route": route, "status": "rejected"} for route in FORBIDDEN_ROUTES
+        ],
         "observer_only_baseline_trajectory": baseline,
-        "access_disabled_no_retrieval_trajectory": disabled_no_retrieval,
+        "access_disabled_no_retrieval_trajectory": baseline_trajectory(),
         "negative_controls": {
             "private_field_fact": NOT_IDENTIFIABLE,
             "future_outcome": NOT_IDENTIFIABLE,
