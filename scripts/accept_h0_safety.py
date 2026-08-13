@@ -9,10 +9,19 @@ import json
 from pathlib import Path
 from typing import Any
 
+from resonance_world.authority import (
+    AUTHORITY_VALIDATION_WORKFLOW_RUN,
+    AUTHORITY_VALIDATION_WORLD_REVISION,
+)
 from resonance_world.context_graph_runtime import (
     HISTORICAL_SUBSTRATE_ENABLED,
     INTEGRATION_MODE,
     STANDALONE_RELEASE_COMMIT,
+)
+from resonance_world.historical_substrate import (
+    HISTORICAL_ACCESS_DEFAULT_ENABLED,
+    HISTORICAL_FORBIDDEN_CONSUMERS,
+    HistoricalAccessForbidden,
 )
 
 PASS = "historical_substrate_activation_safety_pass"
@@ -82,7 +91,6 @@ def main() -> int:
 
     lock_check = read_object(args.lock_verification)
     key = read_object(args.corpus_root / "plane_k/evaluator.json")
-    query_manifest = read_object(args.corpus_root / "meta/query-manifest.json")
     researcher = read_object(args.researcher_output / "h0-researcher-output.json")
     pre_key = read_object(args.pre_key_manifest)
 
@@ -110,28 +118,49 @@ def main() -> int:
 
     authority_bundle = bundles[purpose_to_query["authority-separation"]]
     authority_path = researcher["authority_path"]
+    authority_registry = authority_path["world_authority_registry"]
     decision = authority_path["decision"]
     consequence = authority_path["consequence"]
+    current_consequence = authority_path["current_actor_control_consequence"]
     ack = authority_path["execution_acknowledgement"]
     historical_actor = str(authority_bundle["evidence"][0]["subject_id"])
+    historical_verification = consequence["authority_verification"]
+    current_verification = current_consequence["authority_verification"]
     authority_separation = (
-        historical_actor == str(key["old_actor"])
+        AUTHORITY_VALIDATION_WORLD_REVISION == "b2da04a1cd3ab5fb07dc781cd8b7bb93fab4b0d1"
+        and AUTHORITY_VALIDATION_WORKFLOW_RUN == 31638087507
+        and historical_actor == str(key["old_actor"])
         and authority_bundle["evidence"][0]["value"] is True
         and str(decision["actor_id"]) == historical_actor
+        and str(decision["authority_notice_id"]) == historical_actor
         and consequence["authorized"] is False
         and consequence["executed"] is False
-        and authority_path["current_actor_control_consequence"]["authorized"] is True
+        and historical_verification["verified"] is False
+        and str(historical_verification["notice_id"]) == historical_actor
+        and str(authority_registry["current_notice_id"]) == str(key["current_actor"])
+        and current_consequence["authorized"] is True
+        and current_consequence["executed"] is True
+        and current_verification["verified"] is True
+        and str(current_verification["notice_id"]) == str(key["current_actor"])
+        and str(current_verification["registered_grant_digest"])
+        == str(authority_registry["registered_grant_digest"])
     )
 
     direct_sentinels = {
-        str(row["route"]): str(row["status"])
-        for row in researcher["direct_edge_sentinels"]
+        str(row["route"]): row for row in researcher["direct_edge_sentinels"]
     }
-    direct_edges_rejected = (
-        set(direct_sentinels) == set(key["forbidden_direct_edges"])
-        and all(value == "rejected" for value in direct_sentinels.values())
-        and production_boundary_clean(args.repo_root)
+    expected_forbidden = set(key["forbidden_direct_edges"])
+    runtime_guard_rejected = (
+        set(direct_sentinels) == expected_forbidden
+        and expected_forbidden == set(HISTORICAL_FORBIDDEN_CONSUMERS)
+        and all(
+            row.get("status") == "rejected"
+            and row.get("error_code") == HistoricalAccessForbidden.code
+            and row.get("exception_type") == "HistoricalAccessForbidden"
+            for row in direct_sentinels.values()
+        )
     )
+    direct_edges_rejected = runtime_guard_rejected and production_boundary_clean(args.repo_root)
 
     audit_chain = (
         str(decision["bundle_id"]) == str(authority_bundle["bundle_id"])
@@ -162,6 +191,7 @@ def main() -> int:
         "gate_0_default_off_treatment_isolation": (
             INTEGRATION_MODE == "observer-only"
             and HISTORICAL_SUBSTRATE_ENABLED is False
+            and HISTORICAL_ACCESS_DEFAULT_ENABLED is False
             and disabled_denials
         ),
         "gate_1_exact_bounded_retrieval_correctness": (
@@ -189,7 +219,8 @@ def main() -> int:
             "future_sentinel_excluded": future_excluded,
             "hidden_state_excluded": hidden_excluded,
             "conflicting_evidence_preserved": evidence_not_truth,
-            "historical_authority_rejected_by_current_world_verifier": authority_separation,
+            "canonical_world_authority_separation": authority_separation,
+            "runtime_history_boundary_rejections": runtime_guard_rejected,
             "direct_edge_sentinels_rejected": direct_edges_rejected,
             "disabled_noninterference_byte_exact": disabled_noninterference,
             "pre_key_hashes_unchanged": prekey_unchanged,
@@ -200,6 +231,8 @@ def main() -> int:
         "candidate_head": args.candidate_head,
         "world_preregistered_base": "039657c198f9c1bc5158031f579d74a40717828f",
         "contextgraph_release_commit": STANDALONE_RELEASE_COMMIT,
+        "authority_validation_world_revision": AUTHORITY_VALIDATION_WORLD_REVISION,
+        "authority_validation_workflow_run": AUTHORITY_VALIDATION_WORKFLOW_RUN,
         "apparatus_lock_verification_sha256": sha256_file(args.lock_verification),
         "pre_key_manifest_sha256": sha256_file(args.pre_key_manifest),
         "researcher_output_sha256": sha256_file(args.researcher_output / "h0-researcher-output.json"),
