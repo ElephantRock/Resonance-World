@@ -1,7 +1,6 @@
 name: O2 Longitudinal Scientific Utility
 
 on:
-  pull_request:
   workflow_dispatch:
 
 permissions:
