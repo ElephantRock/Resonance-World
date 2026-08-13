@@ -77,4 +77,4 @@ select = ["E", "F", "I", "UP", "B"]
 "tests/test_w9_replication.py" = ["E501"]
 "tests/test_w9_replication_source.py" = ["E501", "I001"]
 
-# H2 branch reproduction uses the immutable ContextGraph extra above.
+# H2 branch exact reproduction uses the immutable ContextGraph extra above.
