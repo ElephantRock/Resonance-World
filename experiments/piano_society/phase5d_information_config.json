@@ -1,0 +1,59 @@
+{
+  "revision": "piano-phase5d-memory-information-curve-v1",
+  "no_model_calls": true,
+  "source_fields": {
+    "calibration_pool": [
+      "w4-source-seed-20011", "w4-source-seed-20117", "w4-source-seed-20231",
+      "w4-source-seed-20341", "w4-source-seed-20443", "w4-source-seed-20549",
+      "w4-source-seed-20663", "w4-source-seed-20771", "w4-source-seed-20873",
+      "w4-source-seed-20983", "w4-source-seed-21089", "w4-source-seed-21191"
+    ],
+    "validation_pool": [
+      "w4-source-seed-21313", "w4-source-seed-21419", "w4-source-seed-21529",
+      "w4-source-seed-21647", "w4-source-seed-21757", "w4-source-seed-21863",
+      "w4-source-seed-21977", "w4-source-seed-22091", "w4-source-seed-22201",
+      "w4-source-seed-22307", "w4-source-seed-22409", "w4-source-seed-22511",
+      "w4-source-seed-22621", "w4-source-seed-22727", "w4-source-seed-22853",
+      "w4-source-seed-22961", "w4-source-seed-23063", "w4-source-seed-23173",
+      "w4-source-seed-23279", "w4-source-seed-23383", "w4-source-seed-23497",
+      "w4-source-seed-23603", "w4-source-seed-23719", "w4-source-seed-23827"
+    ]
+  },
+  "skills": [
+    "urban_heat", "water_systems", "energy_storage",
+    "supply_networks", "public_health", "mobility"
+  ],
+  "strategy_vocabulary": ["specialist", "balanced"],
+  "structural_hypotheses": ["role_specific", "cross_coverage"],
+  "neutral_prior": {"role_specific": 0.5, "cross_coverage": 0.5},
+  "geometry_eligibility": {
+    "require_distinct_ordered_policy_assignments": true,
+    "min_role_specific_specialist_advantage": 0.02,
+    "min_cross_coverage_balanced_advantage": 0.02,
+    "min_neutral_forecast_margin": 0.0005,
+    "min_formation_hypothesis_identifiability": 0.005
+  },
+  "target_rule": "choose_the_structural_regime_whose_optimal_policy_opposes_the_neutral_prior_preference",
+  "selection_rule": "maximally_balanced_distinct_field_set_by_constructor_score",
+  "minimum_balanced_target_count": {
+    "calibration_each": 3,
+    "validation_each": 5
+  },
+  "formation_depths": [24, 48, 96, 192, 384],
+  "formation_strategy_order": ["specialist", "balanced"],
+  "policy_evaluation_trials": 1024,
+  "calibration_depth_gate": {
+    "min_mean_retained_minus_neutral_success_rate": 0.03,
+    "min_nonnegative_unit_rate": 0.90,
+    "min_target_posterior_match_rate": 0.90,
+    "min_forecast_preference_change_rate": 0.90
+  },
+  "depth_selection_rule": "minimum_registered_depth_passing_all_calibration_gates",
+  "validation_gate": {
+    "min_mean_retained_minus_neutral_success_rate": 0.03,
+    "max_exact_two_sided_sign_test_p": 0.05,
+    "min_nonnegative_unit_rate": 0.90,
+    "min_target_posterior_match_rate": 0.90,
+    "min_forecast_preference_change_rate": 0.90
+  }
+}
