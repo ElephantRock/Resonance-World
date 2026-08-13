@@ -16,6 +16,7 @@ from resonance_world.context_graph_adapter import to_evidence_claim
 from resonance_world.o1_reconstruction import canonical_bytes, reconstruct_products
 
 O0_EVIDENCE_SHA256 = "7e8ef1c9fcbfbc16eb5e50db477dcacc2b6830af86b50b8cf44c965c21ca456a"
+_EMPTY_OBJECT_SENTINEL = "rw-o1-transport:none:v1"
 FORBIDDEN_E_FIELDS = {
     "practice_by_skill",
     "hidden_regime",
@@ -56,6 +57,22 @@ def _sha256_file(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _encode_transport_object(value: str) -> str:
+    """Encode an observed absence without violating ContextGraph's non-empty contract."""
+    return _EMPTY_OBJECT_SENTINEL if value == "" else value
+
+
+def _decode_transport_claims(claims: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Reverse only the registered O1 absence encoding before ledger reconstruction."""
+    decoded: list[dict[str, Any]] = []
+    for claim in claims:
+        row = dict(claim)
+        if row.get("object") == _EMPTY_OBJECT_SENTINEL:
+            row["object"] = ""
+        decoded.append(row)
+    return decoded
+
+
 def _load_plane_e(directory: Path) -> list[dict[str, Any]]:
     planes = []
     observed_families: set[str] = set()
@@ -78,6 +95,8 @@ def _load_plane_e(directory: Path) -> list[dict[str, Any]]:
                 raise ValueError(f"Plane E contains evaluator-only fields: {sorted(bad)}")
             if any(not isinstance(item, str) for item in fields.values()):
                 raise ValueError("Plane-E field objects must already be canonical strings")
+            if _EMPTY_OBJECT_SENTINEL in fields.values():
+                raise ValueError("Plane E collides with the reserved O1 absence encoding")
             scope_id = str(event.get("scope_id", ""))
             if not scope_id.startswith(f"o1:{family}:"):
                 raise ValueError(f"Plane-E scope/family mismatch: {scope_id!r}")
@@ -105,7 +124,7 @@ def _generic_claims(planes: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     field_id=scope_id,
                     subject=subject,
                     predicate=str(predicate),
-                    object=str(object_value),
+                    object=_encode_transport_object(str(object_value)),
                     observed_by=observer_id,
                     source_id=source_id,
                     source_class=source_class,
@@ -144,7 +163,11 @@ def main() -> int:
     if len({str(row["source_id"]) for row in claims}) != len(claims):
         raise ValueError("O1 source identities are not unique")
 
-    products = reconstruct_products(claims)
+    # ContextGraph stores a non-empty sentinel for directly observed absent values.
+    # Reconstruction reverses that transport encoding using evidence alone; Plane K is
+    # still absent, and the frozen Plane-E semantic projection remains unchanged.
+    reconstruction_claims = [*relationship_claims, *_decode_transport_claims(generic)]
+    products = reconstruct_products(reconstruction_claims)
     args.output_dir.mkdir(parents=True, exist_ok=True)
     evidence = {"schema": "o1-contextgraph-evidence-v0.1", "claims": claims}
     (args.output_dir / "contextgraph-evidence.json").write_bytes(canonical_bytes(evidence))
