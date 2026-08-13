@@ -151,9 +151,9 @@ def test_observer_disabled_path_matches_explicit_none() -> None:
         observer=None,
     )
 
-    assert default_session.run_episode(first, second, mission, seed=7001) == explicit_session.run_episode(
-        first, second, mission, seed=7001
-    )
+    default_episode = default_session.run_episode(first, second, mission, seed=7001)
+    explicit_episode = explicit_session.run_episode(first, second, mission, seed=7001)
+    assert default_episode == explicit_episode
     assert default_relationships.snapshot() == explicit_relationships.snapshot()
 
 
