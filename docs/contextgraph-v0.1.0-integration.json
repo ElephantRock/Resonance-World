@@ -1,9 +1,10 @@
 {
   "version": "world-contextgraph-integration-v0.1.0",
-  "status": "observer-only-release-adoption-candidate",
+  "status": "observer-only-observatory-accepted",
   "scientific_claim": false,
   "north_star_issue": 111,
   "base_world_commit": "689ea7b9e0630bf16960b5a0239e65766a285f3c",
+  "integration_merge_commit": "2b618ae277d6b34028f91886ace7aad1839f11c9",
   "integration_mode": "observer-only",
   "historical_substrate_enabled": false,
   "participant_query_access": false,
@@ -28,6 +29,32 @@
     "frozen_cg5_cg11_replay": "pass",
     "outcome_law_isolation": "pass"
   },
+  "observatory_validation": {
+    "preregistration_issue": 113,
+    "execution_pr": 114,
+    "accepted_exact_head": "01b20965feed1e850f16040b144ff54527fe7f1e",
+    "merge_commit": "b2fb206196b73ee80fd28628d3c94f48d5f8e7f1",
+    "workflow_run": 31657145249,
+    "classification": "observatory_non_interference_pass",
+    "primary_artifact_id": 9164799098,
+    "primary_artifact_digest": "sha256:8c56d61e507bc25172bcf1bd2b3c1558783d737440d8d1e2ff552f4060c4b163",
+    "independent_artifact_id": 9164798495,
+    "independent_artifact_digest": "sha256:55318dfb37da01b366949ed767c682a4426ec30591f2baa8e83c00dd549aa188",
+    "frozen_base_trace_sha256": "dd8b5a30cf9ed85f96fcb9164f16ec3d958d7ccfc10c5ab157079e119978bb40",
+    "candidate_baseline_trace_sha256": "dd8b5a30cf9ed85f96fcb9164f16ec3d958d7ccfc10c5ab157079e119978bb40",
+    "observatory_trace_sha256": "dd8b5a30cf9ed85f96fcb9164f16ec3d958d7ccfc10c5ab157079e119978bb40",
+    "contextgraph_evidence_sha256": "7e8ef1c9fcbfbc16eb5e50db477dcacc2b6830af86b50b8cf44c965c21ca456a",
+    "result_sha256": "8a73026c1f76e00b52bc4eee8b8c005c351942f79fedcbf5f39bce304353463d",
+    "manifest_sha256": "f6275d3de1d22fc2d880c2af42fab102a9fda1cc53eb672828f57da2de4538af",
+    "hook_compatibility": "pass",
+    "live_non_interference": "pass",
+    "semantic_evidence_crosscheck": "pass",
+    "hidden_state_exclusion": "pass",
+    "causal_isolation": "pass",
+    "two_reproduction_byte_identity": "pass",
+    "postmerge_contextgraph_integration_run": 31657484267,
+    "postmerge_contextgraph_integration": "pass"
+  },
   "ownership_boundary": {
     "dependency_direction": "Resonance World -> Resonance ContextGraph",
     "reverse_dependency_forbidden": true,
@@ -39,6 +66,6 @@
     "legacy_world_contextgraph_code_in_this_branch": false,
     "historical_scientific_records_remain_on_research_branch": true
   },
-  "scientific_provenance_note": "CG-11 architectural parity follows the executed frozen evaluator. That evaluator enforced pair stability plus a non-negative minimum selected-role score margin, while the preregistration prose described pair stability alone. The historical record is not rewritten.",
-  "purpose": "Minimal observer-only production adoption. This branch imports the released runtime contract without importing the ContextGraph research campaign into World main and without enabling participant access to accumulated history."
+  "scientific_provenance_note": "CG-11 architectural parity follows the executed frozen evaluator. That evaluator enforced pair stability plus a non-negative minimum selected-role score margin, while the preregistration prose described pair stability alone. O0 subsequently established passive Observatory non-interference only; it did not validate historical inference or participant-facing history. The historical record is not rewritten.",
+  "purpose": "Accepted observer-only production substrate. ContextGraph may receive the registered passive World observations for researcher/evaluator use. Participant access to accumulated history remains disabled and requires a separate preregistered Historical Substrate intervention."
 }
