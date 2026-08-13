@@ -50,7 +50,9 @@ jobs:
             scripts/run_h0_safety.py \
             scripts/freeze_h0_prekey.py \
             scripts/accept_h0_safety.py \
-            src/resonance_world/historical_substrate.py
+            src/resonance_world/authority.py \
+            src/resonance_world/historical_substrate.py \
+            tests/test_authority.py
 
       - name: Materialize frozen H0 fixtures
         run: python scripts/materialize_h0_fixtures.py --output-root _h0_corpus
@@ -162,7 +164,7 @@ jobs:
         run: exit 1
 
   compare-reproductions:
-    if: always()
+    if: ${{ always() && (github.head_ref == 'h0/historical-substrate-activation-safety' || github.ref_name == 'h0/historical-substrate-activation-safety') }}
     needs: reproduce
     runs-on: ubuntu-latest
     timeout-minutes: 10
