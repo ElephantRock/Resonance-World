@@ -6,8 +6,7 @@ on:
     paths:
       - ".github/workflows/contextgraph-v0.1.0-integration.yml"
       - "pyproject.toml"
-      - "src/resonance_world/context_graph_adapter.py"
-      - "src/resonance_world/context_graph_runtime.py"
+      - "src/resonance_world/**"
       - "tests/test_context_graph_runtime.py"
       - "docs/contextgraph-v0.1.0-integration.json"
       - "docs/contextgraph-v0.1.0-integration.md"
@@ -15,8 +14,7 @@ on:
     paths:
       - ".github/workflows/contextgraph-v0.1.0-integration.yml"
       - "pyproject.toml"
-      - "src/resonance_world/context_graph_adapter.py"
-      - "src/resonance_world/context_graph_runtime.py"
+      - "src/resonance_world/**"
       - "tests/test_context_graph_runtime.py"
       - "docs/contextgraph-v0.1.0-integration.json"
       - "docs/contextgraph-v0.1.0-integration.md"
@@ -81,7 +79,7 @@ jobs:
               "resonance_contextgraph",
           )
           violations = []
-          for path in Path("src/resonance_world").glob("*.py"):
+          for path in Path("src/resonance_world").rglob("*.py"):
               if path in allowed:
                   continue
               text = path.read_text()
