@@ -9,7 +9,7 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from scripts.materialize_o2_benchmarks import (
+from materialize_o2_benchmarks import (
     canonical_bytes,
     file_manifest,
     manifest_root,
