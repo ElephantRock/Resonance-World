@@ -1,0 +1,98 @@
+{
+  "revision": "piano-phase5c-roster-conditional-v2",
+  "no_model_calls": true,
+  "source_lock": {
+    "workflow_run": 31652358960,
+    "world_revision": "88baf131c78bf37fe49fab858890cce7f4740729",
+    "artifact_id": 9163101495,
+    "artifact_name": "piano-society-phase5c-frozen-source",
+    "artifact_digest": "sha256:2caf65e6f2839f243ad0c6e59f7d12ad196f48ddf79aab7c3cca42b0904f22f6",
+    "capsule_sha256": "b44926d70fe91ae3ad546351bd42096ad54a10d7d50eb954060e1bc56dcd1ea8",
+    "candidate_sha256": "a750b8b110a26a60e74a4561493c3359b29524cca2ebec1061bccff6cb3ad0b7"
+  },
+  "geometry_audit_lock": {
+    "workflow_run": 31652891403,
+    "world_revision": "f01f85369013ff8a74e0c9600e5e7eefc7036a78",
+    "artifact_id": 9163248092,
+    "artifact_name": "piano-society-phase5c-geometry-audit",
+    "artifact_digest": "sha256:c30535d8d14e93e35605db5690a7abda08e42f0ffcff1a49354dfc1b4a42ed2c",
+    "model_calls": 0,
+    "memory_training_performed": false,
+    "mission_outcomes_evaluated": false,
+    "confirmatory_fields_with_role_specific_option": 5,
+    "confirmatory_fields_with_cross_coverage_option": 13,
+    "most_balanced_feasible_twelve_unit_role_specific": 5,
+    "most_balanced_feasible_twelve_unit_cross_coverage": 7
+  },
+  "source_fields": {
+    "calibration_pool": [
+      "w4-source-seed-16001",
+      "w4-source-seed-16103",
+      "w4-source-seed-16217",
+      "w4-source-seed-16333",
+      "w4-source-seed-16447",
+      "w4-source-seed-16561"
+    ],
+    "confirmatory_pool": [
+      "w4-source-seed-16673",
+      "w4-source-seed-16787",
+      "w4-source-seed-16889",
+      "w4-source-seed-16993",
+      "w4-source-seed-17107",
+      "w4-source-seed-17209",
+      "w4-source-seed-17317",
+      "w4-source-seed-17431",
+      "w4-source-seed-17539",
+      "w4-source-seed-17653",
+      "w4-source-seed-17761",
+      "w4-source-seed-17863",
+      "w4-source-seed-17977",
+      "w4-source-seed-18089",
+      "w4-source-seed-18203",
+      "w4-source-seed-18313",
+      "w4-source-seed-18427",
+      "w4-source-seed-18539"
+    ]
+  },
+  "skills": [
+    "urban_heat",
+    "water_systems",
+    "energy_storage",
+    "supply_networks",
+    "public_health",
+    "mobility"
+  ],
+  "strategy_vocabulary": ["specialist", "balanced"],
+  "structural_hypotheses": ["role_specific", "cross_coverage"],
+  "neutral_prior": {
+    "role_specific": 0.5,
+    "cross_coverage": 0.5
+  },
+  "eligibility": {
+    "require_distinct_ordered_policy_assignments": true,
+    "min_role_specific_specialist_advantage": 0.02,
+    "min_cross_coverage_balanced_advantage": 0.02,
+    "min_neutral_forecast_margin": 0.0005,
+    "min_formation_hypothesis_identifiability": 0.005
+  },
+  "target_rule": "choose_the_structural_regime_whose_optimal_policy_opposes_the_neutral_prior_preference",
+  "score_rule": "min_hypothesis_policy_advantage_times_formation_identifiability",
+  "formation_depth": 96,
+  "calibration_evaluation_trials_per_policy": 512,
+  "selection": {
+    "calibration_units": 4,
+    "calibration_target_role_specific": 2,
+    "calibration_target_cross_coverage": 2,
+    "confirmatory_units": 12,
+    "confirmatory_target_role_specific": 5,
+    "confirmatory_target_cross_coverage": 7,
+    "one_unit_per_field": true,
+    "composition_rule": "most_balanced_feasible_twelve_unit_composition_from_locked_geometry_audit"
+  },
+  "calibration_acceptance": {
+    "min_mean_retained_minus_neutral_success_rate": 0.03,
+    "min_nonnegative_units": 4,
+    "min_forecast_preference_change_units": 4,
+    "min_target_posterior_match_units": 4
+  }
+}
