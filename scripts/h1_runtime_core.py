@@ -8,6 +8,7 @@ from collections import Counter
 from typing import Any
 
 from resonance_contextgraph import EvidenceClaim, EvidenceStore
+
 from resonance_world.historical_substrate import (
     HISTORICAL_FORBIDDEN_CONSUMERS,
     HistoricalAccessForbidden,
