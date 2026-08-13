@@ -1,38 +1,4 @@
-#!/usr/bin/env python3
-"""Materialize the preregistered H0 Historical Substrate safety fixtures."""
 
-from __future__ import annotations
-
-import argparse
-import hashlib
-import json
-import shutil
-from pathlib import Path
-from typing import Any
-
-BASE_REVISION = "039657c198f9c1bc5158031f579d74a40717828f"
-SCHEMA = "h0-fixtures-v0.1"
-
-
-def canonical_bytes(value: Any) -> bytes:
-    return (
-        json.dumps(value, sort_keys=True, separators=(",", ":"), ensure_ascii=False)
-        + "\n"
-    ).encode()
-
-
-def write_json(path: Path, value: Any) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_bytes(canonical_bytes(value))
-
-
-def opaque(*parts: object) -> str:
-    raw = "|".join(str(part) for part in parts)
-    return "h0-" + hashlib.sha256(("resonance-h0-v1|" + raw).encode()).hexdigest()[:24]
-
-
-def claim(
-    *,
     semantic_id: str,
     organization_id: str,
     subject_id: str,
@@ -169,7 +135,13 @@ def materialize(root: Path) -> dict[str, Any]:
     }
     write_json(root / "plane_e/evidence.json", plane_e)
 
-    def event_ids(predicate: str, *, org: str = org_a, cutoff: int = 20, limit: int = 100) -> list[str]:
+    def event_ids(
+        predicate: str,
+        *,
+        org: str = org_a,
+        cutoff: int = 20,
+        limit: int = 100,
+    ) -> list[str]:
         selected = [
             row
             for row in rows
