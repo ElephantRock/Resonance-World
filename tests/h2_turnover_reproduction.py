@@ -44,7 +44,9 @@ def _run(root: Path, work: Path, candidate: str) -> dict[str, bytes]:
 
 def reproduce_h2_exact_head(tmp_path: Path) -> None:
     root = Path(__file__).resolve().parents[1]
-    candidate = subprocess.check_output(["git", "rev-parse", "HEAD"], cwd=root, text=True).strip()
+    candidate = subprocess.check_output(
+        ["git", "rev-parse", "origin/experiment/h2-turnover"], cwd=root, text=True
+    ).strip()
     first = _run(root, tmp_path / "primary", candidate)
     second = _run(root, tmp_path / "independent", candidate)
     assert first == second
