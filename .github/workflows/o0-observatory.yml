@@ -1,0 +1,150 @@
+name: O0 ContextGraph Observatory Non-Interference
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  FROZEN_WORLD_BASE: 2b618ae277d6b34028f91886ace7aad1839f11c9
+  CONTEXTGRAPH_COMMIT: b896891108fd954869a8cd0423f6e8440ab0cdc0
+  CANDIDATE_HEAD: ${{ github.event.pull_request.head.sha || github.sha }}
+
+jobs:
+  o0-reproduction:
+    if: github.head_ref == 'o0/observatory-non-interference' || github.ref_name == 'o0/observatory-non-interference'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      matrix:
+        reproduction: [primary, independent]
+    steps:
+      - name: Checkout exact O0 candidate head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.CANDIDATE_HEAD }}
+          fetch-depth: 0
+      - name: Verify exact candidate head
+        run: test "$(git rev-parse HEAD)" = "$CANDIDATE_HEAD"
+      - name: Checkout frozen pre-O0 World base
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ env.FROZEN_WORLD_BASE }}
+          path: frozen-world
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install candidate World and immutable ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Prove frozen and candidate import roots
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE/frozen-world/src" python - <<'PY'
+          import inspect
+          from pathlib import Path
+          import resonance_world.w4a_joint_learning as module
+          root = Path("frozen-world/src").resolve()
+          source = Path(inspect.getsourcefile(module) or "").resolve()
+          assert source.is_relative_to(root), (source, root)
+          PY
+          PYTHONPATH="$GITHUB_WORKSPACE/src" python - <<'PY'
+          import inspect
+          from pathlib import Path
+          import resonance_world.w4a_joint_learning as module
+          root = Path("src").resolve()
+          source = Path(inspect.getsourcefile(module) or "").resolve()
+          assert source.is_relative_to(root), (source, root)
+          PY
+      - name: Lint O0 apparatus
+        run: |
+          ruff check src/resonance_world/w4a_joint_learning.py
+          ruff check src/resonance_world/observatory.py
+          ruff check tests/test_observatory.py
+          ruff check scripts/run_o0_observatory.py
+          ruff check scripts/accept_o0_observatory.py
+      - name: Test O0 apparatus
+        run: pytest -q tests/test_w4a_joint_learning.py tests/test_observatory.py
+      - name: Run frozen-base compatibility arm
+        run: |
+          mkdir -p output/o0
+          PYTHONPATH="$GITHUB_WORKSPACE/frozen-world/src" \
+            python scripts/run_o0_observatory.py \
+              --mode baseline \
+              --trace-output output/o0/frozen-base-trace.json
+      - name: Run candidate disabled-observer arm
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE/src" \
+            python scripts/run_o0_observatory.py \
+              --mode baseline \
+              --trace-output output/o0/candidate-baseline-trace.json
+      - name: Run live Observatory arm
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE/src" \
+            python scripts/run_o0_observatory.py \
+              --mode observatory \
+              --trace-output output/o0/observatory-trace.json \
+              --evidence-output output/o0/contextgraph-evidence.json
+      - name: Evaluate preregistered O0 gates
+        run: |
+          PYTHONPATH="$GITHUB_WORKSPACE/src" \
+            python scripts/accept_o0_observatory.py \
+              --frozen-trace output/o0/frozen-base-trace.json \
+              --candidate-trace output/o0/candidate-baseline-trace.json \
+              --observatory-trace output/o0/observatory-trace.json \
+              --evidence output/o0/contextgraph-evidence.json \
+              --candidate-head "$CANDIDATE_HEAD" \
+              --result-output output/o0/o0-result.json \
+              --manifest-output output/o0/o0-manifest.json
+      - name: Upload O0 authoritative artifact
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: o0-observatory-${{ matrix.reproduction }}
+          path: output/o0
+          if-no-files-found: error
+          retention-days: 90
+
+  compare-reproductions:
+    if: always() && (github.head_ref == 'o0/observatory-non-interference' || github.ref_name == 'o0/observatory-non-interference')
+    needs: o0-reproduction
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Require both isolated reproductions to pass
+        run: test '${{ needs.o0-reproduction.result }}' = 'success'
+      - name: Download primary reproduction
+        uses: actions/download-artifact@v4
+        with:
+          name: o0-observatory-primary
+          path: artifacts/primary
+      - name: Download independent reproduction
+        uses: actions/download-artifact@v4
+        with:
+          name: o0-observatory-independent
+          path: artifacts/independent
+      - name: Enforce byte-identical authoritative O0 outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          authoritative=(
+            frozen-base-trace.json
+            candidate-baseline-trace.json
+            observatory-trace.json
+            contextgraph-evidence.json
+            o0-result.json
+            o0-manifest.json
+          )
+          for file in "${authoritative[@]}"; do
+            test -f "artifacts/primary/$file"
+            test -f "artifacts/independent/$file"
+            cmp --silent "artifacts/primary/$file" "artifacts/independent/$file" || {
+              echo "O0 reproduction mismatch: $file" >&2
+              sha256sum "artifacts/primary/$file" "artifacts/independent/$file" >&2
+              exit 1
+            }
+            sha256sum "artifacts/primary/$file"
+          done

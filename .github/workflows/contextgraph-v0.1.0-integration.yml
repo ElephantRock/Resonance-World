@@ -8,6 +8,7 @@ on:
       - "pyproject.toml"
       - "src/resonance_world/**"
       - "tests/test_context_graph_runtime.py"
+      - "tests/test_observatory.py"
       - "docs/contextgraph-v0.1.0-integration.json"
       - "docs/contextgraph-v0.1.0-integration.md"
   pull_request:
@@ -16,6 +17,7 @@ on:
       - "pyproject.toml"
       - "src/resonance_world/**"
       - "tests/test_context_graph_runtime.py"
+      - "tests/test_observatory.py"
       - "docs/contextgraph-v0.1.0-integration.json"
       - "docs/contextgraph-v0.1.0-integration.md"
   workflow_dispatch:
@@ -60,10 +62,12 @@ jobs:
           test ! -d experiments/context_graph
           ! grep -R --line-number --fixed-strings "context_graph_w3" \
             src/resonance_world/context_graph_adapter.py \
-            src/resonance_world/context_graph_runtime.py
+            src/resonance_world/context_graph_runtime.py \
+            src/resonance_world/observatory.py
           ! grep -R --line-number --fixed-strings "practice_by_skill" \
             src/resonance_world/context_graph_adapter.py \
-            src/resonance_world/context_graph_runtime.py
+            src/resonance_world/context_graph_runtime.py \
+            src/resonance_world/observatory.py
       - name: Enforce observer-only production boundary
         run: |
           python - <<'PY'
@@ -72,11 +76,15 @@ jobs:
           allowed = {
               Path("src/resonance_world/context_graph_adapter.py"),
               Path("src/resonance_world/context_graph_runtime.py"),
+              Path("src/resonance_world/observatory.py"),
           }
           forbidden_tokens = (
               "context_graph_adapter",
               "context_graph_runtime",
               "resonance_contextgraph",
+              "resonance_world.observatory",
+              "from .observatory",
+              "import observatory",
           )
           violations = []
           for path in Path("src/resonance_world").rglob("*.py"):
@@ -117,20 +125,23 @@ jobs:
         run: |
           ruff check src/resonance_world/context_graph_adapter.py
           ruff check src/resonance_world/context_graph_runtime.py
+          ruff check src/resonance_world/observatory.py
           ruff check tests/test_context_graph_runtime.py
+          ruff check tests/test_observatory.py
       - name: Test integration contract
-        run: pytest -q tests/test_context_graph_runtime.py
+        run: pytest -q tests/test_context_graph_runtime.py tests/test_observatory.py
       - name: Re-prove World outcome-law isolation
         run: |
           python - <<'PY'
           import inspect
-          from resonance_world.w4a_joint_learning import JointEnvironment
+          from resonance_world.w4a_joint_learning import JointController, JointEnvironment
 
           forbidden = {
-              "graph", "context_graph", "evidence", "claims",
-              "relationship_state", "organization_memory",
-              "acquisition_state", "stopping_state",
+              "graph", "context_graph", "evidence", "claims", "observer", "observatory",
+              "relationship_state", "organization_memory", "acquisition_state", "stopping_state",
           }
-          params = set(inspect.signature(JointEnvironment.evaluate).parameters)
-          assert not forbidden.intersection(params), params
+          env_params = set(inspect.signature(JointEnvironment.evaluate).parameters)
+          controller_params = set(inspect.signature(JointController.choose_action).parameters)
+          assert not forbidden.intersection(env_params), env_params
+          assert not forbidden.intersection(controller_params), controller_params
           PY
