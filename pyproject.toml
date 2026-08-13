@@ -39,6 +39,7 @@ select = ["E", "F", "I", "UP", "B"]
 
 [tool.ruff.lint.per-file-ignores]
 "scripts/materialize_o1_benchmarks.py" = ["E302", "F403", "F405", "I001"]
+"scripts/materialize_o2_benchmarks.py" = ["E501", "UP035"]
 "scripts/accept_o1_reconstruction.py" = ["E302", "F403", "F405", "I001"]
 "scripts/o1_accept_metrics.py" = ["E302", "I001"]
 "src/resonance_world/w4_relationship.py" = ["E501"]

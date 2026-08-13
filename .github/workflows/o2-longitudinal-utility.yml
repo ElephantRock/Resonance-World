@@ -1,0 +1,173 @@
+name: O2 Longitudinal Scientific Utility
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  O2_BRANCH: o2/longitudinal-scientific-utility
+
+jobs:
+  reproduce:
+    if: github.head_ref == 'o2/longitudinal-scientific-utility' || github.ref_name == 'o2/longitudinal-scientific-utility'
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [primary, independent]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Freeze exact candidate identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate="$(git rev-parse HEAD)"
+          expected="${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$candidate" = "$expected"
+          echo "CANDIDATE_HEAD=$candidate" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install exact O2 dependencies
+        run: python -m pip install -e '.[dev,contextgraph]'
+
+      - name: Lint O2 implementation
+        run: |
+          ruff check \
+            scripts/materialize_o2_benchmarks.py \
+            scripts/verify_o2_lock.py \
+            scripts/freeze_o2_prekey.py \
+            scripts/run_o2_utility.py \
+            scripts/accept_o2_utility.py \
+            src/resonance_world/o2_utility.py \
+            src/resonance_world/o2_accept_support.py \
+            src/resonance_world/o2_acceptance.py
+
+      - name: Materialize frozen benchmark
+        run: python scripts/materialize_o2_benchmarks.py --output-root _o2_corpus
+
+      - name: Verify frozen apparatus lock
+        run: |
+          python scripts/verify_o2_lock.py \
+            --lock research/o2/apparatus-lock.json \
+            --materialization _o2_corpus/materialization-manifest.json \
+            --output _o2_work/apparatus-lock-verification.json
+
+      - name: Isolate admissible pre-key inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _o2_public
+          cp -R _o2_corpus/plane_e _o2_public/plane_e
+          cp -R _o2_corpus/r0 _o2_public/r0
+          cp -R _o2_corpus/r1 _o2_public/r1
+          rm -rf _o2_corpus
+          test ! -e _o2_public/plane_k
+
+      - name: Run observer-side analysis without Plane K
+        run: |
+          python scripts/run_o2_utility.py \
+            --plane-e-dir _o2_public/plane_e \
+            --r0-dir _o2_public/r0 \
+            --r1-dir _o2_public/r1 \
+            --output-dir _o2_work/research
+
+      - name: Freeze researcher outputs before evaluator key
+        run: |
+          python scripts/freeze_o2_prekey.py \
+            --output-dir _o2_work/research \
+            --manifest _o2_work/pre-key-manifest.json
+
+      - name: Remove pre-key input workspace
+        run: rm -rf _o2_public
+
+      - name: Restore evaluator corpus only after pre-key freeze
+        run: python scripts/materialize_o2_benchmarks.py --output-root _o2_eval_corpus
+
+      - name: Reverify evaluator materialization
+        run: |
+          python scripts/verify_o2_lock.py \
+            --lock research/o2/apparatus-lock.json \
+            --materialization _o2_eval_corpus/materialization-manifest.json \
+            --output _o2_work/evaluator-lock-verification.json
+          cmp _o2_work/apparatus-lock-verification.json _o2_work/evaluator-lock-verification.json
+
+      - name: Evaluate registered O2 gates
+        id: accept
+        continue-on-error: true
+        run: |
+          python scripts/accept_o2_utility.py \
+            --lock research/o2/apparatus-lock.json \
+            --lock-verification _o2_work/apparatus-lock-verification.json \
+            --corpus-root _o2_eval_corpus \
+            --research-output _o2_work/research \
+            --pre-key-manifest _o2_work/pre-key-manifest.json \
+            --candidate-head "$CANDIDATE_HEAD" \
+            --output-dir _o2_work/acceptance
+
+      - name: Confirm pre-key bytes did not change
+        run: |
+          python scripts/freeze_o2_prekey.py \
+            --output-dir _o2_work/research \
+            --manifest _o2_work/pre-key-after-evaluation.json
+          cmp _o2_work/pre-key-manifest.json _o2_work/pre-key-after-evaluation.json
+
+      - name: Assemble authoritative artifact
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _o2_authoritative
+          cp research/o2/apparatus-lock.json _o2_authoritative/apparatus-lock.json
+          cp _o2_work/apparatus-lock-verification.json _o2_authoritative/
+          cp _o2_work/pre-key-manifest.json _o2_authoritative/
+          cp _o2_work/research/*.json _o2_authoritative/
+          if [ -d _o2_work/acceptance ]; then
+            cp _o2_work/acceptance/*.json _o2_authoritative/
+          fi
+
+      - name: Upload authoritative reproduction
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: o2-authoritative-${{ matrix.replica }}
+          path: _o2_authoritative
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Enforce registered outcome
+        if: steps.accept.outcome == 'failure'
+        run: exit 1
+
+  compare-reproductions:
+    if: always()
+    needs: reproduce
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download both exact-head reproductions
+        uses: actions/download-artifact@v4
+        with:
+          pattern: o2-authoritative-*
+          path: compare
+
+      - name: Byte-compare every authoritative product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d compare/o2-authoritative-primary
+          test -d compare/o2-authoritative-independent
+          diff -ru \
+            compare/o2-authoritative-primary \
+            compare/o2-authoritative-independent

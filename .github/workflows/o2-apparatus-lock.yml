@@ -1,0 +1,71 @@
+name: O2 Pre-Outcome Apparatus Lock
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  O2_BRANCH: o2/longitudinal-scientific-utility
+
+jobs:
+  materialize:
+    if: github.head_ref == 'o2/longitudinal-scientific-utility' || github.ref_name == 'o2/longitudinal-scientific-utility'
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Checkout candidate
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Materialize registered O2 corpus only
+        run: python scripts/materialize_o2_benchmarks.py --output-root output/o2
+
+      - name: Verify pre-outcome corpus structure
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path('output/o2')
+          manifest = json.loads((root / 'materialization-manifest.json').read_text())
+          assert manifest['semantic_template_count'] == 10
+          assert manifest['collision_pair_count'] == 40
+          assert manifest['history_count'] == 80
+          assert manifest['roots']['plane_e']['file_count'] == 80
+          assert manifest['roots']['plane_k']['file_count'] == 80
+          assert manifest['roots']['r0']['file_count'] == 80
+          assert manifest['roots']['r1']['file_count'] == 80
+
+          groups = {}
+          for path in sorted((root / 'r0').glob('*.json')):
+              pair_id = path.name.split('--', 1)[0]
+              groups.setdefault(pair_id, []).append(path.read_bytes())
+          assert len(groups) == 40
+          assert all(len(rows) == 2 and rows[0] == rows[1] for rows in groups.values())
+
+          for path in (root / 'plane_e').glob('*.json'):
+              doc = json.loads(path.read_text())
+              assert 'template' not in doc and 'variant' not in doc
+              for event in doc['events']:
+                  assert 'template' not in event and 'variant' not in event
+          PY
+
+      - name: Upload apparatus manifests only
+        uses: actions/upload-artifact@v4
+        with:
+          name: o2-preoutcome-apparatus-manifests
+          path: |
+            output/o2/materialization-manifest.json
+            output/o2/meta/*.json
+          if-no-files-found: error
+          retention-days: 90
