@@ -60,7 +60,7 @@ def test_adapter_has_no_legacy_or_evaluator_dependency() -> None:
 
 
 def test_structural_claim_and_mission_mapping() -> None:
-    claim = adapter.to_evidence_claim(Claim())
+    claim = adapter.to_evidence_claim(Claim(), delivery=0)
     mission = adapter.to_mission_spec(Mission())
 
     assert claim.scope_id == "field:test"
@@ -70,6 +70,20 @@ def test_structural_claim_and_mission_mapping() -> None:
     assert mission.mission_id == "mission:test"
     assert mission.lead_skill == "skill:a"
     assert mission.support_skill == "skill:b"
+
+
+def test_public_mapper_requires_and_uses_delivery_ordinal() -> None:
+    claim = Claim()
+    first = adapter.to_evidence_claim(claim, delivery=0)
+    second = adapter.to_evidence_claim(claim, delivery=1)
+
+    assert first.source_id == second.source_id == "source:1"
+    assert first.claim_id != second.claim_id
+    assert first.claim_id.endswith(":0")
+    assert second.claim_id.endswith(":1")
+
+    with pytest.raises(TypeError):
+        adapter.to_evidence_claim(claim)  # type: ignore[call-arg]
 
 
 def test_repeated_delivery_gets_unique_transport_identity() -> None:
