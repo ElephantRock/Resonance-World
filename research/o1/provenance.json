@@ -1,0 +1,55 @@
+{
+  "schema": "o1-benchmark-provenance-v0.1",
+  "preregistration_issue": 119,
+  "threshold_policy_issue": 118,
+  "world_base": "1f3c12416b43b5b6b56eb4ce69453b067cae99c6",
+  "contextgraph_release_commit": "b896891108fd954869a8cd0423f6e8440ab0cdc0",
+  "piano_research_head": "52aa261f22328918c21798befd494bf42943b4b8",
+  "sources": {
+    "R": {
+      "kind": "accepted_o0_artifact",
+      "artifact_id": 9164799098,
+      "artifact_sha256": "8c56d61e507bc25172bcf1bd2b3c1558783d737440d8d1e2ff552f4060c4b163",
+      "contextgraph_evidence_sha256": "7e8ef1c9fcbfbc16eb5e50db477dcacc2b6830af86b50b8cf44c965c21ca456a",
+      "observatory_trace_sha256": "dd8b5a30cf9ed85f96fcb9164f16ec3d958d7ccfc10c5ab157079e119978bb40"
+    },
+    "A": {
+      "kind": "piano_phase4c_artifact",
+      "world_revision": "b2da04a1cd3ab5fb07dc781cd8b7bb93fab4b0d1",
+      "workflow_run": 31638087507,
+      "artifact_id": 9158432521,
+      "artifact_sha256": "465c5d07c7e98a33dccedf24c0fb504a82ad54632590ec1fce8eddd1cf57279e",
+      "materialization": "public/runtime authority observations are Plane E; expected/spoof authenticity fields are Plane K"
+    },
+    "T": {
+      "kind": "piano_phase5c_artifact_plus_frozen_source",
+      "world_revision": "da24461e9244dbeb50d85e9fd1c35339726a49a9",
+      "workflow_run": 31653879702,
+      "artifact_id": 9163662793,
+      "artifact_sha256": "e44cc271d688ada78c59a55410f028147c01e6e2954c923d2c42b56419943d4f",
+      "dataset_sha256": "1cba37efee0d2dcba9c01010a2be684668c2a1c716f931e7dd0c4418ea7e2633",
+      "source_artifact_id": 9163101495,
+      "source_artifact_sha256": "2caf65e6f2839f243ad0c6e59f7d12ad196f48ddf79aab7c3cca42b0904f22f6",
+      "materialization": "frozen model-visible/runtime records plus deterministic World routing replay; private source UUID/practice values are replaced by opaque member aliases and remain outside Plane E"
+    },
+    "S": {
+      "kind": "accepted_w9_06_replay",
+      "accepted_exact_head": "eaaa0c013cd878a5d0e1afa88bfc6d54e90ae371",
+      "workflow_run": 31654273741,
+      "artifact_id": 9163835188,
+      "artifact_sha256": "550da9bfb7ad64dfde8f2c8c48e4ba75de28fb25097152455d0cd3abd6c0487a",
+      "w9_06_sha256": "9e37f426c15fd0dc049fc9da07d25f48dcc6092c1967714b9e90c6274c42f562",
+      "materialization": "frozen W9-06 public market and service events are deterministically replayed; replayed per-cycle service counts sum exactly to the accepted organization totals; private capability/source-frontier diagnostics stay in Plane K"
+    }
+  },
+  "fixture_sha256": {
+    "plane_e/authority.json": "add7132059e94d0421e0743c9e79bb04290e550730fda82add38b88256509223",
+    "plane_e/source-sustainability.json": "62a80e31af5adeecd28dc08417a7744c41cd288d526fa9622c481674ed232599",
+    "plane_e/turnover.json": "d81ff91370e5f2c798bb4abc004746e63240c45323a157c30be6b0f79d44c8d9",
+    "plane_k/authority.json": "d00ef3349c1a746a026dbe51ed562daacfa93c57257632b8dcdd45eb3ce7b85a",
+    "plane_k/source-sustainability.json": "2049828d892479ad851b658ec62ab261969ff13cd6d7fcf81a622ff6ca68912e",
+    "plane_k/turnover.json": "828769906112a960fb20559d67814f838f45f1c10d0ca43d77f33c5e248eac73"
+  },
+  "materialized_before_o1_outcome_evidence": true,
+  "historical_results_reinterpreted": false
+}
