@@ -15,6 +15,9 @@ from resonance_contextgraph import EvidenceStore
 from resonance_world.context_graph_adapter import to_evidence_claim
 from resonance_world.o2_utility import analyze_events, analyze_r0, canonical_bytes
 
+AMENDED_QUERY_ID = "contribution_vector_by_interval"
+NOT_IDENTIFIABLE = "not_observationally_identifiable"
+
 
 @dataclass(frozen=True, slots=True)
 class _ObservedClaim:
@@ -36,6 +39,30 @@ def encoded(value: Any) -> str:
 
 def decoded(value: str) -> Any:
     return json.loads(value)
+
+
+def contribution_answer(events: list[dict[str, Any]]) -> dict[str, Any] | None:
+    """Return the amended per-interval member contribution vector when observable."""
+    member_rows = [row for row in events if isinstance(row.get("member_ids"), list)]
+    members = sorted({str(member) for row in member_rows for member in row["member_ids"]})
+    performance = [row for row in events if row.get("kind") == "performance"]
+    if not members or not performance:
+        return None
+    max_interval = max(int(row["interval"]) for row in performance)
+    vectors: list[dict[str, int]] = []
+    for interval in range(1, max_interval + 1):
+        vector = {member: 0 for member in members}
+        for row in performance:
+            if int(row["interval"]) != interval:
+                continue
+            member = str(row.get("subject_id"))
+            if member in vector:
+                vector[member] += int(row.get("successes", 0))
+        vectors.append(vector)
+    return {
+        "value": vectors,
+        "support_event_ids": sorted(str(row["event_id"]) for row in performance),
+    }
 
 
 def ingest_history(history: dict[str, Any]) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
@@ -117,7 +144,10 @@ def analyze_r0_pairs(directory: Path) -> list[dict[str, Any]]:
     for pair_id, payloads in by_pair.items():
         if len(payloads) != 2 or payloads[0] != payloads[1]:
             raise ValueError(f"R0 aggregate collision broken for {pair_id}")
-    return [analyze_r0(pair_id) for pair_id in sorted(by_pair)]
+    results = [analyze_r0(pair_id) for pair_id in sorted(by_pair)]
+    for result in results:
+        result["answers"][AMENDED_QUERY_ID] = NOT_IDENTIFIABLE
+    return results
 
 
 def main() -> int:
@@ -143,9 +173,11 @@ def main() -> int:
         claims, reconstructed = ingest_history(history)
         all_claims.extend(claims)
         ledgers.append({"history_id": history_id, "pair_id": pair_id, "events": reconstructed})
-        r2_answers.append(
-            {"history_id": history_id, "pair_id": pair_id, **analyze_events(reconstructed)}
-        )
+        r2_result = analyze_events(reconstructed)
+        r2_amended = contribution_answer(reconstructed)
+        if r2_amended is not None:
+            r2_result["answers"][AMENDED_QUERY_ID] = r2_amended
+        r2_answers.append({"history_id": history_id, "pair_id": pair_id, **r2_result})
 
         flat = flat_by_id.get(history_id)
         if flat is None or str(flat.get("pair_id")) != pair_id:
@@ -153,9 +185,11 @@ def main() -> int:
         events = flat.get("events")
         if not isinstance(events, list):
             raise ValueError(f"R1 history {history_id} has invalid events")
-        r1_answers.append(
-            {"history_id": history_id, "pair_id": pair_id, **analyze_events(events)}
-        )
+        r1_result = analyze_events(events)
+        r1_amended = contribution_answer(events)
+        if r1_amended is not None:
+            r1_result["answers"][AMENDED_QUERY_ID] = r1_amended
+        r1_answers.append({"history_id": history_id, "pair_id": pair_id, **r1_result})
 
     if len({str(row["claim_id"]) for row in all_claims}) != len(all_claims):
         raise ValueError("O2 ContextGraph claim identities are not unique")
