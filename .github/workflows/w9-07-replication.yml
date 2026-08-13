@@ -64,3 +64,45 @@ jobs:
           path: output/w9/replication
           if-no-files-found: error
           retention-days: 90
+
+  compare-reproductions:
+    if: github.head_ref == 'w9/replication'
+    needs: w9-replication
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download primary reproduction
+        uses: actions/download-artifact@v4
+        with:
+          name: w9-07-replication-primary
+          path: artifacts/primary
+      - name: Download independent reproduction
+        uses: actions/download-artifact@v4
+        with:
+          name: w9-07-replication-independent
+          path: artifacts/independent
+      - name: Enforce byte-identical authoritative outputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          authoritative=(
+            w9-00b-calibration.json
+            w9-01-allocation.json
+            w9-02-leasing.json
+            w9-03-portfolio.json
+            w9-04-coalition.json
+            w9-05-integrated.json
+            w9-06-long-horizon.json
+            w9-07-replication.json
+            w9-07-manifest.json
+          )
+          for file in "${authoritative[@]}"; do
+            test -f "artifacts/primary/$file"
+            test -f "artifacts/independent/$file"
+            cmp --silent "artifacts/primary/$file" "artifacts/independent/$file" || {
+              echo "W9-07 reproduction mismatch: $file" >&2
+              sha256sum "artifacts/primary/$file" "artifacts/independent/$file" >&2
+              exit 1
+            }
+            sha256sum "artifacts/primary/$file"
+          done
