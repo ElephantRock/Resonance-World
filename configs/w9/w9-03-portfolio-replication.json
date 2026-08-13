@@ -1,0 +1,81 @@
+{
+  "version": "w9-03-portfolio-redundancy-v0.1",
+  "field_sha": "2a85739603ebac86f451b90733229782c0d45ce0",
+  "discovery_seeds": [3611, 3731, 3851, 3971, 4091],
+  "replication_seeds": [4211, 4331, 4451, 4571, 4691],
+  "agents_per_field": 12,
+  "base_source_cycles": 72,
+  "development_cycles": 12,
+  "development_resident_agent_cycle_units_per_field": 144,
+  "portfolio_target_strata": 3,
+  "service_trials": 512,
+  "organization_budget": 220,
+  "offer_count": 8,
+  "bid_base": 30,
+  "bid_span": 60,
+  "source_incremental_bound_pp": 2.0,
+  "source_cumulative_bound_pp": 2.0,
+  "stratum_cumulative_bound_pp": 3.0,
+  "effect_band_pp": 2.0,
+  "diagnostic_public_score_threshold": 0.50,
+  "diagnostic_probability_threshold": 0.64,
+  "diagnostic_redundancy_ratio_threshold": 1.2,
+  "development_campaign_name": "w9-portfolio-development-replication-v0.1",
+  "selector": {
+    "home_success_rate": 0.30,
+    "bid_win_rate": 0.20,
+    "mean_bid_confidence": 0.10,
+    "experience": 0.10,
+    "dominant_host_fit": 0.20,
+    "secondary_host_fit": 0.10,
+    "experience_scale": 12.0
+  },
+  "public_estimator": {
+    "probability_mapping": "source_base_plus_public_score_span",
+    "mission_requirement_weight": 1.0,
+    "selector": {
+      "home_success_rate": 0.30,
+      "bid_win_rate": 0.20,
+      "mean_bid_confidence": 0.10,
+      "experience": 0.10,
+      "dominant_host_fit": 0.20,
+      "secondary_host_fit": 0.10,
+      "experience_scale": 12.0
+    }
+  },
+  "organization_environment": {
+    "base_success_probability": 0.35,
+    "practice_gain": 0.16,
+    "maximum_role_success": 0.94
+  },
+  "source_service_law": {
+    "base_success_probability": 0.38,
+    "practice_gain": 0.14,
+    "maximum_success_probability": 0.90
+  },
+  "organizations": [
+    {
+      "organization_id": "org-alpha",
+      "lead_skill": "energy_storage",
+      "support_skill": "mobility"
+    },
+    {
+      "organization_id": "org-beta",
+      "lead_skill": "water_systems",
+      "support_skill": "public_health"
+    },
+    {
+      "organization_id": "org-gamma",
+      "lead_skill": "supply_networks",
+      "support_skill": "urban_heat"
+    }
+  ],
+  "home_service_missions": [
+    {"mission_id": "home-urban-heat", "skill": "urban_heat"},
+    {"mission_id": "home-water", "skill": "water_systems"},
+    {"mission_id": "home-energy", "skill": "energy_storage"},
+    {"mission_id": "home-supply", "skill": "supply_networks"},
+    {"mission_id": "home-health", "skill": "public_health"},
+    {"mission_id": "home-mobility", "skill": "mobility"}
+  ]
+}
