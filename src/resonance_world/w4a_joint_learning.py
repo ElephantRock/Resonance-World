@@ -11,7 +11,7 @@ import hashlib
 import json
 import math
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import Literal, Protocol
 
 Role = Literal["lead", "support"]
 
@@ -79,6 +79,17 @@ class JointEpisode:
         if agent_id == self.agent_b:
             return self.action_b
         raise KeyError(agent_id)
+
+
+class EpisodeObserver(Protocol):
+    """Read-only post-episode observation hook.
+
+    Implementations receive only the immutable public mission and episode records. They
+    have no participant, relationship-store, controller, environment, or evaluator-state
+    handle through this protocol.
+    """
+
+    def observe(self, mission: JointMission, episode: JointEpisode) -> None: ...
 
 
 @dataclass(slots=True)
@@ -373,6 +384,7 @@ class JointLearningSession:
     controller: JointController
     relationships: RelationshipStateStore
     communication: CommunicationPolicy
+    observer: EpisodeObserver | None = None
 
     def run_episode(
         self,
@@ -418,4 +430,6 @@ class JointLearningSession:
             success=success,
         )
         self.relationships.record(episode)
+        if self.observer is not None:
+            self.observer.observe(mission, episode)
         return episode
