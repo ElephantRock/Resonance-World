@@ -1,0 +1,184 @@
+name: H0 Historical Substrate Activation Safety
+
+on:
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+env:
+  H0_BRANCH: h0/historical-substrate-activation-safety
+
+jobs:
+  reproduce:
+    if: github.head_ref == 'h0/historical-substrate-activation-safety' || github.ref_name == 'h0/historical-substrate-activation-safety'
+    strategy:
+      fail-fast: false
+      matrix:
+        replica: [primary, independent]
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Checkout exact candidate head
+        uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+
+      - name: Freeze exact candidate identity
+        shell: bash
+        run: |
+          set -euo pipefail
+          candidate="$(git rev-parse HEAD)"
+          expected="${{ github.event.pull_request.head.sha || github.sha }}"
+          test "$candidate" = "$expected"
+          echo "CANDIDATE_HEAD=$candidate" >> "$GITHUB_ENV"
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+
+      - name: Install exact H0 dependencies
+        run: python -m pip install -e '.[dev,contextgraph]'
+
+      - name: Lint H0 implementation
+        run: |
+          ruff check \
+            scripts/materialize_h0_fixtures.py \
+            scripts/verify_h0_lock.py \
+            scripts/run_h0_safety.py \
+            scripts/freeze_h0_prekey.py \
+            scripts/accept_h0_safety.py \
+            src/resonance_world/historical_substrate.py
+
+      - name: Materialize frozen H0 fixtures
+        run: python scripts/materialize_h0_fixtures.py --output-root _h0_corpus
+
+      - name: Verify frozen H0 apparatus lock
+        run: |
+          python scripts/verify_h0_lock.py \
+            --lock research/h0/apparatus-lock.json \
+            --materialization _h0_corpus/materialization-manifest.json \
+            --output _h0_work/apparatus-lock-verification.json
+
+      - name: Isolate admissible pre-key inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _h0_public
+          cp _h0_corpus/plane_e/evidence.json _h0_public/evidence.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          src = json.loads(Path('_h0_corpus/meta/query-manifest.json').read_text())
+          public = {
+              'schema': 'h0-public-query-manifest-v0.1',
+              'queries': [
+                  {k: v for k, v in row.items() if k != 'expected_event_ids'}
+                  for row in src['queries']
+              ],
+          }
+          path = Path('_h0_public/queries.json')
+          path.write_text(json.dumps(public, sort_keys=True, separators=(',', ':')) + '\n')
+          assert 'expected_event_ids' not in path.read_text()
+          PY
+          rm -rf _h0_corpus
+          test ! -e _h0_public/plane_k
+
+      - name: Run bounded-history treatment before evaluator key
+        run: |
+          python scripts/run_h0_safety.py \
+            --plane-e _h0_public/evidence.json \
+            --queries _h0_public/queries.json \
+            --output-dir _h0_work/research
+
+      - name: Freeze researcher outputs before evaluator key
+        run: |
+          python scripts/freeze_h0_prekey.py \
+            --output-dir _h0_work/research \
+            --manifest _h0_work/pre-key-manifest.json
+
+      - name: Remove pre-key workspace
+        run: rm -rf _h0_public
+
+      - name: Restore evaluator corpus only after pre-key freeze
+        run: python scripts/materialize_h0_fixtures.py --output-root _h0_eval_corpus
+
+      - name: Reverify evaluator fixture lock
+        run: |
+          python scripts/verify_h0_lock.py \
+            --lock research/h0/apparatus-lock.json \
+            --materialization _h0_eval_corpus/materialization-manifest.json \
+            --output _h0_work/evaluator-lock-verification.json
+          cmp _h0_work/apparatus-lock-verification.json _h0_work/evaluator-lock-verification.json
+
+      - name: Evaluate registered H0 gates
+        id: accept
+        continue-on-error: true
+        run: |
+          python scripts/accept_h0_safety.py \
+            --repo-root . \
+            --lock-verification _h0_work/apparatus-lock-verification.json \
+            --corpus-root _h0_eval_corpus \
+            --researcher-output _h0_work/research \
+            --pre-key-manifest _h0_work/pre-key-manifest.json \
+            --candidate-head "$CANDIDATE_HEAD" \
+            --output-dir _h0_work/acceptance
+
+      - name: Confirm pre-key bytes did not change
+        run: |
+          python scripts/freeze_h0_prekey.py \
+            --output-dir _h0_work/research \
+            --manifest _h0_work/pre-key-after-evaluation.json
+          cmp _h0_work/pre-key-manifest.json _h0_work/pre-key-after-evaluation.json
+
+      - name: Assemble authoritative artifact
+        if: always()
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p _h0_authoritative
+          cp research/h0/apparatus-lock.json _h0_authoritative/
+          cp _h0_work/apparatus-lock-verification.json _h0_authoritative/
+          cp _h0_work/pre-key-manifest.json _h0_authoritative/
+          cp _h0_work/research/*.json _h0_authoritative/
+          if [ -d _h0_work/acceptance ]; then
+            cp _h0_work/acceptance/*.json _h0_authoritative/
+          fi
+
+      - name: Upload authoritative reproduction
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: h0-authoritative-${{ matrix.replica }}
+          path: _h0_authoritative
+          if-no-files-found: error
+          retention-days: 90
+
+      - name: Enforce registered outcome
+        if: steps.accept.outcome == 'failure'
+        run: exit 1
+
+  compare-reproductions:
+    if: always()
+    needs: reproduce
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - name: Download both exact-head reproductions
+        uses: actions/download-artifact@v4
+        with:
+          pattern: h0-authoritative-*
+          path: compare
+
+      - name: Byte-compare every authoritative product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -d compare/h0-authoritative-primary
+          test -d compare/h0-authoritative-independent
+          diff -ru \
+            compare/h0-authoritative-primary \
+            compare/h0-authoritative-independent
