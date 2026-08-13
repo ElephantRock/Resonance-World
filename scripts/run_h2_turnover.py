@@ -9,7 +9,18 @@ import json
 from pathlib import Path
 from typing import Any
 
-from h1_runtime_core import CG, NI, cb, cg_records, did, flat, norm, ordered, path, sentinels
+from h1_runtime_core import (
+    CG,
+    NI,
+    cb,
+    cg_records,
+    did,
+    flat,
+    norm,
+    ordered,
+    path,
+    sentinels,
+)
 from resonance_world.historical_substrate import bounded_historical_evidence
 
 
