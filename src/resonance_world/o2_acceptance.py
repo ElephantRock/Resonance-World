@@ -8,11 +8,6 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Any
 
-from .context_graph_runtime import (
-    HISTORICAL_SUBSTRATE_ENABLED,
-    INTEGRATION_MODE,
-    STANDALONE_RELEASE_COMMIT,
-)
 from .o2_accept_support import event_support, structural_plane_k_exclusion
 from .o2_utility import NEGATIVE_CONTROLS, NOT_IDENTIFIABLE, canonical_bytes
 
@@ -92,6 +87,9 @@ def evaluate_o2(
     pre_key_manifest_path: Path,
     candidate_head: str,
     reproducibility_contract: str,
+    integration_mode: str,
+    historical_substrate_enabled: bool,
+    standalone_release_commit: str,
 ) -> tuple[dict[str, Any], dict[str, Any]]:
     lock = read_object(lock_path)
     lock_check = read_object(lock_verification_path)
@@ -214,7 +212,7 @@ def evaluate_o2(
 
     gates = {
         "gate_0_observer_only_boundary": (
-            INTEGRATION_MODE == "observer-only" and HISTORICAL_SUBSTRATE_ENABLED is False
+            integration_mode == "observer-only" and historical_substrate_enabled is False
         ),
         "gate_1_benchmark_lock_collision_integrity": (
             bool(lock_check.get("all_match")) and root_match and collision_ok and opaque_ok
@@ -263,7 +261,7 @@ def evaluate_o2(
         "schema": "o2-manifest-v0.1",
         "candidate_head": candidate_head,
         "world_preregistered_base": lock["frozen_base_revision"],
-        "contextgraph_release_commit": STANDALONE_RELEASE_COMMIT,
+        "contextgraph_release_commit": standalone_release_commit,
         "generator_revision": lock["generator_revision"],
         "apparatus_roots": lock["roots"],
         "reproducibility_contract": REPRO_CONTRACT,
