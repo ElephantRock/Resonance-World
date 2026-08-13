@@ -223,10 +223,13 @@ def main() -> int:
         "interpretation": "current-authority-control",
     }
 
+    cutoff = int(plane_e["decision_cutoff"])
+    visible_claims = [row for row in records if int(row["observed_at"]) <= cutoff]
     baseline = baseline_trajectory()
     result = {
         "schema": "h0-researcher-output-v0.1",
-        "contextgraph_claim_count": claim_count,
+        "contextgraph_claims": visible_claims,
+        "contextgraph_total_claim_count": claim_count,
         "bundles": bundles,
         "disabled_query_denials": denials,
         "purpose_to_query": purpose_to_query,
