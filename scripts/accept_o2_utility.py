@@ -7,7 +7,11 @@ import argparse
 import hashlib
 from pathlib import Path
 
-from resonance_world.context_graph_runtime import HISTORICAL_SUBSTRATE_ENABLED, INTEGRATION_MODE, STANDALONE_RELEASE_COMMIT
+from resonance_world.context_graph_runtime import (
+    HISTORICAL_SUBSTRATE_ENABLED,
+    INTEGRATION_MODE,
+    STANDALONE_RELEASE_COMMIT,
+)
 from resonance_world.o2_acceptance import CLASS_PASS, REPRO_CONTRACT, evaluate_o2
 from resonance_world.o2_utility import canonical_bytes
 
