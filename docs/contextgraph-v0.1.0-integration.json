@@ -66,6 +66,17 @@
     "production_historical_substrate_enabled": false,
     "scope": "bounded research-treatment harness only"
   },
+  "branch_scoped_h3": {
+    "preregistration_issue": 147,
+    "branch": "experiment/h3-multigeneration-accumulation",
+    "status": "accepted",
+    "accepted_exact_head": "e637711939b6f4e7a2145ef08a4f369647a60385",
+    "validation_run": 31756675516,
+    "classification": "historical_substrate_multigeneration_accumulation_pass",
+    "result_sha256": "c9b98cc290e10e7f45d1957d7d638c11039800b921b510b8fcae37c9f10d7152",
+    "production_historical_substrate_enabled": false,
+    "scope": "bounded research-treatment harness only"
+  },
   "ownership_boundary": {
     "dependency_direction": "Resonance World -> Resonance ContextGraph",
     "reverse_dependency_forbidden": true,
