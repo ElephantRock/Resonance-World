@@ -1,0 +1,240 @@
+name: H7 Selective State Routing
+
+on:
+  push:
+    branches: ["experiment/h7-selective-state-routing"]
+    paths:
+      - ".github/workflows/h7-selective-state-routing.yml"
+      - "scripts/materialize_h7_fixtures.py"
+      - "scripts/h7_selective_core.py"
+      - "scripts/run_h7_selective.py"
+      - "scripts/verify_h7_lock.py"
+      - "scripts/h7_evaluator_core.py"
+      - "scripts/accept_h7_selective.py"
+      - "research/h7/**"
+      - "ruff.toml"
+  pull_request:
+    paths:
+      - ".github/workflows/h7-selective-state-routing.yml"
+      - "scripts/materialize_h7_fixtures.py"
+      - "scripts/h7_selective_core.py"
+      - "scripts/run_h7_selective.py"
+      - "scripts/verify_h7_lock.py"
+      - "scripts/h7_evaluator_core.py"
+      - "scripts/accept_h7_selective.py"
+      - "research/h7/**"
+      - "ruff.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apparatus-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Lint H7 apparatus
+        run: |
+          ruff check scripts/materialize_h7_fixtures.py
+          ruff check scripts/h7_selective_core.py
+          ruff check scripts/run_h7_selective.py
+          ruff check scripts/verify_h7_lock.py
+          ruff check scripts/h7_evaluator_core.py
+          ruff check scripts/accept_h7_selective.py
+      - name: Materialize and verify prospective H7 fixtures
+        run: |
+          rm -rf output/h7-fixtures output/h7-prekey
+          python scripts/materialize_h7_fixtures.py --output-dir output/h7-fixtures
+          python scripts/verify_h7_lock.py --fixture-dir output/h7-fixtures
+      - name: Prepare all model-visible H7 requests without credential
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          python scripts/run_h7_selective.py \
+            --plane-e output/h7-fixtures/plane_e/evidence.json \
+            --output-dir output/h7-prekey \
+            --prepare-only
+          python - <<'PY'
+          import json
+          from collections import Counter, defaultdict
+          p = json.load(open('output/h7-prekey/h7-request-plan.json'))
+          assert len(p['cells']) == 432
+          assert p['calls_per_cell'] == 3
+          blocks = defaultdict(dict)
+          rotations = Counter()
+          exposure = Counter()
+          for cell in p['cells']:
+              blocks[(cell['unit_id'], cell['replicate'])][cell['arm']] = cell
+              rotations[cell['arm_order_rotation']] += 1
+              exposure[cell['arm']] += int(cell['protocol']['state_channel_present'])
+              for prompt in cell['analyst_prompts']:
+                  assert 'record_id' not in prompt
+                  assert 'correct_action' not in prompt
+          assert len(blocks) == 144
+          assert rotations == Counter({0: 144, 1: 144, 2: 144})
+          assert exposure == Counter({'always_state': 144, 'selective_state': 48, 'no_state': 0})
+          for arms in blocks.values():
+              assert set(arms) == {'no_state', 'always_state', 'selective_state'}
+              no, always, selective = arms['no_state'], arms['always_state'], arms['selective_state']
+              assert no['analyst_prompt_sha256'] == always['analyst_prompt_sha256'] == selective['analyst_prompt_sha256']
+              assert no['analyst_partitions'] == always['analyst_partitions'] == selective['analyst_partitions']
+              if no['state_relevance_key'] == 'none':
+                  assert selective['protocol'] == no['protocol']
+                  assert selective['chair_scaffold'] == no['chair_scaffold']
+              else:
+                  assert selective['protocol'] == always['protocol']
+                  assert selective['chair_scaffold'] == always['chair_scaffold']
+          PY
+          ! grep -q 'H7_PRIVATE_EVALUATOR_SENTINEL_91D4' output/h7-prekey/h7-request-plan.json
+          ! grep -q '"correct_action"' output/h7-prekey/h7-request-plan.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h7-plane-e
+          path: |
+            output/h7-fixtures/plane_e/evidence.json
+            output/h7-prekey/h7-request-plan.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h7-plane-k
+          path: output/h7-fixtures/plane_k/evaluator.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h7-fixture-meta
+          path: output/h7-fixtures/meta/fixture-manifest.json
+          if-no-files-found: error
+          retention-days: 90
+
+  live-provider-panel:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[H7-RUN]')
+    needs: apparatus-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Require live provider credential
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "::error::ZAI_API_KEY is required for H7 confirmatory execution"
+            exit 2
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          name: h7-plane-e
+          path: input/plane-e
+      - name: Execute 1,296 isolated H7 model calls
+        run: |
+          python scripts/run_h7_selective.py \
+            --plane-e input/plane-e/h7-fixtures/plane_e/evidence.json \
+            --output-dir output/h7-live
+      - name: Assert evaluator plane was absent from live inference
+        run: |
+          ! grep -q 'H7_PRIVATE_EVALUATOR_SENTINEL_91D4' output/h7-live/h7-live-output.json
+          ! grep -q '"correct_action"' output/h7-live/h7-live-output.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h7-live-output
+          path: output/h7-live/h7-live-output.json
+          if-no-files-found: error
+          retention-days: 90
+
+  frozen-output-evaluator:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[H7-RUN]')
+    needs: live-provider-panel
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - uses: actions/download-artifact@v4
+        with:
+          name: h7-plane-e
+          path: input/plane-e
+      - uses: actions/download-artifact@v4
+        with:
+          name: h7-plane-k
+          path: input/plane-k
+      - uses: actions/download-artifact@v4
+        with:
+          name: h7-fixture-meta
+          path: input/meta
+      - uses: actions/download-artifact@v4
+        with:
+          name: h7-live-output
+          path: input/live
+      - name: Evaluate frozen provider output twice
+        run: |
+          mkdir -p output/eval-a output/eval-b
+          set +e
+          python scripts/accept_h7_selective.py \
+            --plane-e input/plane-e/h7-fixtures/plane_e/evidence.json \
+            --plane-k input/plane-k/evaluator.json \
+            --fixture-manifest input/meta/fixture-manifest.json \
+            --live-output input/live/h7-live-output.json \
+            --output-dir output/eval-a \
+            --candidate-head "$GITHUB_SHA" > output/eval-a/evaluator.log
+          status_a=$?
+          python scripts/accept_h7_selective.py \
+            --plane-e input/plane-e/h7-fixtures/plane_e/evidence.json \
+            --plane-k input/plane-k/evaluator.json \
+            --fixture-manifest input/meta/fixture-manifest.json \
+            --live-output input/live/h7-live-output.json \
+            --output-dir output/eval-b \
+            --candidate-head "$GITHUB_SHA" > output/eval-b/evaluator.log
+          status_b=$?
+          set -e
+          printf '%s\n' "$status_a" > output/eval-a/evaluator-exit-status.txt
+          printf '%s\n' "$status_b" > output/eval-a/second-evaluator-exit-status.txt
+          cmp output/eval-a/result.json output/eval-b/result.json
+          cmp output/eval-a/manifest.json output/eval-b/manifest.json
+          cmp output/eval-a/audit.json output/eval-b/audit.json
+          test "$status_a" = "$status_b"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h7-confirmatory-evaluation
+          path: output/eval-a
+          if-no-files-found: error
+          retention-days: 90
+      - name: Enforce registered scientific classification
+        run: |
+          cat output/eval-a/evaluator.log
+          python - <<'PY'
+          import json
+          result = json.load(open('output/eval-a/result.json'))
+          if result['classification'] != 'historical_substrate_selective_state_routing_pass':
+              raise SystemExit(3)
+          if not all(result['gates'].values()):
+              raise SystemExit(4)
+          PY
