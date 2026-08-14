@@ -160,6 +160,7 @@ jobs:
           path: input/live
       - name: Evaluate frozen provider output twice
         run: |
+          mkdir -p output/eval-a output/eval-b
           set +e
           python scripts/accept_h4_stochastic.py \
             --plane-e input/plane-e/h4-fixtures/plane_e/evidence.json \
@@ -167,7 +168,7 @@ jobs:
             --fixture-manifest input/meta/fixture-manifest.json \
             --live-output input/live/h4-live-output.json \
             --output-dir output/eval-a \
-            --candidate-head "$GITHUB_SHA" > output/eval-a.log
+            --candidate-head "$GITHUB_SHA" > output/eval-a/evaluator.log
           status_a=$?
           python scripts/accept_h4_stochastic.py \
             --plane-e input/plane-e/h4-fixtures/plane_e/evidence.json \
@@ -175,15 +176,15 @@ jobs:
             --fixture-manifest input/meta/fixture-manifest.json \
             --live-output input/live/h4-live-output.json \
             --output-dir output/eval-b \
-            --candidate-head "$GITHUB_SHA" > output/eval-b.log
+            --candidate-head "$GITHUB_SHA" > output/eval-b/evaluator.log
           status_b=$?
           set -e
           cmp output/eval-a/result.json output/eval-b/result.json
           cmp output/eval-a/manifest.json output/eval-b/manifest.json
           cmp output/eval-a/audit.json output/eval-b/audit.json
-          cp output/eval-a.log output/eval-a/evaluator.log
           printf '%s\n' "$status_a" > output/eval-a/evaluator-exit-status.txt
           printf '%s\n' "$status_b" > output/eval-a/second-evaluator-exit-status.txt
+          test "$status_a" = "$status_b"
       - uses: actions/upload-artifact@v4
         with:
           name: h4-confirmatory-evaluation
