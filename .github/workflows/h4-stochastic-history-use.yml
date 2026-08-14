@@ -1,0 +1,204 @@
+name: H4 Stochastic Successor History Use
+
+on:
+  push:
+    branches: ["experiment/h4-stochastic-history-use", "main"]
+    paths:
+      - ".github/workflows/h4-stochastic-history-use.yml"
+      - "scripts/materialize_h4_fixtures.py"
+      - "scripts/verify_h4_lock.py"
+      - "scripts/run_h4_stochastic.py"
+      - "scripts/accept_h4_stochastic.py"
+      - "research/h4/**"
+      - "ruff.toml"
+  pull_request:
+    paths:
+      - ".github/workflows/h4-stochastic-history-use.yml"
+      - "scripts/materialize_h4_fixtures.py"
+      - "scripts/verify_h4_lock.py"
+      - "scripts/run_h4_stochastic.py"
+      - "scripts/accept_h4_stochastic.py"
+      - "research/h4/**"
+      - "ruff.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apparatus-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Lint H4 apparatus
+        run: |
+          ruff check scripts/materialize_h4_fixtures.py
+          ruff check scripts/verify_h4_lock.py
+          ruff check scripts/run_h4_stochastic.py
+          ruff check scripts/accept_h4_stochastic.py
+      - name: Materialize and verify frozen fixtures
+        run: |
+          rm -rf output/h4-fixtures output/h4-prekey
+          python scripts/materialize_h4_fixtures.py --output-dir output/h4-fixtures
+          python scripts/verify_h4_lock.py --fixture-dir output/h4-fixtures
+      - name: Prepare model-visible request plan without credential
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          python scripts/run_h4_stochastic.py \
+            --plane-e output/h4-fixtures/plane_e/evidence.json \
+            --output-dir output/h4-prekey \
+            --prepare-only
+          test "$(python -c 'import json; print(len(json.load(open("output/h4-prekey/h4-request-plan.json"))["cells"]))')" = "432"
+          ! grep -q 'H4_PRIVATE_EVALUATOR_SENTINEL_9A71' output/h4-prekey/h4-request-plan.json
+          ! grep -q '"correct_action"' output/h4-prekey/h4-request-plan.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h4-plane-e
+          path: |
+            output/h4-fixtures/plane_e/evidence.json
+            output/h4-prekey/h4-request-plan.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h4-plane-k
+          path: output/h4-fixtures/plane_k/evaluator.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h4-fixture-meta
+          path: output/h4-fixtures/meta/fixture-manifest.json
+          if-no-files-found: error
+          retention-days: 90
+
+  live-provider-panel:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[H4-RUN]')
+    needs: apparatus-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Require live provider credential
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "::error::ZAI_API_KEY is required for H4 confirmatory execution"
+            exit 2
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          name: h4-plane-e
+          path: input/plane-e
+      - name: Execute 432 isolated stochastic successor calls
+        run: |
+          python scripts/run_h4_stochastic.py \
+            --plane-e input/plane-e/h4-fixtures/plane_e/evidence.json \
+            --output-dir output/h4-live
+      - name: Assert evaluator plane was absent from live inference
+        run: |
+          ! grep -q 'H4_PRIVATE_EVALUATOR_SENTINEL_9A71' output/h4-live/h4-live-output.json
+          ! grep -q '"correct_action"' output/h4-live/h4-live-output.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h4-live-output
+          path: output/h4-live/h4-live-output.json
+          if-no-files-found: error
+          retention-days: 90
+
+  frozen-output-evaluator:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[H4-RUN]')
+    needs: live-provider-panel
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - uses: actions/download-artifact@v4
+        with:
+          name: h4-plane-e
+          path: input/plane-e
+      - uses: actions/download-artifact@v4
+        with:
+          name: h4-plane-k
+          path: input/plane-k
+      - uses: actions/download-artifact@v4
+        with:
+          name: h4-fixture-meta
+          path: input/meta
+      - uses: actions/download-artifact@v4
+        with:
+          name: h4-live-output
+          path: input/live
+      - name: Evaluate frozen provider output twice
+        run: |
+          mkdir -p output/eval-a output/eval-b
+          set +e
+          python scripts/accept_h4_stochastic.py \
+            --plane-e input/plane-e/h4-fixtures/plane_e/evidence.json \
+            --plane-k input/plane-k/evaluator.json \
+            --fixture-manifest input/meta/fixture-manifest.json \
+            --live-output input/live/h4-live-output.json \
+            --output-dir output/eval-a \
+            --candidate-head "$GITHUB_SHA" > output/eval-a/evaluator.log
+          status_a=$?
+          python scripts/accept_h4_stochastic.py \
+            --plane-e input/plane-e/h4-fixtures/plane_e/evidence.json \
+            --plane-k input/plane-k/evaluator.json \
+            --fixture-manifest input/meta/fixture-manifest.json \
+            --live-output input/live/h4-live-output.json \
+            --output-dir output/eval-b \
+            --candidate-head "$GITHUB_SHA" > output/eval-b/evaluator.log
+          status_b=$?
+          set -e
+          cmp output/eval-a/result.json output/eval-b/result.json
+          cmp output/eval-a/manifest.json output/eval-b/manifest.json
+          cmp output/eval-a/audit.json output/eval-b/audit.json
+          printf '%s\n' "$status_a" > output/eval-a/evaluator-exit-status.txt
+          printf '%s\n' "$status_b" > output/eval-a/second-evaluator-exit-status.txt
+          test "$status_a" = "$status_b"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h4-confirmatory-evaluation
+          path: output/eval-a
+          if-no-files-found: error
+          retention-days: 90
+      - name: Enforce registered scientific classification
+        run: |
+          python - <<'PY'
+          import json
+          result = json.load(open('output/eval-a/result.json'))
+          print(json.dumps(result, sort_keys=True))
+          if result['classification'] != 'historical_substrate_stochastic_successor_reasoning_pass':
+              raise SystemExit(3)
+          if not all(result['gates'].values()):
+              raise SystemExit(4)
+          PY

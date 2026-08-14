@@ -77,6 +77,20 @@
     "production_historical_substrate_enabled": false,
     "scope": "bounded research-treatment harness only"
   },
+  "branch_scoped_h4": {
+    "preregistration_issue": 150,
+    "branch": "experiment/h4-stochastic-history-use",
+    "status": "accepted",
+    "accepted_exact_head": "42bc88e59707e2013cb8d2923fae0c0c2b0df56e",
+    "live_validation_run": 31761562214,
+    "frozen_evaluator_run": 31761785993,
+    "classification": "historical_substrate_stochastic_successor_reasoning_pass",
+    "result_sha256": "9743aed1e89a81ab0085ce6a1c2f96dada2b3c5c3b3b2fa5c47c933e470e1bc5",
+    "live_output_sha256": "4d1c2d2e0184ed8bf61fdcf4edabf904c1cfaf3403ae82bde3954ff7b4e369fc",
+    "model": "glm-5-turbo",
+    "production_historical_substrate_enabled": false,
+    "scope": "bounded research-treatment harness only"
+  },
   "ownership_boundary": {
     "dependency_direction": "Resonance World -> Resonance ContextGraph",
     "reverse_dependency_forbidden": true,
