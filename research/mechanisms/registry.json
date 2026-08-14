@@ -1,0 +1,183 @@
+{
+  "schema": "resonance-mechanism-registry-v0.1",
+  "governance": "docs/mechanism-governance-v0.1.md",
+  "promotion_states": [
+    "proposed",
+    "discovery_supported",
+    "internally_replicated",
+    "schema_generalized",
+    "model_generalized",
+    "naturalistic_validated",
+    "integration_eligible",
+    "evolution_eligible"
+  ],
+  "legacy_import_policy": "Historical W/O/H evidence is recorded without retroactive promotion. A historical_record node preserves scope and boundary but grants no new integration/evolution authority.",
+  "nodes": [
+    {
+      "mechanism_id": "portable_individual_capability",
+      "status": "historical_record",
+      "mechanism_family": "capability_development",
+      "supported_scope": "Public home-life evidence predicts some cross-environment portable performance in the registered deterministic skill-practice architecture.",
+      "known_boundary": "Not a general foundation-model cognition claim; replication was heterogeneous across Fields.",
+      "evidence": ["W1"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "evidence_backed_recruitment",
+      "status": "historical_record",
+      "mechanism_family": "capability_access",
+      "supported_scope": "Public life-history evidence can identify useful portable competence under registered response-time constraints.",
+      "known_boundary": "Does not outperform perfect-foreknowledge equal-development comparison and is sensitive to mission drift.",
+      "evidence": ["W2"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "swarm_advantage",
+      "status": "historical_record",
+      "mechanism_family": "composition",
+      "supported_scope": "Registered recruited swarms outperformed the best recruited individual in discovery and replication.",
+      "known_boundary": "Independent relationship-capital contribution from the W3 proxy did not replicate.",
+      "evidence": ["W3"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "partner_specific_coordination_capital",
+      "status": "historical_record",
+      "mechanism_family": "composition",
+      "supported_scope": "Repeated fixed-pair experience produced partner-specific, context-bound productive coordination effects under W4.",
+      "known_boundary": "The effect was not context-free; renamed coordination contexts removed transfer.",
+      "evidence": ["W4"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "organization_routing_memory",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_retention",
+      "supported_scope": "No positive mechanism established.",
+      "known_boundary": "W5 produced a replicated null/equivalence-class result and learned routing could be harmful.",
+      "evidence": ["W5"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "intact_pairmodule_transfer",
+      "status": "historical_record",
+      "mechanism_family": "capability_reproduction",
+      "supported_scope": "Preserving an intact PairModule retained value relative to resetting the same members in discovery and replication.",
+      "known_boundary": "One-member replacement inheritance was null/negative and higher-order composition was not robustly established.",
+      "evidence": ["W5B-01", "W5B-02", "W5B-03"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "returned_learning",
+      "status": "historical_record",
+      "mechanism_family": "regeneration",
+      "supported_scope": "Destination-acquired agent-owned portable learning returned home and improved source frontier under W6.",
+      "known_boundary": "PairModule mobility route consistency did not replicate across all Fields.",
+      "evidence": ["W6"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "source_criticality_estimation",
+      "status": "historical_record",
+      "mechanism_family": "economics",
+      "supported_scope": "A public marginal-source-cost estimator showed calibrated predictive value under W9 discovery and replication.",
+      "known_boundary": "Using criticality as a hard allocation constraint protected sources while collapsing too much organization service.",
+      "evidence": ["W9-00B", "W9-01"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "structured_bounded_history_retrieval",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_retention",
+      "supported_scope": "Structured bounded retrieval surfaced relevant evidence that a recency-based flat suffix missed under the registered equal record budget.",
+      "known_boundary": "Does not establish graph-database information superiority; O2 found complete flat-log parity for registered queries.",
+      "evidence": ["H1", "O2"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "history_through_complete_turnover",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_transmission",
+      "supported_scope": "Structured historical evidence preserved predecessor information across complete member turnover under H2.",
+      "known_boundary": "Registered deterministic task mechanism; broader schema/model generalization not established by H2 alone.",
+      "evidence": ["H2"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "multigeneration_history_accumulation",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_retention",
+      "supported_scope": "Accumulating structured history improved later complete-turnover generations in the registered deterministic cumulative-history mechanism.",
+      "known_boundary": "Synthetic deterministic mechanism; naturalistic and cross-model scope not established.",
+      "evidence": ["H3"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "fresh_successor_structured_history_use",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_transmission",
+      "supported_scope": "Fresh stochastic successors with no predecessor conversation state used bounded structured accumulating history better than registered controls under H4.",
+      "known_boundary": "One stochastic model/provider line and registered task family; no broad institutional mediation claim.",
+      "evidence": ["H4"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "institutional_mediation_bundle",
+      "status": "historical_record",
+      "mechanism_family": "institution",
+      "supported_scope": "No superiority mechanism established.",
+      "known_boundary": "H5 persistent institutional mediation did not beat equal-compute direct, roles-only, or governed-static controls.",
+      "evidence": ["H5", "PR#153"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "compiled_task_relevant_state",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_interpretation",
+      "supported_scope": "H6 observed a positive task-relevant compiled-state contrast on its registered routine-transfer panel.",
+      "known_boundary": "The overall H6 mechanism failed its jointly required irrelevant-state-burden gate, and the H7 fresh-unit confirmatory routing test reversed the relevant-state effect.",
+      "evidence": ["H6", "H7", "PR#155", "PR#157"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "selective_compiled_state_routing",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_interpretation",
+      "supported_scope": "No positive fresh-unit mechanism established.",
+      "known_boundary": "H7 selective routing produced 27/48 versus 37/48 no-state correctness on the registered fresh routine primary, with all non-scientific gates passing.",
+      "evidence": ["H7", "PR#157"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "h8_history_representation_boundary",
+      "status": "proposed",
+      "mechanism_family": "knowledge_retention",
+      "scientific_question": "Which transformations of accumulated historical evidence remain usable by fresh successors under novelty, and does a verified non-interpretive institutional shell preserve the raw structured-history effect?",
+      "dependencies": ["H4", "H5", "H6", "H7", "docs/mechanism-governance-v0.1.md"],
+      "required_before_execution": [
+        "preregistered estimand and confidence interval",
+        "prospective sample-size/power justification",
+        "SESOI classification and provenance",
+        "machine-verifiable zero-interpretation shell audit",
+        "frozen unseen-schema holdout",
+        "fresh provider data"
+      ]
+    },
+    {
+      "mechanism_id": "d1_capability_reproduction",
+      "status": "proposed",
+      "mechanism_family": "capability_reproduction",
+      "scientific_question": "Can a capability developed through experience in Environment A be prospectively characterized and deliberately reproduced in a fresh Environment B?",
+      "dependencies": ["docs/capability-development-v0.1.md", "docs/mechanism-governance-v0.1.md"],
+      "required_before_execution": [
+        "simple objectively scored capability",
+        "development versus reproduction distinction",
+        "fresh destination environment",
+        "frozen reproduction protocol",
+        "prospective sample-size/power justification",
+        "holdout transfer test",
+        "resource and substrate accounting"
+      ]
+    }
+  ]
+}
