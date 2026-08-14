@@ -1,6 +1,6 @@
 # H7 execution record
 
-Status: **hosted apparatus locked; zero H7 provider calls; classifiable campaign not yet triggered**.
+Status: **complete confirmatory negative; preserved; no H7 rerun authorized**.
 
 Frozen preregistration: issue #156. Scientific base: `935e0463acc88f7f7756861d734eeba7b4efb034`. H6 immutable scientific candidate: `ff6bd5e030c3159829460e123f2fadd2e8087f93`.
 
@@ -19,7 +19,7 @@ Local deterministic materialization before hosted execution produced:
 
 ## Hosted credential-free apparatus lock
 
-Apparatus candidate `8c63539e606e481ff25d5c68c87bd5c5ff9168e9` ran as workflow `31797399097`. The apparatus-lock job completed successfully; the live-provider and frozen-output-evaluator jobs were skipped because the commit did not contain `[H7-RUN]`. Therefore zero H7 provider calls occurred.
+Apparatus candidate `8c63539e606e481ff25d5c68c87bd5c5ff9168e9` ran as workflow `31797399097`. The apparatus-lock job completed successfully; the live-provider and frozen-output-evaluator jobs were skipped because the commit did not contain `[H7-RUN]`. Therefore zero H7 provider calls occurred at apparatus lock.
 
 Hosted materialization reproduced the local fixture identities byte-for-byte. Hosted provenance:
 
@@ -36,6 +36,25 @@ Credential-free assertions passed before provider access: 144 matched `(unit, re
 
 The prospective implementation clarification defining deterministic chair-scaffold identity separately from independently sampled analyst reports was posted on #156 before implementation and before any provider calls.
 
-A provenance-only update does not carry `[H7-RUN]`; any workflow it triggers remains apparatus-only. The exact classifiable scientific candidate will be posted prospectively on #156 before its branch ref is advanced.
+## Exact classifiable campaign
+
+The exact campaign candidate `3013360561dcaa7d8a04c24f2224f09978aefb17` was posted prospectively on #156 before branch advancement and before provider calls. Its parent/provenance head was `32bc70bb27391ad2fa72aa0df878976a4bf055eb`; the candidate changed only `research/h7/RUN.md` and carried the registered `[H7-RUN]` marker.
+
+Authoritative workflow `31797668531` reproduced the frozen apparatus/request-plan identity, completed all 432 organization cells / 1,296 logical calls in 1,395 physical provider attempts, and evaluated the one frozen live artifact twice.
+
+Artifacts:
+
+- live output: `9219751504` (`sha256:ca0e7ce80da3f3fc93c498c244b911d9b909302ec2898c0dd3cbdd193068461d`)
+- confirmatory evaluation: `9219762539` (`sha256:fd3f2da964814670cd539c1f9b2e1b66f1950a09a6fa61d013a986fb1fa0d4a1`)
+- frozen live-output content SHA-256: `71bfeaea53f6ea1886b7f23b39459d9af414b8be83c6876e81246a69be6aa943`
+- result SHA-256: `67cab46e8ce2b33edf744e83743e6414f6adf2be1c642031770deca9197d5da5`
+- manifest SHA-256: `640249f8ea3c49f3fd8e84c9d7d18e9086ab0913d852920f469bda88fb44c2e0`
+- audit SHA-256: `89542d0292312ec1d97c78c9a75c93541f5cd227de492aa713ad9118bc476dd3`
+
+The scientific classification is `historical_substrate_selective_state_routing_failed`. Only registered Gate 13 failed. The primary fresh routine-transfer contrast was `selective_state=27/48` versus `no_state=37/48`, difference `-20.83pp`, discordance 9–19, one-sided exact p=`0.9821509309113026`.
+
+All architecture, isolation, authority, information-parity, transport, causal-audit, and two-run evaluator reproducibility gates passed. The negative result is therefore preserved as a scientific result rather than attributed to apparatus failure.
+
+No confirmatory H7 retuning or rerun is authorized after classification. Live-provider and frozen-output-evaluator jobs are permanently disabled in the preservation head; apparatus checks remain available.
 
 Production/default Historical Substrate remains OFF.
