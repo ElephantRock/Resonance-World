@@ -22,8 +22,10 @@ from resonance_world.authority import AuthorityGrant, AuthorityLedger
 MODEL = "glm-5-turbo"
 ENDPOINT = "https://api.z.ai/api/coding/paas/v4/chat/completions"
 MAX_TOKENS = 96
-MAX_ATTEMPTS = 4
-CONCURRENCY = 6
+MAX_ATTEMPTS = 12
+CONCURRENCY = 2
+MIN_REQUEST_INTERVAL_SECONDS = 2.0
+MAX_429_BACKOFF_SECONDS = 120.0
 UNRESOLVED = "UNRESOLVED"
 
 
@@ -38,12 +40,25 @@ class Client:
     def __init__(self, key: str) -> None:
         if not key.strip():
             raise ValueError("empty ZAI_API_KEY")
-        self.key, self.rng, self.lock = key, random.Random(550501), threading.Lock()
+        self.key = key
+        self.rng = random.Random(550501)
+        self.lock = threading.Lock()
+        self.rate_lock = threading.Lock()
+        self.next_request_at = 0.0
 
     def request_id(self, cell_id: str, phase: str, attempt: int) -> str:
         with self.lock:
             nonce = self.rng.getrandbits(64)
         return f"h5-{cell_id[-10:]}-{phase}-{attempt}-{nonce:016x}"
+
+    def wait_for_slot(self) -> None:
+        """Globally pace physical requests without changing scientific inputs."""
+        with self.rate_lock:
+            now = time.monotonic()
+            wait = max(0.0, self.next_request_at - now)
+            if wait:
+                time.sleep(wait)
+            self.next_request_at = max(time.monotonic(), self.next_request_at) + MIN_REQUEST_INTERVAL_SECONDS
 
     def complete(self, cell_id: str, phase: str, prompt: str, actions: list[str], notices: list[str]) -> dict[str, Any]:
         analyst = phase.startswith("analyst")
@@ -72,7 +87,9 @@ class Client:
                 ENDPOINT, data=json.dumps(body, separators=(",", ":")).encode(), method="POST",
                 headers={"Authorization": f"Bearer {self.key}", "Content-Type": "application/json", "Accept-Language": "en-US,en", "User-Agent": "resonance-world-h5/0.1"},
             )
+            self.wait_for_slot()
             started = time.perf_counter()
+            retry_delay = min(8.0, 2.0 ** (attempt - 1))
             try:
                 with urlopen(req, timeout=90.0) as response:
                     outer = json.loads(response.read().decode())
@@ -101,14 +118,23 @@ class Client:
                     "attempt_log": logs, "total_latency_ms": round((time.perf_counter() - started_all) * 1000, 3),
                 }
             except HTTPError as exc:
+                error_body = exc.read().decode(errors="replace")[:1000]
                 logs.append({"attempt": attempt, "request_id": rid, "status": f"http_{exc.code}", "latency_ms": round((time.perf_counter() - started) * 1000, 3)})
                 if (exc.code != 429 and exc.code < 500) or attempt == MAX_ATTEMPTS:
-                    raise RuntimeError(f"Z.AI HTTP {exc.code}: {exc.read().decode(errors='replace')[:1000]}") from exc
+                    raise RuntimeError(f"Z.AI HTTP {exc.code}: {error_body}") from exc
+                if exc.code == 429:
+                    retry_after = exc.headers.get("Retry-After")
+                    retry_delay = min(MAX_429_BACKOFF_SECONDS, 30.0 * (2.0 ** (attempt - 1)))
+                    if retry_after:
+                        try:
+                            retry_delay = max(retry_delay, min(MAX_429_BACKOFF_SECONDS, float(retry_after)))
+                        except ValueError:
+                            pass
             except (URLError, TimeoutError, json.JSONDecodeError, ValueError) as exc:
                 logs.append({"attempt": attempt, "request_id": rid, "status": type(exc).__name__, "latency_ms": round((time.perf_counter() - started) * 1000, 3)})
                 if attempt == MAX_ATTEMPTS:
                     raise RuntimeError(f"Z.AI request failed after {attempt} attempts: {exc}") from exc
-            time.sleep(min(8.0, 2.0 ** (attempt - 1)))
+            time.sleep(retry_delay)
         raise AssertionError("unreachable")
 
 
