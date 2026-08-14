@@ -1,11 +1,11 @@
 # H6 research record
 
-H6 is the prospectively registered follow-up to the immutable H5 negative result. The authoritative preregistration is issue #154 and `PLAN.md` mirrors the frozen design.
+H6 is the completed preregistered follow-up to the immutable H5 negative result. The authoritative preregistration is issue #154; `PLAN.md` preserves the frozen design and `RESULT.md` records the classifiable outcome.
 
-The causal target is narrow: identify whether the institutional state channel has opposite effects depending on relevance while holding scientific information, role routing, authority governance, model compute, and output budget constant.
+Classification: `historical_substrate_relevance_gated_memory_mechanism_failed` on exact scientific candidate `ff6bd5e030c3159829460e123f2fadd2e8087f93`, workflow `31771184210`.
 
-The two primary signatures are a task-relevant state benefit on `routine_transfer` and an irrelevant-state burden on the two non-routine families. Both are required for H6 PASS.
+The result is mechanism-specific rather than uniformly null. The preregistered task-relevant state benefit on `routine_transfer` passed: 41/48 with-state versus 33/48 no-state, +16.7 percentage points, one-sided p=0.019287 and positive in all six replicate cohorts. The preregistered general irrelevant-state burden did not pass: 76/96 no-state versus 69/96 with-state, +7.3 points, one-sided p=0.083534 and below the registered 10-point materiality threshold.
 
-No H6 provider call is authorized until the implementation reproduces the registered H5 fixture lineage, request plan, no-leakage checks, exact 2×2 arm structure, and evidence-slot interface in a credential-free apparatus-lock job.
+Therefore H6 supports the narrow claim that deterministic compiled institutional state can improve decisions when it is task-relevant under this benchmark. It does not establish that irrelevant institutional state is generally harmful, that persistent framing itself is beneficial, or that the Historical Substrate is production-ready.
 
-Production/default Historical Substrate remains OFF.
+The complete negative confirmatory record is preserved without rerun or retuning. Production/default Historical Substrate remains OFF.
