@@ -88,8 +88,11 @@ jobs:
           if-no-files-found: error
           retention-days: 90
 
+  # The confirmatory H5 campaign is frozen. Its authoritative live artifact is
+  # run 31764482769 / artifact 9207100866. Retain this job definition as
+  # historical executable provenance, but never permit a new provider rerun.
   live-provider-panel:
-    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[H5-RUN]')
+    if: ${{ false }}
     needs: apparatus-lock
     runs-on: ubuntu-latest
     timeout-minutes: 120
@@ -133,7 +136,7 @@ jobs:
           retention-days: 90
 
   frozen-output-evaluator:
-    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[H5-RUN]')
+    if: ${{ false }}
     needs: live-provider-panel
     runs-on: ubuntu-latest
     timeout-minutes: 25
