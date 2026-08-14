@@ -1,0 +1,53 @@
+name: H3 Multi-Generation Accumulation
+
+on:
+  push:
+    branches: ["main", "experiment/h3-multigeneration-accumulation"]
+    paths:
+      - ".github/workflows/h3-multigeneration-accumulation.yml"
+      - "scripts/materialize_h3_fixtures.py"
+      - "scripts/verify_h3_lock.py"
+      - "scripts/run_h3_accumulation.py"
+      - "scripts/accept_h3_accumulation.py"
+      - "tests/h3_accumulation_reproduction.py"
+      - "research/h3/**"
+      - "ruff.toml"
+  pull_request:
+    paths:
+      - ".github/workflows/h3-multigeneration-accumulation.yml"
+      - "scripts/materialize_h3_fixtures.py"
+      - "scripts/verify_h3_lock.py"
+      - "scripts/run_h3_accumulation.py"
+      - "scripts/accept_h3_accumulation.py"
+      - "tests/h3_accumulation_reproduction.py"
+      - "research/h3/**"
+      - "ruff.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  exact-reproduction:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Lint H3 apparatus
+        run: |
+          ruff check scripts/materialize_h3_fixtures.py
+          ruff check scripts/verify_h3_lock.py
+          ruff check scripts/run_h3_accumulation.py
+          ruff check scripts/accept_h3_accumulation.py
+          ruff check tests/h3_accumulation_reproduction.py
+      - name: Reproduce accepted matrix twice at exact head
+        run: python tests/h3_accumulation_reproduction.py
