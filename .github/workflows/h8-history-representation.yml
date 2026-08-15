@@ -1,0 +1,268 @@
+name: H8 History Representation Boundary
+
+on:
+  push:
+    branches: ["experiment/h8-history-representation-boundary"]
+    paths:
+      - ".github/workflows/h8-history-representation.yml"
+      - "scripts/h8_power.py"
+      - "scripts/materialize_h8_fixtures.py"
+      - "scripts/h8_representation_core.py"
+      - "scripts/verify_h8_lock.py"
+      - "scripts/run_h8_representation.py"
+      - "scripts/h8_evaluator_core.py"
+      - "scripts/accept_h8_representation.py"
+      - "research/h8/**"
+      - "docs/history-ir-v0.1.md"
+      - "ruff.toml"
+  pull_request:
+    paths:
+      - ".github/workflows/h8-history-representation.yml"
+      - "scripts/h8_power.py"
+      - "scripts/materialize_h8_fixtures.py"
+      - "scripts/h8_representation_core.py"
+      - "scripts/verify_h8_lock.py"
+      - "scripts/run_h8_representation.py"
+      - "scripts/h8_evaluator_core.py"
+      - "scripts/accept_h8_representation.py"
+      - "research/h8/**"
+      - "docs/history-ir-v0.1.md"
+      - "ruff.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apparatus-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Parse-check H8 apparatus
+        run: |
+          python -m py_compile \
+            scripts/h8_power.py \
+            scripts/materialize_h8_fixtures.py \
+            scripts/h8_representation_core.py \
+            scripts/verify_h8_lock.py \
+            scripts/run_h8_representation.py \
+            scripts/h8_evaluator_core.py \
+            scripts/accept_h8_representation.py
+          ruff check \
+            scripts/h8_power.py \
+            scripts/materialize_h8_fixtures.py \
+            scripts/h8_representation_core.py \
+            scripts/verify_h8_lock.py \
+            scripts/run_h8_representation.py \
+            scripts/h8_evaluator_core.py \
+            scripts/accept_h8_representation.py
+      - name: Materialize prospective H8 development and confirmatory fixtures
+        run: |
+          rm -rf output/h8-fixtures output/h8-lock output/h8-prekey
+          python scripts/materialize_h8_fixtures.py --output-dir output/h8-fixtures
+      - name: Verify statistical, holdout, History IR, and T0 shell locks
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          python scripts/verify_h8_lock.py \
+            --fixture-dir output/h8-fixtures \
+            --output-dir output/h8-lock
+      - name: Prepare every model-visible request without credential
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          python scripts/run_h8_representation.py \
+            --plane-e output/h8-fixtures/plane_e/evidence.json \
+            --output-dir output/h8-prekey \
+            --prepare-only
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          lock = json.loads(Path("output/h8-lock/h8-lock-report.json").read_text())
+          plan = Path("output/h8-prekey/h8-request-plan.json").read_bytes()
+          assert hashlib.sha256(plan).hexdigest() == lock["request_plan_sha256"]
+          assert lock["confirmatory_unit_count"] == 384
+          assert lock["organization_cell_count"] == 1920
+          assert lock["logical_model_call_count"] == 5760
+          assert lock["t0_passed"] is True
+          assert lock["power_target_passed"] is True
+          assert lock["development_confirmatory_disjoint"] is True
+          assert lock["production_historical_substrate_enabled"] is False
+          PY
+          ! grep -q 'H8_PRIVATE_EVALUATOR_SENTINEL_F72C' output/h8-prekey/h8-request-plan.json
+          ! grep -q '"correct_action"' output/h8-prekey/h8-request-plan.json
+      - name: Print prospective H8 lock identities
+        run: |
+          cat output/h8-lock/h8-lock-report.json
+          sha256sum scripts/h8_power.py
+          sha256sum output/h8-prekey/h8-request-plan.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h8-plane-e
+          path: |
+            output/h8-fixtures/plane_e/evidence.json
+            output/h8-prekey/h8-request-plan.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h8-plane-k
+          path: output/h8-fixtures/plane_k/evaluator.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h8-fixture-meta
+          path: output/h8-fixtures/meta/fixture-manifest.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h8-development-fixtures
+          path: output/h8-fixtures/development/development.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h8-apparatus-lock
+          path: output/h8-lock
+          if-no-files-found: error
+          retention-days: 90
+
+  live-provider-panel:
+    # Permanently disabled after authoritative H8 classification. Apparatus checks remain available.
+    if: ${{ false }}
+    needs: apparatus-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 360
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Require live provider credential
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "::error::ZAI_API_KEY is required for H8 confirmatory execution"
+            exit 2
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          name: h8-plane-e
+          path: input/plane-e
+      - name: Execute 5,760 isolated H8 logical model calls
+        run: |
+          python scripts/run_h8_representation.py \
+            --plane-e input/plane-e/h8-fixtures/plane_e/evidence.json \
+            --request-plan input/plane-e/h8-prekey/h8-request-plan.json \
+            --output-dir output/h8-live
+      - name: Assert evaluator truth absent from live inference
+        run: |
+          ! grep -q 'H8_PRIVATE_EVALUATOR_SENTINEL_F72C' output/h8-live/h8-live-output.json
+          ! grep -q '"correct_action"' output/h8-live/h8-live-output.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h8-live-output
+          path: output/h8-live/h8-live-output.json
+          if-no-files-found: error
+          retention-days: 90
+
+  frozen-output-evaluator:
+    # Permanently disabled after authoritative H8 classification. The preserved evaluator remains auditable.
+    if: ${{ false }}
+    needs: live-provider-panel
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World research environment
+        run: python -m pip install -e '.[dev]'
+      - uses: actions/download-artifact@v4
+        with:
+          name: h8-plane-e
+          path: input/plane-e
+      - uses: actions/download-artifact@v4
+        with:
+          name: h8-plane-k
+          path: input/plane-k
+      - uses: actions/download-artifact@v4
+        with:
+          name: h8-fixture-meta
+          path: input/meta
+      - uses: actions/download-artifact@v4
+        with:
+          name: h8-apparatus-lock
+          path: input/lock
+      - uses: actions/download-artifact@v4
+        with:
+          name: h8-live-output
+          path: input/live
+      - name: Evaluate one frozen provider artifact twice
+        run: |
+          mkdir -p output/eval-a output/eval-b
+          set +e
+          python scripts/accept_h8_representation.py \
+            --plane-e input/plane-e/h8-fixtures/plane_e/evidence.json \
+            --plane-k input/plane-k/evaluator.json \
+            --fixture-manifest input/meta/fixture-manifest.json \
+            --lock-report input/lock/h8-lock-report.json \
+            --live-output input/live/h8-live-output.json \
+            --output-dir output/eval-a \
+            --candidate-head "$GITHUB_SHA" > output/eval-a/evaluator.log
+          status_a=$?
+          python scripts/accept_h8_representation.py \
+            --plane-e input/plane-e/h8-fixtures/plane_e/evidence.json \
+            --plane-k input/plane-k/evaluator.json \
+            --fixture-manifest input/meta/fixture-manifest.json \
+            --lock-report input/lock/h8-lock-report.json \
+            --live-output input/live/h8-live-output.json \
+            --output-dir output/eval-b \
+            --candidate-head "$GITHUB_SHA" > output/eval-b/evaluator.log
+          status_b=$?
+          set -e
+          printf '%s\n' "$status_a" > output/eval-a/evaluator-exit-status.txt
+          printf '%s\n' "$status_b" > output/eval-a/second-evaluator-exit-status.txt
+          cmp output/eval-a/result.json output/eval-b/result.json
+          cmp output/eval-a/manifest.json output/eval-b/manifest.json
+          cmp output/eval-a/audit.json output/eval-b/audit.json
+          test "$status_a" = "$status_b"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h8-confirmatory-evaluation
+          path: output/eval-a
+          if-no-files-found: error
+          retention-days: 90
+      - name: Enforce classifiable H8 boundary record
+        run: |
+          cat output/eval-a/evaluator.log
+          python - <<'PY'
+          import json
+          result = json.load(open("output/eval-a/result.json"))
+          assert result["classification"] == "historical_substrate_history_representation_boundary_classified"
+          assert all(result["gates"].values())
+          PY

@@ -8,9 +8,11 @@ Mechanism-first research creates a risk of excessive decomposition: a failed or 
 
 ## 1. Registry states
 
-A mechanism registry node moves only through explicit states:
+A genuinely prospective mechanism with no failed/heterogeneous parent begins at `proposed`. A child hypothesis motivated by an inspected failed or heterogeneous parent begins at `posthoc_motivated` and must earn entry into the prospective ladder before any confirmatory execution:
 
 ```text
+posthoc_motivated
+  ↓  fresh rationale + distinct causal intervention + prospective statistical contract
 proposed
   ↓
 discovery_supported
@@ -28,9 +30,13 @@ integration_eligible
 evolution_eligible
 ```
 
+`posthoc_motivated` is a provenance-bearing pre-proposal state, not evidence support and not a promotion. Transition `posthoc_motivated → proposed` requires a prospective record satisfying the decomposition requirements in Section 4 before new confirmatory data are collected. A node may not move directly from `posthoc_motivated` to `discovery_supported`.
+
 A failure at a later level does not erase valid evidence at an earlier level. The node records the highest supported scope and the boundary that failed.
 
 Historical W/O/H results imported before this governance revision use `historical_record` until they are explicitly mapped to the new schema. `historical_record` is not a new promotion and does not grant integration or evolution eligibility.
+
+If an immutable historical record has not yet landed on the registry branch's base tree, the imported node must contain a resolvable preservation pointer and authoritative result identity. Such a node remains `promotion_eligible = false` until the preservation record lands in the required mainline order. A human-readable label such as `PR#153` without a resolvable pointer is insufficient evidence provenance.
 
 ## 2. Required statistical contract
 
@@ -93,13 +99,15 @@ Illustrative values in architecture discussions are **not eligible for direct re
 
 A failed or heterogeneous parent mechanism may motivate child hypotheses, but child hypotheses begin as `posthoc_motivated` and do not inherit confirmatory status.
 
-A child can become a new confirmatory node only if:
+A `posthoc_motivated` child may transition to `proposed` only if, before collecting its new confirmatory data:
 
 1. it defines a distinct causal intervention;
 2. its rationale is recorded prospectively and is not merely the observed sign/magnitude of the parent result;
-3. it uses fresh data;
+3. it commits to fresh data;
 4. it has an independently justified sample-size/statistical contract;
 5. sibling hypotheses are covered by a preregistered multiplicity or hierarchical-testing plan when more than one is pursued.
+
+Only after that transition may the child enter the ordinary prospective evidence ladder. The parent result may motivate the question, but it cannot count as discovery evidence for the child.
 
 A single failed parent should not generate an unbounded collection of independent confirmatory siblings. Any expansion beyond the preregistered sibling family requires a new program-level rationale and fresh multiplicity plan.
 
