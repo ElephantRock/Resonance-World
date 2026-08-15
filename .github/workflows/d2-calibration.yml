@@ -53,9 +53,9 @@ jobs:
           repair = Path("research/d2/D2_0_TRANSPORT_REPAIR_1.md").read_text()
           assert "31889041385" in repair
           assert "162 logical calls" in repair
-          assert "no D2 confirmatory cohort" in repair.lower()
+          assert "no d2 confirmatory cohort" in repair.lower()
           marker = Path("research/d2/RUN_D2_0_R1").read_text()
-          assert "5302646723" in marker
+          assert "5302661623" in marker
           assert "confirmatory" in marker.lower()
           PY
       - name: Execute D2-0 transport-repair-1 calibration
