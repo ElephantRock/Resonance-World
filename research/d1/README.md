@@ -14,7 +14,7 @@ D1 begins with a deliberately simple deterministic individual-specialist substra
 
 Calibration seeds: `10000..10063` inclusive. They may never be used in a D1 confirmatory claim.
 
-The exported `Capability Artifact v0.1` contains the behavioral objective, required task ecology, substrate law, development protocol, resource/stopping/evaluation contracts, and public-source-evidence digest. It explicitly forbids source agent identity, private practice state, conversation state, evaluator truth, and evaluation answers from crossing the source/destination boundary.
+The exported `Capability Artifact v0.1` contains the behavioral objective, required task ecology, substrate law, development protocol, resource/stopping/evaluation contracts, and public-source-evidence digest. It explicitly forbids source agent identity, reconstructive source/environment seeds, private practice state, conversation state, evaluator truth, and evaluation answers from crossing the source/destination boundary.
 
 The private-state oracle is diagnostic only and is never product-eligible.
 

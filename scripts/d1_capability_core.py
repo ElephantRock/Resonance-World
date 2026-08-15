@@ -14,6 +14,8 @@ FORBIDDEN_EXPORT_KEYS = {
     "private_practice_state",
     "practice_by_skill",
     "source_conversation_state",
+    "source_seed",
+    "source_environment_seed",
     "evaluator_truth",
     "evaluation_answers",
 }
@@ -207,7 +209,6 @@ def infer_target_skill(public_events: list[dict[str, Any]]) -> str:
 
 def capability_artifact(
     *,
-    source_seed: int,
     public_events: list[dict[str, Any]],
     config: dict[str, Any],
 ) -> dict[str, Any]:
@@ -217,7 +218,7 @@ def capability_artifact(
         "schema": "d1-capability-artifact-v0.1",
         "capability_class": "individual_specialist",
         "behavioral_objective": {"target_skill": target_skill},
-        "source_evidence": {"public_event_sha256": event_digest, "source_seed": source_seed},
+        "source_evidence": {"public_event_sha256": event_digest},
         "required_task_ecology": {
             "skills": list(SKILLS),
             "target_share": config["target_share"],
@@ -282,7 +283,6 @@ def run_field_pair(pair_seed: int, config: dict[str, Any]) -> dict[str, Any]:
         maximum_success=float(config["maximum_success"]),
     )
     artifact = capability_artifact(
-        source_seed=source_seed,
         public_events=source_events,
         config=config,
     )
@@ -375,12 +375,18 @@ def run_field_pair(pair_seed: int, config: dict[str, Any]) -> dict[str, Any]:
     }
 
     export_text = json.dumps(artifact, sort_keys=True)
+    if str(source_seed) in export_text:
+        raise AssertionError("reconstructive source seed leaked into capability artifact")
+    if source_selected.agent_id in export_text:
+        raise AssertionError("source agent identity leaked into capability artifact")
     forbidden_leaks = [
         key
         for key in (
             "practice_by_skill",
             "private_practice_state",
             "source_conversation_state",
+            "source_seed",
+            "source_environment_seed",
             "evaluator_truth",
             "evaluation_answers",
         )

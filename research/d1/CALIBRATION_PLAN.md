@@ -66,7 +66,7 @@ The artifact includes:
 - heldout evaluation contract;
 - explicit forbidden-transfer declaration.
 
-The artifact may not expose source private practice state, source conversation state, evaluator truth, or evaluation answers. The destination execution path must consume the artifact contract rather than a source-private capsule.
+The artifact may not expose source agent identity, reconstructive source/environment seeds, source private practice state, source conversation state, evaluator truth, or evaluation answers. Because this substrate is deterministic, exporting a source seed would permit reconstruction of source private state and is therefore explicitly forbidden. The destination execution path must consume the artifact contract rather than a source-private capsule.
 
 ## Calibration outcomes
 
@@ -109,7 +109,8 @@ The confirmatory statistical implementation is *not* frozen by D1-0. A later pre
 The calibration workflow fails if:
 
 - any source/destination selected identity is shared;
-- any forbidden private field appears in the exported artifact outside the explicit forbidden-transfer declaration;
+- any forbidden private/reconstructive field appears in the exported artifact outside the explicit forbidden-transfer declaration;
+- the concrete source seed or selected source agent identity appears in the artifact payload;
 - the artifact fails to infer the source ecology's target specialization;
 - the destination does not use the artifact's required ecology/substrate/development contract;
 - calibration seed count/range changes.
