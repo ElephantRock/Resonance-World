@@ -1,5 +1,7 @@
 # Resonance World — v0.1 Research Program
 
+> **Direction note (2026-08-14):** this document remains the historical v0.1 World program and its experiment records are not rewritten. The current program direction broadens the product unit from recruited agents/organizations to **accessible, composable, reproducible, and regenerative capabilities developed across evolving AI environments**. See `docs/capability-development-v0.1.md` for the current capability-development model and `docs/mechanism-governance-v0.1.md` for prospective statistical, novelty, treatment-integrity, and registry-promotion governance. Existing W/O/H evidence remains valid only within its registered scopes.
+
 ## Research boundary
 
 Resonance Field continues independently as the laboratory for within-community emergence.

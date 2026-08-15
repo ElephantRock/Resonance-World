@@ -1,0 +1,256 @@
+{
+  "schema": "resonance-mechanism-registry-v0.1",
+  "governance": "docs/mechanism-governance-v0.1.md",
+  "status_values": [
+    "historical_record",
+    "posthoc_motivated",
+    "proposed",
+    "discovery_supported",
+    "internally_replicated",
+    "schema_generalized",
+    "model_generalized",
+    "naturalistic_validated",
+    "integration_eligible",
+    "evolution_eligible"
+  ],
+  "non_promotional_statuses": ["historical_record", "posthoc_motivated"],
+  "promotion_ladder": [
+    "proposed",
+    "discovery_supported",
+    "internally_replicated",
+    "schema_generalized",
+    "model_generalized",
+    "naturalistic_validated",
+    "integration_eligible",
+    "evolution_eligible"
+  ],
+  "legacy_import_policy": "Historical W/O/H evidence is recorded without retroactive promotion. A historical_record node preserves scope and boundary but grants no new integration/evolution authority. If an immutable record has not yet landed on this branch's base tree, the node must carry a resolvable evidence_pointers entry plus authoritative result identity; such a node remains promotion-ineligible until the preservation record lands in the required mainline order.",
+  "nodes": [
+    {
+      "mechanism_id": "portable_individual_capability",
+      "status": "historical_record",
+      "mechanism_family": "capability_development",
+      "supported_scope": "Public home-life evidence predicts some cross-environment portable performance in the registered deterministic skill-practice architecture.",
+      "known_boundary": "Not a general foundation-model cognition claim; replication was heterogeneous across Fields.",
+      "evidence": ["W1"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "evidence_backed_recruitment",
+      "status": "historical_record",
+      "mechanism_family": "capability_access",
+      "supported_scope": "Public life-history evidence can identify useful portable competence under registered response-time constraints.",
+      "known_boundary": "Does not outperform perfect-foreknowledge equal-development comparison and is sensitive to mission drift.",
+      "evidence": ["W2"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "swarm_advantage",
+      "status": "historical_record",
+      "mechanism_family": "composition",
+      "supported_scope": "Registered recruited swarms outperformed the best recruited individual in discovery and replication.",
+      "known_boundary": "Independent relationship-capital contribution from the W3 proxy did not replicate.",
+      "evidence": ["W3"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "partner_specific_coordination_capital",
+      "status": "historical_record",
+      "mechanism_family": "composition",
+      "supported_scope": "Repeated fixed-pair experience produced partner-specific, context-bound productive coordination effects under W4.",
+      "known_boundary": "The effect was not context-free; renamed coordination contexts removed transfer.",
+      "evidence": ["W4"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "organization_routing_memory",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_retention",
+      "supported_scope": "No positive mechanism established.",
+      "known_boundary": "W5 produced a replicated null/equivalence-class result and learned routing could be harmful.",
+      "evidence": ["W5"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "intact_pairmodule_transfer",
+      "status": "historical_record",
+      "mechanism_family": "capability_retention_transfer",
+      "supported_scope": "Preserving an intact PairModule retained value relative to resetting the same members in discovery and replication.",
+      "known_boundary": "This is retention/transfer of the same intact social unit, not fresh-substrate reproduction; one-member replacement inheritance was null/negative and higher-order composition was not robustly established.",
+      "evidence": ["W5B-01", "W5B-02", "W5B-03"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "returned_learning",
+      "status": "historical_record",
+      "mechanism_family": "regeneration",
+      "supported_scope": "Destination-acquired agent-owned portable learning returned home and improved source frontier under W6.",
+      "known_boundary": "PairModule mobility route consistency did not replicate across all Fields.",
+      "evidence": ["W6"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "source_criticality_estimation",
+      "status": "historical_record",
+      "mechanism_family": "economics",
+      "supported_scope": "A public marginal-source-cost estimator showed calibrated predictive value under W9 discovery and replication.",
+      "known_boundary": "Using criticality as a hard allocation constraint protected sources while collapsing too much organization service.",
+      "evidence": ["W9-00B", "W9-01"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "structured_bounded_history_retrieval",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_retention",
+      "supported_scope": "Structured bounded retrieval surfaced relevant evidence that a recency-based flat suffix missed under the registered equal record budget.",
+      "known_boundary": "Does not establish graph-database information superiority; O2 found complete flat-log parity for registered queries.",
+      "evidence": ["H1", "O2"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "history_through_complete_turnover",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_transmission",
+      "supported_scope": "Structured historical evidence preserved predecessor information across complete member turnover under H2.",
+      "known_boundary": "Registered deterministic task mechanism; broader schema/model generalization not established by H2 alone.",
+      "evidence": ["H2"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "multigeneration_history_accumulation",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_retention",
+      "supported_scope": "Accumulating structured history improved later complete-turnover generations in the registered deterministic cumulative-history mechanism.",
+      "known_boundary": "Synthetic deterministic mechanism; naturalistic and cross-model scope not established.",
+      "evidence": ["H3"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "fresh_successor_structured_history_use",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_transmission",
+      "supported_scope": "Fresh stochastic successors with no predecessor conversation state used bounded structured accumulating history better than registered controls under H4.",
+      "known_boundary": "One stochastic model/provider line and registered task family; no broad institutional mediation claim.",
+      "evidence": ["H4"],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "institutional_mediation_bundle",
+      "status": "historical_record",
+      "mechanism_family": "institution",
+      "supported_scope": "No superiority mechanism established.",
+      "known_boundary": "H5 persistent institutional mediation did not beat equal-compute direct, roles-only, or governed-static controls.",
+      "evidence": ["H5"],
+      "evidence_pointers": [
+        {
+          "type": "preservation_pr",
+          "url": "https://github.com/ElephantRock/Resonance-World/pull/153",
+          "candidate": "7afa2d139049b1fdb80de2a95d76b49430b6a046",
+          "result_sha256": "c4d40f7df4a7f82d324e1cfa81c9a2d90a147a72f87b75e4bcee62a3c3d06029",
+          "mainline_state": "pending_ordered_merge"
+        }
+      ],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "compiled_task_relevant_state",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_interpretation",
+      "supported_scope": "H6 observed a positive task-relevant compiled-state contrast on its registered routine-transfer panel.",
+      "known_boundary": "The overall H6 mechanism failed its jointly required irrelevant-state-burden gate, and the H7 fresh-unit confirmatory routing test reversed the relevant-state effect.",
+      "evidence": ["H6", "H7"],
+      "evidence_pointers": [
+        {
+          "type": "preservation_pr",
+          "url": "https://github.com/ElephantRock/Resonance-World/pull/155",
+          "candidate": "ff6bd5e030c3159829460e123f2fadd2e8087f93",
+          "result_sha256": "fe24974c113f5960420d0c4c62902e471ad90ab7457c7b17e3472e479aed7691",
+          "mainline_state": "pending_after_h5"
+        },
+        {
+          "type": "preservation_pr",
+          "url": "https://github.com/ElephantRock/Resonance-World/pull/157",
+          "candidate": "3013360561dcaa7d8a04c24f2224f09978aefb17",
+          "result_sha256": "67cab46e8ce2b33edf744e83743e6414f6adf2be1c642031770deca9197d5da5",
+          "mainline_state": "pending_after_h6"
+        }
+      ],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "selective_compiled_state_routing",
+      "status": "historical_record",
+      "mechanism_family": "knowledge_interpretation",
+      "supported_scope": "No positive fresh-unit mechanism established.",
+      "known_boundary": "H7 selective routing produced 27/48 versus 37/48 no-state correctness on the registered fresh routine primary, with all non-scientific gates passing.",
+      "evidence": ["H7"],
+      "evidence_pointers": [
+        {
+          "type": "preservation_pr",
+          "url": "https://github.com/ElephantRock/Resonance-World/pull/157",
+          "candidate": "3013360561dcaa7d8a04c24f2224f09978aefb17",
+          "result_sha256": "67cab46e8ce2b33edf744e83743e6414f6adf2be1c642031770deca9197d5da5",
+          "mainline_state": "pending_after_h6"
+        }
+      ],
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "h8_history_representation_boundary",
+      "status": "proposed",
+      "status_provenance": "H8 was motivated by inspected H5-H7 failures/heterogeneity and therefore originated as posthoc_motivated. Its transition to proposed is recorded here from immutable outcome-preceding records that satisfied the governance transition before any H8 provider outcome existed; this is not a result-based promotion.",
+      "origin_state": "posthoc_motivated",
+      "mechanism_family": "knowledge_retention",
+      "scientific_question": "Which transformations of accumulated historical evidence remain usable by fresh successors under novelty, and does a verified non-interpretive institutional shell preserve the raw structured-history effect?",
+      "dependencies": [
+        "H4",
+        "H5@https://github.com/ElephantRock/Resonance-World/pull/153",
+        "H6@https://github.com/ElephantRock/Resonance-World/pull/155",
+        "H7@https://github.com/ElephantRock/Resonance-World/pull/157",
+        "docs/mechanism-governance-v0.1.md"
+      ],
+      "proposal_transition_record": {
+        "transition": "posthoc_motivated_to_proposed",
+        "prospective_design_issue": "https://github.com/ElephantRock/Resonance-World/issues/159",
+        "distinct_causal_intervention": "Five-arm matched representation-boundary experiment isolating non-interpretive shell, role/chair synthesis, typed History IR, and compiled semantic state under equal three-call compute.",
+        "fresh_data_commitment": "384 unique matched confirmatory units, 96 per four new reasoning families, development/confirmatory identity-disjoint.",
+        "sample_size_and_statistical_contract": "Prospectively frozen paired n=384; P1 90% conditional-Wilson equivalence CI; P2-P4 exact McNemar plus 95% conditional-Wilson paired-risk-difference CIs.",
+        "sibling_multiplicity_plan": "P2-P4 formed one preregistered Holm family at FWER 0.05; secondary family decompositions could not rescue a registered contrast.",
+        "apparatus_lock_comment": "https://github.com/ElephantRock/Resonance-World/issues/159#issuecomment-5298420966",
+        "apparatus_candidate": "1feaa2c3ca8dd96864dffbe89437d9da6a255a6c",
+        "apparatus_workflow": "31843151125",
+        "zero_provider_calls_at_transition_lock": true,
+        "t0_shell_audit_sha256": "2505ea21926290aaa91bde3f533bc0e3ebc552fa77222bb505f37f2ea00715bf",
+        "power_implementation_sha256": "a1b513c984b7e5b3ae9290dc8472b3a9c64a14e318141749d47fc6ecb5104d30",
+        "power_report_sha256": "1b6e1c7f8568e97ef0db72a49b727542077b0ccc4ae6da531bbbc8b817c0de28",
+        "request_plan_sha256": "bfd4f7ed58805df103f7c71d3fb1aec9e6e1754ed1af7e68a41d59aad7dfae63",
+        "candidate_freeze_comment": "https://github.com/ElephantRock/Resonance-World/issues/159#issuecomment-5298426160",
+        "scientific_candidate": "57c9d5366fca94c03e137e8d654b1561befe4e30",
+        "candidate_frozen_before_branch_advance_and_provider_calls": true
+      },
+      "execution_record": {
+        "state": "completed_classifiable",
+        "preservation_pr": "https://github.com/ElephantRock/Resonance-World/pull/161",
+        "classification": "historical_substrate_history_representation_boundary_classified",
+        "result_sha256": "5e03a4483433c65032216d7f5b49f51b31e01d9d754029e0018967aacf09daa3"
+      },
+      "promotion_eligible": false
+    },
+    {
+      "mechanism_id": "d1_capability_reproduction",
+      "status": "proposed",
+      "mechanism_family": "capability_reproduction",
+      "scientific_question": "Can a capability developed through experience in Environment A be prospectively characterized and deliberately reproduced in a fresh Environment B?",
+      "dependencies": ["docs/capability-development-v0.1.md", "docs/mechanism-governance-v0.1.md"],
+      "required_before_execution": [
+        "simple objectively scored capability",
+        "development versus reproduction distinction",
+        "fresh destination environment",
+        "frozen reproduction protocol",
+        "prospective sample-size/power justification",
+        "holdout transfer test",
+        "resource and substrate accounting"
+      ]
+    }
+  ]
+}
