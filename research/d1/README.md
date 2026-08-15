@@ -1,25 +1,26 @@
 # D1 research record — capability reproduction
 
-D1 is the first product-oriented capability-reproduction line in Resonance World.
+D1 is the first direct product-oriented capability-reproduction study in Resonance World.
 
-Scientific question:
+Status: **complete and classifiable**.
 
-> Can a capability developed through experience in Environment A be prospectively characterized and deliberately reproduced in a fresh Environment B without copying the source's private capability state?
+Classification: `D1-S3` / `d1_capability_reproduction_supported`.
 
-D1 begins with a deliberately simple deterministic individual-specialist substrate inherited from the W1 skill/practice architecture. This is a causal/plumbing primitive, not a claim about general foundation-model learning.
+Scientific candidate: `46010232f9b73e481eaa6de4b60cc721f4ad2273`. Authoritative confirmatory workflow: `31861296898`. Frozen evaluator transport repair: `83f4b5d1877095163e8e5911bffb7f908675c96b`, workflow `31861464055`.
 
-## D1-0 calibration
+D1 tested whether a simple individual specialist capability developed in a source Field could be represented by a bounded `Capability Artifact v0.1` and deliberately produced again in fresh destination Fields without copying source-private practice state or reconstructive source seeds.
 
-`D1-0` is **development-only calibration**, not confirmatory evidence and not registry promotion. It estimates source development magnitude, destination reproduction variance, source/destination gap variance, development cost, and sample-size requirements on seeds reserved permanently as development data.
+Registered findings over 36 independent fresh Field pairs:
 
-Calibration seeds: `10000..10063` inclusive. They may never be used in a D1 confirmatory claim.
+- source development vs fresh: **+58.355pp**, P0 PASS;
+- reproduced protocol vs fresh: **+60.015pp**, P1 PASS;
+- reproduced minus source: **+1.660pp**; non-inferior to the prospectively conventional `−5.931pp` boundary, P2 PASS;
+- all export, identity, seed, artifact-schema, oracle, execution, and production-safety gates passed.
 
-The exported `Capability Artifact v0.1` contains the behavioral objective, required task ecology, substrate law, development protocol, resource/stopping/evaluation contracts, and public-source-evidence digest. It explicitly forbids source agent identity, reconstructive source/environment seeds, private practice state, conversation state, evaluator truth, and evaluation answers from crossing the source/destination boundary.
+See `RESULT.md`, `result.json`, `manifest.json`, and `audit.json` for the immutable bounded record.
 
-The private-state oracle is diagnostic only and is never product-eligible.
+D1 establishes only initial discovery support in the controlled deterministic individual-specialist substrate. It does not establish stochastic/model-based learning, team/institution reproduction, naturalistic transfer, or environment spawning. A separately preregistered fresh D1b cohort is required before `internally_replicated` registry status.
 
-## Confirmatory boundary
+The confirmatory/evaluator workflow paths are permanently disabled after classification; credential-free calibration/apparatus reconstruction remains available. No D1 scientific rerun/retuning is authorized.
 
-No D1 confirmatory execution is authorized by the calibration apparatus. A later exact confirmatory lock must freeze fresh identities/seeds, P0/P1/P2 estimands, confidence-interval/test implementation, sample size, the conventional fidelity margin and provenance, stopping/missing policy, export-diff integrity gate, classification rules, and a fresh replication requirement.
-
-Production/default Historical Substrate remains OFF and is unrelated to D1 execution.
+Production/default Historical Substrate remains OFF.
