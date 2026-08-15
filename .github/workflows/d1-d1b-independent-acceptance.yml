@@ -1,0 +1,125 @@
+name: D1 D1b Independent Acceptance
+
+on:
+  push:
+    branches: ["acceptance/d1-d1b-independent-glm52"]
+    paths:
+      - ".github/workflows/d1-d1b-independent-acceptance.yml"
+      - "scripts/run_d1_d1b_independent_acceptance.py"
+      - "research/acceptance/d1-d1b/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  independent-review:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify independent review apparatus
+        run: |
+          python -m py_compile scripts/run_d1_d1b_independent_acceptance.py
+          test -n "$ZAI_API_KEY"
+          test -n "$GITHUB_TOKEN"
+          python - <<'PY'
+          from pathlib import Path
+          text = Path("research/acceptance/d1-d1b/REVIEW_PROTOCOL.md").read_text()
+          assert "glm-5.2" in text
+          assert "does not itself mutate the Mechanism Registry" in text
+          assert "Production/default Historical Substrate remains OFF" in text
+          PY
+      - name: Run exactly one substantive independent reviewer decision
+        run: python scripts/run_d1_d1b_independent_acceptance.py
+      - name: Verify review separation and one valid substantive decision
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          audit = json.loads(Path("output/d1-d1b-acceptance/review-audit.json").read_text())
+          response = json.loads(Path("output/d1-d1b-acceptance/review-response.json").read_text())
+          assert audit["provider"] == "Z.AI"
+          assert audit["model"] == "glm-5.2"
+          assert audit["model_separation"] is True
+          assert audit["substantive_valid_decision_count"] == 1
+          assert audit["production_historical_substrate_enabled"] is False
+          assert response["review"]["decision"] in {
+              "ACCEPT both transitions",
+              "ACCEPT discovery_supported only; replication transition rejected/deferred",
+              "REJECT promotion; retain proposed and document reason",
+              "DEFER pending specified evidence/integration condition",
+          }
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d1-d1b-independent-acceptance
+          path: output/d1-d1b-acceptance
+          if-no-files-found: error
+          retention-days: 90
+      - name: Post independent decision to acceptance issue
+        run: |
+          python - <<'PY'
+          import json
+          import os
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+
+          response = json.loads(Path("output/d1-d1b-acceptance/review-response.json").read_text())
+          audit = json.loads(Path("output/d1-d1b-acceptance/review-audit.json").read_text())
+          review = response["review"]
+          checks = "\n".join(
+              f"- `{c['criterion']}`: **{c['status']}** — {c['reason']}"
+              for c in review["checks"]
+          )
+          reservations = "\n".join(f"- {x}" for x in review.get("reservations", [])) or "- none"
+          body = f"""## Independent AI acceptance decision
+
+          Reviewer: **Z.AI `glm-5.2`**, fresh acceptance-plane role, separate from proposer model GPT-5.6 Sol.
+
+          **Decision: `{review['decision']}`**
+
+          {review['summary']}
+
+          ### Checklist
+          {checks}
+
+          ### Accepted claim
+          {review.get('accepted_claim')}
+
+          ### Reservations
+          {reservations}
+
+          Evidence manifest SHA-256: `{audit['evidence_manifest_sha256']}`  
+          Review response SHA-256: `{audit['review_response_sha256']}`  
+          Substantive valid decisions: `{audit['substantive_valid_decision_count']}`
+
+          This comment records the reviewer decision only. It does not itself mutate the Mechanism Registry or authorize claims beyond the bounded decision.
+          """
+          body = "\n".join(line.strip() for line in body.splitlines()).strip()
+          request = Request(
+              "https://api.github.com/repos/ElephantRock/Resonance-World/issues/165/comments",
+              data=json.dumps({"body": body}).encode(),
+              method="POST",
+              headers={
+                  "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+                  "Content-Type": "application/json",
+                  "User-Agent": "resonance-world-independent-acceptor/0.1",
+              },
+          )
+          with urlopen(request, timeout=60) as response_http:
+              posted = json.loads(response_http.read().decode())
+          print(posted["html_url"])
+          PY
