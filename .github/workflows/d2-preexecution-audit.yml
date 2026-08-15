@@ -12,6 +12,7 @@ on:
       - "scripts/d2_artifact_core.py"
       - "scripts/d2_calibration_core.py"
       - "scripts/run_d2_calibration.py"
+      - "scripts/run_d2_calibration_repair1.py"
       - "tests/test_d2_artifact_core.py"
       - "tests/test_d2_calibration_core.py"
   pull_request:
@@ -24,6 +25,7 @@ on:
       - "scripts/d2_artifact_core.py"
       - "scripts/d2_calibration_core.py"
       - "scripts/run_d2_calibration.py"
+      - "scripts/run_d2_calibration_repair1.py"
       - "tests/test_d2_artifact_core.py"
       - "tests/test_d2_calibration_core.py"
   workflow_dispatch:
@@ -50,7 +52,8 @@ jobs:
           python -m py_compile \
             scripts/d2_artifact_core.py \
             scripts/d2_calibration_core.py \
-            scripts/run_d2_calibration.py
+            scripts/run_d2_calibration.py \
+            scripts/run_d2_calibration_repair1.py
       - name: Test D2 export boundary and calibration core
         run: python -m pytest -q tests/test_d2_artifact_core.py tests/test_d2_calibration_core.py
       - name: Verify acceptance prerequisite and execution separation
@@ -70,21 +73,27 @@ jobs:
           assert Path("research/d2/CALIBRATION_PLAN.md").exists()
           assert Path("research/d2/CAPABILITY_ARTIFACT_V0.2.md").exists()
           assert Path("research/d2/D2_0_EXECUTION.md").exists()
+          assert Path("research/d2/D2_0_TRANSPORT_REPAIR_1.md").exists()
           assert Path("scripts/run_d2_calibration.py").exists()
+          assert Path("scripts/run_d2_calibration_repair1.py").exists()
           assert Path(".github/workflows/d2-calibration.yml").exists()
           assert not Path("scripts/run_d2_confirmatory.py").exists()
 
+          repair = Path("research/d2/D2_0_TRANSPORT_REPAIR_1.md").read_text()
+          assert "31889041385" in repair
+          assert "162 logical calls" in repair
           calibration_workflow = Path(".github/workflows/d2-calibration.yml").read_text()
-          assert '"research/d2/RUN_D2_0"' in calibration_workflow
+          assert '"research/d2/RUN_D2_0_R1"' in calibration_workflow
+          assert "run_d2_calibration_repair1.py" in calibration_workflow
           assert "secrets.ZAI_API_KEY" in calibration_workflow
-          assert "confirmatory" not in Path("scripts/run_d2_calibration.py").name
+          assert "run_d2_confirmatory.py" not in calibration_workflow
           PY
 
   provider-calibration-separate-gate:
     if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "D2-0 provider calibration runs only from its RUN_D2_0 marker-gated workflow."
+      - run: echo "D2-0 provider calibration runs only from its explicit marker-gated workflow."
 
   confirmatory-run-disabled:
     if: ${{ false }}
