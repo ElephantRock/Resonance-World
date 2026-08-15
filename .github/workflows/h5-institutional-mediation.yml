@@ -1,0 +1,213 @@
+name: H5 Institutional Mediation
+
+on:
+  push:
+    branches: ["experiment/h5-institutional-mediation", "main"]
+    paths:
+      - ".github/workflows/h5-institutional-mediation.yml"
+      - "scripts/materialize_h5_fixtures.py"
+      - "scripts/h5_institutional_core.py"
+      - "scripts/verify_h5_lock.py"
+      - "scripts/run_h5_institutional.py"
+      - "scripts/h5_evaluator_core.py"
+      - "scripts/accept_h5_institutional.py"
+      - "research/h5/**"
+      - "ruff.toml"
+  pull_request:
+    paths:
+      - ".github/workflows/h5-institutional-mediation.yml"
+      - "scripts/materialize_h5_fixtures.py"
+      - "scripts/h5_institutional_core.py"
+      - "scripts/verify_h5_lock.py"
+      - "scripts/run_h5_institutional.py"
+      - "scripts/h5_evaluator_core.py"
+      - "scripts/accept_h5_institutional.py"
+      - "research/h5/**"
+      - "ruff.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apparatus-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Lint H5 apparatus
+        run: |
+          ruff check scripts/materialize_h5_fixtures.py
+          ruff check scripts/h5_institutional_core.py
+          ruff check scripts/verify_h5_lock.py
+          ruff check scripts/run_h5_institutional.py
+          ruff check scripts/h5_evaluator_core.py
+          ruff check scripts/accept_h5_institutional.py
+      - name: Materialize and verify prospective fixtures
+        run: |
+          rm -rf output/h5-fixtures output/h5-prekey
+          python scripts/materialize_h5_fixtures.py --output-dir output/h5-fixtures
+          python scripts/verify_h5_lock.py --fixture-dir output/h5-fixtures
+      - name: Prepare all model-visible analyst requests without credential
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          python scripts/run_h5_institutional.py \
+            --plane-e output/h5-fixtures/plane_e/evidence.json \
+            --output-dir output/h5-prekey \
+            --prepare-only
+          test "$(python -c 'import json; p=json.load(open("output/h5-prekey/h5-request-plan.json")); print(len(p["cells"]))')" = "432"
+          ! grep -q 'H5_PRIVATE_EVALUATOR_SENTINEL_41C7' output/h5-prekey/h5-request-plan.json
+          ! grep -q '"correct_action"' output/h5-prekey/h5-request-plan.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h5-plane-e
+          path: |
+            output/h5-fixtures/plane_e/evidence.json
+            output/h5-prekey/h5-request-plan.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h5-plane-k
+          path: output/h5-fixtures/plane_k/evaluator.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h5-fixture-meta
+          path: output/h5-fixtures/meta/fixture-manifest.json
+          if-no-files-found: error
+          retention-days: 90
+
+  # The confirmatory H5 campaign is frozen. Its authoritative live artifact is
+  # run 31764482769 / artifact 9207100866. Retain this job definition as
+  # historical executable provenance, but never permit a new provider rerun.
+  live-provider-panel:
+    if: ${{ false }}
+    needs: apparatus-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Require live provider credential
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "::error::ZAI_API_KEY is required for H5 confirmatory execution"
+            exit 2
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          name: h5-plane-e
+          path: input/plane-e
+      - name: Execute 1,296 isolated H5 model calls
+        run: |
+          python scripts/run_h5_institutional.py \
+            --plane-e input/plane-e/h5-fixtures/plane_e/evidence.json \
+            --output-dir output/h5-live
+      - name: Assert evaluator plane was absent from live inference
+        run: |
+          ! grep -q 'H5_PRIVATE_EVALUATOR_SENTINEL_41C7' output/h5-live/h5-live-output.json
+          ! grep -q '"correct_action"' output/h5-live/h5-live-output.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h5-live-output
+          path: output/h5-live/h5-live-output.json
+          if-no-files-found: error
+          retention-days: 90
+
+  frozen-output-evaluator:
+    if: ${{ false }}
+    needs: live-provider-panel
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - uses: actions/download-artifact@v4
+        with:
+          name: h5-plane-e
+          path: input/plane-e
+      - uses: actions/download-artifact@v4
+        with:
+          name: h5-plane-k
+          path: input/plane-k
+      - uses: actions/download-artifact@v4
+        with:
+          name: h5-fixture-meta
+          path: input/meta
+      - uses: actions/download-artifact@v4
+        with:
+          name: h5-live-output
+          path: input/live
+      - name: Evaluate frozen provider output twice
+        run: |
+          mkdir -p output/eval-a output/eval-b
+          set +e
+          python scripts/accept_h5_institutional.py \
+            --plane-e input/plane-e/h5-fixtures/plane_e/evidence.json \
+            --plane-k input/plane-k/evaluator.json \
+            --fixture-manifest input/meta/fixture-manifest.json \
+            --live-output input/live/h5-live-output.json \
+            --output-dir output/eval-a \
+            --candidate-head "$GITHUB_SHA" > output/eval-a/evaluator.log
+          status_a=$?
+          python scripts/accept_h5_institutional.py \
+            --plane-e input/plane-e/h5-fixtures/plane_e/evidence.json \
+            --plane-k input/plane-k/evaluator.json \
+            --fixture-manifest input/meta/fixture-manifest.json \
+            --live-output input/live/h5-live-output.json \
+            --output-dir output/eval-b \
+            --candidate-head "$GITHUB_SHA" > output/eval-b/evaluator.log
+          status_b=$?
+          set -e
+          printf '%s\n' "$status_a" > output/eval-a/evaluator-exit-status.txt
+          printf '%s\n' "$status_b" > output/eval-a/second-evaluator-exit-status.txt
+          cmp output/eval-a/result.json output/eval-b/result.json
+          cmp output/eval-a/manifest.json output/eval-b/manifest.json
+          cmp output/eval-a/audit.json output/eval-b/audit.json
+          test "$status_a" = "$status_b"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h5-confirmatory-evaluation
+          path: output/eval-a
+          if-no-files-found: error
+          retention-days: 90
+      - name: Enforce registered scientific classification
+        run: |
+          cat output/eval-a/evaluator.log
+          python - <<'PY'
+          import json
+          result = json.load(open('output/eval-a/result.json'))
+          if result['classification'] != 'historical_substrate_institutional_mediation_pass':
+              raise SystemExit(3)
+          if not all(result['gates'].values()):
+              raise SystemExit(4)
+          PY
