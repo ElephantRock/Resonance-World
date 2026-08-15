@@ -1,0 +1,211 @@
+name: D1b Capability Reproduction Replication
+
+on:
+  push:
+    branches: ["experiment/d1b-capability-reproduction-replication"]
+    paths:
+      - ".github/workflows/d1b-capability-reproduction.yml"
+      - "scripts/materialize_d1b_plan.py"
+      - "scripts/d1_capability_core.py"
+      - "scripts/run_d1_calibration.py"
+      - "scripts/verify_d1_lock.py"
+      - "scripts/run_d1_confirmatory.py"
+      - "scripts/d1_evaluator_core.py"
+      - "scripts/accept_d1_reproduction.py"
+      - "research/d1b/**"
+  pull_request:
+    paths:
+      - ".github/workflows/d1b-capability-reproduction.yml"
+      - "scripts/materialize_d1b_plan.py"
+      - "scripts/d1_capability_core.py"
+      - "scripts/run_d1_calibration.py"
+      - "scripts/verify_d1_lock.py"
+      - "scripts/run_d1_confirmatory.py"
+      - "scripts/d1_evaluator_core.py"
+      - "scripts/accept_d1_reproduction.py"
+      - "research/d1b/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apparatus-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert D1b apparatus is credential-free
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Parse-check D1b and frozen D1 apparatus
+        run: |
+          python -m py_compile \
+            scripts/materialize_d1b_plan.py \
+            scripts/d1_capability_core.py \
+            scripts/run_d1_calibration.py \
+            scripts/verify_d1_lock.py \
+            scripts/run_d1_confirmatory.py \
+            scripts/d1_evaluator_core.py \
+            scripts/accept_d1_reproduction.py
+      - name: Reconstruct frozen parent D1 plan
+        run: |
+          rm -rf output/d1-calibration output/d1-lock output/d1b-lock-a output/d1b-lock-b
+          mkdir -p output/d1-calibration
+          python scripts/run_d1_calibration.py --output output/d1-calibration/calibration.json > output/d1-calibration/calibration.log
+          test "$(sha256sum output/d1-calibration/calibration.json | cut -d' ' -f1)" = "9ec5481eaf9106fe670ccd5a25efb1c2ab1710d2062ff143e28ebb050a1b2799"
+          python scripts/verify_d1_lock.py \
+            --calibration output/d1-calibration/calibration.json \
+            --output-dir output/d1-lock
+          test "$(sha256sum output/d1-lock/d1-confirmatory-plan.json | cut -d' ' -f1)" = "8223d441f8399d89901ecd7f704d8744c571a8035c7ebdc94150435f92ba8858"
+          test "$(sha256sum output/d1-lock/d1-lock-report.json | cut -d' ' -f1)" = "15f479faae0f9d2a9ec9d859b1359c103c2d1075628ba1e872cdb71a900e5cfd"
+      - name: Materialize D1b fresh replication plan twice
+        run: |
+          python scripts/materialize_d1b_plan.py \
+            --parent-d1-plan output/d1-lock/d1-confirmatory-plan.json \
+            --output-dir output/d1b-lock-a | tee output/d1b-lock-a/materializer.log
+          python scripts/materialize_d1b_plan.py \
+            --parent-d1-plan output/d1-lock/d1-confirmatory-plan.json \
+            --output-dir output/d1b-lock-b > output/d1b-lock-b/materializer.log
+          cmp output/d1b-lock-a/d1b-confirmatory-plan.json output/d1b-lock-b/d1b-confirmatory-plan.json
+          cmp output/d1b-lock-a/d1b-lock-report.json output/d1b-lock-b/d1b-lock-report.json
+      - name: Verify D1b prospective lock
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          plan = json.loads(Path("output/d1b-lock-a/d1b-confirmatory-plan.json").read_text())
+          lock = json.loads(Path("output/d1b-lock-a/d1b-lock-report.json").read_text())
+          assert plan["confirmatory_pair_seeds"] == list(range(50000, 50036))
+          assert plan["skill_alias_balance"] == {"skill-a": 12, "skill-b": 12, "skill-c": 12}
+          assert plan["statistical_contract"]["P2"]["noninferiority_margin"] == 0.05931396484374999
+          assert lock["d1_calibration_seed_disjoint"] is True
+          assert lock["d1_confirmatory_seed_disjoint"] is True
+          assert lock["confirmatory_execution_authorized"] is False
+          assert lock["production_historical_substrate_enabled"] is False
+          PY
+          sha256sum output/d1b-lock-a/d1b-confirmatory-plan.json
+          sha256sum output/d1b-lock-a/d1b-lock-report.json
+          sha256sum scripts/d1_capability_core.py scripts/run_d1_confirmatory.py scripts/d1_evaluator_core.py
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d1b-apparatus-lock
+          path: |
+            output/d1b-lock-a/d1b-confirmatory-plan.json
+            output/d1b-lock-a/d1b-lock-report.json
+            output/d1b-lock-a/materializer.log
+          if-no-files-found: error
+          retention-days: 90
+
+  confirmatory-run:
+    if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[D1B-RUN]') }}
+    needs: apparatus-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert D1b execution is credential-free
+        run: test -z "${ZAI_API_KEY:-}"
+      - uses: actions/download-artifact@v4
+        with:
+          name: d1b-apparatus-lock
+          path: input/d1b-lock
+      - name: Execute frozen D1b panel twice
+        run: |
+          mkdir -p output/d1b-run-a output/d1b-run-b
+          python scripts/run_d1_confirmatory.py \
+            --plan input/d1b-lock/d1b-confirmatory-plan.json \
+            --output output/d1b-run-a/d1b-confirmatory-output.json \
+            --candidate-head "$GITHUB_SHA" | tee output/d1b-run-a/run.log
+          python scripts/run_d1_confirmatory.py \
+            --plan input/d1b-lock/d1b-confirmatory-plan.json \
+            --output output/d1b-run-b/d1b-confirmatory-output.json \
+            --candidate-head "$GITHUB_SHA" > output/d1b-run-b/run.log
+          cmp output/d1b-run-a/d1b-confirmatory-output.json output/d1b-run-b/d1b-confirmatory-output.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d1b-confirmatory-output
+          path: output/d1b-run-a
+          if-no-files-found: error
+          retention-days: 90
+
+  frozen-evaluator:
+    needs: confirmatory-run
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World research environment
+        run: python -m pip install -e '.[dev]'
+      - uses: actions/download-artifact@v4
+        with:
+          name: d1b-apparatus-lock
+          path: input/d1b-lock
+      - uses: actions/download-artifact@v4
+        with:
+          name: d1b-confirmatory-output
+          path: input/d1b-output
+      - name: Evaluate frozen D1b output twice with unchanged D1 evaluator
+        run: |
+          mkdir -p output/eval-a output/eval-b
+          set +e
+          python scripts/accept_d1_reproduction.py \
+            --plan input/d1b-lock/d1b-confirmatory-plan.json \
+            --lock input/d1b-lock/d1b-lock-report.json \
+            --confirmatory-output input/d1b-output/d1b-confirmatory-output.json \
+            --output-dir output/eval-a \
+            --candidate-head "$GITHUB_SHA" > output/eval-a/evaluator.log
+          status_a=$?
+          python scripts/accept_d1_reproduction.py \
+            --plan input/d1b-lock/d1b-confirmatory-plan.json \
+            --lock input/d1b-lock/d1b-lock-report.json \
+            --confirmatory-output input/d1b-output/d1b-confirmatory-output.json \
+            --output-dir output/eval-b \
+            --candidate-head "$GITHUB_SHA" > output/eval-b/evaluator.log
+          status_b=$?
+          set -e
+          printf '%s\n' "$status_a" > output/eval-a/evaluator-exit-status.txt
+          printf '%s\n' "$status_b" > output/eval-a/second-evaluator-exit-status.txt
+          cmp output/eval-a/result.json output/eval-b/result.json
+          cmp output/eval-a/audit.json output/eval-b/audit.json
+          cmp output/eval-a/manifest.json output/eval-b/manifest.json
+          test "$status_a" = "$status_b"
+      - name: Enforce classifiable D1b replication record
+        run: |
+          cat output/eval-a/evaluator.log
+          python - <<'PY'
+          import json
+          result = json.load(open("output/eval-a/result.json"))
+          assert result["classification_code"] in {"D1-S0", "D1-S1", "D1-S2", "D1-S3"}
+          assert all(result["gates"].values())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d1b-confirmatory-evaluation
+          path: output/eval-a
+          if-no-files-found: error
+          retention-days: 90
