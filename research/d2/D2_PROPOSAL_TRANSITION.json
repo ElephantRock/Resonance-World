@@ -1,0 +1,42 @@
+{
+  "mechanism_id": "d2_stochastic_model_mediated_capability_reproduction",
+  "mechanism_family": "capability_reproduction",
+  "origin_state": "posthoc_motivated",
+  "status": "proposed",
+  "status_provenance": "D2 was motivated by inspected D1/D1b outcomes and therefore originated as posthoc_motivated. This prospective transition to proposed is based on a distinct stochastic model-mediated intervention, a fresh confirmatory cohort commitment, an outcome-preceding statistical contract, and a serial multiplicity plan; it is not a result-based promotion.",
+  "scientific_question": "Can a capability developed through stochastic model-mediated local experience be reproduced in a fresh destination Field from a public Capability Artifact plus destination-local development, beyond description-only practice and without exporting source-private learned state?",
+  "dependencies": [
+    "d1_capability_reproduction@internally_replicated",
+    "https://github.com/ElephantRock/Resonance-World/issues/167",
+    "D2-0 R2 development-only calibration workflow 31891269604",
+    "docs/mechanism-governance-v0.1.md"
+  ],
+  "proposal_transition_record": {
+    "transition": "posthoc_motivated_to_proposed",
+    "prospective_design_issue": "https://github.com/ElephantRock/Resonance-World/issues/167",
+    "distinct_causal_intervention": "Fresh stochastic model-mediated source development and public Capability Artifact reproduction in identity-disjoint destination Fields, contrasted against equal-call description-only practice and fresh no-development control.",
+    "fresh_data_commitment": "360 attempted fresh confirmatory Field pairs from seed series 1200000 + 100*i, with no R1/R2 pair reuse; minimum analyzable N 330; no replacement or outcome-adaptive sample-size increase.",
+    "cohort_pairs_sha256": "d8e2c82cd7c110bd3013b870e460218442d4d6819bb9cf06f537dcd670fd32a3",
+    "statistical_contract": "Serial P0->P1->P2 gatekeeping at one-sided alpha 0.05. P0 source-fresh and P1 reproduced-description each test mean paired effect > conventional +10pp SESOI. P2 tests mean(reproduced - 0.90*source_developed) > 0 under a conventional 90% fidelity criterion. Minimum analyzable N 330; fixed 360 attempted.",
+    "sibling_multiplicity_plan": "Fixed serial gatekeeping P0 then P1 then P2; all raw and Holm-adjusted p-values also reported diagnostically, but cannot rescue a failed gate.",
+    "sample_size_provenance": "R2 paired variances only; favorable R2 effect estimates are not planning alternatives. P2 drives N using R2 SD 0.3092419446924089, true fidelity ratio 1.0, and source accuracy 0.50 from the prospectively fixed R2 readiness floor, yielding required N 328 for 90% normal-approximation power; minimum analyzable N fixed at 330.",
+    "calibration_workflow": "31891269604",
+    "calibration_artifact": "9248780667",
+    "calibration_output_sha256": "c55e4e5e0c41a81173ff4da33eeef011ec7c566a940d0280e157f6d9312be643",
+    "calibration_report_sha256": "bccb960a39c6ab06aad322874626185719a42968acbcf0067dfaf97131dcf197",
+    "calibration_manifest_sha256": "ff41bf0f86ccb528f17ab58295e772fbe220b70a162da2bbc801a6d2260ef82d",
+    "plan": "research/d2/D2_CONFIRMATORY_PLAN.md",
+    "request_plan": "research/d2/D2_CONFIRMATORY_REQUEST_PLAN.json",
+    "sample_size_report": "research/d2/D2_CONFIRMATORY_SAMPLE_SIZE.json",
+    "cohort_lock": "research/d2/d2-confirmatory-cohort-lock.json",
+    "provider_runner": "scripts/run_d2_confirmatory.py",
+    "frozen_evaluator": "scripts/evaluate_d2_confirmatory.py",
+    "candidate_freeze_record": "issue #167 comment to be posted after zero-provider CI/audit and before authorization marker",
+    "zero_provider_calls_at_transition_record": true,
+    "production_historical_substrate_enabled": false
+  },
+  "supported_scope": null,
+  "known_boundary": "No D2 outcome exists at proposal transition; even D2-S3 would be limited to the registered single-model synthetic individual-agent stochastic substrate and would require a fresh replication before internally_replicated.",
+  "promotion_eligible": false,
+  "production_historical_substrate_enabled": false
+}
