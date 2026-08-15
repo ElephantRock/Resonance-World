@@ -4,9 +4,7 @@ on:
   push:
     branches: ["acceptance/d1-d1b-independent-glm52"]
     paths:
-      - ".github/workflows/d1-d1b-independent-acceptance.yml"
-      - "scripts/run_d1_d1b_independent_acceptance.py"
-      - "research/acceptance/d1-d1b/**"
+      - "research/acceptance/d1-d1b/RUN_REVIEW"
   workflow_dispatch:
 
 permissions:
@@ -36,7 +34,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           text = Path("research/acceptance/d1-d1b/REVIEW_PROTOCOL.md").read_text()
-          assert "glm-5.3" in text
+          assert "glm-5-turbo" in text
           assert "does not itself mutate the Mechanism Registry" in text
           assert "Production/default Historical Substrate remains OFF" in text
           PY
@@ -50,7 +48,7 @@ jobs:
           audit = json.loads(Path("output/d1-d1b-acceptance/review-audit.json").read_text())
           response = json.loads(Path("output/d1-d1b-acceptance/review-response.json").read_text())
           assert audit["provider"] == "Z.AI"
-          assert audit["model"] == "glm-5.3"
+          assert audit["model"] == "glm-5-turbo"
           assert audit["model_separation"] is True
           assert audit["substantive_valid_decision_count"] == 1
           assert audit["production_historical_substrate_enabled"] is False
@@ -85,7 +83,7 @@ jobs:
           reservations = "\n".join(f"- {x}" for x in review.get("reservations", [])) or "- none"
           body = f"""## Independent AI acceptance decision
 
-          Reviewer: **Z.AI `glm-5.3`**, fresh acceptance-plane role, separate from proposer model GPT-5.6 Sol.
+          Reviewer: **Z.AI `glm-5-turbo`**, fresh acceptance-plane role, separate from proposer model GPT-5.6 Sol.
 
           **Decision: `{review['decision']}`**
 
