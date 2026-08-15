@@ -1,0 +1,228 @@
+name: H6 Relevance-Gated Memory
+
+on:
+  push:
+    branches: ["experiment/h6-relevance-gated-memory"]
+    paths:
+      - ".github/workflows/h6-relevance-gated-memory.yml"
+      - "scripts/materialize_h6_fixtures.py"
+      - "scripts/h6_relevance_core.py"
+      - "scripts/verify_h6_lock.py"
+      - "scripts/run_h6_relevance.py"
+      - "scripts/h6_evaluator_core.py"
+      - "scripts/accept_h6_relevance.py"
+      - "research/h6/**"
+      - "ruff.toml"
+  pull_request:
+    paths:
+      - ".github/workflows/h6-relevance-gated-memory.yml"
+      - "scripts/materialize_h6_fixtures.py"
+      - "scripts/h6_relevance_core.py"
+      - "scripts/verify_h6_lock.py"
+      - "scripts/run_h6_relevance.py"
+      - "scripts/h6_evaluator_core.py"
+      - "scripts/accept_h6_relevance.py"
+      - "research/h6/**"
+      - "ruff.toml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apparatus-lock:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Lint H6 apparatus
+        run: |
+          ruff check scripts/materialize_h6_fixtures.py
+          ruff check scripts/h6_relevance_core.py
+          ruff check scripts/verify_h6_lock.py
+          ruff check scripts/run_h6_relevance.py
+          ruff check scripts/h6_evaluator_core.py
+          ruff check scripts/accept_h6_relevance.py
+      - name: Materialize and verify prospective H6 fixtures
+        run: |
+          rm -rf output/h6-fixtures output/h6-prekey
+          python scripts/materialize_h6_fixtures.py --output-dir output/h6-fixtures
+          python scripts/verify_h6_lock.py --fixture-dir output/h6-fixtures
+      - name: Prepare all model-visible H6 requests without credential
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          python scripts/run_h6_relevance.py \
+            --plane-e output/h6-fixtures/plane_e/evidence.json \
+            --output-dir output/h6-prekey \
+            --prepare-only
+          python - <<'PY'
+          import json
+          from collections import Counter, defaultdict
+          p = json.load(open('output/h6-prekey/h6-request-plan.json'))
+          assert len(p['cells']) == 288
+          assert p['calls_per_cell'] == 3
+          matched = defaultdict(set)
+          rotations = Counter()
+          for cell in p['cells']:
+              key = (cell['unit_id'], cell['replicate'])
+              matched[key].add(tuple(cell['analyst_prompt_sha256']))
+              rotations[cell['arm_order_rotation']] += 1
+              for prompt in cell['analyst_prompts']:
+                  assert 'record_id' not in prompt
+                  assert 'correct_action' not in prompt
+          assert len(matched) == 72
+          assert all(len(values) == 1 for values in matched.values())
+          assert rotations == Counter({0: 72, 1: 72, 2: 72, 3: 72})
+          PY
+          ! grep -q 'H6_PRIVATE_EVALUATOR_SENTINEL_6B19' output/h6-prekey/h6-request-plan.json
+          ! grep -q '"correct_action"' output/h6-prekey/h6-request-plan.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h6-plane-e
+          path: |
+            output/h6-fixtures/plane_e/evidence.json
+            output/h6-prekey/h6-request-plan.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h6-plane-k
+          path: output/h6-fixtures/plane_k/evaluator.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h6-fixture-meta
+          path: output/h6-fixtures/meta/fixture-manifest.json
+          if-no-files-found: error
+          retention-days: 90
+
+  live-provider-panel:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[H6-RUN]')
+    needs: apparatus-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - name: Require live provider credential
+        run: |
+          if [ -z "$ZAI_API_KEY" ]; then
+            echo "::error::ZAI_API_KEY is required for H6 confirmatory execution"
+            exit 2
+          fi
+      - uses: actions/download-artifact@v4
+        with:
+          name: h6-plane-e
+          path: input/plane-e
+      - name: Execute 864 isolated H6 model calls
+        run: |
+          python scripts/run_h6_relevance.py \
+            --plane-e input/plane-e/h6-fixtures/plane_e/evidence.json \
+            --output-dir output/h6-live
+      - name: Assert evaluator plane was absent from live inference
+        run: |
+          ! grep -q 'H6_PRIVATE_EVALUATOR_SENTINEL_6B19' output/h6-live/h6-live-output.json
+          ! grep -q '"correct_action"' output/h6-live/h6-live-output.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h6-live-output
+          path: output/h6-live/h6-live-output.json
+          if-no-files-found: error
+          retention-days: 90
+
+  frozen-output-evaluator:
+    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[H6-RUN]')
+    needs: live-provider-panel
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World with ContextGraph release
+        run: python -m pip install -e '.[dev,contextgraph]'
+      - uses: actions/download-artifact@v4
+        with:
+          name: h6-plane-e
+          path: input/plane-e
+      - uses: actions/download-artifact@v4
+        with:
+          name: h6-plane-k
+          path: input/plane-k
+      - uses: actions/download-artifact@v4
+        with:
+          name: h6-fixture-meta
+          path: input/meta
+      - uses: actions/download-artifact@v4
+        with:
+          name: h6-live-output
+          path: input/live
+      - name: Evaluate frozen provider output twice
+        run: |
+          mkdir -p output/eval-a output/eval-b
+          set +e
+          python scripts/accept_h6_relevance.py \
+            --plane-e input/plane-e/h6-fixtures/plane_e/evidence.json \
+            --plane-k input/plane-k/evaluator.json \
+            --fixture-manifest input/meta/fixture-manifest.json \
+            --live-output input/live/h6-live-output.json \
+            --output-dir output/eval-a \
+            --candidate-head "$GITHUB_SHA" > output/eval-a/evaluator.log
+          status_a=$?
+          python scripts/accept_h6_relevance.py \
+            --plane-e input/plane-e/h6-fixtures/plane_e/evidence.json \
+            --plane-k input/plane-k/evaluator.json \
+            --fixture-manifest input/meta/fixture-manifest.json \
+            --live-output input/live/h6-live-output.json \
+            --output-dir output/eval-b \
+            --candidate-head "$GITHUB_SHA" > output/eval-b/evaluator.log
+          status_b=$?
+          set -e
+          printf '%s\n' "$status_a" > output/eval-a/evaluator-exit-status.txt
+          printf '%s\n' "$status_b" > output/eval-a/second-evaluator-exit-status.txt
+          cmp output/eval-a/result.json output/eval-b/result.json
+          cmp output/eval-a/manifest.json output/eval-b/manifest.json
+          cmp output/eval-a/audit.json output/eval-b/audit.json
+          test "$status_a" = "$status_b"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: h6-confirmatory-evaluation
+          path: output/eval-a
+          if-no-files-found: error
+          retention-days: 90
+      - name: Enforce registered scientific classification
+        run: |
+          cat output/eval-a/evaluator.log
+          python - <<'PY'
+          import json
+          result = json.load(open('output/eval-a/result.json'))
+          if result['classification'] != 'historical_substrate_relevance_gated_memory_mechanism_pass':
+              raise SystemExit(3)
+          if not all(result['gates'].values()):
+              raise SystemExit(4)
+          PY
