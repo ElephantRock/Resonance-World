@@ -186,6 +186,8 @@
     {
       "mechanism_id": "h8_history_representation_boundary",
       "status": "proposed",
+      "status_provenance": "H8 was motivated by inspected H5-H7 failures/heterogeneity and therefore originated as posthoc_motivated. Its transition to proposed is recorded here from immutable outcome-preceding records that satisfied the governance transition before any H8 provider outcome existed; this is not a result-based promotion.",
+      "origin_state": "posthoc_motivated",
       "mechanism_family": "knowledge_retention",
       "scientific_question": "Which transformations of accumulated historical evidence remain usable by fresh successors under novelty, and does a verified non-interpretive institutional shell preserve the raw structured-history effect?",
       "dependencies": [
@@ -195,14 +197,32 @@
         "H7@https://github.com/ElephantRock/Resonance-World/pull/157",
         "docs/mechanism-governance-v0.1.md"
       ],
-      "required_before_execution": [
-        "preregistered estimand and confidence interval",
-        "prospective sample-size/power justification",
-        "SESOI classification and provenance",
-        "machine-verifiable zero-interpretation shell audit",
-        "frozen unseen-schema holdout",
-        "fresh provider data"
-      ]
+      "proposal_transition_record": {
+        "transition": "posthoc_motivated_to_proposed",
+        "prospective_design_issue": "https://github.com/ElephantRock/Resonance-World/issues/159",
+        "distinct_causal_intervention": "Five-arm matched representation-boundary experiment isolating non-interpretive shell, role/chair synthesis, typed History IR, and compiled semantic state under equal three-call compute.",
+        "fresh_data_commitment": "384 unique matched confirmatory units, 96 per four new reasoning families, development/confirmatory identity-disjoint.",
+        "sample_size_and_statistical_contract": "Prospectively frozen paired n=384; P1 90% conditional-Wilson equivalence CI; P2-P4 exact McNemar plus 95% conditional-Wilson paired-risk-difference CIs.",
+        "sibling_multiplicity_plan": "P2-P4 formed one preregistered Holm family at FWER 0.05; secondary family decompositions could not rescue a registered contrast.",
+        "apparatus_lock_comment": "https://github.com/ElephantRock/Resonance-World/issues/159#issuecomment-5298420966",
+        "apparatus_candidate": "1feaa2c3ca8dd96864dffbe89437d9da6a255a6c",
+        "apparatus_workflow": "31843151125",
+        "zero_provider_calls_at_transition_lock": true,
+        "t0_shell_audit_sha256": "2505ea21926290aaa91bde3f533bc0e3ebc552fa77222bb505f37f2ea00715bf",
+        "power_implementation_sha256": "a1b513c984b7e5b3ae9290dc8472b3a9c64a14e318141749d47fc6ecb5104d30",
+        "power_report_sha256": "1b6e1c7f8568e97ef0db72a49b727542077b0ccc4ae6da531bbbc8b817c0de28",
+        "request_plan_sha256": "bfd4f7ed58805df103f7c71d3fb1aec9e6e1754ed1af7e68a41d59aad7dfae63",
+        "candidate_freeze_comment": "https://github.com/ElephantRock/Resonance-World/issues/159#issuecomment-5298426160",
+        "scientific_candidate": "57c9d5366fca94c03e137e8d654b1561befe4e30",
+        "candidate_frozen_before_branch_advance_and_provider_calls": true
+      },
+      "execution_record": {
+        "state": "completed_classifiable",
+        "preservation_pr": "https://github.com/ElephantRock/Resonance-World/pull/161",
+        "classification": "historical_substrate_history_representation_boundary_classified",
+        "result_sha256": "5e03a4483433c65032216d7f5b49f51b31e01d9d754029e0018967aacf09daa3"
+      },
+      "promotion_eligible": false
     },
     {
       "mechanism_id": "d1_capability_reproduction",
