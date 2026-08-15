@@ -1,0 +1,51 @@
+{
+  "schema": "resonance-registry-promotion-events-v0.1",
+  "registry_node": "d1_capability_reproduction",
+  "decision": "ACCEPT both transitions",
+  "proposer_id": "github:Alajmah:experiment_plane",
+  "acceptor_id": "zai:glm-5-turbo:independent_acceptance_plane_reviewer",
+  "acceptance_timestamp": "2026-08-15T13:24:27Z",
+  "review_record": "https://github.com/ElephantRock/Resonance-World/issues/165#issuecomment-5302430384",
+  "review_workflow": 31887082910,
+  "review_branch_commit": "d012b77bee1e82a5d6942e16291806d4475aae1c",
+  "review_artifact_id": 9247552081,
+  "review_artifact_digest": "sha256:9f9148edba19f081223be959a080d4acdcabcd8ad14521d91751a7eaebf9c70c",
+  "evidence_manifest_sha256": "737c6f7dc169c976af57f479940351bcfb275ddab71f0b98f91ff3f3337a244f",
+  "review_response_sha256": "6e8e464c18358aa71d39d48cfe5796c0effe98348dc7d2d482c50e4e30082510",
+  "events": [
+    {
+      "sequence": 1,
+      "registry_node": "d1_capability_reproduction",
+      "from_status": "proposed",
+      "to_status": "discovery_supported",
+      "preregistration_hash_or_issue": "https://github.com/ElephantRock/Resonance-World/issues/160",
+      "candidate_result_hash": "cd68485ff3ef1aeb783e442b5fd7fe7aa73132b620a4c57c63e5c3ce62d165e8",
+      "acceptor": "zai:glm-5-turbo:independent_acceptance_plane_reviewer",
+      "acceptance_timestamp": "2026-08-15T13:24:27Z",
+      "review_commit_or_record": "https://github.com/ElephantRock/Resonance-World/issues/165#issuecomment-5302430384"
+    },
+    {
+      "sequence": 2,
+      "registry_node": "d1_capability_reproduction",
+      "from_status": "discovery_supported",
+      "to_status": "internally_replicated",
+      "preregistration_hash_or_issue": "https://github.com/ElephantRock/Resonance-World/issues/163",
+      "candidate_result_hash": "56e85a609c32b7dc62c16b94f07efa16c7f550497c8dc81eeb84517bd13dc200",
+      "acceptor": "zai:glm-5-turbo:independent_acceptance_plane_reviewer",
+      "acceptance_timestamp": "2026-08-15T13:24:27Z",
+      "review_commit_or_record": "https://github.com/ElephantRock/Resonance-World/issues/165#issuecomment-5302430384"
+    }
+  ],
+  "accepted_claim": "Within the registered deterministic individual-specialist Field skill/practice substrate, a public Capability Artifact describing the developmental ecology, substrate law, feedback/development protocol, resource/stopping contract, and behavioral target can be used to reproduce the developed specialist capability in fresh Fields without transferring source-private capability state. This effect was supported in D1 and reproduced prospectively in a fresh D1b cohort under the same conventional 90% fidelity criterion.",
+  "claim_ceiling": "controlled_deterministic_individual_specialist_substrate_only",
+  "explicit_nonclaims": [
+    "stochastic_or_foundation_model_learning",
+    "semantic_knowledge_transfer",
+    "team_swarm_relationship_institution_or_organization_reproduction",
+    "naturalistic_domain_transfer",
+    "environment_spawning",
+    "reproduced_superiority_over_source",
+    "production_historical_substrate_authorization"
+  ],
+  "production_historical_substrate_enabled": false
+}

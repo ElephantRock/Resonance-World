@@ -13,7 +13,10 @@
     "integration_eligible",
     "evolution_eligible"
   ],
-  "non_promotional_statuses": ["historical_record", "posthoc_motivated"],
+  "non_promotional_statuses": [
+    "historical_record",
+    "posthoc_motivated"
+  ],
   "promotion_ladder": [
     "proposed",
     "discovery_supported",
@@ -32,7 +35,9 @@
       "mechanism_family": "capability_development",
       "supported_scope": "Public home-life evidence predicts some cross-environment portable performance in the registered deterministic skill-practice architecture.",
       "known_boundary": "Not a general foundation-model cognition claim; replication was heterogeneous across Fields.",
-      "evidence": ["W1"],
+      "evidence": [
+        "W1"
+      ],
       "promotion_eligible": false
     },
     {
@@ -41,7 +46,9 @@
       "mechanism_family": "capability_access",
       "supported_scope": "Public life-history evidence can identify useful portable competence under registered response-time constraints.",
       "known_boundary": "Does not outperform perfect-foreknowledge equal-development comparison and is sensitive to mission drift.",
-      "evidence": ["W2"],
+      "evidence": [
+        "W2"
+      ],
       "promotion_eligible": false
     },
     {
@@ -50,7 +57,9 @@
       "mechanism_family": "composition",
       "supported_scope": "Registered recruited swarms outperformed the best recruited individual in discovery and replication.",
       "known_boundary": "Independent relationship-capital contribution from the W3 proxy did not replicate.",
-      "evidence": ["W3"],
+      "evidence": [
+        "W3"
+      ],
       "promotion_eligible": false
     },
     {
@@ -59,7 +68,9 @@
       "mechanism_family": "composition",
       "supported_scope": "Repeated fixed-pair experience produced partner-specific, context-bound productive coordination effects under W4.",
       "known_boundary": "The effect was not context-free; renamed coordination contexts removed transfer.",
-      "evidence": ["W4"],
+      "evidence": [
+        "W4"
+      ],
       "promotion_eligible": false
     },
     {
@@ -68,7 +79,9 @@
       "mechanism_family": "knowledge_retention",
       "supported_scope": "No positive mechanism established.",
       "known_boundary": "W5 produced a replicated null/equivalence-class result and learned routing could be harmful.",
-      "evidence": ["W5"],
+      "evidence": [
+        "W5"
+      ],
       "promotion_eligible": false
     },
     {
@@ -77,7 +90,11 @@
       "mechanism_family": "capability_retention_transfer",
       "supported_scope": "Preserving an intact PairModule retained value relative to resetting the same members in discovery and replication.",
       "known_boundary": "This is retention/transfer of the same intact social unit, not fresh-substrate reproduction; one-member replacement inheritance was null/negative and higher-order composition was not robustly established.",
-      "evidence": ["W5B-01", "W5B-02", "W5B-03"],
+      "evidence": [
+        "W5B-01",
+        "W5B-02",
+        "W5B-03"
+      ],
       "promotion_eligible": false
     },
     {
@@ -86,7 +103,9 @@
       "mechanism_family": "regeneration",
       "supported_scope": "Destination-acquired agent-owned portable learning returned home and improved source frontier under W6.",
       "known_boundary": "PairModule mobility route consistency did not replicate across all Fields.",
-      "evidence": ["W6"],
+      "evidence": [
+        "W6"
+      ],
       "promotion_eligible": false
     },
     {
@@ -95,7 +114,10 @@
       "mechanism_family": "economics",
       "supported_scope": "A public marginal-source-cost estimator showed calibrated predictive value under W9 discovery and replication.",
       "known_boundary": "Using criticality as a hard allocation constraint protected sources while collapsing too much organization service.",
-      "evidence": ["W9-00B", "W9-01"],
+      "evidence": [
+        "W9-00B",
+        "W9-01"
+      ],
       "promotion_eligible": false
     },
     {
@@ -104,7 +126,10 @@
       "mechanism_family": "knowledge_retention",
       "supported_scope": "Structured bounded retrieval surfaced relevant evidence that a recency-based flat suffix missed under the registered equal record budget.",
       "known_boundary": "Does not establish graph-database information superiority; O2 found complete flat-log parity for registered queries.",
-      "evidence": ["H1", "O2"],
+      "evidence": [
+        "H1",
+        "O2"
+      ],
       "promotion_eligible": false
     },
     {
@@ -113,7 +138,9 @@
       "mechanism_family": "knowledge_transmission",
       "supported_scope": "Structured historical evidence preserved predecessor information across complete member turnover under H2.",
       "known_boundary": "Registered deterministic task mechanism; broader schema/model generalization not established by H2 alone.",
-      "evidence": ["H2"],
+      "evidence": [
+        "H2"
+      ],
       "promotion_eligible": false
     },
     {
@@ -122,7 +149,9 @@
       "mechanism_family": "knowledge_retention",
       "supported_scope": "Accumulating structured history improved later complete-turnover generations in the registered deterministic cumulative-history mechanism.",
       "known_boundary": "Synthetic deterministic mechanism; naturalistic and cross-model scope not established.",
-      "evidence": ["H3"],
+      "evidence": [
+        "H3"
+      ],
       "promotion_eligible": false
     },
     {
@@ -131,7 +160,9 @@
       "mechanism_family": "knowledge_transmission",
       "supported_scope": "Fresh stochastic successors with no predecessor conversation state used bounded structured accumulating history better than registered controls under H4.",
       "known_boundary": "One stochastic model/provider line and registered task family; no broad institutional mediation claim.",
-      "evidence": ["H4"],
+      "evidence": [
+        "H4"
+      ],
       "promotion_eligible": false
     },
     {
@@ -140,7 +171,9 @@
       "mechanism_family": "institution",
       "supported_scope": "No superiority mechanism established.",
       "known_boundary": "H5 persistent institutional mediation did not beat equal-compute direct, roles-only, or governed-static controls.",
-      "evidence": ["H5"],
+      "evidence": [
+        "H5"
+      ],
       "evidence_pointers": [
         {
           "type": "preservation_pr",
@@ -158,7 +191,10 @@
       "mechanism_family": "knowledge_interpretation",
       "supported_scope": "H6 observed a positive task-relevant compiled-state contrast on its registered routine-transfer panel.",
       "known_boundary": "The overall H6 mechanism failed its jointly required irrelevant-state-burden gate, and the H7 fresh-unit confirmatory routing test reversed the relevant-state effect.",
-      "evidence": ["H6", "H7"],
+      "evidence": [
+        "H6",
+        "H7"
+      ],
       "evidence_pointers": [
         {
           "type": "preservation_pr",
@@ -183,7 +219,9 @@
       "mechanism_family": "knowledge_interpretation",
       "supported_scope": "No positive fresh-unit mechanism established.",
       "known_boundary": "H7 selective routing produced 27/48 versus 37/48 no-state correctness on the registered fresh routine primary, with all non-scientific gates passing.",
-      "evidence": ["H7"],
+      "evidence": [
+        "H7"
+      ],
       "evidence_pointers": [
         {
           "type": "preservation_pr",
@@ -238,10 +276,13 @@
     },
     {
       "mechanism_id": "d1_capability_reproduction",
-      "status": "proposed",
+      "status": "internally_replicated",
       "mechanism_family": "capability_reproduction",
       "scientific_question": "Can a capability developed through experience in Environment A be prospectively characterized and deliberately reproduced in a fresh Environment B?",
-      "dependencies": ["docs/capability-development-v0.1.md", "docs/mechanism-governance-v0.1.md"],
+      "dependencies": [
+        "docs/capability-development-v0.1.md",
+        "docs/mechanism-governance-v0.1.md"
+      ],
       "required_before_execution": [
         "simple objectively scored capability",
         "development versus reproduction distinction",
@@ -250,7 +291,18 @@
         "prospective sample-size/power justification",
         "holdout transfer test",
         "resource and substrate accounting"
-      ]
+      ],
+      "supported_scope": "In the registered deterministic individual-specialist Field skill/practice substrate, a public Capability Artifact describing the developmental ecology, substrate law, feedback/development protocol, resource/stopping contract, and behavioral target can be used to reproduce the developed specialist capability in fresh Fields without transferring source-private capability state. This effect was supported in D1 and reproduced prospectively in a fresh D1b cohort under the same conventional 90% fidelity criterion.",
+      "known_boundary": "Controlled deterministic individual-specialist substrate only; no stochastic/model-based learning, semantic transfer, team/institution reproduction, naturalistic transfer, environment spawning, superiority, or production Historical Substrate implication.",
+      "evidence": [
+        "D1",
+        "D1b"
+      ],
+      "acceptance_record": "research/acceptance/d1-d1b/PROMOTION_EVENTS.json",
+      "acceptance_issue": "https://github.com/ElephantRock/Resonance-World/issues/165",
+      "acceptor": "zai:glm-5-turbo:independent_acceptance_plane_reviewer",
+      "promotion_eligible": true,
+      "production_historical_substrate_enabled": false
     }
   ]
 }
