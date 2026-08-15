@@ -1,0 +1,58 @@
+name: D2 Preexecution Audit
+
+on:
+  push:
+    branches: ["experiment/d2-stochastic-capability-reproduction"]
+    paths:
+      - ".github/workflows/d2-preexecution-audit.yml"
+      - "research/d2/**"
+      - "scripts/d2_artifact_core.py"
+      - "tests/test_d2_artifact_core.py"
+  pull_request:
+    paths:
+      - ".github/workflows/d2-preexecution-audit.yml"
+      - "research/d2/**"
+      - "scripts/d2_artifact_core.py"
+      - "tests/test_d2_artifact_core.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-design-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert provider credentials are unavailable
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Compile D2 zero-provider apparatus
+        run: python -m py_compile scripts/d2_artifact_core.py
+      - name: Test D2 export boundary
+        run: python -m pytest -q tests/test_d2_artifact_core.py
+      - name: Assert execution gate remains documentary and no provider runner exists
+        run: |
+          test -f research/d2/README.md
+          test -f research/d2/CALIBRATION_PLAN.md
+          test -f research/d2/CAPABILITY_ARTIFACT_V0.2.md
+          test ! -e scripts/run_d2_provider.py
+          test ! -e scripts/run_d2_confirmatory.py
+
+  provider-calibration-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D2 provider calibration is blocked pending independent D1/D1b acceptance on issue #165."
+
+  confirmatory-run-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D2 confirmatory execution is not yet authorized or materialized."
