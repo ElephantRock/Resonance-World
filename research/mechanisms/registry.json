@@ -1,7 +1,20 @@
 {
   "schema": "resonance-mechanism-registry-v0.1",
   "governance": "docs/mechanism-governance-v0.1.md",
-  "promotion_states": [
+  "status_values": [
+    "historical_record",
+    "posthoc_motivated",
+    "proposed",
+    "discovery_supported",
+    "internally_replicated",
+    "schema_generalized",
+    "model_generalized",
+    "naturalistic_validated",
+    "integration_eligible",
+    "evolution_eligible"
+  ],
+  "non_promotional_statuses": ["historical_record"],
+  "promotion_ladder": [
     "posthoc_motivated",
     "proposed",
     "discovery_supported",
