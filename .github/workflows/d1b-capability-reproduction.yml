@@ -59,7 +59,7 @@ jobs:
       - name: Reconstruct frozen parent D1 plan
         run: |
           rm -rf output/d1-calibration output/d1-lock output/d1b-lock-a output/d1b-lock-b
-          mkdir -p output/d1-calibration
+          mkdir -p output/d1-calibration output/d1b-lock-a output/d1b-lock-b
           python scripts/run_d1_calibration.py --output output/d1-calibration/calibration.json > output/d1-calibration/calibration.log
           test "$(sha256sum output/d1-calibration/calibration.json | cut -d' ' -f1)" = "9ec5481eaf9106fe670ccd5a25efb1c2ab1710d2062ff143e28ebb050a1b2799"
           python scripts/verify_d1_lock.py \
