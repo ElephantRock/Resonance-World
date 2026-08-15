@@ -140,7 +140,8 @@ jobs:
           retention-days: 90
 
   live-provider-panel:
-    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[H8-RUN]')
+    # Permanently disabled after authoritative H8 classification. Apparatus checks remain available.
+    if: ${{ false }}
     needs: apparatus-lock
     runs-on: ubuntu-latest
     timeout-minutes: 360
@@ -185,7 +186,8 @@ jobs:
           retention-days: 90
 
   frozen-output-evaluator:
-    if: github.event_name == 'push' && contains(github.event.head_commit.message, '[H8-RUN]')
+    # Permanently disabled after authoritative H8 classification. The preserved evaluator remains auditable.
+    if: ${{ false }}
     needs: live-provider-panel
     runs-on: ubuntu-latest
     timeout-minutes: 30

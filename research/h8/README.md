@@ -2,18 +2,21 @@
 
 H8 is the prospectively preregistered history-representation boundary study defined by issue #159.
 
-It asks where performance changes when fresh successors receive the same underlying historical evidence as:
+Status: **complete and classifiable**.
 
-1. raw structured evidence with neutral direct reasoning;
-2. the same raw evidence through a machine-verified non-interpretive shell;
-3. the same shell plus two analyst roles and a fresh chair;
-4. typed provenance-bearing History IR under the same roles/chair protocol;
-5. compiled semantic institutional state under the same roles/chair protocol.
+Classification: `historical_substrate_history_representation_boundary_classified`. Authoritative candidate: `57c9d5366fca94c03e137e8d654b1561befe4e30`; workflow: `31843357720`.
 
-H8 does not assume that raw evidence, institutional synthesis, History IR, or compiled state will win. It is a single-model causal-boundary study, not a production-readiness experiment.
+H8 compared five equal-compute representations/protocols over 384 fresh matched units: direct raw structured evidence, an exact non-interpretive shell, the same shell with two analysts and a chair, typed History IR with the same roles/chair protocol, and compiled semantic state with the same roles/chair protocol.
 
-The confirmatory holdout contains 384 unique matched units across four fresh reasoning families. Each arm uses exactly three logical model calls per unit, for 1,920 cells and 5,760 logical calls.
+Registered findings:
 
-No provider access is authorized until the hosted credential-free apparatus lock reproduces the frozen fixtures, exact power report, T0 shell identity audit, History IR restrictions, development/confirmatory separation, and pre-key request-plan hash, and those identities are posted prospectively on #159.
+- the non-interpretive shell was equivalent to direct raw evidence within the conventional ±10pp treatment-integrity band;
+- role/chair synthesis improved correctness by +8.33pp and survived Holm correction;
+- History IR added +1.04pp over raw-evidence roles/chair, not statistically established;
+- compiled state added 0.00pp over raw-evidence roles/chair, not statistically established.
+
+See `RESULT.md`, `result.json`, and `manifest.json` for the immutable bounded record. Family decompositions are descriptive only.
+
+H8 is a single-model causal-boundary result, not production readiness or model-generalized architecture. No post-classification confirmatory rerun/retuning is authorized. The live-provider and evaluator workflow jobs are permanently disabled; credential-free apparatus reconstruction remains available.
 
 Production/default Historical Substrate remains OFF.
