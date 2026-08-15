@@ -91,6 +91,25 @@
     "production_historical_substrate_enabled": false,
     "scope": "bounded research-treatment harness only"
   },
+  "branch_scoped_h5": {
+    "preregistration_issue": 152,
+    "branch": "experiment/h5-institutional-mediation",
+    "status": "failed-confirmatory-preserved",
+    "accepted_exact_head": "7afa2d139049b1fdb80de2a95d76b49430b6a046",
+    "validation_run": 31764482769,
+    "frozen_evaluator_job": 94668378810,
+    "classification": "historical_substrate_institutional_mediation_failed",
+    "result_sha256": "c4d40f7df4a7f82d324e1cfa81c9a2d90a147a72f87b75e4bcee62a3c3d06029",
+    "manifest_sha256": "b93d518adb70aef890cc8720af5804cbd1e1328a4e85f9905b21be39cfc9a8cb",
+    "audit_sha256": "d6d757ff6459cf6b52d3c0f362b80b802fc21ea2b4f31b6a83de585263f25265",
+    "live_output_sha256": "c0448e5eaa6fdca199832ff8262f34e8e027643582967034088f8f8bf42ac5b5",
+    "live_artifact_id": 9207100866,
+    "evaluation_artifact_id": 9207107658,
+    "model": "glm-5-turbo",
+    "failed_gates": [10, 12, 13],
+    "production_historical_substrate_enabled": false,
+    "scope": "bounded research-treatment harness only; negative confirmatory record"
+  },
   "ownership_boundary": {
     "dependency_direction": "Resonance World -> Resonance ContextGraph",
     "reverse_dependency_forbidden": true,
