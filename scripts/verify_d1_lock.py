@@ -1,38 +1,4 @@
-#!/usr/bin/env python3
-"""Build and verify the prospective D1 confirmatory lock from D1-0 calibration."""
-from __future__ import annotations
-
-import argparse
-import hashlib
-import json
-import math
-from pathlib import Path
-from statistics import NormalDist
-from typing import Any
-
-from d1_capability_core import canonical_bytes
-
-CONFIRMATORY_SEEDS = tuple(range(30_000, 30_036))
-CALIBRATION_SEEDS = set(range(10_000, 10_064))
-BOOTSTRAP_REPS = 100_000
-NORMAL_ALPHA = 0.05
-TARGET_POWER = 0.90
-
-
-def file_sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def planning_power(effect: float, sd: float, n: int) -> float:
-    if sd <= 0:
-        return 1.0 if effect > 0 else 0.0
-    z_alpha = NormalDist().inv_cdf(1.0 - NORMAL_ALPHA)
-    signal = math.sqrt(n) * effect / sd
-    return NormalDist().cdf(signal - z_alpha)
-
-
-def load(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text())
+())
     if not isinstance(value, dict):
         raise ValueError(f"{path} must contain a JSON object")
     return value
@@ -49,14 +15,16 @@ def main() -> int:
         raise ValueError("D1 calibration status drift")
     if calibration["calibration_seed_count"] != 64:
         raise ValueError("D1 calibration seed count drift")
-    if calibration["calibration_seed_min"] != 10_000 or calibration["calibration_seed_max"] != 10_063:
+    if calibration["calibration_seed_min"] != 10_000 or \
+       calibration["calibration_seed_max"] != 10_063:
         raise ValueError("D1 calibration seed range drift")
     planning = calibration["planning"]
     if planning["p2_conventional_retention_fraction"] != 0.90:
         raise ValueError("D1 fidelity convention drift")
     if planning["p2_margin_type"] != "conventional":
         raise ValueError("D1 P2 margin classification drift")
-    if planning["target_power"] != TARGET_POWER or planning["alpha_one_sided"] != NORMAL_ALPHA:
+    if planning["target_power"] != TARGET_POWER or \
+       planning["alpha_one_sided"] != NORMAL_ALPHA:
         raise ValueError("D1 planning alpha/power drift")
     if set(CONFIRMATORY_SEEDS) & CALIBRATION_SEEDS:
         raise ValueError("D1 confirmatory seeds overlap development calibration")
@@ -72,7 +40,9 @@ def main() -> int:
     margin = float(planning["p2_noninferiority_margin"])
     source_uplift = float(calibration["means"]["source_uplift_vs_fresh"])
     if abs(margin - 0.10 * source_uplift) > 1e-15:
-        raise ValueError("D1 absolute NI margin is not the frozen 90% retention convention")
+        raise ValueError(
+            "D1 absolute NI margin is not the frozen 90% retention convention"
+        )
 
     n = len(CONFIRMATORY_SEEDS)
     p1_power = planning_power(
@@ -114,13 +84,21 @@ def main() -> int:
         "outcome": "heldout_specialist_success_rate_over_256_trials",
         "statistical_contract": {
             "alpha_one_sided": NORMAL_ALPHA,
-            "fixed_sequence": ["P0_source_development", "P1_destination_acquisition", "P2_reproduction_fidelity"],
+            "fixed_sequence": [
+                "P0_source_development",
+                "P1_destination_acquisition",
+                "P2_reproduction_fidelity",
+            ],
             "multiplicity": "fixed_sequence_gatekeeping_at_alpha_0.05",
             "primary_ci": "normal_approximation_on_paired_field_difference",
-            "primary_gate": "one_sided_95pct_lower_confidence_bound_above_registered_null",
+            "primary_gate": (
+                "one_sided_95pct_lower_confidence_bound_above_registered_null"
+            ),
             "sensitivity_ci": "fixed_seed_percentile_bootstrap_on_paired_field_difference",
             "bootstrap_replicates": BOOTSTRAP_REPS,
-            "bootstrap_gate": "one_sided_95pct_lower_percentile_bound_above_registered_null",
+            "bootstrap_gate": (
+                "one_sided_95pct_lower_percentile_bound_above_registered_null"
+            ),
             "P0": {
                 "estimand": "mean(source_developed - fresh_no_development)",
                 "null_boundary": 0.0,
@@ -141,9 +119,14 @@ def main() -> int:
             },
         },
         "sample_size": {
-            "calibration_recommended_minimum": int(planning["recommended_confirmatory_n"]),
+            "calibration_recommended_minimum": int(
+                planning["recommended_confirmatory_n"]
+            ),
             "confirmatory_n": n,
-            "n_rationale": "exceeds calibrated n=32 floor and balances three skill aliases at 12 Field pairs each",
+            "n_rationale": (
+                "exceeds calibrated n=32 floor and balances three skill "
+                "aliases at 12 Field pairs each"
+            ),
             "calibration_planning_power_P1_at_n": p1_power,
             "calibration_planning_power_P2_at_n": p2_power,
             "target_power": TARGET_POWER,
@@ -174,8 +157,14 @@ def main() -> int:
             "D1-S3": "capability_reproduction_supported",
             "D1-S4": "integrity_failure_unclassifiable",
         },
-        "replication_requirement": "D1-S3 is initial discovery support only; a separately preregistered fresh D1b cohort is required before internally_replicated registry status",
-        "claim_ceiling": "controlled_deterministic_individual_specialist_substrate_only",
+        "replication_requirement": (
+            "D1-S3 is initial discovery support only; a separately "
+            "preregistered fresh D1b cohort is required before "
+            "internally_replicated registry status"
+        ),
+        "claim_ceiling": (
+            "controlled_deterministic_individual_specialist_substrate_only"
+        ),
         "production_historical_substrate_enabled": False,
     }
 
