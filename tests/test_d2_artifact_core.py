@@ -11,7 +11,10 @@ def valid_artifact():
         behavioral_objective={"objective": "choose the correct action from observable features"},
         source_public_evidence={"summary_digest": "public-summary-sha"},
         required_environment={"action_vocabulary": ["A", "B", "C"]},
-        required_task_ecology={"generator": "frozen-hidden-policy-family", "source_examples_exported": False},
+        required_task_ecology={
+            "generator": "frozen-hidden-policy-family",
+            "source_examples_exported": False,
+        },
         development_protocol={"episodes": 12, "curriculum": "destination-local"},
         feedback_contract={"type": "binary_objective_outcome"},
         memory_update_contract={"type": "bounded_private_strategy", "export_allowed": False},
