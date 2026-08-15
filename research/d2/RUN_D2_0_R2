@@ -1,0 +1,8 @@
+D2-0 learnability revision 2 development-only calibration authorization.
+
+Frozen candidate: a9dc3bb0ae407ec877126d1a0d04a8fdc6c2c092
+Prospective issue #167 lock comment: 5302778520
+Parent completed D2-0 calibration workflow: 31890035170
+
+This marker authorizes D2-0 R2 development-only calibration only. It does not authorize D2 confirmatory execution, a D2 S-classification, or any registry promotion.
+Production/default Historical Substrate remains OFF.
