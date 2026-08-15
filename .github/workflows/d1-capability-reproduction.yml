@@ -7,12 +7,20 @@ on:
       - ".github/workflows/d1-capability-reproduction.yml"
       - "scripts/d1_capability_core.py"
       - "scripts/run_d1_calibration.py"
+      - "scripts/verify_d1_lock.py"
+      - "scripts/run_d1_confirmatory.py"
+      - "scripts/d1_evaluator_core.py"
+      - "scripts/accept_d1_reproduction.py"
       - "research/d1/**"
   pull_request:
     paths:
       - ".github/workflows/d1-capability-reproduction.yml"
       - "scripts/d1_capability_core.py"
       - "scripts/run_d1_calibration.py"
+      - "scripts/verify_d1_lock.py"
+      - "scripts/run_d1_confirmatory.py"
+      - "scripts/d1_evaluator_core.py"
+      - "scripts/accept_d1_reproduction.py"
       - "research/d1/**"
   workflow_dispatch:
 
@@ -20,9 +28,9 @@ permissions:
   contents: read
 
 jobs:
-  calibration:
+  apparatus-lock:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,56 +42,160 @@ jobs:
           cache: pip
       - name: Install World research environment
         run: python -m pip install -e '.[dev]'
-      - name: Assert calibration is credential-free
+      - name: Assert D1 apparatus is credential-free
         run: test -z "${ZAI_API_KEY:-}"
-      - name: Parse-check D1-0 apparatus
+      - name: Parse-check D1 apparatus
         run: |
-          python -m py_compile scripts/d1_capability_core.py scripts/run_d1_calibration.py
-      - name: Run deterministic development-only calibration twice
+          python -m py_compile \
+            scripts/d1_capability_core.py \
+            scripts/run_d1_calibration.py \
+            scripts/verify_d1_lock.py \
+            scripts/run_d1_confirmatory.py \
+            scripts/d1_evaluator_core.py \
+            scripts/accept_d1_reproduction.py
+      - name: Reproduce repaired D1-0 calibration twice
         run: |
-          rm -rf output/d1-calibration-a output/d1-calibration-b
+          rm -rf output/d1-calibration-a output/d1-calibration-b output/d1-lock
           mkdir -p output/d1-calibration-a output/d1-calibration-b
           python scripts/run_d1_calibration.py --output output/d1-calibration-a/calibration.json | tee output/d1-calibration-a/calibration.log
           python scripts/run_d1_calibration.py --output output/d1-calibration-b/calibration.json > output/d1-calibration-b/calibration.log
           cmp output/d1-calibration-a/calibration.json output/d1-calibration-b/calibration.json
-      - name: Verify frozen D1-0 calibration contract
+      - name: Build prospective confirmatory plan and lock
         run: |
+          test -z "${ZAI_API_KEY:-}"
+          python scripts/verify_d1_lock.py \
+            --calibration output/d1-calibration-a/calibration.json \
+            --output-dir output/d1-lock
           python - <<'PY'
-          import hashlib
           import json
           from pathlib import Path
-
-          p = Path("output/d1-calibration-a/calibration.json")
-          report = json.loads(p.read_text())
-          assert report["status"] == "development_only_not_confirmatory"
-          assert report["calibration_seed_count"] == 64
-          assert report["calibration_seed_min"] == 10000
-          assert report["calibration_seed_max"] == 10063
-          assert report["planning"]["p2_conventional_retention_fraction"] == 0.90
-          assert report["planning"]["p2_margin_type"] == "conventional"
-          assert report["planning"]["minimum_n_floor"] == 32
-          assert report["planning"]["target_power"] == 0.90
-          assert report["integrity"]["source_destination_identity_disjoint"] is True
-          assert report["integrity"]["forbidden_private_state_export_absent"] is True
-          assert len(report["rows"]) == 64
-          assert all(not row["forbidden_private_export_keys_found"] for row in report["rows"])
-          assert all(row["source_destination_identity_disjoint"] for row in report["rows"])
-          print("calibration_sha256=" + hashlib.sha256(p.read_bytes()).hexdigest())
-          print(json.dumps(report["means"], sort_keys=True))
-          print(json.dumps(report["population_sd"], sort_keys=True))
-          print(json.dumps(report["planning"], sort_keys=True))
+          lock = json.loads(Path("output/d1-lock/d1-lock-report.json").read_text())
+          assert lock["confirmatory_pair_count"] == 36
+          assert lock["skill_alias_balance"] == {"skill-a": 12, "skill-b": 12, "skill-c": 12}
+          assert lock["development_confirmatory_seed_disjoint"] is True
+          assert lock["p2_margin_type"] == "conventional"
+          assert lock["confirmatory_execution_authorized"] is False
+          assert lock["production_historical_substrate_enabled"] is False
           PY
+      - name: Print D1 prospective lock identities
+        run: |
+          sha256sum output/d1-calibration-a/calibration.json
+          sha256sum output/d1-lock/d1-confirmatory-plan.json
+          sha256sum output/d1-lock/d1-lock-report.json
+          sha256sum scripts/d1_capability_core.py scripts/verify_d1_lock.py scripts/d1_evaluator_core.py
+          cat output/d1-lock/d1-lock-report.json
       - uses: actions/upload-artifact@v4
         with:
-          name: d1-development-calibration
-          path: output/d1-calibration-a
+          name: d1-apparatus-lock
+          path: |
+            output/d1-calibration-a/calibration.json
+            output/d1-calibration-a/calibration.log
+            output/d1-lock/d1-confirmatory-plan.json
+            output/d1-lock/d1-lock-report.json
           if-no-files-found: error
           retention-days: 90
 
-  confirmatory:
-    # D1 confirmatory execution is not authorized until a separate prospective lock.
-    if: ${{ false }}
-    needs: calibration
+  confirmatory-run:
+    if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[D1-RUN]') }}
+    needs: apparatus-lock
     runs-on: ubuntu-latest
+    timeout-minutes: 30
     steps:
-      - run: echo "D1 confirmatory execution remains prospectively locked."
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert confirmatory execution is credential-free
+        run: test -z "${ZAI_API_KEY:-}"
+      - uses: actions/download-artifact@v4
+        with:
+          name: d1-apparatus-lock
+          path: input/d1-lock
+      - name: Execute frozen D1 panel twice
+        run: |
+          mkdir -p output/d1-run-a output/d1-run-b
+          python scripts/run_d1_confirmatory.py \
+            --plan input/d1-lock/d1-lock/d1-confirmatory-plan.json \
+            --output output/d1-run-a/d1-confirmatory-output.json \
+            --candidate-head "$GITHUB_SHA" | tee output/d1-run-a/run.log
+          python scripts/run_d1_confirmatory.py \
+            --plan input/d1-lock/d1-lock/d1-confirmatory-plan.json \
+            --output output/d1-run-b/d1-confirmatory-output.json \
+            --candidate-head "$GITHUB_SHA" > output/d1-run-b/run.log
+          cmp output/d1-run-a/d1-confirmatory-output.json output/d1-run-b/d1-confirmatory-output.json
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d1-confirmatory-output
+          path: output/d1-run-a
+          if-no-files-found: error
+          retention-days: 90
+
+  frozen-evaluator:
+    needs: confirmatory-run
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World research environment
+        run: python -m pip install -e '.[dev]'
+      - uses: actions/download-artifact@v4
+        with:
+          name: d1-apparatus-lock
+          path: input/d1-lock
+      - uses: actions/download-artifact@v4
+        with:
+          name: d1-confirmatory-output
+          path: input/d1-output
+      - name: Evaluate one frozen D1 output twice
+        run: |
+          mkdir -p output/eval-a output/eval-b
+          set +e
+          python scripts/accept_d1_reproduction.py \
+            --plan input/d1-lock/d1-lock/d1-confirmatory-plan.json \
+            --lock input/d1-lock/d1-lock/d1-lock-report.json \
+            --confirmatory-output input/d1-output/d1-run-a/d1-confirmatory-output.json \
+            --output-dir output/eval-a \
+            --candidate-head "$GITHUB_SHA" > output/eval-a/evaluator.log
+          status_a=$?
+          python scripts/accept_d1_reproduction.py \
+            --plan input/d1-lock/d1-lock/d1-confirmatory-plan.json \
+            --lock input/d1-lock/d1-lock/d1-lock-report.json \
+            --confirmatory-output input/d1-output/d1-run-a/d1-confirmatory-output.json \
+            --output-dir output/eval-b \
+            --candidate-head "$GITHUB_SHA" > output/eval-b/evaluator.log
+          status_b=$?
+          set -e
+          printf '%s\n' "$status_a" > output/eval-a/evaluator-exit-status.txt
+          printf '%s\n' "$status_b" > output/eval-a/second-evaluator-exit-status.txt
+          cmp output/eval-a/result.json output/eval-b/result.json
+          cmp output/eval-a/audit.json output/eval-b/audit.json
+          cmp output/eval-a/manifest.json output/eval-b/manifest.json
+          test "$status_a" = "$status_b"
+      - name: Enforce classifiable D1 record
+        run: |
+          cat output/eval-a/evaluator.log
+          python - <<'PY'
+          import json
+          result = json.load(open("output/eval-a/result.json"))
+          assert result["classification_code"] in {"D1-S0", "D1-S1", "D1-S2", "D1-S3"}
+          assert all(result["gates"].values())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d1-confirmatory-evaluation
+          path: output/eval-a
+          if-no-files-found: error
+          retention-days: 90

@@ -249,6 +249,7 @@ def capability_artifact(
     serialized = json.dumps(artifact, sort_keys=True)
     for forbidden in FORBIDDEN_EXPORT_KEYS:
         if f'"{forbidden}"' in serialized and forbidden != "agent_id":
+            # Forbidden names may appear only in the explicit forbidden_transfers declaration.
             occurrences = serialized.count(f'"{forbidden}"')
             if occurrences != 1:
                 raise AssertionError(f"forbidden private key leaked: {forbidden}")
@@ -286,9 +287,6 @@ def run_field_pair(pair_seed: int, config: dict[str, Any]) -> dict[str, Any]:
         public_events=source_events,
         config=config,
     )
-    if artifact["behavioral_objective"]["target_skill"] != target_skill:
-        raise AssertionError("artifact extracted wrong specialization")
-
     destination_agents, destination_events = develop_population(
         seed=destination_seed,
         prefix=f"destination-{pair_seed}",
@@ -381,24 +379,17 @@ def run_field_pair(pair_seed: int, config: dict[str, Any]) -> dict[str, Any]:
         raise AssertionError("source agent identity leaked into capability artifact")
     forbidden_leaks = [
         key
-        for key in (
-            "practice_by_skill",
-            "private_practice_state",
-            "source_conversation_state",
-            "source_seed",
-            "source_environment_seed",
-            "evaluator_truth",
-            "evaluation_answers",
-        )
+        for key in ("practice_by_skill", "private_practice_state", "source_conversation_state", "source_seed", "source_environment_seed", "evaluator_truth", "evaluation_answers")
         if f'"{key}":' in export_text
     ]
     return {
         "pair_seed": pair_seed,
         "target_skill": target_skill,
+        "artifact_target_skill": str(artifact["behavioral_objective"]["target_skill"]),
+        "artifact_target_matches_source_target": str(artifact["behavioral_objective"]["target_skill"]) == target_skill,
         "source_agent_id": source_selected.agent_id,
         "destination_agent_id": destination_selected.agent_id,
-        "source_destination_identity_disjoint": source_selected.agent_id
-        != destination_selected.agent_id,
+        "source_destination_identity_disjoint": source_selected.agent_id != destination_selected.agent_id,
         "source_public_event_count": len(source_events),
         "destination_public_event_count": len(destination_events),
         "capability_artifact": artifact,

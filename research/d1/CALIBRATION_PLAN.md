@@ -111,7 +111,7 @@ The calibration workflow fails if:
 - any source/destination selected identity is shared;
 - any forbidden private/reconstructive field appears in the exported artifact outside the explicit forbidden-transfer declaration;
 - the concrete source seed or selected source agent identity appears in the artifact payload;
-- the artifact fails to infer the source ecology's target specialization;
+- calibration records whether the artifact infers the source ecology's target specialization; an inference miss is a mechanism outcome, not an apparatus failure for future confirmatory execution;
 - the destination does not use the artifact's required ecology/substrate/development contract;
 - calibration seed count/range changes.
 
