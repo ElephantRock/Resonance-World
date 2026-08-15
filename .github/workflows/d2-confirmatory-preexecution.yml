@@ -70,11 +70,11 @@ jobs:
         run: pytest -q tests/test_d2_artifact_core.py tests/test_d2_confirmatory.py
       - name: Verify prospective design contract
         run: |
-          python - <<'PY'
+          PYTHONPATH=scripts python - <<'PY'
           import json
           from pathlib import Path
-          from scripts.d2_confirmatory_sample_size import report
-          from scripts.run_d2_confirmatory import verify_cohort_lock
+          from d2_confirmatory_sample_size import report
+          from run_d2_confirmatory import verify_cohort_lock
 
           request = json.loads(Path("research/d2/D2_CONFIRMATORY_REQUEST_PLAN.json").read_text())
           assert request["pair_count_attempted"] == 360
