@@ -1,0 +1,88 @@
+name: D1 D1b Registry Promotion
+
+on:
+  push:
+    branches: ["acceptance/d1-d1b-promotion"]
+    paths:
+      - ".github/workflows/d1-d1b-promotion.yml"
+      - "research/mechanisms/registry.json"
+      - "research/acceptance/d1-d1b/**"
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  apply-promotion:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Verify independent acceptance and apply sequential promotion
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          registry_path = Path("research/mechanisms/registry.json")
+          events_path = Path("research/acceptance/d1-d1b/PROMOTION_EVENTS.json")
+          response_path = Path("research/acceptance/d1-d1b/review-response.json")
+          audit_path = Path("research/acceptance/d1-d1b/review-audit.json")
+
+          registry = json.loads(registry_path.read_text())
+          events = json.loads(events_path.read_text())
+          response = json.loads(response_path.read_text())
+          audit = json.loads(audit_path.read_text())
+
+          assert events["registry_node"] == "d1_capability_reproduction"
+          assert events["decision"] == "ACCEPT both transitions"
+          assert events["proposer_id"] != events["acceptor_id"]
+          assert events["review_response_sha256"] == audit["review_response_sha256"]
+          assert events["evidence_manifest_sha256"] == audit["evidence_manifest_sha256"]
+          assert audit["model_separation"] is True
+          assert audit["substantive_valid_decision_count"] == 1
+          assert audit["production_historical_substrate_enabled"] is False
+          assert response["review"]["decision"] == "ACCEPT both transitions"
+          assert all(check["status"] == "PASS" for check in response["review"]["checks"])
+          assert response["review"]["reservations"] == []
+
+          seq = events["events"]
+          assert len(seq) == 2
+          assert (seq[0]["from_status"], seq[0]["to_status"]) == ("proposed", "discovery_supported")
+          assert (seq[1]["from_status"], seq[1]["to_status"]) == ("discovery_supported", "internally_replicated")
+          assert seq[0]["candidate_result_hash"] == "cd68485ff3ef1aeb783e442b5fd7fe7aa73132b620a4c57c63e5c3ce62d165e8"
+          assert seq[1]["candidate_result_hash"] == "56e85a609c32b7dc62c16b94f07efa16c7f550497c8dc81eeb84517bd13dc200"
+
+          node = next(n for n in registry["nodes"] if n["mechanism_id"] == "d1_capability_reproduction")
+          if node["status"] == "internally_replicated":
+              raise SystemExit(0)
+          assert node["status"] == "proposed"
+
+          node["status"] = "internally_replicated"
+          node["supported_scope"] = response["review"]["accepted_claim"]
+          node["known_boundary"] = "Controlled deterministic individual-specialist substrate only; no stochastic/model-based learning, semantic transfer, team/institution reproduction, naturalistic transfer, environment spawning, superiority, or production Historical Substrate implication."
+          node["evidence"] = ["D1", "D1b"]
+          node["acceptance_record"] = "research/acceptance/d1-d1b/PROMOTION_EVENTS.json"
+          node["acceptance_issue"] = "https://github.com/ElephantRock/Resonance-World/issues/165"
+          node["acceptor"] = events["acceptor_id"]
+          node["promotion_eligible"] = True
+          node["production_historical_substrate_enabled"] = False
+
+          registry_path.write_text(json.dumps(registry, indent=2, sort_keys=False) + "\n")
+          PY
+      - name: Commit registry promotion if changed
+        run: |
+          if git diff --quiet -- research/mechanisms/registry.json; then
+            echo "Registry already at accepted state."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add research/mechanisms/registry.json
+          git commit -m "Acceptance: promote D1 capability reproduction to internally replicated"
+          git push origin HEAD:acceptance/d1-d1b-promotion
