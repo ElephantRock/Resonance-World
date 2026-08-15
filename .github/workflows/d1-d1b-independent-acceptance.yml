@@ -36,7 +36,7 @@ jobs:
           python - <<'PY'
           from pathlib import Path
           text = Path("research/acceptance/d1-d1b/REVIEW_PROTOCOL.md").read_text()
-          assert "glm-5.2" in text
+          assert "glm-5.3" in text
           assert "does not itself mutate the Mechanism Registry" in text
           assert "Production/default Historical Substrate remains OFF" in text
           PY
@@ -50,7 +50,7 @@ jobs:
           audit = json.loads(Path("output/d1-d1b-acceptance/review-audit.json").read_text())
           response = json.loads(Path("output/d1-d1b-acceptance/review-response.json").read_text())
           assert audit["provider"] == "Z.AI"
-          assert audit["model"] == "glm-5.2"
+          assert audit["model"] == "glm-5.3"
           assert audit["model_separation"] is True
           assert audit["substantive_valid_decision_count"] == 1
           assert audit["production_historical_substrate_enabled"] is False
@@ -85,7 +85,7 @@ jobs:
           reservations = "\n".join(f"- {x}" for x in review.get("reservations", [])) or "- none"
           body = f"""## Independent AI acceptance decision
 
-          Reviewer: **Z.AI `glm-5.2`**, fresh acceptance-plane role, separate from proposer model GPT-5.6 Sol.
+          Reviewer: **Z.AI `glm-5.3`**, fresh acceptance-plane role, separate from proposer model GPT-5.6 Sol.
 
           **Decision: `{review['decision']}`**
 
