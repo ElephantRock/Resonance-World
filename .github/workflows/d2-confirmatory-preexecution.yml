@@ -1,0 +1,125 @@
+name: D2 Confirmatory Preexecution Audit
+
+on:
+  push:
+    branches: ["experiment/d2-confirmatory"]
+    paths:
+      - ".github/workflows/d2-confirmatory-preexecution.yml"
+      - ".github/workflows/d2-confirmatory.yml"
+      - "research/d2/D2_CONFIRMATORY_PLAN.md"
+      - "research/d2/D2_CONFIRMATORY_REQUEST_PLAN.json"
+      - "research/d2/D2_CONFIRMATORY_SAMPLE_SIZE.json"
+      - "research/d2/d2-confirmatory-cohort-lock.json"
+      - "research/d2/D2_PROPOSAL_TRANSITION.json"
+      - "research/d2/RUN_D2_CONFIRMATORY"
+      - "scripts/d2_confirmatory_sample_size.py"
+      - "scripts/d2_confirmatory_stats.py"
+      - "scripts/run_d2_confirmatory.py"
+      - "scripts/evaluate_d2_confirmatory.py"
+      - "tests/test_d2_confirmatory.py"
+  pull_request:
+    paths:
+      - ".github/workflows/d2-confirmatory-preexecution.yml"
+      - ".github/workflows/d2-confirmatory.yml"
+      - "research/d2/D2_CONFIRMATORY_PLAN.md"
+      - "research/d2/D2_CONFIRMATORY_REQUEST_PLAN.json"
+      - "research/d2/D2_CONFIRMATORY_SAMPLE_SIZE.json"
+      - "research/d2/d2-confirmatory-cohort-lock.json"
+      - "research/d2/D2_PROPOSAL_TRANSITION.json"
+      - "research/d2/RUN_D2_CONFIRMATORY"
+      - "scripts/d2_confirmatory_sample_size.py"
+      - "scripts/d2_confirmatory_stats.py"
+      - "scripts/run_d2_confirmatory.py"
+      - "scripts/evaluate_d2_confirmatory.py"
+      - "tests/test_d2_confirmatory.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-confirmatory-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert provider credential is unavailable
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Compile and lint frozen apparatus
+        run: |
+          python -m py_compile \
+            scripts/d2_confirmatory_sample_size.py \
+            scripts/d2_confirmatory_stats.py \
+            scripts/run_d2_confirmatory.py \
+            scripts/evaluate_d2_confirmatory.py
+          ruff check \
+            scripts/d2_confirmatory_sample_size.py \
+            scripts/d2_confirmatory_stats.py \
+            scripts/run_d2_confirmatory.py \
+            scripts/evaluate_d2_confirmatory.py \
+            tests/test_d2_confirmatory.py
+      - name: Test frozen confirmatory apparatus
+        run: pytest -q tests/test_d2_artifact_core.py tests/test_d2_confirmatory.py
+      - name: Verify prospective design contract
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          from scripts.d2_confirmatory_sample_size import report
+          from scripts.run_d2_confirmatory import verify_cohort_lock
+
+          request = json.loads(Path("research/d2/D2_CONFIRMATORY_REQUEST_PLAN.json").read_text())
+          assert request["pair_count_attempted"] == 360
+          assert request["minimum_analyzable_pairs"] == 330
+          assert request["logical_calls_campaign_before_retries"] == 11160
+          assert request["model"] == "glm-5-turbo"
+          assert request["temperature"] == 0.8
+          assert request["historical_substrate_enabled"] is False
+          assert request["confirmatory_rerun_allowed"] is False
+
+          sample_size = json.loads(Path("research/d2/D2_CONFIRMATORY_SAMPLE_SIZE.json").read_text())
+          assert report() == sample_size
+          assert sample_size["P2"]["required_n"] == 328
+          assert sample_size["minimum_analyzable_pairs"] == 330
+
+          cohort = verify_cohort_lock(Path("research/d2/d2-confirmatory-cohort-lock.json"))
+          assert cohort["pair_count"] == 360
+          assert cohort["cohort_pairs_sha256"] == "d8e2c82cd7c110bd3013b870e460218442d4d6819bb9cf06f537dcd670fd32a3"
+
+          plan = Path("research/d2/D2_CONFIRMATORY_PLAN.md").read_text()
+          assert "P0 -> P1 -> P2" in plan
+          assert "90% preservation of source-developed accuracy" in plan
+          assert "11,160 logical calls" in plan
+          assert "No D2 result promotes the registry automatically" in plan
+          assert "Production/default Historical Substrate remains OFF" in plan
+          PY
+      - name: Verify authorization separation
+        run: |
+          if test -f research/d2/RUN_D2_CONFIRMATORY; then
+            candidate="$(sed -n 's/^candidate_sha=//p' research/d2/RUN_D2_CONFIRMATORY)"
+            test -n "$candidate"
+            test "$(git rev-parse HEAD^)" = "$candidate"
+            test "$(git diff --name-only "$candidate" HEAD)" = "research/d2/RUN_D2_CONFIRMATORY"
+          else
+            echo "Provider execution remains unauthorized: marker absent."
+          fi
+
+  provider-execution-not-in-audit:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Provider execution is marker-gated in a separate workflow."
+
+  registry-promotion-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D2 cannot promote itself; Acceptance-plane authority remains separate."
