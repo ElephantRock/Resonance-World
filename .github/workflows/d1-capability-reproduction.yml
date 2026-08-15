@@ -1,0 +1,89 @@
+name: D1 Capability Reproduction
+
+on:
+  push:
+    branches: ["experiment/d1-capability-reproduction"]
+    paths:
+      - ".github/workflows/d1-capability-reproduction.yml"
+      - "scripts/d1_capability_core.py"
+      - "scripts/run_d1_calibration.py"
+      - "research/d1/**"
+  pull_request:
+    paths:
+      - ".github/workflows/d1-capability-reproduction.yml"
+      - "scripts/d1_capability_core.py"
+      - "scripts/run_d1_calibration.py"
+      - "research/d1/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert calibration is credential-free
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Parse-check D1-0 apparatus
+        run: |
+          python -m py_compile scripts/d1_capability_core.py scripts/run_d1_calibration.py
+      - name: Run deterministic development-only calibration twice
+        run: |
+          rm -rf output/d1-calibration-a output/d1-calibration-b
+          mkdir -p output/d1-calibration-a output/d1-calibration-b
+          python scripts/run_d1_calibration.py --output output/d1-calibration-a/calibration.json | tee output/d1-calibration-a/calibration.log
+          python scripts/run_d1_calibration.py --output output/d1-calibration-b/calibration.json > output/d1-calibration-b/calibration.log
+          cmp output/d1-calibration-a/calibration.json output/d1-calibration-b/calibration.json
+      - name: Verify frozen D1-0 calibration contract
+        run: |
+          python - <<'PY'
+          import hashlib
+          import json
+          from pathlib import Path
+
+          p = Path("output/d1-calibration-a/calibration.json")
+          report = json.loads(p.read_text())
+          assert report["status"] == "development_only_not_confirmatory"
+          assert report["calibration_seed_count"] == 64
+          assert report["calibration_seed_min"] == 10000
+          assert report["calibration_seed_max"] == 10063
+          assert report["planning"]["p2_conventional_retention_fraction"] == 0.90
+          assert report["planning"]["p2_margin_type"] == "conventional"
+          assert report["planning"]["minimum_n_floor"] == 32
+          assert report["planning"]["target_power"] == 0.90
+          assert report["integrity"]["source_destination_identity_disjoint"] is True
+          assert report["integrity"]["forbidden_private_state_export_absent"] is True
+          assert len(report["rows"]) == 64
+          assert all(not row["forbidden_private_export_keys_found"] for row in report["rows"])
+          assert all(row["source_destination_identity_disjoint"] for row in report["rows"])
+          print("calibration_sha256=" + hashlib.sha256(p.read_bytes()).hexdigest())
+          print(json.dumps(report["means"], sort_keys=True))
+          print(json.dumps(report["population_sd"], sort_keys=True))
+          print(json.dumps(report["planning"], sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d1-development-calibration
+          path: output/d1-calibration-a
+          if-no-files-found: error
+          retention-days: 90
+
+  confirmatory:
+    # D1 confirmatory execution is not authorized until a separate prospective lock.
+    if: ${{ false }}
+    needs: calibration
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D1 confirmatory execution remains prospectively locked."
