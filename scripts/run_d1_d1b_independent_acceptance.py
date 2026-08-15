@@ -12,7 +12,7 @@ from urllib.error import HTTPError, URLError
 from urllib.request import Request, urlopen
 
 REPO = "ElephantRock/Resonance-World"
-MODEL = "glm-5.2"
+MODEL = "glm-5.3"
 ENDPOINT = "https://api.z.ai/api/coding/paas/v4/chat/completions"
 MAX_ATTEMPTS = 4
 
@@ -104,7 +104,6 @@ def build_evidence(github_token: str) -> tuple[list[dict[str, Any]], dict[str, A
 
     for evidence_id, url in GITHUB_EVIDENCE.items():
         value = github_get(url, github_token)
-        # Issue #165 is rubric-only: do not supply proposer-side issue comments.
         if evidence_id == "github:issue-165-rubric" and isinstance(value, dict):
             value = {
                 "number": value.get("number"),
