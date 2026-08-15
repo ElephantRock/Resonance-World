@@ -1,0 +1,112 @@
+name: D2 Confirmatory Campaign
+
+on:
+  push:
+    branches: ["experiment/d2-confirmatory"]
+    paths:
+      - "research/d2/RUN_D2_CONFIRMATORY"
+
+permissions:
+  contents: read
+
+jobs:
+  provider-confirmatory-campaign:
+    runs-on: ubuntu-latest
+    timeout-minutes: 300
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Verify marker is the sole post-lock change
+        run: |
+          test -n "${ZAI_API_KEY:-}"
+          candidate="$(sed -n 's/^candidate_sha=//p' research/d2/RUN_D2_CONFIRMATORY)"
+          test -n "$candidate"
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "research/d2/RUN_D2_CONFIRMATORY"
+          test "$(sed -n 's/^issue=//p' research/d2/RUN_D2_CONFIRMATORY)" = "167"
+          echo "Frozen D2 candidate: $candidate"
+      - name: Execute frozen provider campaign
+        run: |
+          python scripts/run_d2_confirmatory.py \
+            --output-dir output/d2-confirmatory-provider
+      - name: Verify unclassified provider output
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          path = Path("output/d2-confirmatory-provider/d2-confirmatory-provider-output.json")
+          data = json.loads(path.read_text())
+          assert data["schema"] == "d2-confirmatory-provider-output-v0.1"
+          assert data["status"] == "provider_campaign_complete_unclassified"
+          assert data["classification"] is None
+          assert data["attempted_pairs"] == 360
+          assert data["complete_pairs"] + data["failed_pairs"] == 360
+          assert data["cohort_lock"]["cohort_pairs_sha256"] == "d8e2c82cd7c110bd3013b870e460218442d4d6819bb9cf06f537dcd670fd32a3"
+          assert data["production_historical_substrate_enabled"] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-confirmatory-provider-output
+          path: output/d2-confirmatory-provider/
+          if-no-files-found: error
+
+  frozen-output-evaluator:
+    needs: provider-confirmatory-campaign
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert evaluator has no provider credential
+        run: test -z "${ZAI_API_KEY:-}"
+      - uses: actions/download-artifact@v4
+        with:
+          name: d2-confirmatory-provider-output
+          path: frozen-provider
+      - name: Evaluate frozen output twice
+        run: |
+          python scripts/evaluate_d2_confirmatory.py \
+            frozen-provider/d2-confirmatory-provider-output.json \
+            --output-dir output/eval-a
+          python scripts/evaluate_d2_confirmatory.py \
+            frozen-provider/d2-confirmatory-provider-output.json \
+            --output-dir output/eval-b
+          cmp output/eval-a/d2-confirmatory-result.json output/eval-b/d2-confirmatory-result.json
+          cmp output/eval-a/evaluation-manifest.json output/eval-b/evaluation-manifest.json
+      - name: Verify bounded classification and no promotion
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path("output/eval-a/d2-confirmatory-result.json").read_text())
+          assert result["classification"] in {"D2-S0", "D2-S1", "D2-S2", "D2-S3", "D2-S4"}
+          assert result["registry_promotion_authorized"] is False
+          assert result["production_historical_substrate_enabled"] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-confirmatory-evaluation
+          path: output/eval-a/
+          if-no-files-found: error
+
+  registry-promotion-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Classification never mutates Mechanism Registry authority."
