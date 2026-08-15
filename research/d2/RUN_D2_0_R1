@@ -1,0 +1,9 @@
+D2-0 development-only transport-repair-1 calibration authorization.
+
+Repair candidate: f228b8e9a0b607aca9e851365f32cf724101ddc7
+Prospective issue #167 repair lock comment: 5302661623
+Prior incomplete D2-0 workflow: 31889041385
+Independent D1/D1b acceptance merge: 31cfd4f216dc1c98bdd97af5f174f7298d412cb6
+
+This marker authorizes D2-0 repair-1 calibration only. It does not authorize D2 confirmatory execution.
+Production/default Historical Substrate remains OFF.
