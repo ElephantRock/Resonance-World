@@ -4,7 +4,7 @@ on:
   push:
     branches: ["experiment/d2-0-stochastic-calibration"]
     paths:
-      - "research/d2/RUN_D2_0"
+      - "research/d2/RUN_D2_0_R1"
 
 permissions:
   contents: read
@@ -26,11 +26,18 @@ jobs:
           cache: pip
       - name: Install research environment
         run: python -m pip install -e '.[dev]'
-      - name: Verify D1/D1b acceptance prerequisite and D2-0 apparatus
+      - name: Verify D1/D1b acceptance and D2-0 repair apparatus
         run: |
           test -n "$ZAI_API_KEY"
-          python -m py_compile scripts/d2_artifact_core.py scripts/d2_calibration_core.py scripts/run_d2_calibration.py
-          ruff check scripts/d2_artifact_core.py scripts/d2_calibration_core.py scripts/run_d2_calibration.py tests/test_d2_calibration_core.py
+          python -m py_compile \
+            scripts/d2_artifact_core.py \
+            scripts/d2_calibration_core.py \
+            scripts/run_d2_calibration_repair1.py
+          ruff check \
+            scripts/d2_artifact_core.py \
+            scripts/d2_calibration_core.py \
+            scripts/run_d2_calibration_repair1.py \
+            tests/test_d2_calibration_core.py
           pytest -q tests/test_d2_artifact_core.py tests/test_d2_calibration_core.py
           python - <<'PY'
           import json
@@ -42,40 +49,53 @@ jobs:
           assert node["acceptor"] == "zai:glm-5-turbo:independent_acceptance_plane_reviewer"
           assert node["production_historical_substrate_enabled"] is False
           assert Path("research/acceptance/d1-d1b/PROMOTION_EVENTS.json").exists()
-          lock = Path("research/d2/D2_0_EXECUTION.md").read_text()
-          assert "98 logical provider calls" in lock
-          assert "confirmatory D2 cohort is **not generated or inspected" in lock
+          assert Path("research/d2/D2_0_TRANSPORT_REPAIR_1.md").exists()
+          repair = Path("research/d2/D2_0_TRANSPORT_REPAIR_1.md").read_text()
+          assert "31889041385" in repair
+          assert "162 logical calls" in repair
+          assert "no D2 confirmatory cohort" in repair.lower()
+          marker = Path("research/d2/RUN_D2_0_R1").read_text()
+          assert "5302646723" in marker
+          assert "confirmatory" in marker.lower()
           PY
-      - name: Execute D2-0 development-only provider calibration
+      - name: Execute D2-0 transport-repair-1 calibration
         run: |
-          rm -rf output/d2-calibration
-          python scripts/run_d2_calibration.py --output-dir output/d2-calibration
-      - name: Verify D2-0 structural integrity
+          rm -rf output/d2-calibration-r1
+          python scripts/run_d2_calibration_repair1.py --output-dir output/d2-calibration-r1
+      - name: Verify D2-0 repair-1 structural integrity
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
 
-          report = json.loads(Path("output/d2-calibration/d2-0-calibration-report.json").read_text())
+          report = json.loads(Path("output/d2-calibration-r1/d2-0-calibration-report.json").read_text())
           assert report["status"] == "completed_development_only_not_confirmatory"
+          assert report["transport_repair"] == 1
+          assert report["prior_incomplete_workflow"] == 31889041385
           assert report["pair_count"] == 8
+          assert report["evaluation_chunk_size"] == 8
           assert report["confirmatory_outcomes_included"] is False
           assert report["confirmatory_holdout_created_or_used"] is False
           assert report["integrity"]["source_destination_development_overlap_total"] == 0
           assert report["integrity"]["development_evaluation_overlap_total"] == 0
           assert report["integrity"]["all_artifact_audits_pass"] is True
           assert report["integrity"]["description_reproduced_logical_calls_equal"] is True
+          assert report["integrity"]["all_developed_arm_logical_calls_five"] is True
+          assert report["integrity"]["all_fresh_logical_calls_three"] is True
+          assert report["integrity"]["evaluation_feedback_returned"] is False
           assert report["production_historical_substrate_enabled"] is False
-          assert report["call_accounting"]["logical_calls_total"] == 98
-          manifest = json.loads(Path("output/d2-calibration/manifest.json").read_text())
+          assert report["call_accounting"]["logical_calls_total"] == 162
+          manifest = json.loads(Path("output/d2-calibration-r1/manifest.json").read_text())
           assert manifest["development_only"] is True
           assert manifest["confirmatory_evidence"] is False
+          assert manifest["transport_repair"] == 1
+          assert manifest["logical_calls_total"] == 162
           assert manifest["production_historical_substrate_enabled"] is False
           PY
-          sha256sum output/d2-calibration/*
+          sha256sum output/d2-calibration-r1/*
       - uses: actions/upload-artifact@v4
         with:
-          name: d2-0-development-calibration
-          path: output/d2-calibration
+          name: d2-0-development-calibration-r1
+          path: output/d2-calibration-r1
           if-no-files-found: error
           retention-days: 90
