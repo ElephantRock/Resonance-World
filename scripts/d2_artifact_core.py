@@ -3,8 +3,9 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Iterable
 from dataclasses import dataclass
-from typing import Any, Iterable
+from typing import Any
 
 SCHEMA = "d2-capability-artifact-v0.2"
 CAPABILITY_CLASS = "individual_model_mediated_specialist"
