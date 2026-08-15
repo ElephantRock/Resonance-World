@@ -16,8 +16,8 @@
     "null_threshold": 0.0,
     "planning_source_accuracy": 0.5,
     "planning_true_fidelity_ratio": 1.0,
-    "power_at_attempted_if_all_complete": 0.9226198647909651,
-    "power_at_minimum_analyzable": 0.9018756066467699,
+    "power_at_attempted_if_all_complete": 0.9226198647708239,
+    "power_at_minimum_analyzable": 0.9018756066452513,
     "r2_paired_sd": 0.3092419446924089,
     "required_n": 328,
     "source_accuracy_provenance": "prospectively fixed R2 readiness floor"
