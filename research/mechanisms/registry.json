@@ -13,9 +13,8 @@
     "integration_eligible",
     "evolution_eligible"
   ],
-  "non_promotional_statuses": ["historical_record"],
+  "non_promotional_statuses": ["historical_record", "posthoc_motivated"],
   "promotion_ladder": [
-    "posthoc_motivated",
     "proposed",
     "discovery_supported",
     "internally_replicated",
