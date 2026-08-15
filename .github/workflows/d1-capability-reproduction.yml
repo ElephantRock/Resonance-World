@@ -1,0 +1,101 @@
+name: D1 Capability Reproduction
+
+on:
+  push:
+    branches: ["experiment/d1-capability-reproduction"]
+    paths:
+      - ".github/workflows/d1-capability-reproduction.yml"
+      - "scripts/d1_capability_core.py"
+      - "scripts/run_d1_calibration.py"
+      - "scripts/verify_d1_lock.py"
+      - "scripts/run_d1_confirmatory.py"
+      - "scripts/d1_evaluator_core.py"
+      - "scripts/accept_d1_reproduction.py"
+      - "research/d1/**"
+  pull_request:
+    paths:
+      - ".github/workflows/d1-capability-reproduction.yml"
+      - "scripts/d1_capability_core.py"
+      - "scripts/run_d1_calibration.py"
+      - "scripts/verify_d1_lock.py"
+      - "scripts/run_d1_confirmatory.py"
+      - "scripts/d1_evaluator_core.py"
+      - "scripts/accept_d1_reproduction.py"
+      - "research/d1/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apparatus-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert post-classification audit is credential-free
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Parse-check preserved D1 apparatus
+        run: |
+          python -m py_compile \
+            scripts/d1_capability_core.py \
+            scripts/run_d1_calibration.py \
+            scripts/verify_d1_lock.py \
+            scripts/run_d1_confirmatory.py \
+            scripts/d1_evaluator_core.py \
+            scripts/accept_d1_reproduction.py
+      - name: Reconstruct D1-0 calibration and confirmatory lock twice
+        run: |
+          rm -rf output/d1-a output/d1-b output/d1-lock-a output/d1-lock-b
+          mkdir -p output/d1-a output/d1-b
+          python scripts/run_d1_calibration.py --output output/d1-a/calibration.json > output/d1-a/calibration.log
+          python scripts/run_d1_calibration.py --output output/d1-b/calibration.json > output/d1-b/calibration.log
+          cmp output/d1-a/calibration.json output/d1-b/calibration.json
+          python scripts/verify_d1_lock.py --calibration output/d1-a/calibration.json --output-dir output/d1-lock-a
+          python scripts/verify_d1_lock.py --calibration output/d1-b/calibration.json --output-dir output/d1-lock-b
+          cmp output/d1-lock-a/d1-confirmatory-plan.json output/d1-lock-b/d1-confirmatory-plan.json
+          cmp output/d1-lock-a/d1-lock-report.json output/d1-lock-b/d1-lock-report.json
+      - name: Verify authoritative frozen identities
+        run: |
+          test "$(sha256sum output/d1-a/calibration.json | cut -d' ' -f1)" = "9ec5481eaf9106fe670ccd5a25efb1c2ab1710d2062ff143e28ebb050a1b2799"
+          test "$(sha256sum output/d1-lock-a/d1-confirmatory-plan.json | cut -d' ' -f1)" = "8223d441f8399d89901ecd7f704d8744c571a8035c7ebdc94150435f92ba8858"
+          test "$(sha256sum output/d1-lock-a/d1-lock-report.json | cut -d' ' -f1)" = "15f479faae0f9d2a9ec9d859b1359c103c2d1075628ba1e872cdb71a900e5cfd"
+          test "$(sha256sum research/d1/result.json | cut -d' ' -f1)" = "cd68485ff3ef1aeb783e442b5fd7fe7aa73132b620a4c57c63e5c3ce62d165e8"
+          test "$(sha256sum research/d1/audit.json | cut -d' ' -f1)" = "2912519f61eaa086678cb7ef817c994a83ed36d683b48a44bc40a32260c88e6d"
+          test "$(sha256sum research/d1/manifest.json | cut -d' ' -f1)" = "3fbf05c6dc38a72c008b2d9445bef538ae45ed7a56aaebbd33ecb6c9a61cec3f"
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d1-postclassification-apparatus-audit
+          path: |
+            output/d1-a/calibration.json
+            output/d1-lock-a/d1-confirmatory-plan.json
+            output/d1-lock-a/d1-lock-report.json
+          if-no-files-found: error
+          retention-days: 90
+
+  confirmatory-run-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D1 confirmatory execution is permanently disabled after classification."
+
+  frozen-evaluator-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D1 frozen evaluator reruns are permanently disabled after classification."
+
+  evaluator-repair-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D1 evaluator transport repair is permanently disabled after classification."
