@@ -8,6 +8,9 @@ on:
       - ".github/workflows/d2-r2-calibration.yml"
       - "research/d2/D2_0_LEARNABILITY_REVISION_2.md"
       - "research/d2/RUN_D2_0_R2"
+      - "research/d2/CALIBRATION_RESULT_R2.md"
+      - "research/d2/calibration-report-r2.json"
+      - "research/d2/calibration-manifest-r2.json"
       - "scripts/d2_calibration_r2_core.py"
       - "scripts/run_d2_calibration_r2.py"
       - "tests/test_d2_calibration_r2_core.py"
@@ -17,6 +20,9 @@ on:
       - ".github/workflows/d2-r2-calibration.yml"
       - "research/d2/D2_0_LEARNABILITY_REVISION_2.md"
       - "research/d2/RUN_D2_0_R2"
+      - "research/d2/CALIBRATION_RESULT_R2.md"
+      - "research/d2/calibration-report-r2.json"
+      - "research/d2/calibration-manifest-r2.json"
       - "scripts/d2_calibration_r2_core.py"
       - "scripts/run_d2_calibration_r2.py"
       - "tests/test_d2_calibration_r2_core.py"
@@ -45,9 +51,10 @@ jobs:
           ruff check scripts/d2_calibration_r2_core.py scripts/run_d2_calibration_r2.py tests/test_d2_calibration_r2_core.py
       - name: Test R2 substrate and D2 artifact boundary
         run: pytest -q tests/test_d2_artifact_core.py tests/test_d2_calibration_r2_core.py
-      - name: Verify governance and execution separation
+      - name: Verify governance, authorization, and preserved result
         run: |
           python - <<'PY'
+          import hashlib
           import json
           from pathlib import Path
 
@@ -55,13 +62,39 @@ jobs:
           node = next(n for n in registry["nodes"] if n["mechanism_id"] == "d1_capability_reproduction")
           assert node["status"] == "internally_replicated"
           assert node["production_historical_substrate_enabled"] is False
+
           revision = Path("research/d2/D2_0_LEARNABILITY_REVISION_2.md").read_text()
           assert "conventional development-readiness" in revision
           assert "266 logical calls" in revision
           assert "never confirmatory evidence" in revision
           assert Path("scripts/run_d2_calibration_r2.py").exists()
           assert not Path("scripts/run_d2_confirmatory.py").exists()
-          assert not Path("research/d2/RUN_D2_0_R2").exists()
+
+          marker_path = Path("research/d2/RUN_D2_0_R2")
+          if marker_path.exists():
+              marker = marker_path.read_text()
+              assert "a9dc3bb0ae407ec877126d1a0d04a8fdc6c2c092" in marker
+              assert "5302778520" in marker
+              assert "does not authorize D2 confirmatory execution" in marker
+
+          report_path = Path("research/d2/calibration-report-r2.json")
+          manifest_path = Path("research/d2/calibration-manifest-r2.json")
+          result_path = Path("research/d2/CALIBRATION_RESULT_R2.md")
+          if report_path.exists() or manifest_path.exists() or result_path.exists():
+              assert report_path.exists() and manifest_path.exists() and result_path.exists()
+              report_bytes = report_path.read_bytes()
+              manifest_bytes = manifest_path.read_bytes()
+              assert hashlib.sha256(report_bytes).hexdigest() == "bccb960a39c6ab06aad322874626185719a42968acbcf0067dfaf97131dcf197"
+              assert hashlib.sha256(manifest_bytes).hexdigest() == "ff41bf0f86ccb528f17ab58295e772fbe220b70a162da2bbc801a6d2260ef82d"
+              report = json.loads(report_bytes)
+              manifest = json.loads(manifest_bytes)
+              assert report["handoff"] == "eligible_for_confirmatory_design_freeze"
+              assert report["development_readiness"]["all_gates_pass"] is True
+              assert report["confirmatory_evidence"] is False
+              assert report["production_historical_substrate_enabled"] is False
+              assert manifest["output_sha256"] == "c55e4e5e0c41a81173ff4da33eeef011ec7c566a940d0280e157f6d9312be643"
+              assert manifest["logical_calls_total"] == 266
+              assert manifest["confirmatory_evidence"] is False
           PY
 
   provider-run-separate-gate:
