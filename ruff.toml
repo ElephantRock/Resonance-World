@@ -44,3 +44,5 @@ extend = "pyproject.toml"
 "scripts/materialize_d1b_plan.py" = ["E501"]
 "scripts/run_d1_calibration.py" = ["E501"]
 "scripts/verify_d1_lock.py" = ["E501"]
+"scripts/run_d2_calibration.py" = ["E501"]
+"scripts/run_d2_calibration_repair1.py" = ["E501"]

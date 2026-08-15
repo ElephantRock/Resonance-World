@@ -2,18 +2,32 @@ name: D2 Preexecution Audit
 
 on:
   push:
-    branches: ["experiment/d2-stochastic-capability-reproduction"]
+    branches: ["experiment/d2-stochastic-capability-reproduction", "experiment/d2-0-stochastic-calibration"]
     paths:
       - ".github/workflows/d2-preexecution-audit.yml"
+      - ".github/workflows/d2-calibration.yml"
       - "research/d2/**"
+      - "research/acceptance/d1-d1b/**"
+      - "research/mechanisms/registry.json"
       - "scripts/d2_artifact_core.py"
+      - "scripts/d2_calibration_core.py"
+      - "scripts/run_d2_calibration.py"
+      - "scripts/run_d2_calibration_repair1.py"
       - "tests/test_d2_artifact_core.py"
+      - "tests/test_d2_calibration_core.py"
   pull_request:
     paths:
       - ".github/workflows/d2-preexecution-audit.yml"
+      - ".github/workflows/d2-calibration.yml"
       - "research/d2/**"
+      - "research/acceptance/d1-d1b/**"
+      - "research/mechanisms/registry.json"
       - "scripts/d2_artifact_core.py"
+      - "scripts/d2_calibration_core.py"
+      - "scripts/run_d2_calibration.py"
+      - "scripts/run_d2_calibration_repair1.py"
       - "tests/test_d2_artifact_core.py"
+      - "tests/test_d2_calibration_core.py"
   workflow_dispatch:
 
 permissions:
@@ -31,28 +45,58 @@ jobs:
           cache: pip
       - name: Install research environment
         run: python -m pip install -e '.[dev]'
-      - name: Assert provider credentials are unavailable
+      - name: Assert provider credentials are unavailable in the design audit
         run: test -z "${ZAI_API_KEY:-}"
-      - name: Compile D2 zero-provider apparatus
-        run: python -m py_compile scripts/d2_artifact_core.py
-      - name: Test D2 export boundary
-        run: python -m pytest -q tests/test_d2_artifact_core.py
-      - name: Assert execution gate remains documentary and no provider runner exists
+      - name: Compile D2 apparatus without provider calls
         run: |
-          test -f research/d2/README.md
-          test -f research/d2/CALIBRATION_PLAN.md
-          test -f research/d2/CAPABILITY_ARTIFACT_V0.2.md
-          test ! -e scripts/run_d2_provider.py
-          test ! -e scripts/run_d2_confirmatory.py
+          python -m py_compile \
+            scripts/d2_artifact_core.py \
+            scripts/d2_calibration_core.py \
+            scripts/run_d2_calibration.py \
+            scripts/run_d2_calibration_repair1.py
+      - name: Test D2 export boundary and calibration core
+        run: python -m pytest -q tests/test_d2_artifact_core.py tests/test_d2_calibration_core.py
+      - name: Verify acceptance prerequisite and execution separation
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
 
-  provider-calibration-disabled:
+          registry = json.loads(Path("research/mechanisms/registry.json").read_text())
+          node = next(n for n in registry["nodes"] if n["mechanism_id"] == "d1_capability_reproduction")
+          assert node["status"] == "internally_replicated"
+          assert node["acceptor"] == "zai:glm-5-turbo:independent_acceptance_plane_reviewer"
+          assert node["production_historical_substrate_enabled"] is False
+          assert Path("research/acceptance/d1-d1b/PROMOTION_EVENTS.json").exists()
+
+          assert Path("research/d2/README.md").exists()
+          assert Path("research/d2/CALIBRATION_PLAN.md").exists()
+          assert Path("research/d2/CAPABILITY_ARTIFACT_V0.2.md").exists()
+          assert Path("research/d2/D2_0_EXECUTION.md").exists()
+          assert Path("research/d2/D2_0_TRANSPORT_REPAIR_1.md").exists()
+          assert Path("scripts/run_d2_calibration.py").exists()
+          assert Path("scripts/run_d2_calibration_repair1.py").exists()
+          assert Path(".github/workflows/d2-calibration.yml").exists()
+          assert not Path("scripts/run_d2_confirmatory.py").exists()
+
+          repair = Path("research/d2/D2_0_TRANSPORT_REPAIR_1.md").read_text()
+          assert "31889041385" in repair
+          assert "162 logical calls" in repair
+          calibration_workflow = Path(".github/workflows/d2-calibration.yml").read_text()
+          assert '"research/d2/RUN_D2_0_R1"' in calibration_workflow
+          assert "run_d2_calibration_repair1.py" in calibration_workflow
+          assert "secrets.ZAI_API_KEY" in calibration_workflow
+          assert "run_d2_confirmatory.py" not in calibration_workflow
+          PY
+
+  provider-calibration-separate-gate:
     if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "D2 provider calibration is blocked pending independent D1/D1b acceptance on issue #165."
+      - run: echo "D2-0 provider calibration runs only from its explicit marker-gated workflow."
 
   confirmatory-run-disabled:
     if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "D2 confirmatory execution is not yet authorized or materialized."
+      - run: echo "D2 confirmatory execution remains unmaterialized and unauthorized pending D2-0 closeout."
