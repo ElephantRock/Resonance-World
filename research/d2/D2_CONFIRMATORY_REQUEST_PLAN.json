@@ -1,0 +1,38 @@
+{
+  "concurrency": 4,
+  "confirmatory_rerun_allowed": false,
+  "cohort_pairs_sha256": "d8e2c82cd7c110bd3013b870e460218442d4d6819bb9cf06f537dcd670fd32a3",
+  "destination_development_cases": 40,
+  "development_batch_size": 8,
+  "endpoint_class": "coding-paas-v4-chat-completions",
+  "evaluation_cases": 32,
+  "evaluation_chunk_size": 8,
+  "historical_substrate_enabled": false,
+  "logical_calls_campaign_before_retries": 11160,
+  "logical_calls_per_complete_pair": {
+    "description_only": 9,
+    "fresh": 4,
+    "reproduced": 9,
+    "source_developed": 9,
+    "total": 31
+  },
+  "max_attempts_per_logical_call": 8,
+  "minimum_analyzable_pairs": 330,
+  "minimum_request_interval_seconds": 0.35,
+  "model": "glm-5-turbo",
+  "pair_count_attempted": 360,
+  "pair_replacement": false,
+  "provider": "Z.AI",
+  "schema": "d2-confirmatory-request-plan-v0.1",
+  "seed_series": {
+    "base": 1200000,
+    "destination_offset": 2,
+    "evaluation_offset": 3,
+    "source_offset": 1,
+    "step": 100
+  },
+  "source_development_cases": 40,
+  "structured_output": "json_object",
+  "temperature": 0.8,
+  "thinking": "disabled"
+}
