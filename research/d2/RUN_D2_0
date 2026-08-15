@@ -1,0 +1,8 @@
+D2-0 development-only provider calibration authorization.
+
+Pre-provider apparatus candidate: 0d058294057c97ac974a779866686e7cca7b8ba0
+Prospective issue #167 lock comment: 5302588258
+Independent D1/D1b acceptance merge: 31cfd4f216dc1c98bdd97af5f174f7298d412cb6
+
+This marker authorizes D2-0 calibration only. It does not authorize D2 confirmatory execution.
+Production/default Historical Substrate remains OFF.
