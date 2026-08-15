@@ -1,0 +1,109 @@
+name: D1b Capability Reproduction Replication
+
+on:
+  push:
+    branches: ["experiment/d1b-capability-reproduction-replication"]
+    paths:
+      - ".github/workflows/d1b-capability-reproduction.yml"
+      - "scripts/materialize_d1b_plan.py"
+      - "scripts/d1_capability_core.py"
+      - "scripts/run_d1_calibration.py"
+      - "scripts/verify_d1_lock.py"
+      - "scripts/run_d1_confirmatory.py"
+      - "scripts/d1_evaluator_core.py"
+      - "scripts/accept_d1_reproduction.py"
+      - "research/d1b/**"
+  pull_request:
+    paths:
+      - ".github/workflows/d1b-capability-reproduction.yml"
+      - "scripts/materialize_d1b_plan.py"
+      - "scripts/d1_capability_core.py"
+      - "scripts/run_d1_calibration.py"
+      - "scripts/verify_d1_lock.py"
+      - "scripts/run_d1_confirmatory.py"
+      - "scripts/d1_evaluator_core.py"
+      - "scripts/accept_d1_reproduction.py"
+      - "research/d1b/**"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  apparatus-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.event.pull_request.head.sha || github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install World research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert post-classification audit is credential-free
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Parse-check preserved D1/D1b apparatus
+        run: |
+          python -m py_compile \
+            scripts/materialize_d1b_plan.py \
+            scripts/d1_capability_core.py \
+            scripts/run_d1_calibration.py \
+            scripts/verify_d1_lock.py \
+            scripts/run_d1_confirmatory.py \
+            scripts/d1_evaluator_core.py \
+            scripts/accept_d1_reproduction.py
+      - name: Reconstruct parent D1 and D1b locks twice
+        run: |
+          rm -rf output/d1-calibration output/d1-lock output/d1b-a output/d1b-b
+          mkdir -p output/d1-calibration output/d1b-a output/d1b-b
+          python scripts/run_d1_calibration.py --output output/d1-calibration/calibration.json > output/d1-calibration/calibration.log
+          test "$(sha256sum output/d1-calibration/calibration.json | cut -d' ' -f1)" = "9ec5481eaf9106fe670ccd5a25efb1c2ab1710d2062ff143e28ebb050a1b2799"
+          python scripts/verify_d1_lock.py --calibration output/d1-calibration/calibration.json --output-dir output/d1-lock
+          test "$(sha256sum output/d1-lock/d1-confirmatory-plan.json | cut -d' ' -f1)" = "8223d441f8399d89901ecd7f704d8744c571a8035c7ebdc94150435f92ba8858"
+          test "$(sha256sum output/d1-lock/d1-lock-report.json | cut -d' ' -f1)" = "15f479faae0f9d2a9ec9d859b1359c103c2d1075628ba1e872cdb71a900e5cfd"
+          python scripts/materialize_d1b_plan.py --parent-d1-plan output/d1-lock/d1-confirmatory-plan.json --output-dir output/d1b-a
+          python scripts/materialize_d1b_plan.py --parent-d1-plan output/d1-lock/d1-confirmatory-plan.json --output-dir output/d1b-b
+          cmp output/d1b-a/d1b-confirmatory-plan.json output/d1b-b/d1b-confirmatory-plan.json
+          cmp output/d1b-a/d1b-lock-report.json output/d1b-b/d1b-lock-report.json
+          test "$(sha256sum output/d1b-a/d1b-confirmatory-plan.json | cut -d' ' -f1)" = "e3e7a0698d2cb89b58da973aeef6f4d48ddc6a4f6946212657eb952aeef45bdb"
+          test "$(sha256sum output/d1b-a/d1b-lock-report.json | cut -d' ' -f1)" = "8cea47bed19b054b68023a39a64de1b9b17ab9cb40db737b076075332e5df393"
+      - name: Verify preserved result identities
+        run: |
+          test "$(sha256sum research/d1b/result.json | cut -d' ' -f1)" = "56e85a609c32b7dc62c16b94f07efa16c7f550497c8dc81eeb84517bd13dc200"
+          test "$(sha256sum research/d1b/audit.json | cut -d' ' -f1)" = "34b9e40c4ed35271d0b38c6e0c86433d010063d63f942c8d489ac6b48ee323f0"
+          test "$(sha256sum research/d1b/manifest.json | cut -d' ' -f1)" = "320ca765c1a2c67a857bc894d222e7d4eb15a0199c6bd0a41010fe3e0c60cd6a"
+          python - <<'PY'
+          import json
+          result = json.load(open("research/d1b/result.json"))
+          mapping = json.load(open("research/d1b/classification.json"))
+          assert result["candidate_head"] == "00a5d84e09939e51d54cc59c7ecf1e27f6acbd3c"
+          assert result["classification_code"] == "D1-S3"
+          assert all(result["gates"].values())
+          assert mapping["study_classification"]["classification_code"] == "D1b-S3"
+          assert mapping["registry_effect"]["automatic_promotion"] is False
+          assert result["production_historical_substrate_enabled"] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d1b-postclassification-apparatus-audit
+          path: |
+            output/d1b-a/d1b-confirmatory-plan.json
+            output/d1b-a/d1b-lock-report.json
+          if-no-files-found: error
+          retention-days: 90
+
+  confirmatory-run-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D1b confirmatory execution is permanently disabled after classification."
+
+  frozen-evaluator-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D1b evaluator reruns are permanently disabled after classification."
