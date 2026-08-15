@@ -10,7 +10,7 @@ import random
 import threading
 import time
 from concurrent.futures import ThreadPoolExecutor, as_completed
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from urllib.error import HTTPError, URLError
@@ -62,9 +62,9 @@ ECOLOGY_HINT = (
 )
 DEVELOPMENT_PROTOCOL = (
     "Use local outcome-bearing feedback as evidence. Across batches, compare candidate controlling "
-    "feature pairs, infer the four-state action relabeling, and maintain a concise private hypothesis. "
-    "Prefer rules that explain all labeled examples; retain alternatives when evidence is ambiguous. "
-    "Do not memorize case IDs as the policy."
+    "feature pairs, infer the four-state action relabeling, and maintain a concise private "
+    "hypothesis. Prefer rules that explain all labeled examples; retain alternatives when "
+    "evidence is ambiguous. Do not memorize case IDs as the policy."
 )
 
 
@@ -696,7 +696,7 @@ def main() -> None:
     report = {
         "status": "completed_development_only_not_confirmatory",
         "revision": "D2-0 learnability revision 2",
-        "created_at_utc": datetime.now(timezone.utc).isoformat(),
+        "created_at_utc": datetime.now(UTC).isoformat(),
         "model": MODEL,
         "temperature": TEMPERATURE,
         "chance_score": CHANCE_SCORE,
