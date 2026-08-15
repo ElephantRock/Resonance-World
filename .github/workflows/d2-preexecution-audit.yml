@@ -2,7 +2,7 @@ name: D2 Preexecution Audit
 
 on:
   push:
-    branches: ["experiment/d2-stochastic-capability-reproduction", "experiment/d2-0-stochastic-calibration"]
+    branches: ["experiment/d2-stochastic-capability-reproduction", "experiment/d2-0-stochastic-calibration", "experiment/d2-confirmatory"]
     paths:
       - ".github/workflows/d2-preexecution-audit.yml"
       - ".github/workflows/d2-calibration.yml"
@@ -77,7 +77,20 @@ jobs:
           assert Path("scripts/run_d2_calibration.py").exists()
           assert Path("scripts/run_d2_calibration_repair1.py").exists()
           assert Path(".github/workflows/d2-calibration.yml").exists()
-          assert not Path("scripts/run_d2_confirmatory.py").exists()
+
+          confirmatory = Path("scripts/run_d2_confirmatory.py")
+          if confirmatory.exists():
+              assert Path("research/d2/D2_CONFIRMATORY_PLAN.md").exists()
+              assert Path("research/d2/D2_CONFIRMATORY_REQUEST_PLAN.json").exists()
+              assert Path("research/d2/d2-confirmatory-cohort-lock.json").exists()
+              assert Path("scripts/evaluate_d2_confirmatory.py").exists()
+              assert Path(".github/workflows/d2-confirmatory.yml").exists()
+              proposal = json.loads(Path("research/d2/D2_PROPOSAL_TRANSITION.json").read_text())
+              assert proposal["origin_state"] == "posthoc_motivated"
+              assert proposal["status"] == "proposed"
+              assert proposal["production_historical_substrate_enabled"] is False
+          else:
+              assert not Path("research/d2/RUN_D2_CONFIRMATORY").exists()
 
           repair = Path("research/d2/D2_0_TRANSPORT_REPAIR_1.md").read_text()
           assert "31889041385" in repair
@@ -95,8 +108,8 @@ jobs:
     steps:
       - run: echo "D2-0 provider calibration runs only from its explicit marker-gated workflow."
 
-  confirmatory-run-disabled:
+  confirmatory-run-separate-gate:
     if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "D2 confirmatory execution remains unmaterialized and unauthorized pending D2-0 closeout."
+      - run: echo "D2 confirmatory execution, when prospectively authorized, runs only in its marker-gated workflow."
