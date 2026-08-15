@@ -1,8 +1,10 @@
 # D1/D1b independent acceptance review
 
-Status: **prospective acceptance-plane review; no decision exists at this commit**.
+Status: **prospective acceptance-plane review; no schema-valid decision exists at this commit**.
 
-This review uses exactly one fresh external model reviewer: Z.AI `glm-5.2`. The reviewer is distinct from the GPT model that proposed the acceptance judgment in the project conversation and did not design, execute, tune, or evaluate D1/D1b.
+This review uses exactly one fresh external-model reviewer: Z.AI `glm-5.3`. The reviewer is distinct from the GPT model that proposed the acceptance judgment in the project conversation and did not design, execute, tune, or evaluate D1/D1b.
+
+The first transport attempt requested the provider alias `glm-5.2`, but Z.AI returned model identity `glm-5.3`. The runner rejected those responses before parsing or accepting any substantive decision because the frozen model-identity assertion failed. This commit is a transport/identity repair only: it freezes the provider-returned model identity `glm-5.3`; the evidence, rubric, allowed decisions, and scientific acceptance criteria are unchanged.
 
 The reviewer receives the frozen D1/D1b evidence and the existing issue #165 acceptance rubric. It does not receive a recommendation to accept or reject.
 
@@ -47,7 +49,7 @@ Exactly one of:
 
 The reviewer must assess every checklist item from issue #165, cite evidence section identifiers, respect the deterministic individual-specialist claim ceiling, and defer rather than infer missing evidence.
 
-One substantive model decision is authoritative for this review. Transport or malformed-output retries are permitted only until one schema-valid decision is obtained; all attempts are preserved in the audit. A valid unfavorable decision is not rerun.
+One schema-valid substantive model decision is authoritative for this review. Transport or malformed-output retries are permitted only until one schema-valid decision is obtained; all attempts are preserved in the audit. A valid unfavorable decision is not rerun.
 
 This review does not itself mutate the Mechanism Registry. Any accepted registry transition is a subsequent mechanical acceptance-plane action preserving the reviewer decision and `proposer_id != acceptor_id`.
 
