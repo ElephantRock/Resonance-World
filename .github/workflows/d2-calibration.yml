@@ -1,0 +1,81 @@
+name: D2-0 Stochastic Capability Calibration
+
+on:
+  push:
+    branches: ["experiment/d2-0-stochastic-calibration"]
+    paths:
+      - "research/d2/RUN_D2_0"
+
+permissions:
+  contents: read
+
+jobs:
+  development-only-calibration:
+    runs-on: ubuntu-latest
+    timeout-minutes: 180
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Verify D1/D1b acceptance prerequisite and D2-0 apparatus
+        run: |
+          test -n "$ZAI_API_KEY"
+          python -m py_compile scripts/d2_artifact_core.py scripts/d2_calibration_core.py scripts/run_d2_calibration.py
+          ruff check scripts/d2_artifact_core.py scripts/d2_calibration_core.py scripts/run_d2_calibration.py tests/test_d2_calibration_core.py
+          pytest -q tests/test_d2_artifact_core.py tests/test_d2_calibration_core.py
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          registry = json.loads(Path("research/mechanisms/registry.json").read_text())
+          node = next(n for n in registry["nodes"] if n["mechanism_id"] == "d1_capability_reproduction")
+          assert node["status"] == "internally_replicated"
+          assert node["acceptor"] == "zai:glm-5-turbo:independent_acceptance_plane_reviewer"
+          assert node["production_historical_substrate_enabled"] is False
+          assert Path("research/acceptance/d1-d1b/PROMOTION_EVENTS.json").exists()
+          lock = Path("research/d2/D2_0_EXECUTION.md").read_text()
+          assert "98 logical provider calls" in lock
+          assert "confirmatory D2 cohort is **not generated or inspected" in lock
+          PY
+      - name: Execute D2-0 development-only provider calibration
+        run: |
+          rm -rf output/d2-calibration
+          python scripts/run_d2_calibration.py --output-dir output/d2-calibration
+      - name: Verify D2-0 structural integrity
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          report = json.loads(Path("output/d2-calibration/d2-0-calibration-report.json").read_text())
+          assert report["status"] == "completed_development_only_not_confirmatory"
+          assert report["pair_count"] == 8
+          assert report["confirmatory_outcomes_included"] is False
+          assert report["confirmatory_holdout_created_or_used"] is False
+          assert report["integrity"]["source_destination_development_overlap_total"] == 0
+          assert report["integrity"]["development_evaluation_overlap_total"] == 0
+          assert report["integrity"]["all_artifact_audits_pass"] is True
+          assert report["integrity"]["description_reproduced_logical_calls_equal"] is True
+          assert report["production_historical_substrate_enabled"] is False
+          assert report["call_accounting"]["logical_calls_total"] == 98
+          manifest = json.loads(Path("output/d2-calibration/manifest.json").read_text())
+          assert manifest["development_only"] is True
+          assert manifest["confirmatory_evidence"] is False
+          assert manifest["production_historical_substrate_enabled"] is False
+          PY
+          sha256sum output/d2-calibration/*
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-0-development-calibration
+          path: output/d2-calibration
+          if-no-files-found: error
+          retention-days: 90
