@@ -1,0 +1,6 @@
+authoritative_review=true
+reviewer_provider=Z.AI
+reviewer_model=glm-5-turbo
+rubric_issue=165
+prior_valid_substantive_decisions=0
+production_historical_substrate_enabled=false
