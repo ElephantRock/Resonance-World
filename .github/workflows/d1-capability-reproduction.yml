@@ -26,6 +26,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 jobs:
   apparatus-lock:
@@ -196,6 +197,85 @@ jobs:
       - uses: actions/upload-artifact@v4
         with:
           name: d1-confirmatory-evaluation
+          path: output/eval-a
+          if-no-files-found: error
+          retention-days: 90
+
+  frozen-evaluator-repair:
+    if: ${{ github.event_name == 'push' && contains(github.event.head_commit.message, '[D1-EVAL-REPAIR]') }}
+    needs: apparatus-lock
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install frozen World research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert evaluator repair is credential-free
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Download authoritative D1 apparatus from original run
+        uses: actions/download-artifact@v4
+        with:
+          name: d1-apparatus-lock
+          path: input/d1-lock
+          run-id: 31861296898
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Download authoritative frozen D1 output from original run
+        uses: actions/download-artifact@v4
+        with:
+          name: d1-confirmatory-output
+          path: input/d1-output
+          run-id: 31861296898
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+      - name: Verify authoritative frozen input identities
+        run: |
+          test "$(sha256sum input/d1-lock/d1-lock/d1-confirmatory-plan.json | cut -d' ' -f1)" = "8223d441f8399d89901ecd7f704d8744c571a8035c7ebdc94150435f92ba8858"
+          test "$(sha256sum input/d1-lock/d1-lock/d1-lock-report.json | cut -d' ' -f1)" = "15f479faae0f9d2a9ec9d859b1359c103c2d1075628ba1e872cdb71a900e5cfd"
+          test "$(sha256sum input/d1-output/d1-confirmatory-output.json | cut -d' ' -f1)" = "f65e67fee740a5f0a2471479af08e18571c8592ca1e6c6f34c5c2486770df936"
+      - name: Evaluate authoritative frozen D1 output twice
+        run: |
+          mkdir -p output/eval-a output/eval-b
+          set +e
+          python scripts/accept_d1_reproduction.py \
+            --plan input/d1-lock/d1-lock/d1-confirmatory-plan.json \
+            --lock input/d1-lock/d1-lock/d1-lock-report.json \
+            --confirmatory-output input/d1-output/d1-confirmatory-output.json \
+            --output-dir output/eval-a \
+            --candidate-head "46010232f9b73e481eaa6de4b60cc721f4ad2273" > output/eval-a/evaluator.log
+          status_a=$?
+          python scripts/accept_d1_reproduction.py \
+            --plan input/d1-lock/d1-lock/d1-confirmatory-plan.json \
+            --lock input/d1-lock/d1-lock/d1-lock-report.json \
+            --confirmatory-output input/d1-output/d1-confirmatory-output.json \
+            --output-dir output/eval-b \
+            --candidate-head "46010232f9b73e481eaa6de4b60cc721f4ad2273" > output/eval-b/evaluator.log
+          status_b=$?
+          set -e
+          printf '%s\n' "$status_a" > output/eval-a/evaluator-exit-status.txt
+          printf '%s\n' "$status_b" > output/eval-a/second-evaluator-exit-status.txt
+          cmp output/eval-a/result.json output/eval-b/result.json
+          cmp output/eval-a/audit.json output/eval-b/audit.json
+          cmp output/eval-a/manifest.json output/eval-b/manifest.json
+          test "$status_a" = "$status_b"
+      - name: Enforce classifiable repaired D1 record
+        run: |
+          cat output/eval-a/evaluator.log
+          python - <<'PY'
+          import json
+          result = json.load(open("output/eval-a/result.json"))
+          assert result["candidate_head"] == "46010232f9b73e481eaa6de4b60cc721f4ad2273"
+          assert result["classification_code"] in {"D1-S0", "D1-S1", "D1-S2", "D1-S3"}
+          assert all(result["gates"].values())
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d1-confirmatory-evaluation-repair
           path: output/eval-a
           if-no-files-found: error
           retention-days: 90
