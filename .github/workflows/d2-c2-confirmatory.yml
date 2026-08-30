@@ -132,8 +132,8 @@ jobs:
           retention-days: 90
 
   aggregate-frozen-shards:
-    if: ${{ always() && github.run_attempt == 1 }}
-    needs: provider-shards
+    if: ${{ always() && github.run_attempt == 1 && needs.authorization-integrity.result == 'success' }}
+    needs: [authorization-integrity, provider-shards]
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -250,7 +250,7 @@ jobs:
           retention-days: 90
 
   frozen-output-evaluator:
-    if: ${{ always() && github.run_attempt == 1 }}
+    if: ${{ always() && github.run_attempt == 1 && needs.aggregate-frozen-shards.result == 'success' }}
     needs: aggregate-frozen-shards
     runs-on: ubuntu-latest
     timeout-minutes: 90
