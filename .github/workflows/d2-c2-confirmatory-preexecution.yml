@@ -5,6 +5,7 @@ on:
     branches: ["research/d2-c1-closeout-c2-scaffold"]
     paths:
       - ".github/workflows/d2-c2-confirmatory-preexecution.yml"
+      - ".github/workflows/d2-c2-confirmatory.yml"
       - "research/d2/D2_CONFIRMATORY_C1_CLOSEOUT.json"
       - "research/d2/D2_C2_CONFIRMATORY_PLAN.md"
       - "research/d2/D2_C2_CONFIRMATORY_REQUEST_PLAN.json"
@@ -21,6 +22,7 @@ on:
   pull_request:
     paths:
       - ".github/workflows/d2-c2-confirmatory-preexecution.yml"
+      - ".github/workflows/d2-c2-confirmatory.yml"
       - "research/d2/D2_CONFIRMATORY_C1_CLOSEOUT.json"
       - "research/d2/D2_C2_CONFIRMATORY_PLAN.md"
       - "research/d2/D2_C2_CONFIRMATORY_REQUEST_PLAN.json"
@@ -120,7 +122,26 @@ jobs:
           assert "P0 -> P1 -> P2" in plan
           assert "8341d573da2d626858d25abfb381c499cc4d3c640749045b0141c985828fc676" in plan
           assert "18 provider shards" in plan
-          assert "No D2-C2 provider call" not in plan or True
+          assert "Production/default Historical Substrate remains OFF" in plan
+          PY
+      - name: Verify marker-gated provider workflow
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          workflow = Path(".github/workflows/d2-c2-confirmatory.yml").read_text()
+          assert 'branches: ["research/d2-c1-closeout-c2-scaffold"]' in workflow
+          assert '- "research/d2/RUN_D2_C2_CONFIRMATORY"' in workflow
+          assert "max-parallel: 4" in workflow
+          assert "timeout-minutes: 240" in workflow
+          assert "github.run_attempt == 1" in workflow
+          assert "github.run_attempt != 1" in workflow
+          assert "d2-c2-provider-shard-${{ matrix.shard }}" in workflow
+          assert "aggregate_d2_c2_confirmatory.py" in workflow
+          assert "evaluate_d2_c2_confirmatory.py" in workflow
+          assert "Assert aggregator has no provider credential" in workflow
+          assert "Assert evaluator has no provider credential" in workflow
+          assert "registry-promotion-disabled" in workflow
           PY
       - name: Verify authorization remains absent
         run: |
