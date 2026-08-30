@@ -1,0 +1,31 @@
+{
+  "P0": {
+    "null_threshold": 0.1,
+    "planning_alternative_mean": 0.2,
+    "r2_paired_sd": 0.26198929912716445,
+    "required_n": 59
+  },
+  "P1": {
+    "null_threshold": 0.1,
+    "planning_alternative_mean": 0.2,
+    "r2_paired_sd": 0.2878685525920269,
+    "required_n": 71
+  },
+  "P2": {
+    "contrast": "reproduced - 0.90 * source_developed",
+    "null_threshold": 0.0,
+    "planning_source_accuracy": 0.5,
+    "planning_true_fidelity_ratio": 1.0,
+    "power_at_attempted_if_all_complete": 0.9226198647708239,
+    "power_at_minimum_analyzable": 0.9018756066452513,
+    "r2_paired_sd": 0.3092419446924089,
+    "required_n": 328,
+    "source_accuracy_provenance": "prospectively fixed R2 readiness floor"
+  },
+  "alpha_one_sided": 0.05,
+  "attempted_pairs": 360,
+  "minimum_analyzable_pairs": 330,
+  "planning_principle": "R2 variances only; R2 observed effects are not planning effects",
+  "schema": "d2-c2-confirmatory-sample-size-v0.1",
+  "target_power": 0.9
+}
