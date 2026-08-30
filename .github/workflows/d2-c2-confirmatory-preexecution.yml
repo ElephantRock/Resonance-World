@@ -136,7 +136,8 @@ jobs:
           assert "timeout-minutes: 240" in workflow
           assert "github.run_attempt == 1" in workflow
           assert "github.run_attempt != 1" in workflow
-          assert "d2-c2-provider-shard-${{ matrix.shard }}" in workflow
+          assert "d2-c2-provider-shard-" in workflow
+          assert "matrix.shard" in workflow
           assert "aggregate_d2_c2_confirmatory.py" in workflow
           assert "evaluate_d2_c2_confirmatory.py" in workflow
           assert "Assert aggregator has no provider credential" in workflow
