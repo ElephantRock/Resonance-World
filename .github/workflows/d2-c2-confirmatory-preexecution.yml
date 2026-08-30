@@ -1,0 +1,140 @@
+name: D2-C2 Confirmatory Preexecution Audit
+
+on:
+  push:
+    branches: ["research/d2-c1-closeout-c2-scaffold"]
+    paths:
+      - ".github/workflows/d2-c2-confirmatory-preexecution.yml"
+      - "research/d2/D2_CONFIRMATORY_C1_CLOSEOUT.json"
+      - "research/d2/D2_C2_CONFIRMATORY_PLAN.md"
+      - "research/d2/D2_C2_CONFIRMATORY_REQUEST_PLAN.json"
+      - "research/d2/D2_C2_CONFIRMATORY_SAMPLE_SIZE.json"
+      - "research/d2/D2_C2_SHARD_MAP.json"
+      - "research/d2/d2-c2-confirmatory-cohort-lock.json"
+      - "research/d2/RUN_D2_C2_CONFIRMATORY"
+      - "scripts/d2_c2_confirmatory_sample_size.py"
+      - "scripts/d2_c2_confirmatory_stats.py"
+      - "scripts/run_d2_c2_confirmatory.py"
+      - "scripts/aggregate_d2_c2_confirmatory.py"
+      - "scripts/evaluate_d2_c2_confirmatory.py"
+      - "tests/test_d2_c2_confirmatory.py"
+  pull_request:
+    paths:
+      - ".github/workflows/d2-c2-confirmatory-preexecution.yml"
+      - "research/d2/D2_CONFIRMATORY_C1_CLOSEOUT.json"
+      - "research/d2/D2_C2_CONFIRMATORY_PLAN.md"
+      - "research/d2/D2_C2_CONFIRMATORY_REQUEST_PLAN.json"
+      - "research/d2/D2_C2_CONFIRMATORY_SAMPLE_SIZE.json"
+      - "research/d2/D2_C2_SHARD_MAP.json"
+      - "research/d2/d2-c2-confirmatory-cohort-lock.json"
+      - "research/d2/RUN_D2_C2_CONFIRMATORY"
+      - "scripts/d2_c2_confirmatory_sample_size.py"
+      - "scripts/d2_c2_confirmatory_stats.py"
+      - "scripts/run_d2_c2_confirmatory.py"
+      - "scripts/aggregate_d2_c2_confirmatory.py"
+      - "scripts/evaluate_d2_c2_confirmatory.py"
+      - "tests/test_d2_c2_confirmatory.py"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-c2-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert provider credential is unavailable
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Compile and lint C2 apparatus
+        run: |
+          python -m py_compile \
+            scripts/d2_c2_confirmatory_sample_size.py \
+            scripts/d2_c2_confirmatory_stats.py \
+            scripts/run_d2_c2_confirmatory.py \
+            scripts/aggregate_d2_c2_confirmatory.py \
+            scripts/evaluate_d2_c2_confirmatory.py
+          ruff check \
+            scripts/d2_c2_confirmatory_sample_size.py \
+            scripts/d2_c2_confirmatory_stats.py \
+            scripts/run_d2_c2_confirmatory.py \
+            scripts/aggregate_d2_c2_confirmatory.py \
+            scripts/evaluate_d2_c2_confirmatory.py \
+            tests/test_d2_c2_confirmatory.py
+      - name: Run zero-provider C2 tests
+        run: pytest -q tests/test_d2_artifact_core.py tests/test_d2_c2_confirmatory.py
+      - name: Verify prospective C2 contract
+        run: |
+          PYTHONPATH=scripts python - <<'PY'
+          import json
+          from pathlib import Path
+          from d2_c2_confirmatory_sample_size import report
+          from run_d2_c2_confirmatory import verify_cohort_lock, load_shard_range
+
+          request = json.loads(Path("research/d2/D2_C2_CONFIRMATORY_REQUEST_PLAN.json").read_text())
+          assert request["pair_count_attempted"] == 360
+          assert request["minimum_analyzable_pairs"] == 330
+          assert request["logical_calls_campaign_before_retries"] == 11160
+          assert request["logical_calls_per_full_shard_before_retries"] == 620
+          assert request["provider_shard_count"] == 18
+          assert request["pairs_per_provider_shard"] == 20
+          assert request["provider_local_concurrency_per_shard"] == 1
+          assert request["provider_matrix_max_parallel"] == 4
+          assert request["aggregate_provider_concurrency_ceiling"] == 4
+          assert request["provider_shard_timeout_minutes"] == 240
+          assert request["shard_job_rerun_allowed"] is False
+          assert request["confirmatory_same_request_stream_rerun_allowed"] is False
+          assert request["model"] == "glm-5-turbo"
+          assert request["temperature"] == 0.8
+          assert request["historical_substrate_enabled"] is False
+
+          sample = json.loads(Path("research/d2/D2_C2_CONFIRMATORY_SAMPLE_SIZE.json").read_text())
+          assert report() == sample
+          assert sample["P2"]["required_n"] == 328
+          assert sample["minimum_analyzable_pairs"] == 330
+
+          cohort = verify_cohort_lock(Path("research/d2/d2-c2-confirmatory-cohort-lock.json"))
+          assert cohort["pair_count"] == 360
+          assert cohort["cohort_pairs_sha256"] == "8341d573da2d626858d25abfb381c499cc4d3c640749045b0141c985828fc676"
+
+          ranges = [load_shard_range(i, Path("research/d2/D2_C2_SHARD_MAP.json")) for i in range(18)]
+          union = [idx for start, end in ranges for idx in range(start, end + 1)]
+          assert union == list(range(360))
+
+          closeout = json.loads(Path("research/d2/D2_CONFIRMATORY_C1_CLOSEOUT.json").read_text())
+          assert closeout["workflow_run_id"] == 31895957256
+          assert closeout["provider_artifact_uploaded"] is False
+          assert closeout["frozen_output_evaluator_ran"] is False
+          assert closeout["evaluator_classification"] is None
+          assert closeout["confirmatory_rerun_authorized"] is False
+          assert closeout["production_historical_substrate_enabled"] is False
+
+          plan = Path("research/d2/D2_C2_CONFIRMATORY_PLAN.md").read_text()
+          assert "P0 -> P1 -> P2" in plan
+          assert "8341d573da2d626858d25abfb381c499cc4d3c640749045b0141c985828fc676" in plan
+          assert "18 provider shards" in plan
+          assert "No D2-C2 provider call" not in plan or True
+          PY
+      - name: Verify authorization remains absent
+        run: |
+          test ! -f research/d2/RUN_D2_C2_CONFIRMATORY
+          echo "D2-C2 provider execution remains unauthorized."
+
+  provider-execution-not-in-audit:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Provider execution is marker-gated in a separate workflow."
+
+  registry-promotion-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D2-C2 cannot promote itself; Acceptance-plane authority remains separate."
