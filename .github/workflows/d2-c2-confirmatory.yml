@@ -1,0 +1,314 @@
+name: D2-C2 Confirmatory Campaign
+
+on:
+  push:
+    branches: ["research/d2-c1-closeout-c2-scaffold"]
+    paths:
+      - "research/d2/RUN_D2_C2_CONFIRMATORY"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  authorization-integrity:
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      candidate_sha: ${{ steps.marker.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Verify sole post-lock authorization marker
+        id: marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+          marker="research/d2/RUN_D2_C2_CONFIRMATORY"
+          test -f "$marker"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          test -n "$candidate"
+          test "$issue" = "180"
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          test "$(git diff --name-only "$candidate" HEAD | wc -l)" = "1"
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+          echo "Authorized frozen D2-C2 candidate: $candidate"
+
+  provider-shards:
+    if: ${{ github.run_attempt == 1 }}
+    needs: authorization-integrity
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17]
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Reverify frozen authorization and provider contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+          test -n "${ZAI_API_KEY:-}"
+          marker="research/d2/RUN_D2_C2_CONFIRMATORY"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          test "$candidate" = "${{ needs.authorization-integrity.outputs.candidate_sha }}"
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          plan = json.loads(Path("research/d2/D2_C2_CONFIRMATORY_REQUEST_PLAN.json").read_text())
+          assert plan["provider"] == "Z.AI"
+          assert plan["model"] == "glm-5-turbo"
+          assert plan["temperature"] == 0.8
+          assert plan["thinking"] == "disabled"
+          assert plan["pair_count_attempted"] == 360
+          assert plan["provider_shard_count"] == 18
+          assert plan["pairs_per_provider_shard"] == 20
+          assert plan["provider_local_concurrency_per_shard"] == 1
+          assert plan["provider_matrix_max_parallel"] == 4
+          assert plan["aggregate_provider_concurrency_ceiling"] == 4
+          assert plan["shard_job_rerun_allowed"] is False
+          assert plan["confirmatory_same_request_stream_rerun_allowed"] is False
+          assert plan["historical_substrate_enabled"] is False
+          PY
+      - name: Execute frozen provider shard
+        run: |
+          python scripts/run_d2_c2_confirmatory.py \
+            --shard-id "${{ matrix.shard }}" \
+            --output-dir "output/d2-c2-provider-shard-${{ matrix.shard }}"
+      - name: Verify unclassified shard output
+        shell: bash
+        run: |
+          python - "${{ matrix.shard }}" <<'PY'
+          import json
+          import sys
+          from pathlib import Path
+
+          shard = int(sys.argv[1])
+          path = Path(f"output/d2-c2-provider-shard-{shard}/d2-c2-confirmatory-provider-shard-{shard:02d}.json")
+          data = json.loads(path.read_text())
+          start = shard * 20
+          end = start + 19
+          assert data["schema"] == "d2-c2-confirmatory-provider-shard-v0.1"
+          assert data["status"] == "provider_shard_complete_unclassified"
+          assert data["classification"] is None
+          assert data["shard_id"] == shard
+          assert data["start_pair"] == start
+          assert data["end_pair"] == end
+          assert data["attempted_pairs"] == 20
+          assert data["complete_pairs"] + data["failed_pairs"] == 20
+          assert [row["pair_index"] for row in data["pair_records"]] == list(range(start, end + 1))
+          assert data["cohort_lock"]["cohort_pairs_sha256"] == "8341d573da2d626858d25abfb381c499cc4d3c640749045b0141c985828fc676"
+          assert data["model"] == "glm-5-turbo"
+          assert data["temperature"] == 0.8
+          assert data["production_historical_substrate_enabled"] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-c2-provider-shard-${{ matrix.shard }}
+          path: output/d2-c2-provider-shard-${{ matrix.shard }}/
+          if-no-files-found: error
+          retention-days: 90
+
+  aggregate-frozen-shards:
+    if: ${{ always() && github.run_attempt == 1 }}
+    needs: provider-shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert aggregator has no provider credential
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Download shard 0
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-0, path: provider-shards/shard-00}
+      - name: Download shard 1
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-1, path: provider-shards/shard-01}
+      - name: Download shard 2
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-2, path: provider-shards/shard-02}
+      - name: Download shard 3
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-3, path: provider-shards/shard-03}
+      - name: Download shard 4
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-4, path: provider-shards/shard-04}
+      - name: Download shard 5
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-5, path: provider-shards/shard-05}
+      - name: Download shard 6
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-6, path: provider-shards/shard-06}
+      - name: Download shard 7
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-7, path: provider-shards/shard-07}
+      - name: Download shard 8
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-8, path: provider-shards/shard-08}
+      - name: Download shard 9
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-9, path: provider-shards/shard-09}
+      - name: Download shard 10
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-10, path: provider-shards/shard-10}
+      - name: Download shard 11
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-11, path: provider-shards/shard-11}
+      - name: Download shard 12
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-12, path: provider-shards/shard-12}
+      - name: Download shard 13
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-13, path: provider-shards/shard-13}
+      - name: Download shard 14
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-14, path: provider-shards/shard-14}
+      - name: Download shard 15
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-15, path: provider-shards/shard-15}
+      - name: Download shard 16
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-16, path: provider-shards/shard-16}
+      - name: Download shard 17
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with: {name: d2-c2-provider-shard-17, path: provider-shards/shard-17}
+      - name: Aggregate immutable shard outputs
+        run: |
+          mkdir -p provider-shards
+          python scripts/aggregate_d2_c2_confirmatory.py \
+            provider-shards \
+            --output-dir output/d2-c2-canonical-provider
+      - name: Verify canonical provider output remains unclassified
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          data = json.loads(Path("output/d2-c2-canonical-provider/d2-c2-confirmatory-provider-output.json").read_text())
+          assert data["schema"] == "d2-c2-confirmatory-provider-output-v0.1"
+          assert data["status"] == "provider_campaign_complete_unclassified"
+          assert data["classification"] is None
+          assert data["attempted_pairs"] == 360
+          assert data["complete_pairs"] + data["failed_pairs"] == 360
+          assert [row["pair_index"] for row in data["pair_records"]] == list(range(360))
+          assert data["cohort_lock"]["cohort_pairs_sha256"] == "8341d573da2d626858d25abfb381c499cc4d3c640749045b0141c985828fc676"
+          assert data["production_historical_substrate_enabled"] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-c2-canonical-provider-output
+          path: output/d2-c2-canonical-provider/
+          if-no-files-found: error
+          retention-days: 90
+
+  frozen-output-evaluator:
+    if: ${{ always() && github.run_attempt == 1 }}
+    needs: aggregate-frozen-shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert evaluator has no provider credential
+        run: test -z "${ZAI_API_KEY:-}"
+      - uses: actions/download-artifact@v4
+        with:
+          name: d2-c2-canonical-provider-output
+          path: frozen-provider
+      - name: Evaluate canonical output twice
+        run: |
+          python scripts/evaluate_d2_c2_confirmatory.py \
+            frozen-provider/d2-c2-confirmatory-provider-output.json \
+            --output-dir output/eval-a
+          python scripts/evaluate_d2_c2_confirmatory.py \
+            frozen-provider/d2-c2-confirmatory-provider-output.json \
+            --output-dir output/eval-b
+          cmp output/eval-a/d2-c2-confirmatory-result.json output/eval-b/d2-c2-confirmatory-result.json
+          cmp output/eval-a/evaluation-manifest.json output/eval-b/evaluation-manifest.json
+      - name: Verify bounded classification and no promotion
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          result = json.loads(Path("output/eval-a/d2-c2-confirmatory-result.json").read_text())
+          assert result["classification"] in {"D2-S0", "D2-S1", "D2-S2", "D2-S3", "D2-S4"}
+          assert result["registry_promotion_authorized"] is False
+          assert result["production_historical_substrate_enabled"] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-c2-confirmatory-evaluation
+          path: output/eval-a/
+          if-no-files-found: error
+          retention-days: 90
+
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-latest
+    steps:
+      - name: Refuse confirmatory workflow rerun
+        run: |
+          echo "D2-C2 same-request-stream reruns are prospectively prohibited."
+          exit 1
+
+  registry-promotion-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D2-C2 classification never mutates Mechanism Registry authority."
