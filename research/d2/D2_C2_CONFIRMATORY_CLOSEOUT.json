@@ -1,0 +1,295 @@
+{
+  "analyzable_pairs": 359,
+  "attempted_pairs": 360,
+  "authorization_commit_sha": "88ab2e26efaff6434606b16e9a4dd162784e6279",
+  "c1_relation": {
+    "c1_disposition": "apparatus_failure_scientifically_unclassifiable",
+    "c1_evaluator_emitted_classification": null,
+    "c1_workflow_run_id": 31895957256,
+    "c2_is_fresh_successor_not_rerun": true
+  },
+  "canonical_provider_archive": {
+    "contained_provider_output_sha256": "83de0f7d79b6356d590f55e048629829ccbd2eec67d8cc86d1605b2521d6b3aa",
+    "contained_provider_output_size_in_bytes": 9469422,
+    "durable_repository_pair_score_ledger_path": "research/d2/evidence/D2_C2_INFERENTIAL_LEDGER.json",
+    "durable_repository_pair_score_ledger_sha256": "11effc4f5584ef2ec03150e5e9e81877a62b9480fccf338c8b33a38d44fde17e",
+    "durable_repository_raw_archive_committed": false,
+    "github_actions_artifact_id": 9738929037,
+    "github_actions_artifact_name": "d2-c2-canonical-provider-output",
+    "github_actions_artifact_sha256": "5f27258f1a27f7ed0c6bd4ac096a6d85f53fd003ee651dbf148a85ed560dc9cc",
+    "github_actions_artifact_size_in_bytes": 1737292,
+    "note": "The full raw archive exceeds the intended lightweight repository evidence boundary. The repository preserves the exact evaluator/aggregation manifests, a compact 360-index inferential score ledger, and cryptographic commitments to the full canonical provider output and every GitHub Actions shard artifact."
+  },
+  "claim_ceiling": "registered single-model synthetic individual-agent stochastic capability-reproduction mechanism only; no weight learning, cross-model/provider, naturalistic, team/swarm/institution, composition, market, environment-spawning, or production Historical Substrate claim",
+  "classification": "D2-S3",
+  "classification_label": "stochastic_model_mediated_capability_reproduction_supported",
+  "cohort_lock_file_sha256": "529a83cd138a1d4b828e49a1acf93b8b5a6f8f92fa6271e378661db717cc8323",
+  "cohort_pairs_sha256": "8341d573da2d626858d25abfb381c499cc4d3c640749045b0141c985828fc676",
+  "complete_pairs": 359,
+  "evaluation_archive": {
+    "github_actions_artifact_sha256": "5f5f31c60302a17b774942508dfcd45d3481330fbe2dbe3273ee9e155ab6ad6f",
+    "size_in_bytes": 2262
+  },
+  "failed_pairs": 1,
+  "governance": {
+    "acceptance_plane_review_required": true,
+    "automatic_registry_promotion": false,
+    "historical_substrate_default_state": "OFF",
+    "same_request_stream_rerun_authorized": false
+  },
+  "integrity": {
+    "evaluated_complete_pairs": 359,
+    "global_defects": [],
+    "pair_defects": [],
+    "passed": true
+  },
+  "issue": 180,
+  "minimum_analyzable_pairs": 330,
+  "plan_sha256": "149420e4cc43b283c7d038c03d58799ba5891e06b8ab363358beb46157d12669",
+  "production_historical_substrate_enabled": false,
+  "provider_output_sha256": "83de0f7d79b6356d590f55e048629829ccbd2eec67d8cc86d1605b2521d6b3aa",
+  "pull_request": 181,
+  "registry_promotion_authorized": false,
+  "request_plan_sha256": "a8553d6c70619862d90093da8bf9f544b19da7f7c66c972d6b8bea43e83c37c6",
+  "result_sha256": "f6010b83120c3767c518ffa75fd897b6321da17d190c42f783f1ee39a78ceec5",
+  "schema": "d2-c2-confirmatory-closeout-v0.1",
+  "scientific_candidate_sha": "e8f719c3698b1f0180db07409c5eefd93facefbf",
+  "shard_map_sha256": "875b43b81d3245c6336a3e8c75362078f62e7e4e8ddef3b18ad5c70c01b49146",
+  "statistics": {
+    "P0": {
+      "gate_pass": true,
+      "mean": 0.24347144846796656,
+      "n": 359.0,
+      "one_sided_95_lower": 0.2208149913597814,
+      "one_sided_p": 0.0,
+      "sample_sd": 0.2609828477949221,
+      "standard_error": 0.013774147885837156,
+      "threshold": 0.1,
+      "two_sided_95_lower": 0.2164746146939972,
+      "two_sided_95_upper": 0.2704682822419359,
+      "z": 10.415994488884984
+    },
+    "P1": {
+      "gate_entered": true,
+      "gate_pass": true,
+      "mean": 0.302141364902507,
+      "n": 359.0,
+      "one_sided_95_lower": 0.27827320252675164,
+      "one_sided_p": 0.0,
+      "sample_sd": 0.2749406475474846,
+      "standard_error": 0.014510812381519918,
+      "threshold": 0.1,
+      "two_sided_95_lower": 0.27370069524831003,
+      "two_sided_95_upper": 0.33058203455670393,
+      "z": 13.930396147905672
+    },
+    "P2": {
+      "aggregate_fidelity_ratio": 1.1272598369372562,
+      "fidelity_fraction": 0.9,
+      "gate_entered": true,
+      "gate_pass": true,
+      "mean": 0.11161211699164343,
+      "n": 359.0,
+      "one_sided_95_lower": 0.08395123335838728,
+      "one_sided_p": 1.6005419212206107e-11,
+      "raw_reproduced_minus_source_mean": 0.0625,
+      "raw_reproduced_minus_source_sd": 0.3339610520520462,
+      "sample_sd": 0.31862952573123626,
+      "standard_error": 0.016816623181554528,
+      "threshold": 0.0,
+      "two_sided_95_lower": 0.07865214121421518,
+      "two_sided_95_upper": 0.14457209276907168,
+      "z": 6.637011235053791
+    },
+    "alpha_one_sided": 0.05,
+    "analyzable_pairs": 359,
+    "arm_means": {
+      "description_only": 0.2514798050139276,
+      "fresh": 0.24764972144846797,
+      "reproduced": 0.5536211699164345,
+      "source_developed": 0.49112116991643456
+    },
+    "bootstrap_sensitivity": {
+      "interval": "paired percentile 95%",
+      "metrics": {
+        "fidelity_ratio": {
+          "lower_2_5": 1.0559402730031167,
+          "median": 1.1277753730910158,
+          "upper_97_5": 1.2043456261767098
+        },
+        "p0_source_minus_fresh": {
+          "lower_2_5": 0.21657381615598886,
+          "median": 0.24338440111420614,
+          "upper_97_5": 0.2701949860724234
+        },
+        "p1_reproduced_minus_description": {
+          "lower_2_5": 0.27393802228412256,
+          "median": 0.302141364902507,
+          "upper_97_5": 0.3306928969359332
+        },
+        "p2_90": {
+          "lower_2_5": 0.0790994951253482,
+          "median": 0.11180362116991643,
+          "upper_97_5": 0.14449860724233982
+        },
+        "p2_raw_reproduced_minus_source": {
+          "lower_2_5": 0.028377437325905308,
+          "median": 0.0627611420612813,
+          "upper_97_5": 0.09688370473537611
+        }
+      },
+      "replicates": 50000,
+      "seed": 2026081516
+    },
+    "classification": "D2-S3",
+    "classification_label": "stochastic_model_mediated_capability_reproduction_supported",
+    "gatekeeping_order": [
+      "P0",
+      "P1",
+      "P2"
+    ],
+    "holm_adjusted_p_values_diagnostic": {
+      "P0": 0.0,
+      "P1": 0.0,
+      "P2": 1.6005419212206107e-11
+    },
+    "minimum_analyzable_pairs": 330,
+    "raw_p_values": {
+      "P0": 0.0,
+      "P1": 0.0,
+      "P2": 1.6005419212206107e-11
+    },
+    "threshold_provenance": {
+      "P0": "conventional_materiality_10pp",
+      "P1": "conventional_materiality_10pp",
+      "P2": "conventional_fidelity_90_percent_source_accuracy"
+    }
+  },
+  "status": "confirmatory_completed",
+  "workflow_artifacts": [
+    {
+      "artifact_id": 9733843725,
+      "digest": "sha256:37bb9fc50f36679762edbbc99e725b66ffda2bcaef868b456ed5c2754edd25c3",
+      "name": "d2-c2-provider-shard-0",
+      "size_in_bytes": 99795
+    },
+    {
+      "artifact_id": 9733653876,
+      "digest": "sha256:a5aac960918ecbadfe8d6688ddef0013c77706cd48b4e3b0fae08e0f93b187cf",
+      "name": "d2-c2-provider-shard-1",
+      "size_in_bytes": 100150
+    },
+    {
+      "artifact_id": 9733822673,
+      "digest": "sha256:e4161b8e20a115565b7b77b6ae5897b9571bc3bb5a28f34366f80e9599fe682d",
+      "name": "d2-c2-provider-shard-2",
+      "size_in_bytes": 99912
+    },
+    {
+      "artifact_id": 9733743784,
+      "digest": "sha256:8cd24bf38bc3b2b410b2ebf1bd018a03f147dea6d9d791c5bda3e849fef75342",
+      "name": "d2-c2-provider-shard-3",
+      "size_in_bytes": 100465
+    },
+    {
+      "artifact_id": 9734830966,
+      "digest": "sha256:cc25cfc708c54ad5c074aa6179b867a09d23249d8977c52ed582e7455c4e8186",
+      "name": "d2-c2-provider-shard-4",
+      "size_in_bytes": 98706
+    },
+    {
+      "artifact_id": 9735071117,
+      "digest": "sha256:6de1f10bd492d44e0b53a22ad3b35ca6629c7836bde1beac402ea1c65453b24f",
+      "name": "d2-c2-provider-shard-5",
+      "size_in_bytes": 100233
+    },
+    {
+      "artifact_id": 9735195198,
+      "digest": "sha256:649364767380a3a8a09fd43a357bfeb88fef7d0d3cfc3a64973ad8eaf99c78f5",
+      "name": "d2-c2-provider-shard-6",
+      "size_in_bytes": 98720
+    },
+    {
+      "artifact_id": 9735385393,
+      "digest": "sha256:3aeda87a36088eee74b59016161c16e8f4896262a2b1baae5e427e3078f7b8a3",
+      "name": "d2-c2-provider-shard-7",
+      "size_in_bytes": 100418
+    },
+    {
+      "artifact_id": 9736080661,
+      "digest": "sha256:f94d233ab73304545f97710425747ab4c38fa6f0b73101b9c8752bcd5de97573",
+      "name": "d2-c2-provider-shard-8",
+      "size_in_bytes": 99654
+    },
+    {
+      "artifact_id": 9736315778,
+      "digest": "sha256:de7fe3b65c215a7710365f9caff41bce6b51de1fff4b7d89c4a9531154528f88",
+      "name": "d2-c2-provider-shard-9",
+      "size_in_bytes": 100509
+    },
+    {
+      "artifact_id": 9736461364,
+      "digest": "sha256:b09e941e867b1c55dad6fa3fd7af7676c2b2405bbd71c330c9d41d713f9af9e8",
+      "name": "d2-c2-provider-shard-10",
+      "size_in_bytes": 99829
+    },
+    {
+      "artifact_id": 9736704649,
+      "digest": "sha256:74cf161ce79465a15dbbce78c3bacc8eb8160427aeb408d07a7f7b3fbed61b25",
+      "name": "d2-c2-provider-shard-11",
+      "size_in_bytes": 100478
+    },
+    {
+      "artifact_id": 9737480877,
+      "digest": "sha256:61e630482a7ac4521214f7f12cf16f17a5569d5558e4b42eefdb169966bb6de2",
+      "name": "d2-c2-provider-shard-12",
+      "size_in_bytes": 102069
+    },
+    {
+      "artifact_id": 9737338115,
+      "digest": "sha256:363fa683a42a31e521a18b6faaf04d44f35f0d3261be15709f7e5aa63da9e2fa",
+      "name": "d2-c2-provider-shard-13",
+      "size_in_bytes": 99599
+    },
+    {
+      "artifact_id": 9737751099,
+      "digest": "sha256:7296ba49b60fe42600b7bc15b1467125072f1edfd332d9604f6eba98ad9c4a3e",
+      "name": "d2-c2-provider-shard-14",
+      "size_in_bytes": 100661
+    },
+    {
+      "artifact_id": 9737740147,
+      "digest": "sha256:de887eeb6662b23b2164078344cd5c691e2ff22242fea2cd3e905caa39b1da30",
+      "name": "d2-c2-provider-shard-15",
+      "size_in_bytes": 99965
+    },
+    {
+      "artifact_id": 9738470153,
+      "digest": "sha256:90c2fe9202cc116853f441b0a1195919b3e6ce26c50d1cf067589b7d7a88cccf",
+      "name": "d2-c2-provider-shard-16",
+      "size_in_bytes": 99011
+    },
+    {
+      "artifact_id": 9738921507,
+      "digest": "sha256:b48f5bef8518285678646c1b312bebc2fcccf03e212a66ea4031ba7505ad504a",
+      "name": "d2-c2-provider-shard-17",
+      "size_in_bytes": 95072
+    },
+    {
+      "artifact_id": 9738936837,
+      "digest": "sha256:5f5f31c60302a17b774942508dfcd45d3481330fbe2dbe3273ee9e155ab6ad6f",
+      "name": "d2-c2-confirmatory-evaluation",
+      "size_in_bytes": 2262
+    },
+    {
+      "artifact_id": 9738929037,
+      "digest": "sha256:5f27258f1a27f7ed0c6bd4ac096a6d85f53fd003ee651dbf148a85ed560dc9cc",
+      "name": "d2-c2-canonical-provider-output",
+      "size_in_bytes": 1737292
+    }
+  ],
+  "workflow_run_completed_at": "2026-08-30T21:10:04Z",
+  "workflow_run_conclusion": "success",
+  "workflow_run_id": 33312336871,
+  "workflow_run_started_at": "2026-08-30T12:45:25Z"
+}
