@@ -47,6 +47,8 @@ jobs:
     timeout-minutes: 45
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -146,10 +148,28 @@ jobs:
           assert "Assert evaluator has no provider credential" in workflow
           assert "registry-promotion-disabled" in workflow
           PY
-      - name: Verify authorization remains absent
+      - name: Verify authorization phase integrity
+        shell: bash
         run: |
-          test ! -f research/d2/RUN_D2_C2_CONFIRMATORY
-          echo "D2-C2 provider execution remains unauthorized."
+          set -euo pipefail
+          marker="research/d2/RUN_D2_C2_CONFIRMATORY"
+          if [[ ! -f "$marker" ]]; then
+            echo "D2-C2 remains in preauthorization phase."
+            exit 0
+          fi
+
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          test "$candidate" = "e8f719c3698b1f0180db07409c5eefd93facefbf"
+          test "$issue" = "180"
+
+          auth_commit="$(git log --diff-filter=A --format=%H -- "$marker" | head -n 1)"
+          test -n "$auth_commit"
+          test "$(git rev-parse "${auth_commit}^")" = "$candidate"
+          test "$(git diff --name-only "$candidate" "$auth_commit")" = "$marker"
+          test "$(git diff --name-only "$candidate" "$auth_commit" | wc -l)" = "1"
+          git merge-base --is-ancestor "$auth_commit" HEAD
+          echo "D2-C2 postauthorization chain remains intact: $candidate -> $auth_commit -> $GITHUB_SHA"
 
   provider-execution-not-in-audit:
     if: ${{ false }}
