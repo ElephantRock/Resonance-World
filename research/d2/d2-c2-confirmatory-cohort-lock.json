@@ -1,0 +1,26 @@
+{
+  "case_id_prefixes": {
+    "destination": "d2c2-destination-p{pair_index:03d}",
+    "evaluation": "d2c2-eval-p{pair_index:03d}",
+    "source": "d2c2-source-p{pair_index:03d}"
+  },
+  "cohort_pairs_sha256": "8341d573da2d626858d25abfb381c499cc4d3c640749045b0141c985828fc676",
+  "counts": {
+    "destination_development": 40,
+    "evaluation_holdout": 32,
+    "source_development": 40
+  },
+  "hash_contract": "sha256(canonical_json(per_pair_hash_records)+newline); each per-pair record hashes the complete source, destination, and evaluation case lists including correct_action plus the private policy record",
+  "pair_count": 360,
+  "production_historical_substrate_enabled": false,
+  "schema": "d2-c2-confirmatory-cohort-lock-v0.1",
+  "seed_series": {
+    "base": 2200000,
+    "destination_offset": 2,
+    "evaluation_offset": 3,
+    "source_offset": 1,
+    "step": 100
+  },
+  "task_generator": "scripts/d2_calibration_r2_core.py",
+  "task_generator_blob_sha_at_freeze": "b6c34aedaf458686d3c9d45521e5db302c9ff118"
+}
