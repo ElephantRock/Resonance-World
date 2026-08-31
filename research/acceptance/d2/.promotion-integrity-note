@@ -1,0 +1,3 @@
+D2 registry promotion branch is append-only relative to main 45fead6220e0062a51623b652ff790c00fdd43fe.
+Independent Acceptance decision: ACCEPT discovery_supported.
+No internally_replicated transition. Production/default Historical Substrate remains OFF.
