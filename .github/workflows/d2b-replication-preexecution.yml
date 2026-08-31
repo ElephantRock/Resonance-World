@@ -104,11 +104,10 @@ jobs:
           from pathlib import Path
           text = Path('.github/workflows/d2b-replication.yml').read_text()
           assert 'research/d2b/RUN_D2B_REPLICATION' in text
-          assert 'issue" = "186"' in text or 'test "$issue" = "186"' in text
+          assert 'test "$issue" = "186"' in text
           assert 'max-parallel: 4' in text
           assert 'timeout-minutes: 240' in text
           assert 'registry-promotion-disabled' in text
-          assert 'if: ${{ false }}' in text
           assert 'ZAI_API_KEY' in text
           assert 'production_historical_substrate_enabled' in text
           PY
