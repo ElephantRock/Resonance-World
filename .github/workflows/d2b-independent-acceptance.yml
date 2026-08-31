@@ -1,0 +1,151 @@
+name: D2b Independent Internal-Replication Acceptance Review
+
+on:
+  push:
+    branches: ["acceptance/d2b-internal-replication-glm5"]
+    paths:
+      - "research/acceptance/d2b/RUN_REVIEW"
+
+permissions:
+  contents: read
+  issues: write
+
+jobs:
+  authorization-integrity:
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-latest
+    outputs:
+      candidate_sha: ${{ steps.auth.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: auth
+        name: Verify sole post-lock review marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker="research/acceptance/d2b/RUN_REVIEW"
+          test -f "$marker"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          test -n "$candidate"
+          test "$issue" = "190"
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          mapfile -t changed < <(git diff --name-only "$candidate" HEAD)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = "$marker"
+          test "$(git diff --numstat "$candidate" HEAD | wc -l)" -eq 1
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+
+  independent-review:
+    if: ${{ github.run_attempt == 1 }}
+    needs: authorization-integrity
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      GITHUB_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Assert review credentials are available
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ZAI_API_KEY:-}"
+          test -n "${GITHUB_TOKEN:-}"
+      - name: Run single independent Acceptance review
+        run: python scripts/run_d2b_independent_acceptance.py
+      - name: Verify bounded review artifact
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+
+          root = Path("output/d2b-acceptance")
+          audit = json.loads((root / "review-audit.json").read_text())
+          response = json.loads((root / "review-response.json").read_text())
+          request = json.loads((root / "review-request.json").read_text())
+
+          assert audit["provider"] == "Z.AI"
+          assert audit["requested_model"] == "glm-5-turbo"
+          assert audit["returned_model"] == "glm-5-turbo"
+          assert audit["proposer_acceptor_separation"] is True
+          assert audit["substantive_valid_decision_count"] == 1
+          assert audit["structural_warnings"] == []
+          assert audit["registry_mutated_by_review"] is False
+          assert audit["production_historical_substrate_enabled"] is False
+          assert all(audit["mainline_preservation_gate"]["assertions"].values())
+
+          assert request["transition_under_review"] == "discovery_supported -> internally_replicated"
+          assert request["proposer_acceptor_separation"] is True
+          assert request["production_historical_substrate_enabled"] is False
+
+          allowed = {
+              "ACCEPT internally_replicated",
+              "REJECT promotion; retain discovery_supported and document reason",
+              "DEFER pending specified evidence/integration condition",
+          }
+          assert response["review"]["decision"] in allowed
+          assert response["transition_under_review"] == "discovery_supported -> internally_replicated"
+          PY
+      - name: Post decision to issue 190
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json, os
+          from pathlib import Path
+          from urllib.request import Request, urlopen
+
+          review = json.loads(Path("output/d2b-acceptance/review-response.json").read_text())["review"]
+          audit = json.loads(Path("output/d2b-acceptance/review-audit.json").read_text())
+          body = {
+              "body": (
+                  "## Independent D2 internal-replication Acceptance-plane decision\n\n"
+                  f"**Decision:** `{review['decision']}`\n\n"
+                  f"{review.get('summary', '')}\n\n"
+                  f"Evidence manifest: `{audit['evidence_manifest_sha256']}`\n\n"
+                  "The machine-readable review, checklist, audit, and evidence manifest are preserved in the workflow artifact. "
+                  "This review does not mutate the Mechanism Registry. Production/default Historical Substrate remains OFF."
+              )
+          }
+          req = Request(
+              "https://api.github.com/repos/ElephantRock/Resonance-World/issues/190/comments",
+              data=json.dumps(body).encode(),
+              method="POST",
+              headers={
+                  "Authorization": f"Bearer {os.environ['GITHUB_TOKEN']}",
+                  "Accept": "application/vnd.github+json",
+                  "X-GitHub-Api-Version": "2022-11-28",
+                  "Content-Type": "application/json",
+                  "User-Agent": "resonance-world-d2b-independent-acceptor/0.1",
+              },
+          )
+          with urlopen(req, timeout=60) as response:
+              print(response.status)
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2b-independent-acceptance-review
+          path: output/d2b-acceptance/
+          retention-days: 90
+
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "D2b Acceptance reviewer reruns are prohibited. A valid substantive decision is singular and immutable."
+          exit 1
+
+  registry-promotion-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "Independent review cannot mutate the Mechanism Registry."
