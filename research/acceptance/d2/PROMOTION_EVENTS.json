@@ -1,0 +1,50 @@
+{
+  "schema": "resonance-registry-promotion-events-v0.1",
+  "registry_node": "d2_stochastic_capability_reproduction",
+  "decision": "ACCEPT discovery_supported",
+  "proposer_id": "openai:gpt-5.6-sol:resonance-world-project",
+  "acceptor_id": "zai:glm-5-turbo:independent-acceptance-plane",
+  "acceptance_timestamp": "2026-08-30T23:51:09Z",
+  "review_record": "https://github.com/ElephantRock/Resonance-World/issues/183#issuecomment-5472033272",
+  "review_workflow": 33342809877,
+  "review_branch_commit": "28a65f49fada0204e84f19425b51183dc7706dc8",
+  "review_artifact_id": 9741085228,
+  "review_artifact_digest": "sha256:05912ee4b648ff16a4b8fa4978ad67160db40efbbc207621b7e724232fab30be",
+  "evidence_manifest_sha256": "b4d97c410ea6391438cd45409a581e7a9c53b161997d3c00e49cd0acbcb5ac24",
+  "review_response_sha256": "104aae511bd1f2735858129a4cda15f7d53fca3c1be387dd8b74a06cdd99bcd5",
+  "proposal_prerequisite": {
+    "origin_state": "posthoc_motivated",
+    "transition": "posthoc_motivated_to_proposed",
+    "status": "PASS",
+    "review_record": "https://github.com/ElephantRock/Resonance-World/issues/183#issuecomment-5472033272",
+    "reason": "D2 began as posthoc_motivated per issue #167. The registry records the transition with zero_provider_calls_at_transition_lock: true, a distinct causal intervention, fresh data commitment, independent statistical contract, and sibling multiplicity plan—all frozen before any D2 confirmatory outcomes. The proposal_transition_record in registry. documents a valid non-result-based posthoc_motivated → proposed transition satisfying governance Section 4.",
+    "confirmatory_outcome_preceding": true
+  },
+  "events": [
+    {
+      "sequence": 1,
+      "registry_node": "d2_stochastic_capability_reproduction",
+      "from_status": "proposed",
+      "to_status": "discovery_supported",
+      "preregistration_hash_or_issue": "https://github.com/ElephantRock/Resonance-World/issues/180",
+      "candidate_result_hash": "f6010b83120c3767c518ffa75fd897b6321da17d190c42f783f1ee39a78ceec5",
+      "acceptor": "zai:glm-5-turbo:independent-acceptance-plane",
+      "acceptance_timestamp": "2026-08-30T23:51:09Z",
+      "review_commit_or_record": "https://github.com/ElephantRock/Resonance-World/issues/183#issuecomment-5472033272"
+    }
+  ],
+  "accepted_claim": "In the registered single-model synthetic individual-agent Field substrate using Z.AI glm-5-turbo, capability developed through stochastic model-mediated local experience was reproducible in fresh destination agents through the registered public Capability Artifact mechanism beyond description-only and fresh controls, while satisfying the preregistered 90% source-fidelity criterion.",
+  "claim_ceiling": "registered_single_model_synthetic_individual_agent_only",
+  "explicit_nonclaims": [
+    "weight_learning",
+    "cross_model_or_cross_provider_reproduction",
+    "naturalistic_or_semantic_domain_generalization",
+    "team_swarm_relationship_or_institution_reproduction",
+    "capability_composition",
+    "market_viability",
+    "autonomous_environment_spawning",
+    "internally_replicated_status",
+    "production_historical_substrate_authorization"
+  ],
+  "production_historical_substrate_enabled": false
+}
