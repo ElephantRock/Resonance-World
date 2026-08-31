@@ -306,8 +306,8 @@
     },
     {
       "mechanism_id": "d2_stochastic_capability_reproduction",
-      "status": "discovery_supported",
-      "status_provenance": "D2 originated as posthoc_motivated because it was motivated by inspected D1/D1b evidence. The independent Acceptance-plane review on issue #183 verified that immutable outcome-preceding records satisfied the non-result-based posthoc_motivated -> proposed prerequisite before D2 confirmatory provider outcomes, and then accepted the sole promotive transition proposed -> discovery_supported from the preserved D2-C2 result.",
+      "status": "internally_replicated",
+      "status_provenance": "D2-C2 was independently accepted at discovery_supported. D2b then executed as a prospectively frozen fresh replication of the same mechanism with a fully disjoint cohort and no outcome-based retuning, and its frozen evaluator emitted D2b-S3. The separate external Acceptance-plane review on issue #190 accepted exactly discovery_supported -> internally_replicated.",
       "origin_state": "posthoc_motivated",
       "mechanism_family": "capability_reproduction",
       "scientific_question": "Can a capability genuinely developed through stochastic model-mediated local experience in a Source Field be prospectively characterized as a public Capability Artifact and deliberately developed again in a fresh, identity-disjoint Destination Field without transferring source-private learned state?",
@@ -315,7 +315,9 @@
         "docs/mechanism-governance-v0.1.md",
         "research/d2/CAPABILITY_ARTIFACT_V0.2.md",
         "https://github.com/ElephantRock/Resonance-World/issues/167",
-        "https://github.com/ElephantRock/Resonance-World/issues/180"
+        "https://github.com/ElephantRock/Resonance-World/issues/180",
+        "https://github.com/ElephantRock/Resonance-World/issues/186",
+        "https://github.com/ElephantRock/Resonance-World/issues/190"
       ],
       "proposal_transition_record": {
         "transition": "posthoc_motivated_to_proposed",
@@ -349,18 +351,39 @@
           "failed_pairs": 1,
           "integrity_passed": true
         },
-        "preservation_main_head": "45fead6220e0062a51623b652ff790c00fdd43fe"
+        "preservation_main_head": "b4494408b07d8404ced24f5edb786eb2013c01f9",
+        "d2b": {
+          "state": "completed_classifiable_fresh_replication",
+          "scientific_candidate": "cf938d895020120a0f979d035f0e428065e05140",
+          "authorization_commit": "b1402081d8a3252b28a788b7e5c75544aaacbe6d",
+          "workflow": 33353320198,
+          "run_attempt": 1,
+          "classification": "D2b-S3",
+          "base_evaluator_classification": "D2-S3",
+          "result_sha256": "1a602e3813f4a4f1c58e82c3dba8feb42485fa44cda11a23d289b0de72a27757",
+          "cohort_sha256": "b4d8f39b9730de6869b6b3c3f9ceb4d16c76214b8eee9437c2bca62e85286b23",
+          "attempted_pairs": 360,
+          "analyzable_pairs": 360,
+          "failed_pairs": 0,
+          "all_18_provider_shards_success": true,
+          "rerun_performed": false,
+          "integrity_passed": true,
+          "preservation_commit": "b4494408b07d8404ced24f5edb786eb2013c01f9"
+        }
       },
-      "supported_scope": "In the registered single-model synthetic individual-agent Field substrate using Z.AI glm-5-turbo, capability developed through stochastic model-mediated local experience was reproducible in fresh destination agents through the registered public Capability Artifact mechanism beyond description-only and fresh controls, while satisfying the preregistered 90% source-fidelity criterion.",
-      "known_boundary": "Registered single-model synthetic individual-agent stochastic capability-reproduction mechanism only; no weight learning, cross-model/provider, naturalistic, team/swarm/institution, composition, market, environment-spawning, or production Historical Substrate claim. D2-C2 is one confirmatory study and does not establish internal replication.",
+      "supported_scope": "In two prospectively registered fresh cohorts of the same single-model synthetic individual-agent Field substrate using Z.AI glm-5-turbo, including an independently executed fresh replication, capability developed through stochastic model-mediated local experience was reproducibly reproduced in fresh destination agents through the registered public Capability Artifact mechanism beyond description-only and fresh controls while satisfying the preregistered 90% source-fidelity criterion.",
+      "known_boundary": "Registered single-model synthetic individual-agent stochastic capability-reproduction mechanism only; internal replication is established only within the same Z.AI glm-5-turbo provider/model line and registered synthetic Field substrate. No weight learning, schema generalization, cross-model/provider, naturalistic, team/swarm/institution, composition, market, environment-spawning, production-readiness, or production Historical Substrate claim.",
       "evidence": [
-        "D2-C2"
+        "D2-C2",
+        "D2b"
       ],
-      "acceptance_record": "research/acceptance/d2/PROMOTION_EVENTS.json",
-      "acceptance_issue": "https://github.com/ElephantRock/Resonance-World/issues/183",
+      "acceptance_record": "research/acceptance/d2b/PROMOTION_EVENTS.json",
+      "acceptance_issue": "https://github.com/ElephantRock/Resonance-World/issues/190",
       "acceptor": "zai:glm-5-turbo:independent-acceptance-plane",
       "promotion_eligible": true,
-      "production_historical_substrate_enabled": false
+      "production_historical_substrate_enabled": false,
+      "prior_acceptance_record": "research/acceptance/d2/PROMOTION_EVENTS.json",
+      "prior_acceptance_issue": "https://github.com/ElephantRock/Resonance-World/issues/183"
     }
   ]
 }
