@@ -1,31 +1,45 @@
-name: D2b Replication Preexecution Scaffold Audit
+name: D2b Replication Preexecution Audit
 
 on:
   push:
     branches: ["research/d2b-fresh-replication"]
     paths:
       - ".github/workflows/d2b-replication-preexecution.yml"
+      - ".github/workflows/d2b-replication.yml"
       - "research/d2b/**"
+      - "research/acceptance/d2/**"
       - "research/mechanisms/registry.json"
       - "scripts/materialize_d2b_replication.py"
+      - "scripts/run_d2b_replication.py"
+      - "scripts/aggregate_d2b_replication.py"
+      - "scripts/evaluate_d2b_replication.py"
       - "tests/test_d2b_scaffold.py"
+      - "tests/test_d2b_replication.py"
   pull_request:
     paths:
       - ".github/workflows/d2b-replication-preexecution.yml"
+      - ".github/workflows/d2b-replication.yml"
       - "research/d2b/**"
+      - "research/acceptance/d2/**"
       - "research/mechanisms/registry.json"
       - "scripts/materialize_d2b_replication.py"
+      - "scripts/run_d2b_replication.py"
+      - "scripts/aggregate_d2b_replication.py"
+      - "scripts/evaluate_d2b_replication.py"
       - "tests/test_d2b_scaffold.py"
+      - "tests/test_d2b_replication.py"
 
 permissions:
   contents: read
 
 jobs:
-  zero-provider-scaffold-audit:
+  zero-provider-design-audit:
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
@@ -34,51 +48,92 @@ jobs:
         run: python -m pip install -e '.[dev]'
       - name: Assert provider credentials are unavailable
         run: test -z "${ZAI_API_KEY:-}"
-      - name: Compile D2b zero-provider materializer
-        run: python -m py_compile scripts/materialize_d2b_replication.py
-      - name: Verify D2b scaffold contract
-        run: python -m pytest -q tests/test_d2b_scaffold.py
-      - name: Materialize fresh cohort and shard locks
-        run: python scripts/materialize_d2b_replication.py --output-dir output/d2b-materialized
-      - name: Verify materialized lock invariants
+      - name: Compile frozen D2b apparatus
+        run: |
+          python -m py_compile \
+            scripts/materialize_d2b_replication.py \
+            scripts/run_d2b_replication.py \
+            scripts/aggregate_d2b_replication.py \
+            scripts/evaluate_d2b_replication.py
+      - name: Test D2b frozen apparatus
+        run: python -m pytest -q tests/test_d2b_scaffold.py tests/test_d2b_replication.py
+      - name: Verify registry and independent Acceptance prerequisite
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          root = Path('output/d2b-materialized')
-          summary = json.loads((root / 'materialization-summary.json').read_text())
-          cohort = json.loads((root / 'd2b-replication-cohort-lock.json').read_text())
-          shards = json.loads((root / 'D2B_SHARD_MAP.json').read_text())
-          assert summary['pair_count'] == 360
-          assert summary['shard_count'] == 18
-          assert summary['all_source_destination_overlaps_zero'] is True
-          assert summary['all_development_evaluation_overlaps_zero'] is True
-          assert summary['c1_seed_namespace_overlap'] == 0
-          assert summary['c2_seed_namespace_overlap'] == 0
-          assert cohort['cohort_pairs_sha256'] == summary['cohort_pairs_sha256']
-          assert len(cohort['pairs']) == 360
-          assert len(shards['shards']) == 18
+          registry = json.loads(Path('research/mechanisms/registry.json').read_text())
+          nodes = [n for n in registry['nodes'] if n.get('mechanism_id') == 'd2_stochastic_capability_reproduction']
+          assert len(nodes) == 1
+          assert nodes[0]['status'] == 'discovery_supported'
+          assert nodes[0]['production_historical_substrate_enabled'] is False
+          acceptance = json.loads(Path('research/acceptance/d2/PROMOTION_EVENTS.json').read_text())
+          assert acceptance['decision'] == 'ACCEPT discovery_supported'
+          assert acceptance['production_historical_substrate_enabled'] is False
+          PY
+      - name: Re-materialize and verify committed cohort/shard locks
+        run: |
+          python scripts/materialize_d2b_replication.py --output-dir output/d2b-materialized
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          out = Path('output/d2b-materialized')
+          generated = json.loads((out / 'materialization-summary.json').read_text())
+          cohort = json.loads(Path('research/d2b/d2b-replication-cohort-lock.json').read_text())
+          shards = json.loads(Path('research/d2b/D2B_SHARD_MAP.json').read_text())
+          request = json.loads(Path('research/d2b/D2B_REPLICATION_REQUEST_PLAN.json').read_text())
+          sample = json.loads(Path('research/d2b/D2B_REPLICATION_SAMPLE_SIZE.json').read_text())
+          expected = 'b4d8f39b9730de6869b6b3c3f9ceb4d16c76214b8eee9437c2bca62e85286b23'
+          assert generated['cohort_pairs_sha256'] == expected
+          assert cohort['cohort_pairs_sha256'] == expected
+          assert request['cohort_pairs_sha256'] == expected
+          assert generated['all_source_destination_overlaps_zero'] is True
+          assert generated['all_development_evaluation_overlaps_zero'] is True
+          assert generated['c1_seed_namespace_overlap'] == 0
+          assert generated['c2_seed_namespace_overlap'] == 0
+          assert shards['shard_count'] == 18
+          assert shards['pair_count_attempted'] == 360
+          assert sample['minimum_analyzable_pairs'] == 330
+          assert sample['P2']['required_n'] == 328
           assert cohort['production_historical_substrate_enabled'] is False
           assert shards['production_historical_substrate_enabled'] is False
           PY
-      - name: Upload zero-provider D2b materialization
-        uses: actions/upload-artifact@v4
-        with:
-          name: d2b-zero-provider-materialization
-          path: output/d2b-materialized
-          retention-days: 30
-      - name: Verify provider execution remains absent
+      - name: Verify marker-gated provider workflow and no authority mutation
         run: |
-          test ! -e research/d2b/RUN_D2B_REPLICATION
-          test ! -e scripts/run_d2b_replication.py
-          test ! -e scripts/aggregate_d2b_replication.py
-          test ! -e scripts/evaluate_d2b_replication.py
-          test ! -e .github/workflows/d2b-replication.yml
-          grep -q 'prospective_zero_provider_scaffold_not_execution_candidate' research/d2b/REQUEST_PLAN_DRAFT.json
-          grep -q 'Production/default Historical Substrate remains OFF' research/d2b/PLAN.md
+          python - <<'PY'
+          from pathlib import Path
+          text = Path('.github/workflows/d2b-replication.yml').read_text()
+          assert 'research/d2b/RUN_D2B_REPLICATION' in text
+          assert 'issue" = "186"' in text or 'test "$issue" = "186"' in text
+          assert 'max-parallel: 4' in text
+          assert 'timeout-minutes: 240' in text
+          assert 'registry-promotion-disabled' in text
+          assert 'if: ${{ false }}' in text
+          assert 'ZAI_API_KEY' in text
+          assert 'production_historical_substrate_enabled' in text
+          PY
+      - name: Verify authorization phase integrity
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker="research/d2b/RUN_D2B_REPLICATION"
+          if [ ! -e "$marker" ]; then
+            echo "D2b remains in preauthorization phase."
+            exit 0
+          fi
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          test -n "$candidate"
+          test "$issue" = "186"
+          auth_commit="$(git log --diff-filter=A --format='%H' -- "$marker" | head -n1)"
+          test -n "$auth_commit"
+          test "$(git rev-parse "$auth_commit^")" = "$candidate"
+          test "$(git diff --name-only "$candidate" "$auth_commit")" = "$marker"
+          test "$(git diff --name-only "$candidate" "$auth_commit" | wc -l)" = "1"
+          git merge-base --is-ancestor "$auth_commit" HEAD
 
-  provider-execution-disabled:
+  provider-execution-disabled-in-audit:
     if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "D2b provider execution remains blocked until full apparatus/candidate freeze and separate authorization."
+      - run: echo "D2b preexecution audit never receives provider credentials or executes provider calls."
