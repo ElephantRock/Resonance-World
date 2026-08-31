@@ -1,6 +1,6 @@
 # D2b implementation checklist
 
-Status: **zero-provider implementation work only**.
+Status: **full zero-provider apparatus assembled; final candidate audit/posting pending**.
 
 The replication study is preregistered on issue #186. This checklist is not provider authorization.
 
@@ -14,22 +14,24 @@ The replication study is preregistered on issue #186. This checklist is not prov
 
 ## Before candidate freeze
 
-- [ ] Deterministically materialize all 360 fresh pair locks from the frozen R2 substrate generator.
-- [ ] Verify exact zero source/destination feature overlap for every pair.
-- [ ] Verify exact zero development/evaluation feature overlap for every pair.
-- [ ] Prove no seed/case/request identity overlap with C1/C2/calibration records.
-- [ ] Freeze aggregate cohort hash.
-- [ ] Freeze 18×20 shard map.
-- [ ] Replace request-plan draft with final request plan carrying exact cohort hash.
-- [ ] Derive D2b provider runner from D2-C2 with only study/cohort identity changes.
-- [ ] Derive D2b aggregator from D2-C2 with only study/cohort identity changes.
-- [ ] Derive D2b evaluator from D2-C2; statistical gates must be unchanged.
-- [ ] Add zero-provider tests for cohort, shard map, missing shard, duplicate/foreign/preclassified input, model/temperature/request drift, N=329→S4, and deterministic synthetic S0–S3 behavior.
-- [ ] Add dedicated credential-free D2b preexecution audit.
-- [ ] Ensure provider credential is scoped only to later provider shard jobs.
-- [ ] Ensure authorization marker is absent.
-- [ ] General CI success.
-- [ ] Dedicated D2b audit success.
+- [x] Deterministically materialize all 360 fresh pair locks from the frozen R2 substrate generator.
+- [x] Verify exact zero source/destination feature overlap for every pair.
+- [x] Verify exact zero development/evaluation feature overlap for every pair.
+- [x] Prove seed namespace disjointness from C1/C2 and identity-disjoint D2b case prefixes.
+- [x] Freeze aggregate cohort hash: `b4d8f39b9730de6869b6b3c3f9ceb4d16c76214b8eee9437c2bca62e85286b23`.
+- [x] Freeze 18×20 shard map.
+- [x] Replace request-plan draft with final request plan carrying exact cohort hash.
+- [x] Preserve the unchanged D2-C2 sample-size/power contract.
+- [x] Derive D2b provider runner from D2-C2 with only study/cohort identity changes.
+- [x] Derive D2b aggregator from D2-C2 with only study/cohort identity changes.
+- [x] Derive D2b evaluator from D2-C2 while reusing the unchanged `d2_c2_confirmatory_stats` scientific decision core.
+- [x] Add zero-provider tests for cohort, shard map, missing shard, duplicate/drift/preclassified input, N=329→S4, serial S0–S3 behavior, and deterministic evaluator output.
+- [x] Add marker-gated run-attempt-1 provider workflow with 18×20 shards and no registry promotion.
+- [x] Add dedicated credential-free phase-aware D2b preexecution audit.
+- [x] Scope provider credential only to later provider-shard jobs; audit/aggregation/evaluation have no provider credential.
+- [x] Keep authorization marker absent during candidate construction.
+- [ ] General CI success on the exact final candidate.
+- [ ] Dedicated D2b audit success on the exact final candidate.
 - [ ] Post exact candidate SHA + cohort hash prospectively to issue #186.
 
 ## Provider boundary
