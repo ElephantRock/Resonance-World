@@ -12,18 +12,22 @@ permissions:
 
 jobs:
   assemble-promotion:
-    if: ${{ github.event.head_commit.message == 'D2: stage internal-replication promotion automation' }}
+    if: "${{ github.event.head_commit.message == 'D2: repair promotion assembly workflow syntax' }}"
     runs-on: ubuntu-latest
     timeout-minutes: 15
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
-      - name: Verify promotion base and current registry state
+      - name: Verify promotion branch contains no substantive pre-assembly change
         shell: bash
         run: |
           set -euo pipefail
-          test "$(git rev-parse HEAD^)" = "b4494408b07d8404ced24f5edb786eb2013c01f9"
+          base="b4494408b07d8404ced24f5edb786eb2013c01f9"
+          test "$(git merge-base HEAD "$base")" = "$base"
+          mapfile -t changed < <(git diff --name-only "$base" HEAD)
+          test "${#changed[@]}" -eq 1
+          test "${changed[0]}" = ".github/workflows/promote-d2-internal-replication.yml"
           python - <<'PY'
           import json
           from pathlib import Path
@@ -219,6 +223,6 @@ jobs:
           git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
           git add research/mechanisms/registry.json research/acceptance/d2b .github/workflows/promote-d2-internal-replication.yml
           git diff --cached --name-status
-          test "$(git diff --cached --name-only | wc -l)" -eq 6
+          test "$(git diff --cached --name-only | wc -l)" -eq 7
           git commit -m "D2: promote stochastic capability reproduction to internally_replicated"
           git push origin HEAD:acceptance/d2-internally-replicated
