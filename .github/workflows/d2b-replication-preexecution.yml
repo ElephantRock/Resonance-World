@@ -1,0 +1,51 @@
+name: D2b Replication Preexecution Scaffold Audit
+
+on:
+  push:
+    branches: ["research/d2b-fresh-replication"]
+    paths:
+      - ".github/workflows/d2b-replication-preexecution.yml"
+      - "research/d2b/**"
+      - "research/mechanisms/registry.json"
+      - "tests/test_d2b_scaffold.py"
+  pull_request:
+    paths:
+      - ".github/workflows/d2b-replication-preexecution.yml"
+      - "research/d2b/**"
+      - "research/mechanisms/registry.json"
+      - "tests/test_d2b_scaffold.py"
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-scaffold-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert provider credentials are unavailable
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Verify D2b scaffold contract
+        run: python -m pytest -q tests/test_d2b_scaffold.py
+      - name: Verify provider execution remains absent
+        run: |
+          test ! -e research/d2b/RUN_D2B_REPLICATION
+          test ! -e scripts/run_d2b_replication.py
+          test ! -e scripts/aggregate_d2b_replication.py
+          test ! -e scripts/evaluate_d2b_replication.py
+          test ! -e .github/workflows/d2b-replication.yml
+          grep -q 'prospective_zero_provider_scaffold_not_execution_candidate' research/d2b/REQUEST_PLAN_DRAFT.json
+          grep -q 'Production/default Historical Substrate remains OFF' research/d2b/PLAN.md
+
+  provider-execution-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D2b provider execution remains blocked until full apparatus/candidate freeze and separate authorization."
