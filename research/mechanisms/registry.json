@@ -303,6 +303,62 @@
       "acceptor": "zai:glm-5-turbo:independent_acceptance_plane_reviewer",
       "promotion_eligible": true,
       "production_historical_substrate_enabled": false
+    },
+    {
+      "mechanism_id": "d2_stochastic_model_mediated_capability_reproduction",
+      "status": "discovery_supported",
+      "status_provenance": "D2 was motivated by inspected D1/D1b outcomes and therefore originated as posthoc_motivated. An immutable outcome-preceding D2 proposal-transition record at the C1 scientific candidate established the non-result-based posthoc_motivated -> proposed transition before confirmatory provider outcomes. The independent Acceptance-plane review on issue #183 verified that prerequisite and accepted only proposed -> discovery_supported from the fresh D2-C2 confirmatory evidence.",
+      "origin_state": "posthoc_motivated",
+      "mechanism_family": "capability_reproduction",
+      "scientific_question": "Can a capability developed through stochastic model-mediated local experience be reproduced in a fresh destination Field from a public Capability Artifact plus destination-local development, beyond description-only practice and without exporting source-private learned state?",
+      "dependencies": [
+        "d1_capability_reproduction@internally_replicated",
+        "https://github.com/ElephantRock/Resonance-World/issues/167",
+        "research/d2/D2_PROPOSAL_TRANSITION.json",
+        "docs/mechanism-governance-v0.1.md"
+      ],
+      "proposal_transition_record": {
+        "transition": "posthoc_motivated_to_proposed",
+        "preserved_record": "research/d2/D2_PROPOSAL_TRANSITION.json",
+        "prospective_record_blob_sha": "0d20c4fdbf08e52cad37f400de04692f774dd07e",
+        "prospective_record_candidate": "6d693c1fe1ad368855374e81d406db6720839990",
+        "prospective_design_issue": "https://github.com/ElephantRock/Resonance-World/issues/167",
+        "distinct_causal_intervention": "Fresh stochastic model-mediated source development and public Capability Artifact reproduction in identity-disjoint destination Fields, contrasted against equal-call description-only practice and fresh no-development control.",
+        "fresh_data_commitment": "360 attempted fresh confirmatory Field pairs with minimum analyzable N 330, no replacement, and no outcome-adaptive sample-size increase; C2 later retired the C1 seed namespace and used a fresh disjoint 360-pair cohort after C1 apparatus failure.",
+        "statistical_contract": "Serial P0->P1->P2 gatekeeping at one-sided alpha 0.05. P0 source-fresh and P1 reproduced-description each test mean paired effect > conventional +10pp SESOI. P2 tests mean(reproduced - 0.90*source_developed) > 0 under a conventional 90% fidelity criterion. Minimum analyzable N 330; fixed 360 attempted.",
+        "sibling_multiplicity_plan": "Fixed serial gatekeeping P0 then P1 then P2; C2 is a fresh apparatus-successor on the same D2 mechanism node, not a posthoc child or sibling mechanism.",
+        "zero_provider_calls_at_transition_record": true,
+        "independent_acceptance_verification": "https://github.com/ElephantRock/Resonance-World/issues/183#issuecomment-5472033272",
+        "verification_finding": "PASS: the independent Acceptance-plane reviewer found the posthoc_motivated -> proposed prerequisite valid before any D2 confirmatory provider outcomes."
+      },
+      "supported_scope": "In the registered single-model synthetic individual-agent Field substrate using Z.AI glm-5-turbo, capability developed through stochastic model-mediated local experience was reproducible in fresh destination agents through the registered public Capability Artifact mechanism beyond description-only and fresh controls, while satisfying the preregistered 90% source-fidelity criterion.",
+      "known_boundary": "One classifiable confirmatory study on the registered single-model synthetic individual-agent substrate. No weight learning, cross-model/provider reproduction, naturalistic transfer, team/swarm/relationship/institution reproduction, capability composition, market viability, environment spawning, internally_replicated status, or production Historical Substrate authorization is established.",
+      "evidence": [
+        "D2-C2"
+      ],
+      "execution_record": {
+        "c1": {
+          "workflow": 31895957256,
+          "disposition": "apparatus_failure_scientifically_unclassifiable",
+          "evaluator_classification": null,
+          "rerun_permitted": false
+        },
+        "c2": {
+          "scientific_candidate": "e8f719c3698b1f0180db07409c5eefd93facefbf",
+          "authorization_commit": "88ab2e26efaff6434606b16e9a4dd162784e6279",
+          "workflow": 33312336871,
+          "attempted_pairs": 360,
+          "analyzable_pairs": 359,
+          "failed_pairs": 1,
+          "classification": "D2-S3",
+          "result_sha256": "f6010b83120c3767c518ffa75fd897b6321da17d190c42f783f1ee39a78ceec5"
+        }
+      },
+      "acceptance_record": "research/acceptance/d2/PROMOTION_EVENTS.json",
+      "acceptance_issue": "https://github.com/ElephantRock/Resonance-World/issues/183",
+      "acceptor": "zai:glm-5-turbo:independent-acceptance-plane",
+      "promotion_eligible": true,
+      "production_historical_substrate_enabled": false
     }
   ]
 }
