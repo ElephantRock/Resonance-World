@@ -16,4 +16,6 @@ No D2c workflow may promote the registry. A favorable preserved result requires 
 
 The candidate contains no substantive run marker. Repository-CI formatting changes are engineering-only and do not alter the preregistered scientific contract or deterministic cohort identity.
 
+The branch is synchronized with the accepted D2b scaffold-status maintenance on `main`; this synchronization changes no D2c scientific parameter, cohort identity, inferential threshold, authority boundary, or claim ceiling.
+
 Production/default Historical Substrate remains OFF.
