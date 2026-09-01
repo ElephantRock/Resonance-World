@@ -1,4 +1,5 @@
 """Frozen per-schema statistics for D2c schema-generalization evaluation."""
+
 from __future__ import annotations
 
 import math

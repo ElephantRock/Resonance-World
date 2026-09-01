@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Materialize the deterministic zero-provider D2c schema-generalization cohort."""
+
 from __future__ import annotations
 
 import argparse
@@ -87,8 +88,7 @@ def pair_lock_record(global_pair_index: int) -> dict[str, Any]:
             bundle["source_features"] & bundle["destination_features"]
         ),
         "development_evaluation_overlap": len(
-            (bundle["source_features"] | bundle["destination_features"])
-            & bundle["eval_features"]
+            (bundle["source_features"] | bundle["destination_features"]) & bundle["eval_features"]
         ),
     }
 
@@ -104,8 +104,7 @@ def seed_namespace(seed_base: int, pair_count: int) -> set[int]:
 def build_cohort_lock() -> dict[str, Any]:
     records = [pair_lock_record(index) for index in range(TOTAL_PAIRS)]
     if any(
-        row["source_destination_overlap"] != 0
-        or row["development_evaluation_overlap"] != 0
+        row["source_destination_overlap"] != 0 or row["development_evaluation_overlap"] != 0
         for row in records
     ):
         raise AssertionError("D2c cohort overlap integrity failure")
@@ -152,11 +151,7 @@ def build_cohort_lock() -> dict[str, Any]:
         "all_source_destination_overlaps_zero": True,
         "all_development_evaluation_overlaps_zero": True,
         "cross_schema_seed_overlap": 0,
-        "predecessor_seed_namespace_overlap": {
-            "D2-C1": 0,
-            "D2-C2": 0,
-            "D2b": 0
-        },
+        "predecessor_seed_namespace_overlap": {"D2-C1": 0, "D2-C2": 0, "D2b": 0},
         "pairs": records,
         "production_historical_substrate_enabled": False,
     }

@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 """Run one frozen D2c schema-generalization provider shard without classifying it."""
+
 from __future__ import annotations
 
 import argparse
@@ -150,7 +151,8 @@ def system_prompt(case_count: int) -> str:
     return (
         "Return one JSON object with an actions array containing exactly "
         f"{case_count} entries, each one of {', '.join(core.ACTIONS)}. "
-        "You may also include strategy as a concise private working string. Other keys are ignored. "
+        "You may also include strategy as a concise private working string. "
+        "Other keys are ignored. "
         "Do not use markdown."
     )
 
@@ -179,7 +181,8 @@ def decision_user(
         sections.append(f"Development protocol: {core.DEVELOPMENT_PROTOCOL[schema_id]}")
     elif phase.startswith("description"):
         sections.append(
-            "This control receives unlabeled practice only. No correctness or correct-action feedback "
+            "This control receives unlabeled practice only. No correctness or "
+            "correct-action feedback "
             "is available; do not treat prior choices as labels."
         )
     if prior_strategy:
@@ -189,13 +192,19 @@ def decision_user(
         sections.append(label + ":\n" + json.dumps(history, sort_keys=True, separators=(",", ":")))
     sections.append(
         "Cases to answer now:\n"
-        + json.dumps([core.public_case(case) for case in cases], sort_keys=True, separators=(",", ":"))
+        + json.dumps(
+            [core.public_case(case) for case in cases], sort_keys=True, separators=(",", ":")
+        )
     )
     if "evaluation" in phase:
-        sections.append("These are held-out confirmatory cases. Their correctness will not be returned to the agent.")
+        sections.append(
+            "These are held-out confirmatory cases. Their correctness will not be "
+            "returned to the agent."
+        )
     else:
         sections.append(
-            "Return choices and, if useful, an updated private strategy. Use feedback to revise the "
+            "Return choices and, if useful, an updated private strategy. Use feedback "
+            "to revise the "
             "hypothesis rather than memorizing case IDs."
         )
     return "\n\n".join(sections)
@@ -263,7 +272,11 @@ def run_development_arm(
         strategy = _resolved_strategy(result, strategy)
         calls.append(_call_record(result, strategy))
         batch_scores.append(core.score_actions(batch, actions))
-        prior_history = core.labeled_feedback(batch, actions) if labeled else core.unlabeled_history(batch, actions)
+        prior_history = (
+            core.labeled_feedback(batch, actions)
+            if labeled
+            else core.unlabeled_history(batch, actions)
+        )
 
     eval_actions: list[str] = []
     for chunk_index, chunk in enumerate(_split(eval_cases, EVAL_CHUNK_SIZE), start=1):
@@ -295,7 +308,9 @@ def run_development_arm(
     }
 
 
-def run_fresh_arm(client: Client, *, schema_id: str, eval_cases: list[dict[str, Any]]) -> dict[str, Any]:
+def run_fresh_arm(
+    client: Client, *, schema_id: str, eval_cases: list[dict[str, Any]]
+) -> dict[str, Any]:
     calls: list[dict[str, Any]] = []
     strategy = ""
     eval_actions: list[str] = []
@@ -331,10 +346,15 @@ def run_fresh_arm(client: Client, *, schema_id: str, eval_cases: list[dict[str, 
 def build_artifact(pair_index: int, schema_id: str, source_public_score: float) -> dict[str, Any]:
     return make_artifact(
         artifact_id=f"d2c-{schema_id}-capability-{pair_index:03d}",
-        behavioral_objective={"action_vocabulary": list(core.ACTIONS), "objective": BEHAVIORAL_OBJECTIVE},
+        behavioral_objective={
+            "action_vocabulary": list(core.ACTIONS),
+            "objective": BEHAVIORAL_OBJECTIVE,
+        },
         source_public_evidence={
             "registered_source_development_completed": True,
-            "heldout_score_band": "at_or_above_chance" if source_public_score >= 0.25 else "below_chance",
+            "heldout_score_band": "at_or_above_chance"
+            if source_public_score >= 0.25
+            else "below_chance",
             "no_private_strategy_exported": True,
         },
         required_environment={
@@ -353,7 +373,10 @@ def build_artifact(pair_index: int, schema_id: str, source_public_score: float) 
             "procedure": core.DEVELOPMENT_PROTOCOL[schema_id],
             "destination_local_examples_only": True,
         },
-        feedback_contract={"development_feedback": ["correct", "correct_action"], "evaluation_feedback": "none"},
+        feedback_contract={
+            "development_feedback": ["correct", "correct_action"],
+            "evaluation_feedback": "none",
+        },
         memory_update_contract={
             "private_strategy_allowed": True,
             "strategy_is_local_and_nonexportable": True,
@@ -382,8 +405,14 @@ def build_artifact(pair_index: int, schema_id: str, source_public_score: float) 
             "destination exposes four integer features with the registered D2c schema family",
             "outcome-bearing feedback is available only during development",
         ],
-        known_failure_conditions=["insufficient labeled local development evidence", "provider fails structured action contract"],
-        permitted_use_modes=["local_development", "fresh_destination_reproduction_schema_generalization"],
+        known_failure_conditions=[
+            "insufficient labeled local development evidence",
+            "provider fails structured action contract",
+        ],
+        permitted_use_modes=[
+            "local_development",
+            "fresh_destination_reproduction_schema_generalization",
+        ],
         provenance={
             "program_issue": 192,
             "parent_registry_node": "d2_stochastic_capability_reproduction",
@@ -402,24 +431,41 @@ def run_pair(client: Client, pair_index: int) -> dict[str, Any]:
     destination_cases = bundle["destination_cases"]
     eval_cases = bundle["eval_cases"]
     source = run_development_arm(
-        client, schema_id=schema_id, arm=f"source-{schema_id}-p{pair_index:03d}",
-        dev_cases=source_cases, eval_cases=eval_cases, artifact=None, labeled=True,
+        client,
+        schema_id=schema_id,
+        arm=f"source-{schema_id}-p{pair_index:03d}",
+        dev_cases=source_cases,
+        eval_cases=eval_cases,
+        artifact=None,
+        labeled=True,
     )
     artifact = build_artifact(pair_index, schema_id, float(source["runner_final_score"]))
     audit = assert_export_safe(
         artifact,
-        source_agent_ids=[f"source-agent-d2c-{schema_id}-p{pair_index:03d}-{bundle['source_seed']}"],
+        source_agent_ids=[
+            f"source-agent-d2c-{schema_id}-p{pair_index:03d}-{bundle['source_seed']}"
+        ],
         source_seeds=[bundle["source_seed"], bundle["pair_seed"]],
         source_example_ids=[case["case_id"] for case in source_cases],
         hidden_truth_tokens=[policy.truth_token],
     )
     reproduced = run_development_arm(
-        client, schema_id=schema_id, arm=f"reproduced-{schema_id}-p{pair_index:03d}",
-        dev_cases=destination_cases, eval_cases=eval_cases, artifact=artifact, labeled=True,
+        client,
+        schema_id=schema_id,
+        arm=f"reproduced-{schema_id}-p{pair_index:03d}",
+        dev_cases=destination_cases,
+        eval_cases=eval_cases,
+        artifact=artifact,
+        labeled=True,
     )
     description = run_development_arm(
-        client, schema_id=schema_id, arm=f"description-{schema_id}-p{pair_index:03d}",
-        dev_cases=destination_cases, eval_cases=eval_cases, artifact=None, labeled=False,
+        client,
+        schema_id=schema_id,
+        arm=f"description-{schema_id}-p{pair_index:03d}",
+        dev_cases=destination_cases,
+        eval_cases=eval_cases,
+        artifact=None,
+        labeled=False,
     )
     fresh = run_fresh_arm(client, schema_id=schema_id, eval_cases=eval_cases)
     return {
@@ -526,7 +572,9 @@ def main() -> None:
         "classification": None,
         "production_historical_substrate_enabled": False,
     }
-    (out / f"d2c-provider-shard-{args.shard_id:02d}-manifest.json").write_bytes(canonical_bytes(manifest))
+    (out / f"d2c-provider-shard-{args.shard_id:02d}-manifest.json").write_bytes(
+        canonical_bytes(manifest)
+    )
     print(json.dumps(manifest, indent=2, sort_keys=True))
 
 

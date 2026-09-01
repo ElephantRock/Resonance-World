@@ -1,4 +1,5 @@
 """Pure deterministic task generation for D2c G2 schema generalization."""
+
 from __future__ import annotations
 
 import hashlib
@@ -158,18 +159,14 @@ def generate_balanced_cases(
 
 
 def features_set(cases: list[dict[str, Any]]) -> set[tuple[int, int, int, int]]:
-    return {
-        tuple(int(case["features"][name]) for name in FEATURE_NAMES)
-        for case in cases
-    }
+    return {tuple(int(case["features"][name]) for name in FEATURE_NAMES) for case in cases}
 
 
 def score_actions(cases: list[dict[str, Any]], actions: list[str]) -> float:
     if len(cases) != len(actions):
         raise ValueError("action count mismatch")
     return sum(
-        action == case["correct_action"]
-        for case, action in zip(cases, actions, strict=True)
+        action == case["correct_action"] for case, action in zip(cases, actions, strict=True)
     ) / len(cases)
 
 

@@ -46,13 +46,19 @@ def test_balanced_generation_and_within_pair_disjointness():
         assert len(bundle["source_cases"]) == 40
         assert len(bundle["destination_cases"]) == 40
         assert len(bundle["eval_cases"]) == 32
-        for cases, expected_each in ((bundle["source_cases"], 10), (bundle["destination_cases"], 10), (bundle["eval_cases"], 8)):
+        for cases, expected_each in (
+            (bundle["source_cases"], 10),
+            (bundle["destination_cases"], 10),
+            (bundle["eval_cases"], 8),
+        ):
             counts = {action: 0 for action in core.ACTIONS}
             for case in cases:
                 counts[case["correct_action"]] += 1
             assert set(counts.values()) == {expected_each}
         assert bundle["source_features"].isdisjoint(bundle["destination_features"])
-        assert (bundle["source_features"] | bundle["destination_features"]).isdisjoint(bundle["eval_features"])
+        assert (bundle["source_features"] | bundle["destination_features"]).isdisjoint(
+            bundle["eval_features"]
+        )
 
 
 def test_global_pair_index_blocks_are_exact():
@@ -66,7 +72,9 @@ def test_global_pair_index_blocks_are_exact():
 
 def test_seed_namespaces_are_pairwise_and_predecessor_disjoint():
     namespaces = {
-        schema_id: materializer.seed_namespace(core.SCHEMA_SEED_BASES[schema_id], core.PAIRS_PER_SCHEMA)
+        schema_id: materializer.seed_namespace(
+            core.SCHEMA_SEED_BASES[schema_id], core.PAIRS_PER_SCHEMA
+        )
         for schema_id in core.SCHEMA_ORDER
     }
     ids = list(core.SCHEMA_ORDER)
@@ -92,7 +100,9 @@ def test_materialized_cohort_and_shards_are_exact():
     assert shards["shard_count"] == 27
     assert shards["shards_per_schema"] == 9
     assert all(row["schema_id"] == core.SCHEMA_ORDER[row["shard"] // 9] for row in shards["shards"])
-    union = [index for row in shards["shards"] for index in range(row["start_pair"], row["end_pair"] + 1)]
+    union = [
+        index for row in shards["shards"] for index in range(row["start_pair"], row["end_pair"] + 1)
+    ]
     assert union == list(range(540))
 
 
@@ -104,7 +114,7 @@ def test_sample_size_contract_is_prospective_and_conservative():
     assert sample["minimum_analyzable_pairs_per_schema"] == 165
     assert sample["attempted_pairs_per_schema"] == 180
     z_alpha = NormalDist().inv_cdf(0.95)
-    computed_min_power = NormalDist().cdf((165 ** 0.5) * 0.1 / 0.4 - z_alpha)
+    computed_min_power = NormalDist().cdf((165**0.5) * 0.1 / 0.4 - z_alpha)
     assert abs(computed_min_power - sample["approx_power_at_minimum_n"]) < 1e-12
 
 
