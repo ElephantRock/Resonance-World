@@ -11,7 +11,7 @@ permissions:
 
 jobs:
   format-and-verify:
-    if: "${{ github.event.head_commit.message == 'D2c: stage zero-provider formatting repair' }}"
+    if: "${{ github.event.head_commit.message == 'D2c: repair zero-provider formatting workflow' }}"
     runs-on: ubuntu-latest
     timeout-minutes: 30
     steps:
@@ -43,6 +43,63 @@ jobs:
             scripts/evaluate_d2c_schema_generalization.py \
             tests/test_d2c_schema_generalization.py \
             tests/test_d2c_full_apparatus.py
+          python - <<'PY'
+          from pathlib import Path
+
+          replacements = {
+              Path('scripts/evaluate_d2c_schema_generalization.py'): [
+                  (
+                      '        "program_decision_rule": "all_three_schemas_must_independently_pass_minimum_n_P0_P1_P2_no_pooling_or_rescue",\n',
+                      '        "program_decision_rule": (\n'
+                      '            "all_three_schemas_must_independently_pass_minimum_n_P0_P1_P2_"\n'
+                      '            "no_pooling_or_rescue"\n'
+                      '        ),\n',
+                  ),
+                  (
+                      '        "claim_ceiling": "registered single-model synthetic individual-agent G2 schema-generalization across the three frozen D2c schemas using Z.AI glm-5-turbo only; no G3 operator, cross-model/provider, naturalistic, team/swarm/institution, composition, market, environment-spawning, production-readiness, or production Historical Substrate claim",\n',
+                      '        "claim_ceiling": (\n'
+                      '            "registered single-model synthetic individual-agent G2 schema-generalization "\n'
+                      '            "across the three frozen D2c schemas using Z.AI glm-5-turbo only; no G3 "\n'
+                      '            "operator, cross-model/provider, naturalistic, team/swarm/institution, "\n'
+                      '            "composition, market, environment-spawning, production-readiness, or "\n'
+                      '            "production Historical Substrate claim"\n'
+                      '        ),\n',
+                  ),
+              ],
+              Path('scripts/run_d2c_schema_generalization.py'): [
+                  (
+                      '        "You may also include strategy as a concise private working string. Other keys are ignored. "\n',
+                      '        "You may also include strategy as a concise private working string. "\n'
+                      '        "Other keys are ignored. "\n',
+                  ),
+                  (
+                      '            "This control receives unlabeled practice only. No correctness or correct-action feedback "\n',
+                      '            "This control receives unlabeled practice only. No correctness or "\n'
+                      '            "correct-action feedback "\n',
+                  ),
+                  (
+                      '            "These are held-out confirmatory cases. Their correctness will not be returned to the agent."\n',
+                      '            "These are held-out confirmatory cases. Their correctness will not be "\n'
+                      '            "returned to the agent."\n',
+                  ),
+                  (
+                      '            "Return choices and, if useful, an updated private strategy. Use feedback to revise the "\n',
+                      '            "Return choices and, if useful, an updated private strategy. Use feedback "\n'
+                      '            "to revise the "\n',
+                  ),
+              ],
+          }
+          for path, items in replacements.items():
+              text = path.read_text()
+              for old, new in items:
+                  if old not in text:
+                      raise SystemExit(f'missing expected formatting target in {path}: {old!r}')
+                  text = text.replace(old, new, 1)
+              path.write_text(text)
+          PY
+          ruff format \
+            scripts/run_d2c_schema_generalization.py \
+            scripts/evaluate_d2c_schema_generalization.py
       - name: Verify lint and D2c tests
         shell: bash
         run: |
