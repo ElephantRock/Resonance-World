@@ -14,4 +14,6 @@ Construction and zero-provider auditing are allowed before execution authorizati
 
 No D2c workflow may promote the registry. A favorable preserved result requires a separate independent Acceptance-plane review of exactly `internally_replicated -> schema_generalized`.
 
+The candidate contains no substantive run marker. Repository-CI formatting changes are engineering-only and do not alter the preregistered scientific contract or deterministic cohort identity.
+
 Production/default Historical Substrate remains OFF.
