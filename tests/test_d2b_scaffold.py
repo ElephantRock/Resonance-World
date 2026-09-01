@@ -93,9 +93,12 @@ def test_registry_and_acceptance_prerequisite_are_preserved() -> None:
     ]
     assert len(matches) == 1
     node = matches[0]
-    assert node["status"] == "discovery_supported"
+    assert node["status"] == "internally_replicated"
     assert node["production_historical_substrate_enabled"] is False
-    assert "D2-C2" in node["evidence"]
+    assert node["evidence"] == ["D2-C2", "D2b"]
+    assert node["execution_record"]["d2b"]["classification"] == "D2b-S3"
+    assert node["execution_record"]["d2b"]["rerun_performed"] is False
+    assert node["prior_acceptance_record"] == "research/acceptance/d2/PROMOTION_EVENTS.json"
 
     acceptance = json.loads(ACCEPTANCE.read_text())
     assert acceptance["registry_node"] == "d2_stochastic_capability_reproduction"
