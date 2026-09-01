@@ -1,0 +1,141 @@
+name: D2c Schema Generalization Preexecution Audit
+
+on:
+  push:
+    branches: ["research/d2c-schema-generalization"]
+    paths:
+      - "research/d2c/PLAN.md"
+      - "research/d2c/README.md"
+      - "research/d2c/D2C_SCHEMA_SUITE.json"
+      - "research/d2c/D2C_SAMPLE_SIZE.json"
+      - "research/d2c/D2C_REQUEST_PLAN.json"
+      - "research/d2c/D2C_SHARD_MAP.json"
+      - "research/d2c/MATERIALIZATION_SUMMARY.json"
+      - "research/d2c/d2c-schema-cohort-lock.json"
+      - "scripts/d2c_schema_core.py"
+      - "scripts/d2c_schema_stats.py"
+      - "scripts/materialize_d2c_schema_generalization.py"
+      - "scripts/run_d2c_schema_generalization.py"
+      - "scripts/aggregate_d2c_schema_generalization.py"
+      - "scripts/evaluate_d2c_schema_generalization.py"
+      - "tests/test_d2c_schema_generalization.py"
+      - "tests/test_d2c_full_apparatus.py"
+      - ".github/workflows/d2c-schema-generalization.yml"
+      - ".github/workflows/d2c-schema-preexecution.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-preexecution-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert provider execution remains unauthorized
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e research/d2c/RUN_D2C_SCHEMA_GENERALIZATION
+          test -z "${ZAI_API_KEY:-}"
+      - name: Verify registry provenance and no registry mutation
+        shell: bash
+        run: |
+          set -euo pipefail
+          git fetch origin main --depth=1
+          python - <<'PY'
+          import json, subprocess
+          from pathlib import Path
+          branch=json.loads(Path('research/mechanisms/registry.json').read_text())
+          node=next(n for n in branch['nodes'] if n['mechanism_id']=='d2_stochastic_capability_reproduction')
+          assert node['status']=='internally_replicated'
+          assert node['production_historical_substrate_enabled'] is False
+          assert node['execution_record']['d2b']['classification']=='D2b-S3'
+          assert node['acceptance_issue'].endswith('/190')
+          changed=subprocess.check_output(['git','diff','--name-only','origin/main...HEAD'], text=True).splitlines()
+          assert 'research/mechanisms/registry.json' not in changed
+          PY
+      - name: Verify immutable materialization and prospective contracts
+        shell: bash
+        run: |
+          set -euo pipefail
+          echo "5701669d2594aaeb49ad0bc8c682b61c3cbfde6a1cb496bbf63b265a6ce26f00  research/d2c/d2c-schema-cohort-lock.json" | sha256sum -c -
+          echo "2f23b0a940a6a2b4bd71aedf7d6d008939f5e89e6978284eac304e060e0009b5  research/d2c/D2C_SHARD_MAP.json" | sha256sum -c -
+          echo "c5479b42632b089bc4858a23beb8c31c952d02c328bc0639c8284bd6d305ea44  research/d2c/MATERIALIZATION_SUMMARY.json" | sha256sum -c -
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          cohort=json.loads(Path('research/d2c/d2c-schema-cohort-lock.json').read_text())
+          request=json.loads(Path('research/d2c/D2C_REQUEST_PLAN.json').read_text())
+          suite=json.loads(Path('research/d2c/D2C_SCHEMA_SUITE.json').read_text())
+          sample=json.loads(Path('research/d2c/D2C_SAMPLE_SIZE.json').read_text())
+          assert cohort['cohort_pairs_sha256']=='559a4420a1d592d85fa350d087a8d4b945f4bf882a683c660a77cf9fdb6b9c04'
+          assert cohort['pair_count']==540 and cohort['pairs_per_schema']==180
+          assert suite['governance_novelty']=='G2_new_schema_same_abstract_operator'
+          assert [x['schema_id'] for x in suite['schemas']]==['parity_pair','interval_pair','pairwise_order']
+          assert sample['minimum_analyzable_pairs_per_schema']==165 and sample['attempted_pairs_per_schema']==180
+          assert sample['planning_effects_are_conventional_not_observed_parent_effects'] is True
+          assert request['logical_calls_campaign_before_retries']==16740
+          assert request['confirmatory_same_request_stream_rerun_allowed'] is False
+          assert request['registry_promotion_authorized'] is False
+          assert request['historical_substrate_enabled'] is False
+          PY
+      - name: Compile and test complete D2c apparatus
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/d2c_schema_core.py scripts/d2c_schema_stats.py scripts/materialize_d2c_schema_generalization.py scripts/run_d2c_schema_generalization.py scripts/aggregate_d2c_schema_generalization.py scripts/evaluate_d2c_schema_generalization.py
+          python -m pytest -q tests/test_d2c_schema_generalization.py tests/test_d2c_full_apparatus.py
+      - name: Audit execution workflow authority boundaries
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          from pathlib import Path
+          text=Path('.github/workflows/d2c-schema-generalization.yml').read_text()
+          assert 'research/d2c/RUN_D2C_SCHEMA_GENERALIZATION' in text
+          assert 'github.run_attempt == 1' in text
+          assert 'registry-promotion-disabled' in text
+          assert 'if: ${{ false }}' in text
+          assert 'scripts/evaluate_d2c_schema_generalization.py' in text
+          assert 'D2c-S4' in text
+          assert 'Historical Substrate' not in text or 'production_historical_substrate_enabled' in text
+          PY
+      - name: Emit exact zero-provider audit manifest
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output/d2c-preexecution
+          python - <<'PY'
+          import hashlib,json,subprocess
+          from pathlib import Path
+          files=[
+            'research/d2c/PLAN.md','research/d2c/D2C_SCHEMA_SUITE.json','research/d2c/D2C_SAMPLE_SIZE.json','research/d2c/D2C_REQUEST_PLAN.json','research/d2c/D2C_SHARD_MAP.json','research/d2c/d2c-schema-cohort-lock.json',
+            'scripts/d2c_schema_core.py','scripts/d2c_schema_stats.py','scripts/run_d2c_schema_generalization.py','scripts/aggregate_d2c_schema_generalization.py','scripts/evaluate_d2c_schema_generalization.py','.github/workflows/d2c-schema-generalization.yml'
+          ]
+          hashes={p:hashlib.sha256(Path(p).read_bytes()).hexdigest() for p in files}
+          manifest={
+            'schema':'d2c-schema-generalization-preexecution-audit-v0.1',
+            'candidate_sha':subprocess.check_output(['git','rev-parse','HEAD'],text=True).strip(),
+            'cohort_pairs_sha256':'559a4420a1d592d85fa350d087a8d4b945f4bf882a683c660a77cf9fdb6b9c04',
+            'file_sha256':hashes,
+            'provider_calls':0,
+            'run_marker_present':False,
+            'registry_promotion_authorized':False,
+            'production_historical_substrate_enabled':False,
+          }
+          Path('output/d2c-preexecution/audit-manifest.json').write_text(json.dumps(manifest,sort_keys=True,separators=(',',':'))+'\n')
+          print(json.dumps(manifest,indent=2,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2c-preexecution-audit
+          path: output/d2c-preexecution/
+          if-no-files-found: error
+          retention-days: 90
