@@ -102,10 +102,11 @@ jobs:
           assert 'research/d2c/RUN_D2C_SCHEMA_GENERALIZATION' in text
           assert 'github.run_attempt == 1' in text
           assert 'registry-promotion-disabled' in text
-          assert 'if: ${{ false }}' in text
+          disabled_literal='if: $' + '{{ false }}'
+          assert disabled_literal in text
           assert 'scripts/evaluate_d2c_schema_generalization.py' in text
           assert 'D2c-S4' in text
-          assert 'Historical Substrate' not in text or 'production_historical_substrate_enabled' in text
+          assert 'production_historical_substrate_enabled' in text
           PY
       - name: Emit exact zero-provider audit manifest
         shell: bash
