@@ -1,0 +1,60 @@
+{
+  "schema": "d2d-source-acquisition-request-plan-v0.1",
+  "provider": "Z.AI",
+  "model": "glm-5-turbo",
+  "temperature": 0.8,
+  "thinking": "disabled",
+  "response_format": "structured_json",
+  "study_type": "source_capability_acquisition_calibration",
+  "destination_reproduction_tested": false,
+  "capability_artifact_exported": false,
+  "schemas": [
+    "threshold_at_4",
+    "parity_pair",
+    "interval_pair",
+    "pairwise_order"
+  ],
+  "arms": [
+    "fresh",
+    "developed_40",
+    "developed_80",
+    "developed_160",
+    "oracle_instruction"
+  ],
+  "development_cases": {
+    "fresh": 0,
+    "developed_40": 40,
+    "developed_80": 80,
+    "developed_160": 160,
+    "oracle_instruction": 0
+  },
+  "development_batch_size": 8,
+  "evaluation_cases": 32,
+  "evaluation_chunk_size": 8,
+  "evaluation_feedback": false,
+  "attempted_pairs_per_schema": 96,
+  "minimum_analyzable_pairs_per_schema": 88,
+  "attempted_pairs_total": 384,
+  "primary_materiality_margin": 0.1,
+  "alpha_one_sided": 0.05,
+  "gatekeeping_order": [
+    "developed_160_minus_fresh",
+    "developed_80_minus_fresh",
+    "developed_40_minus_fresh"
+  ],
+  "primary_statistic": "paired_normal_one_sided_lower_confidence_bound",
+  "bootstrap_sensitivity_only": true,
+  "oracle_arm_confirmatory": false,
+  "positive_control_schema": "threshold_at_4",
+  "positive_control_requirement": "developed_40_minus_fresh_passes_primary_margin",
+  "replacement_allowed": false,
+  "adaptive_n_allowed": false,
+  "interim_outcome_decisions_allowed": false,
+  "threshold_retuning_allowed": false,
+  "schema_dropping_allowed": false,
+  "same_request_stream_rerun_allowed": false,
+  "d2e_reuse_of_calibration_schemas_allowed": false,
+  "registry_promotion_authorized": false,
+  "historical_substrate_enabled": false,
+  "provider_execution_authorized": false
+}
