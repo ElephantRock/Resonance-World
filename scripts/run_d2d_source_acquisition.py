@@ -31,7 +31,8 @@ EXPECTED_COHORT_SHA256 = "a9c2077d4e76825d9ef1f6b245caf0231f5a4a3b1dc00cc0032793
 
 BEHAVIORAL_OBJECTIVE = (
     "Choose exactly one action from KAPPA, MICA, ORBIT, VELA for each four-feature integer case. "
-    "Each Field owns a fixed hidden local policy belonging to the registered D2d calibration schema."
+    "Each Field owns a fixed hidden local policy belonging to the registered D2d "
+    "calibration schema."
 )
 
 parent.r2.MODEL = MODEL
