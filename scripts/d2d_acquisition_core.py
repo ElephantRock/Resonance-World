@@ -39,7 +39,8 @@ PUBLIC_ECOLOGY = {
     ),
     "interval_pair": (
         "This Field has exactly two hidden controlling feature coordinates among f0..f3. "
-        "Each contributes one latent bit indicating whether its value lies in 2 through 5 inclusive. "
+        "Each contributes one latent bit indicating whether its value lies in 2 through 5 "
+        "inclusive. "
         "The two-bit state is mapped one-to-one to the four opaque action tokens. "
         "The controlling coordinates and action relabeling are local secrets and differ by Field."
     ),
