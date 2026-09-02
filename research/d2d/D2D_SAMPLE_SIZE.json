@@ -1,0 +1,22 @@
+{
+  "schema": "d2d-source-acquisition-sample-size-v0.1",
+  "alpha_one_sided": 0.05,
+  "target_power": 0.9,
+  "null_materiality_margin": 0.1,
+  "planning_alternative_mean_difference": 0.2,
+  "planning_effect_above_margin": 0.1,
+  "planning_paired_sd": 0.3,
+  "z_alpha": 1.6448536269514722,
+  "z_power": 1.2815515655446004,
+  "approx_required_n": 77.06764511331945,
+  "minimum_analyzable_n_per_schema": 88,
+  "attempted_n_per_schema": 96,
+  "schema_count": 4,
+  "attempted_total": 384,
+  "planning_basis": "prospective conservative calibration assumptions; no adaptive-N or post-outcome resizing",
+  "notes": [
+    "The study is calibration/characterization and is not eligible for registry promotion.",
+    "The 160->80->40 serial hierarchy preserves alpha within each schema without post-hoc budget selection.",
+    "No failed experimental unit is replaced."
+  ]
+}
