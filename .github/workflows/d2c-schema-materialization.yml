@@ -1,0 +1,70 @@
+name: D2c Zero-Provider Schema Materialization
+
+on:
+  push:
+    branches: ["research/d2c-schema-generalization"]
+    paths:
+      - "research/d2c/**"
+      - "scripts/d2c_schema_core.py"
+      - "scripts/materialize_d2c_schema_generalization.py"
+      - "tests/test_d2c_schema_generalization.py"
+      - ".github/workflows/d2c-schema-materialization.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  materialize-and-audit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install zero-provider test dependency
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pip install --disable-pip-version-check pytest
+      - name: Assert substantive run marker absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e research/d2c/RUN_D2C_SCHEMA_GENERALIZATION
+      - name: Compile deterministic D2c apparatus
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m py_compile scripts/d2c_schema_core.py scripts/materialize_d2c_schema_generalization.py
+      - name: Run D2c zero-provider tests
+        shell: bash
+        run: |
+          set -euo pipefail
+          python -m pytest -q tests/test_d2c_schema_generalization.py
+      - name: Materialize exact fresh cohort and shards
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/materialize_d2c_schema_generalization.py --output-dir output/d2c-materialized
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          summary = json.loads(Path('output/d2c-materialized/materialization-summary.json').read_text())
+          assert summary['pair_count'] == 540
+          assert summary['pairs_per_schema'] == 180
+          assert summary['schema_pair_counts'] == {'parity_pair': 180, 'interval_pair': 180, 'pairwise_order': 180}
+          assert summary['all_source_destination_overlaps_zero'] is True
+          assert summary['all_development_evaluation_overlaps_zero'] is True
+          assert summary['cross_schema_seed_overlap'] == 0
+          assert summary['predecessor_seed_namespace_overlap'] == {'D2-C1': 0, 'D2-C2': 0, 'D2b': 0}
+          assert summary['production_historical_substrate_enabled'] is False
+          PY
+      - name: Upload zero-provider materialization
+        uses: actions/upload-artifact@v4
+        with:
+          name: d2c-zero-provider-materialization
+          path: output/d2c-materialized/
+          if-no-files-found: error
+          retention-days: 90
