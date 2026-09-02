@@ -1,5 +1,5 @@
 {
-  "schema": "d2d-source-acquisition-schema-suite-v0.1",
+  "schema": "d2d-source-acquisition-schema-suite-v0.2",
   "feature_domain": {
     "names": ["f0", "f1", "f2", "f3"],
     "values": "integers_0_through_7"
@@ -34,12 +34,13 @@
   "pairs_per_schema": 96,
   "seed_step": 100,
   "policy_offset": 0,
-  "development_seed_offsets": {
-    "developed_40": 11,
-    "developed_80": 21,
-    "developed_160": 31
-  },
+  "development_seed_offset": 11,
+  "development_sequence_cases": 160,
+  "development_budget_prefixes": [40, 80, 160],
+  "development_agents_independent": true,
+  "development_examples_nested_by_prefix": true,
   "evaluation_seed_offset": 41,
+  "evaluation_cases": 32,
   "freshness": {
     "must_be_disjoint_from_d2c_seed_bases": [4200000, 4400000, 4600000],
     "must_be_disjoint_from_prior_d2_seed_namespaces": true,

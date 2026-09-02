@@ -1,5 +1,5 @@
 {
-  "schema": "d2d-source-acquisition-request-plan-v0.1",
+  "schema": "d2d-source-acquisition-request-plan-v0.2",
   "provider": "Z.AI",
   "model": "glm-5-turbo",
   "temperature": 0.8,
@@ -29,6 +29,8 @@
     "oracle_instruction": 0
   },
   "development_batch_size": 8,
+  "development_agents_independent": true,
+  "development_examples_nested_by_prefix": true,
   "evaluation_cases": 32,
   "evaluation_chunk_size": 8,
   "evaluation_feedback": false,
@@ -46,7 +48,7 @@
   "bootstrap_sensitivity_only": true,
   "oracle_arm_confirmatory": false,
   "positive_control_schema": "threshold_at_4",
-  "positive_control_requirement": "developed_40_minus_fresh_passes_primary_margin",
+  "positive_control_requirement": "developed_40_minus_fresh_passes_primary_serial_gate",
   "replacement_allowed": false,
   "adaptive_n_allowed": false,
   "interim_outcome_decisions_allowed": false,

@@ -5,13 +5,25 @@ on:
     branches: ["research/d2d-source-acquisition-envelope"]
     paths:
       - "research/d2d/**"
-      - "tests/test_d2d_scaffold.py"
-      - ".github/workflows/d2d-source-acquisition-preexecution.yml"
+      - "scripts/d2d_acquisition_*.py"
+      - "scripts/materialize_d2d_source_acquisition.py"
+      - "scripts/run_d2d_source_acquisition.py"
+      - "scripts/aggregate_d2d_source_acquisition.py"
+      - "scripts/evaluate_d2d_source_acquisition.py"
+      - "tests/test_d2d_*.py"
+      - ".github/workflows/d2d-source-acquisition*.yml"
+      - ".github/workflows/d2d-source-materialization.yml"
   pull_request:
     paths:
       - "research/d2d/**"
-      - "tests/test_d2d_scaffold.py"
-      - ".github/workflows/d2d-source-acquisition-preexecution.yml"
+      - "scripts/d2d_acquisition_*.py"
+      - "scripts/materialize_d2d_source_acquisition.py"
+      - "scripts/run_d2d_source_acquisition.py"
+      - "scripts/aggregate_d2d_source_acquisition.py"
+      - "scripts/evaluate_d2d_source_acquisition.py"
+      - "tests/test_d2d_*.py"
+      - ".github/workflows/d2d-source-acquisition*.yml"
+      - ".github/workflows/d2d-source-materialization.yml"
 
 permissions:
   contents: read
@@ -19,7 +31,7 @@ permissions:
 jobs:
   zero-provider-preexecution:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     steps:
       - uses: actions/checkout@v4
         with:
@@ -34,6 +46,7 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
           test ! -e research/d2d/RUN_D2D_SOURCE_ACQUISITION
           python - <<'PY'
           import json
@@ -43,9 +56,27 @@ jobs:
           assert p['registry_promotion_authorized'] is False
           assert p['historical_substrate_enabled'] is False
           assert p['same_request_stream_rerun_allowed'] is False
+          assert p['destination_reproduction_tested'] is False
+          assert p['capability_artifact_exported'] is False
           PY
-      - name: Run D2d scaffold invariants
-        run: python -m pytest -q tests/test_d2d_scaffold.py
+      - name: Verify deterministic materialization
+        run: |
+          python scripts/materialize_d2d_source_acquisition.py --output-dir /tmp/d2d-materialized
+          cmp /tmp/d2d-materialized/d2d-source-acquisition-cohort-lock.json \
+            research/d2d/d2d-source-acquisition-cohort-lock.json
+          cmp /tmp/d2d-materialized/D2D_SHARD_MAP.json research/d2d/D2D_SHARD_MAP.json
+          cmp /tmp/d2d-materialized/MATERIALIZATION_SUMMARY.json \
+            research/d2d/MATERIALIZATION_SUMMARY.json
+      - name: Compile and test full D2d apparatus
+        run: |
+          python -m compileall -q \
+            scripts/d2d_acquisition_core.py \
+            scripts/d2d_acquisition_stats.py \
+            scripts/materialize_d2d_source_acquisition.py \
+            scripts/run_d2d_source_acquisition.py \
+            scripts/aggregate_d2d_source_acquisition.py \
+            scripts/evaluate_d2d_source_acquisition.py
+          python -m pytest -q tests/test_d2d_scaffold.py tests/test_d2d_full_apparatus.py
       - name: Assert no registry mutation in branch diff
         shell: bash
         run: |
@@ -59,18 +90,64 @@ jobs:
             echo "D2d construction must not mutate the Mechanism Registry."
             exit 1
           fi
-      - name: Emit zero-provider audit summary
+      - name: Audit authority and topology boundaries
         run: |
           python - <<'PY'
           import json
           from pathlib import Path
-          p=json.loads(Path('research/d2d/D2D_REQUEST_PLAN.json').read_text())
-          print(json.dumps({
-              'candidate_sha': '${{ github.sha }}',
-              'provider_calls': 0,
-              'provider_execution_authorized': p['provider_execution_authorized'],
-              'registry_promotion_authorized': p['registry_promotion_authorized'],
-              'historical_substrate_enabled': p['historical_substrate_enabled'],
-              'run_marker_present': Path('research/d2d/RUN_D2D_SOURCE_ACQUISITION').exists(),
-          }, sort_keys=True))
+          lock=json.loads(Path('research/d2d/d2d-source-acquisition-cohort-lock.json').read_text())
+          shard=json.loads(Path('research/d2d/D2D_SHARD_MAP.json').read_text())
+          assert lock['cohort_pairs_sha256']=='a9c2077d4e76825d9ef1f6b245caf0231f5a4a3b1dc00cc0032793add8f9ea19'
+          assert lock['all_development_prefixes_nested'] is True
+          assert lock['all_development_evaluation_overlaps_zero'] is True
+          assert shard['shard_count']==24 and shard['pairs_per_provider_shard']==16
+          assert shard['logical_calls_before_retries']==21120
+          assert shard['missing_whole_shard_max_analyzable_in_affected_schema']==80
+          assert shard['minimum_analyzable_pairs_per_schema']==88
+          assert shard['favorable_result_possible_with_missing_whole_shard'] is False
+          assert lock['production_historical_substrate_enabled'] is False
           PY
+      - name: Emit exact-head zero-provider audit manifest
+        run: |
+          mkdir -p output/d2d-preexecution-audit
+          python - <<'PY'
+          import hashlib,json
+          from pathlib import Path
+          files=[
+            '.github/workflows/d2d-source-acquisition.yml',
+            'research/d2d/D2D_REQUEST_PLAN.json',
+            'research/d2d/D2D_SAMPLE_SIZE.json',
+            'research/d2d/D2D_SCHEMA_SUITE.json',
+            'research/d2d/D2D_SHARD_MAP.json',
+            'research/d2d/PLAN.md',
+            'research/d2d/d2d-source-acquisition-cohort-lock.json',
+            'scripts/aggregate_d2d_source_acquisition.py',
+            'scripts/d2d_acquisition_core.py',
+            'scripts/d2d_acquisition_stats.py',
+            'scripts/evaluate_d2d_source_acquisition.py',
+            'scripts/run_d2d_source_acquisition.py',
+          ]
+          manifest={
+            'schema':'d2d-zero-provider-preexecution-audit-v0.1',
+            'candidate_sha':'${{ github.sha }}',
+            'cohort_pairs_sha256':'a9c2077d4e76825d9ef1f6b245caf0231f5a4a3b1dc00cc0032793add8f9ea19',
+            'provider_calls':0,
+            'provider_execution_authorized':False,
+            'run_marker_present':Path('research/d2d/RUN_D2D_SOURCE_ACQUISITION').exists(),
+            'registry_promotion_authorized':False,
+            'production_historical_substrate_enabled':False,
+            'files':{},
+          }
+          for name in files:
+            manifest['files'][name]=hashlib.sha256(Path(name).read_bytes()).hexdigest()
+          Path('output/d2d-preexecution-audit/audit-manifest.json').write_text(
+            json.dumps(manifest,sort_keys=True,separators=(',',':'))+'\n'
+          )
+          print(json.dumps(manifest,indent=2,sort_keys=True))
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2d-preexecution-audit
+          path: output/d2d-preexecution-audit/
+          if-no-files-found: error
+          retention-days: 90
