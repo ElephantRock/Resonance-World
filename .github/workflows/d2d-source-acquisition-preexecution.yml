@@ -1,0 +1,73 @@
+name: D2d Source Acquisition Preexecution
+
+on:
+  push:
+    branches: ["research/d2d-source-acquisition-envelope"]
+    paths:
+      - "research/d2d/**"
+      - "tests/test_d2d_scaffold.py"
+      - ".github/workflows/d2d-source-acquisition-preexecution.yml"
+  pull_request:
+    paths:
+      - "research/d2d/**"
+      - "tests/test_d2d_scaffold.py"
+      - ".github/workflows/d2d-source-acquisition-preexecution.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-preexecution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert provider execution remains unauthorized
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e research/d2d/RUN_D2D_SOURCE_ACQUISITION
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/d2d/D2D_REQUEST_PLAN.json').read_text())
+          assert p['provider_execution_authorized'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['historical_substrate_enabled'] is False
+          assert p['same_request_stream_rerun_allowed'] is False
+          PY
+      - name: Run D2d scaffold invariants
+        run: python -m pytest -q tests/test_d2d_scaffold.py
+      - name: Assert no registry mutation in branch diff
+        shell: bash
+        run: |
+          set -euo pipefail
+          base="${{ github.event.pull_request.base.sha }}"
+          if [ -z "$base" ]; then
+            base="$(git merge-base HEAD origin/main)"
+          fi
+          if git diff --name-only "$base" HEAD | grep -Fxq research/mechanisms/registry.json; then
+            echo "D2d construction must not mutate the Mechanism Registry."
+            exit 1
+          fi
+      - name: Emit zero-provider audit summary
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/d2d/D2D_REQUEST_PLAN.json').read_text())
+          print(json.dumps({
+              'candidate_sha': '${{ github.sha }}',
+              'provider_calls': 0,
+              'provider_execution_authorized': p['provider_execution_authorized'],
+              'registry_promotion_authorized': p['registry_promotion_authorized'],
+              'historical_substrate_enabled': p['historical_substrate_enabled'],
+              'run_marker_present': Path('research/d2d/RUN_D2D_SOURCE_ACQUISITION').exists(),
+          }, sort_keys=True))
+          PY
