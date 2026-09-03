@@ -49,10 +49,17 @@ def request_matrix() -> list[dict[str, Any]]:
     minimal_user = "Return eight valid action tokens in JSON."
     d2d_user = "\n\n".join(
         [
-            "Objective: Choose exactly one action from KAPPA, MICA, ORBIT, VELA for each four-feature integer case.",
-            "Task ecology: A Field has a fixed hidden local policy; infer nothing beyond the public cases in this engineering probe.",
+            (
+                "Objective: Choose exactly one action from KAPPA, MICA, ORBIT, VELA "
+                "for each four-feature integer case."
+            ),
+            (
+                "Task ecology: A Field has a fixed hidden local policy; infer nothing "
+                "beyond the public cases in this engineering probe."
+            ),
             "Phase: fresh_evaluation_1",
-            "Cases to answer now:\n" + json.dumps(public_cases(), sort_keys=True, separators=(",", ":")),
+            "Cases to answer now:\n"
+            + json.dumps(public_cases(), sort_keys=True, separators=(",", ":")),
             "These are engineering diagnostic cases. No correctness feedback will be provided.",
         ]
     )
