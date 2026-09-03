@@ -1,0 +1,55 @@
+name: D2d Provider Diagnostic Preexecution
+
+on:
+  push:
+    branches:
+      - engineering/d2d-provider-diagnosis
+  pull_request:
+    paths:
+      - 'research/d2d_diag/**'
+      - 'scripts/diagnose_d2d_provider_runtime.py'
+      - 'tests/test_d2d_provider_diagnostic.py'
+      - '.github/workflows/d2d-provider-diagnostic*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-zero-provider:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert provider execution remains unauthorized
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e research/d2d_diag/RUN_D2D_PROVIDER_DIAGNOSTIC
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/d2d_diag/DIAGNOSTIC_REQUEST_PLAN.json').read_text())
+          assert p['provider_execution_authorized'] is False
+          assert p['request_count'] == 3
+          assert p['max_attempts_per_request'] == 1
+          assert p['historical_substrate_enabled'] is False
+          PY
+      - name: Deterministic diagnostic materialization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/diagnose_d2d_provider_runtime.py > /tmp/d2d-diag-a.json
+          python scripts/diagnose_d2d_provider_runtime.py > /tmp/d2d-diag-b.json
+          cmp /tmp/d2d-diag-a.json /tmp/d2d-diag-b.json
+      - name: Test bounded diagnostic apparatus
+        run: python -m pytest -q tests/test_d2d_provider_diagnostic.py
+      - name: Ruff diagnostic files
+        run: python -m ruff check scripts/diagnose_d2d_provider_runtime.py tests/test_d2d_provider_diagnostic.py

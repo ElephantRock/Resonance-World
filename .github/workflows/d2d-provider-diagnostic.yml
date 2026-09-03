@@ -1,0 +1,112 @@
+name: D2d Provider Diagnostic Execution
+
+on:
+  push:
+    branches:
+      - engineering/d2d-provider-diagnosis
+    paths:
+      - 'research/d2d_diag/RUN_D2D_PROVIDER_DIAGNOSTIC'
+
+permissions:
+  contents: read
+
+jobs:
+  authorization-integrity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      candidate_sha: ${{ steps.auth.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: auth
+        name: Verify sole post-freeze diagnostic authorization marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+          marker='research/d2d_diag/RUN_D2D_PROVIDER_DIAGNOSTIC'
+          test -f "$marker"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          authorization="$(sed -n 's/^authorization=//p' "$marker")"
+          test -n "$candidate"
+          test "$issue" = '200'
+          test "$authorization" = 'D2d_provider_diagnostic_execution_explicitly_authorized'
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          python - "$candidate" <<'PY'
+          import json, subprocess, sys
+          candidate=sys.argv[1]
+          raw=subprocess.check_output([
+              'git','show',f'{candidate}:research/d2d_diag/DIAGNOSTIC_REQUEST_PLAN.json'
+          ], text=True)
+          p=json.loads(raw)
+          assert p['issue'] == 200
+          assert p['engineering_only'] is True
+          assert p['provider_execution_authorized'] is False
+          assert p['request_count'] == 3
+          assert p['max_attempts_per_request'] == 1
+          assert p['scientific_field_trajectory_executed'] is False
+          assert p['replacement_d2d_data_allowed'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['historical_substrate_enabled'] is False
+          PY
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+
+  execute-bounded-diagnostic:
+    needs: authorization-integrity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      D2D_PROVIDER_DIAGNOSTIC_AUTHORIZED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assert credential and exact one-shot contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+          test -n "${ZAI_API_KEY:-}"
+          test "$(git rev-parse HEAD^)" = '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+      - name: Execute exactly three no-retry engineering probes
+        run: |
+          python scripts/diagnose_d2d_provider_runtime.py \
+            --execute \
+            --output output/d2d-provider-diagnostic.json
+      - name: Verify result is engineering-only
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('output/d2d-provider-diagnostic.json').read_text())
+          assert p['schema'] == 'd2d-provider-diagnostic-result-v0.1'
+          assert p['engineering_only'] is True
+          assert p['request_count'] == 3
+          assert p['scientific_field_trajectory_executed'] is False
+          assert p['replacement_d2d_data_allowed'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['production_historical_substrate_enabled'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2d-provider-diagnostic-result
+          path: output/d2d-provider-diagnostic.json
+          if-no-files-found: error
+          retention-days: 90
+
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo 'Diagnostic reruns are prohibited; freeze a new engineering candidate instead.' >&2
+          exit 1
