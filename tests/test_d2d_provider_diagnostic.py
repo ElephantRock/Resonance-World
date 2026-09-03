@@ -87,5 +87,9 @@ def test_success_validation_distinguishes_json_shape() -> None:
     assert result["actions_shape_valid"] is True
 
 
-def test_execution_marker_absent_before_separate_authorization() -> None:
-    assert not MARKER.exists()
+def test_execution_marker_preserves_exact_completed_authorization() -> None:
+    assert MARKER.read_text() == (
+        "candidate_sha=82d8c1b166234c18b89e7642bf5cf18d806dbf70\n"
+        "issue=200\n"
+        "authorization=D2d_provider_diagnostic_execution_explicitly_authorized\n"
+    )
