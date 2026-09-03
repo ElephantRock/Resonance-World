@@ -57,8 +57,13 @@ def test_calibration_schema_firewall() -> None:
     assert suite["freshness"]["development_evaluation_feature_overlap_allowed"] is False
 
 
-def test_no_provider_run_marker_exists() -> None:
-    assert not (D2D / "RUN_D2D_SOURCE_ACQUISITION").exists()
+def test_provider_run_marker_records_frozen_authorization() -> None:
+    marker = D2D / "RUN_D2D_SOURCE_ACQUISITION"
+    assert marker.read_text() == (
+        "candidate_sha=258b35cadc0f8d613bc2f238954abff34a16de20\n"
+        "issue=198\n"
+        "authorization=D2d_provider_execution_explicitly_authorized\n"
+    )
 
 
 def test_d2_registry_state_is_not_promoted_by_d2d() -> None:

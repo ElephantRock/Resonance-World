@@ -182,5 +182,10 @@ def test_missing_provider_shards_are_registered_failures(tmp_path: Path) -> None
     assert all(row["status"] == "missing" for row in output["shard_inputs"])
 
 
-def test_execution_marker_absent_before_separate_authorization() -> None:
-    assert not Path("research/d2d/RUN_D2D_SOURCE_ACQUISITION").exists()
+def test_execution_marker_preserves_exact_separate_authorization() -> None:
+    marker = Path("research/d2d/RUN_D2D_SOURCE_ACQUISITION")
+    assert marker.read_text() == (
+        "candidate_sha=258b35cadc0f8d613bc2f238954abff34a16de20\n"
+        "issue=198\n"
+        "authorization=D2d_provider_execution_explicitly_authorized\n"
+    )
