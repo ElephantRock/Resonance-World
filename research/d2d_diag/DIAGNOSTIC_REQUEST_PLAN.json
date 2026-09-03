@@ -1,0 +1,35 @@
+{
+  "schema": "d2d-provider-diagnostic-request-plan-v0.1",
+  "issue": 200,
+  "upstream_d2d_workflow_run_id": 33701860334,
+  "upstream_d2d_classification": "D2d-A0",
+  "engineering_only": true,
+  "provider_execution_authorized": false,
+  "endpoint": "https://api.z.ai/api/coding/paas/v4/chat/completions",
+  "provider": "Z.AI",
+  "model": "glm-5-turbo",
+  "temperature": 0.8,
+  "thinking": "disabled",
+  "max_tokens": 256,
+  "stream": false,
+  "max_attempts_per_request": 1,
+  "request_count": 3,
+  "request_ids": [
+    "minimal_json",
+    "d2d_shape_json",
+    "d2d_shape_text"
+  ],
+  "scientific_field_trajectory_executed": false,
+  "scientific_scoring_performed": false,
+  "replacement_d2d_data_allowed": false,
+  "same_request_stream_rerun_allowed": false,
+  "registry_promotion_authorized": false,
+  "historical_substrate_enabled": false,
+  "execution_marker": "research/d2d_diag/RUN_D2D_PROVIDER_DIAGNOSTIC",
+  "execution_authorization_string": "D2d_provider_diagnostic_execution_explicitly_authorized",
+  "notes": [
+    "Construction and zero-provider validation are authorized under issue 200.",
+    "No provider diagnostic call is authorized until a separate explicit exact-candidate authorization is recorded.",
+    "The diagnostic cannot make the completed D2d A0 stream analyzable."
+  ]
+}
