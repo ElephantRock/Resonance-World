@@ -1,0 +1,119 @@
+name: D2 General API Preflight Execution
+
+on:
+  push:
+    branches:
+      - engineering/d2-general-api-preflight
+    paths:
+      - 'research/d2_general_api_preflight/RUN_D2_GENERAL_API_PREFLIGHT'
+
+permissions:
+  contents: read
+
+jobs:
+  authorization-integrity:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      candidate_sha: ${{ steps.auth.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: auth
+        name: Verify sole post-freeze preflight authorization marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+          marker='research/d2_general_api_preflight/RUN_D2_GENERAL_API_PREFLIGHT'
+          test -f "$marker"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          authorization="$(sed -n 's/^authorization=//p' "$marker")"
+          test -n "$candidate"
+          test "$issue" = '202'
+          test "$authorization" = \
+            'D2_general_api_preflight_execution_explicitly_authorized'
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          python - "$candidate" <<'PY'
+          import json, subprocess, sys
+          candidate=sys.argv[1]
+          raw=subprocess.check_output([
+              'git','show',
+              f'{candidate}:research/d2_general_api_preflight/PREFLIGHT_REQUEST_PLAN.json'
+          ], text=True)
+          p=json.loads(raw)
+          assert p['issue'] == 202
+          assert p['engineering_only'] is True
+          assert p['provider_execution_authorized'] is False
+          assert p['endpoint'] == 'https://api.z.ai/api/paas/v4/chat/completions'
+          assert p['model'] == 'glm-5-turbo'
+          assert p['request_count'] == 3
+          assert p['max_attempts_per_request'] == 1
+          assert p['scientific_field_trajectory_executed'] is False
+          assert p['scientific_scoring_performed'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['historical_substrate_enabled'] is False
+          PY
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+
+  execute-bounded-preflight:
+    needs: authorization-integrity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      D2_GENERAL_API_PREFLIGHT_AUTHORIZED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assert credential and exact one-shot contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+          test -n "${ZAI_API_KEY:-}"
+          test "$(git rev-parse HEAD^)" = \
+            '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+      - name: Execute exactly three no-retry General API probes
+        run: |
+          python scripts/preflight_d2_general_api.py \
+            --execute \
+            --output output/d2-general-api-preflight.json
+      - name: Verify result is engineering-only
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('output/d2-general-api-preflight.json').read_text())
+          assert p['schema'] == 'd2-general-api-preflight-result-v0.1'
+          assert p['engineering_only'] is True
+          assert p['request_count'] == 3
+          assert isinstance(p['qualification_pass'], bool)
+          assert p['scientific_field_trajectory_executed'] is False
+          assert p['scientific_scoring_performed'] is False
+          assert p['replacement_d2d_data_allowed'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['production_historical_substrate_enabled'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-general-api-preflight-result
+          path: output/d2-general-api-preflight.json
+          if-no-files-found: error
+          retention-days: 90
+
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo 'Preflight reruns are prohibited; freeze a new engineering candidate.' >&2
+          exit 1
