@@ -33,10 +33,11 @@ to workflow artifact `9976954042`, digest
 SHA-256 `607994b0e3679fa65ec89150cf58d09b1e560156dcf8009af499463004082a2f`.
 
 Post-execution apparatus maintenance now rejects redirects, requires explicit HTTP 200 for
-qualification, records connection timeouts, and bounds response-body read failures so a
-truncated or stalled body becomes a failed diagnostic row instead of aborting the remaining
-probe stream. These changes are prospective and do not retroactively change the historical
-execution.
+qualification, records connection timeouts and open-phase protocol failures, rejects
+non-standard JSON constants, and bounds response-body reads with a total elapsed deadline so
+truncated, stalled, or drip-fed bodies become failed diagnostic rows instead of aborting the
+remaining probe stream. These changes are prospective and do not retroactively change the
+historical execution.
 
 Any fresh engineering requalification requires a new prospective stream, freeze, and separate
 exact-candidate execution authorization. Any future source-acquisition study must then be a
