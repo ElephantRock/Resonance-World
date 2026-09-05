@@ -1,0 +1,220 @@
+name: D2d Source Acquisition Campaign
+
+on:
+  push:
+    branches: ["research/d2d-source-acquisition-envelope"]
+    paths:
+      - "research/d2d/RUN_D2D_SOURCE_ACQUISITION"
+
+permissions:
+  actions: read
+  contents: read
+
+jobs:
+  authorization-integrity:
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    outputs:
+      candidate_sha: ${{ steps.marker.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with: {fetch-depth: 2}
+      - name: Verify sole post-freeze authorization marker
+        id: marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+          marker="research/d2d/RUN_D2D_SOURCE_ACQUISITION"
+          test -f "$marker"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          authorization="$(sed -n 's/^authorization=//p' "$marker")"
+          test -n "$candidate"
+          test "$issue" = "198"
+          test "$authorization" = "D2d_provider_execution_explicitly_authorized"
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          test "$(git diff --name-only "$candidate" HEAD | wc -l)" = "1"
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+
+  provider-shards:
+    if: ${{ github.run_attempt == 1 }}
+    needs: authorization-integrity
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23]
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.sha }}
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Reverify frozen authorization and D2d contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = "1"
+          test -n "${ZAI_API_KEY:-}"
+          marker="research/d2d/RUN_D2D_SOURCE_ACQUISITION"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          test "$candidate" = "${{ needs.authorization-integrity.outputs.candidate_sha }}"
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/d2d/D2D_REQUEST_PLAN.json').read_text())
+          assert p['provider']=='Z.AI'
+          assert p['model']=='glm-5-turbo'
+          assert p['temperature']==0.8 and p['thinking']=='disabled'
+          assert p['attempted_pairs_total']==384
+          assert p['minimum_analyzable_pairs_per_schema']==88
+          assert p['same_request_stream_rerun_allowed'] is False
+          assert p['provider_execution_authorized'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['historical_substrate_enabled'] is False
+          PY
+      - name: Execute frozen provider shard
+        run: |
+          python scripts/run_d2d_source_acquisition.py \
+            --shard-id "${{ matrix.shard }}" \
+            --output-dir "output/d2d-provider-shard-${{ matrix.shard }}"
+      - name: Verify shard is unclassified and bounded
+        shell: bash
+        run: |
+          python - "${{ matrix.shard }}" <<'PY'
+          import json,sys
+          from pathlib import Path
+          shard=int(sys.argv[1])
+          path=Path(f'output/d2d-provider-shard-{shard}/d2d-provider-shard-{shard:02d}.json')
+          d=json.loads(path.read_text())
+          start=shard*16; end=start+15
+          assert d['schema']=='d2d-source-acquisition-provider-shard-v0.1'
+          assert d['status']=='provider_shard_complete_unclassified'
+          assert d['classification'] is None
+          assert d['shard_id']==shard and d['start_pair']==start and d['end_pair']==end
+          assert d['attempted_pairs']==16
+          assert d['complete_pairs']+d['failed_pairs']==16
+          assert d['cohort_lock']['cohort_pairs_sha256']=='a9c2077d4e76825d9ef1f6b245caf0231f5a4a3b1dc00cc0032793add8f9ea19'
+          assert d['production_historical_substrate_enabled'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2d-provider-shard-${{ matrix.shard }}
+          path: output/d2d-provider-shard-${{ matrix.shard }}/
+          if-no-files-found: error
+          retention-days: 90
+
+  aggregate-frozen-shards:
+    if: ${{ always() && github.run_attempt == 1 && needs.authorization-integrity.result == 'success' }}
+    needs: [authorization-integrity, provider-shards]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: "${{ github.sha }}"}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: python -m pip install -e '.[dev]'
+      - name: Assert aggregator is credential-free
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Download all available immutable shard artifacts
+        continue-on-error: true
+        uses: actions/download-artifact@v4
+        with:
+          pattern: d2d-provider-shard-*
+          path: provider-shards
+          merge-multiple: true
+      - name: Aggregate registered 24-shard campaign
+        run: |
+          mkdir -p provider-shards
+          python scripts/aggregate_d2d_source_acquisition.py provider-shards \
+            --output-dir output/d2d-canonical-provider
+      - name: Verify canonical provider output remains unclassified
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          d=json.loads(Path('output/d2d-canonical-provider/d2d-provider-output.json').read_text())
+          assert d['status']=='provider_campaign_complete_unclassified'
+          assert d['classification'] is None
+          assert d['attempted_pairs']==384
+          assert d['complete_pairs']+d['failed_pairs']==384
+          assert [r['pair_index'] for r in d['pair_records']]==list(range(384))
+          assert d['production_historical_substrate_enabled'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2d-canonical-provider-output
+          path: output/d2d-canonical-provider/
+          if-no-files-found: error
+          retention-days: 90
+
+  frozen-output-evaluator:
+    if: ${{ always() && github.run_attempt == 1 && needs.aggregate-frozen-shards.result == 'success' }}
+    needs: aggregate-frozen-shards
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v4
+        with: {ref: "${{ github.sha }}"}
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12", cache: pip}
+      - run: python -m pip install -e '.[dev]'
+      - name: Assert evaluator is credential-free
+        run: test -z "${ZAI_API_KEY:-}"
+      - uses: actions/download-artifact@v4
+        with: {name: d2d-canonical-provider-output, path: frozen-provider}
+      - name: Evaluate canonical output twice
+        run: |
+          python scripts/evaluate_d2d_source_acquisition.py \
+            frozen-provider/d2d-provider-output.json --output-dir output/eval-a
+          python scripts/evaluate_d2d_source_acquisition.py \
+            frozen-provider/d2d-provider-output.json --output-dir output/eval-b
+          cmp output/eval-a/d2d-source-acquisition-result.json \
+            output/eval-b/d2d-source-acquisition-result.json
+          cmp output/eval-a/evaluation-manifest.json output/eval-b/evaluation-manifest.json
+      - name: Verify bounded evaluator authority
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          r=json.loads(Path('output/eval-a/d2d-source-acquisition-result.json').read_text())
+          assert r['classification'] in {'D2d-A0','D2d-A1','D2d-A2','D2d-A3','D2d-A4','D2d-A5'}
+          assert r['calibration_only'] is True
+          assert r['registry_promotion_authorized'] is False
+          assert r['production_historical_substrate_enabled'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2d-source-acquisition-evaluation
+          path: output/eval-a/
+          if-no-files-found: error
+          retention-days: 90
+
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: |
+          echo "D2d same-request-stream workflow reruns are prospectively prohibited."
+          exit 1
+
+  registry-promotion-disabled:
+    if: ${{ false }}
+    runs-on: ubuntu-latest
+    steps:
+      - run: echo "D2d calibration never mutates Mechanism Registry authority."

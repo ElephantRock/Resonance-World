@@ -1,0 +1,19 @@
+{
+  "schema": "d2d-source-acquisition-postexecution-sample-size-correction-v0.1",
+  "applies_to_frozen_candidate": "258b35cadc0f8d613bc2f238954abff34a16de20",
+  "original_artifact": "research/d2d/D2D_SAMPLE_SIZE.json",
+  "original_approx_required_n": 77.06764511331945,
+  "recalculation_formula": "((z_alpha + z_power) * planning_paired_sd / planning_effect_above_margin) ** 2",
+  "z_alpha": 1.6448536269514722,
+  "z_power": 1.2815515655446004,
+  "planning_paired_sd": 0.3,
+  "planning_effect_above_margin": 0.1,
+  "recalculated_approx_required_n": 77.07462615601175,
+  "minimum_analyzable_n_per_schema": 88,
+  "attempted_n_per_schema": 96,
+  "frozen_artifact_modified": false,
+  "scientific_decision_changed": false,
+  "registry_transition_authorized": false,
+  "production_historical_substrate_enabled": false,
+  "note": "Post-execution clerical provenance correction only. The frozen preregistration artifact remains byte-preserved at its historical candidate; the registered minimum N=88, attempted N=96, thresholds, outcome, and D2d-A0 classification are unchanged."
+}

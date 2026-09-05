@@ -1,0 +1,68 @@
+name: D2d Zero-Provider Materialization
+
+on:
+  push:
+    branches: ["research/d2d-source-acquisition-envelope"]
+    paths:
+      - "research/d2d/**"
+      - "scripts/d2d_acquisition_core.py"
+      - "scripts/materialize_d2d_source_acquisition.py"
+      - ".github/workflows/d2d-source-materialization.yml"
+  pull_request:
+    paths:
+      - "research/d2d/**"
+      - "scripts/d2d_acquisition_core.py"
+      - "scripts/materialize_d2d_source_acquisition.py"
+      - ".github/workflows/d2d-source-materialization.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  materialize:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Assert zero-provider authority
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          test ! -e research/d2d/RUN_D2D_SOURCE_ACQUISITION
+      - name: Deterministically rematerialize frozen cohort
+        run: |
+          python scripts/materialize_d2d_source_acquisition.py \
+            --output-dir output/d2d-materialization
+      - name: Compare against committed deterministic files
+        run: |
+          cmp output/d2d-materialization/d2d-source-acquisition-cohort-lock.json \
+            research/d2d/d2d-source-acquisition-cohort-lock.json
+          cmp output/d2d-materialization/D2D_SHARD_MAP.json \
+            research/d2d/D2D_SHARD_MAP.json
+          cmp output/d2d-materialization/MATERIALIZATION_SUMMARY.json \
+            research/d2d/MATERIALIZATION_SUMMARY.json
+      - name: Verify frozen materialization hashes
+        run: |
+          test "$(sha256sum research/d2d/d2d-source-acquisition-cohort-lock.json | cut -d' ' -f1)" = \
+            "07a733e73e88dac95322d54951edaf00e8b5df8e72ca34691dc26d4563364912"
+          test "$(sha256sum research/d2d/D2D_SHARD_MAP.json | cut -d' ' -f1)" = \
+            "a0438458465219a9b16be8ffb236750460ef6f90f4dec32a53df80f0e4c4bd1a"
+          test "$(sha256sum research/d2d/MATERIALIZATION_SUMMARY.json | cut -d' ' -f1)" = \
+            "a6dbc7729a698b98d0914aba8b54468f3c1ddad7563eb2b80aa4f5eedbb3b5da"
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          lock=json.loads(Path('research/d2d/d2d-source-acquisition-cohort-lock.json').read_text())
+          assert lock['cohort_pairs_sha256']=='a9c2077d4e76825d9ef1f6b245caf0231f5a4a3b1dc00cc0032793add8f9ea19'
+          assert lock['production_historical_substrate_enabled'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2d-zero-provider-materialization
+          path: output/d2d-materialization/
+          if-no-files-found: error
+          retention-days: 90

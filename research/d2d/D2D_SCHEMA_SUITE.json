@@ -1,0 +1,54 @@
+{
+  "schema": "d2d-source-acquisition-schema-suite-v0.2",
+  "feature_domain": {
+    "names": ["f0", "f1", "f2", "f3"],
+    "values": "integers_0_through_7"
+  },
+  "actions": ["KAPPA", "MICA", "ORBIT", "VELA"],
+  "schemas": [
+    {
+      "id": "threshold_at_4",
+      "role": "positive_control_anchor",
+      "seed_base": 5000000,
+      "private_policy": "two undisclosed distinct feature coordinates; each latent bit is 1 iff coordinate value >= 4; fresh opaque one-to-one action permutation"
+    },
+    {
+      "id": "parity_pair",
+      "role": "calibration",
+      "seed_base": 5200000,
+      "private_policy": "two undisclosed distinct feature coordinates; each latent bit is coordinate value mod 2; fresh opaque one-to-one action permutation"
+    },
+    {
+      "id": "interval_pair",
+      "role": "calibration",
+      "seed_base": 5400000,
+      "private_policy": "two undisclosed distinct feature coordinates; each latent bit is 1 iff coordinate value lies in 2..5 inclusive; fresh opaque one-to-one action permutation"
+    },
+    {
+      "id": "pairwise_order",
+      "role": "calibration",
+      "seed_base": 5600000,
+      "private_policy": "four coordinates partitioned into two undisclosed ordered pairs; each latent bit is 1 iff first >= second; fresh opaque one-to-one action permutation"
+    }
+  ],
+  "pairs_per_schema": 96,
+  "seed_step": 100,
+  "policy_offset": 0,
+  "development_seed_offset": 11,
+  "development_sequence_cases": 160,
+  "development_budget_prefixes": [40, 80, 160],
+  "development_agents_independent": true,
+  "development_examples_nested_by_prefix": true,
+  "evaluation_seed_offset": 41,
+  "evaluation_cases": 32,
+  "freshness": {
+    "must_be_disjoint_from_d2c_seed_bases": [4200000, 4400000, 4600000],
+    "must_be_disjoint_from_prior_d2_seed_namespaces": true,
+    "cross_schema_seed_overlap_allowed": false,
+    "development_evaluation_feature_overlap_allowed": false
+  },
+  "future_use": {
+    "eligible_as_d2e_heldout_confirmatory_schema": false,
+    "reason": "D2d calibrates acquisition on these schemas; D2e must use entirely new held-out schemas."
+  }
+}
