@@ -40,8 +40,11 @@
     "does_not_authorize_scientific_campaign": true,
     "does_not_create_source_acquisition_evidence": true,
     "does_not_reinterpret_d2d": true,
-    "statement": "At this engineering preflight time, the General API route satisfied the frozen three-probe transport contract for exact glm-5-turbo model identity and required structured-output behavior.",
-    "transport_qualified_for_future_prospective_design": true
+    "fresh_engineering_requalification_required": true,
+    "one_physical_request_per_probe_verified": false,
+    "redirect_history_verified": false,
+    "statement": "At this engineering preflight time, all three preserved final responses were HTTP 200 with exact glm-5-turbo model identity and the required structured-output behavior. The executed client did not preserve redirect history, so the one-physical-request-per-probe property and full frozen transport qualification were not established.",
+    "transport_qualified_for_future_prospective_design": false
   },
   "issue": 202,
   "pull_request": 203,
@@ -65,7 +68,7 @@
     }
   },
   "schema": "d2-general-api-preflight-closeout-v0.1",
-  "status": "completed_qualified",
+  "status": "completed_response_level_pass_redirect_unverified",
   "workflow": {
     "attempt": 1,
     "authorization_integrity": "success",
