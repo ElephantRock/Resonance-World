@@ -116,6 +116,26 @@ def test_model_drift_fails_contract() -> None:
     assert result["contract_pass"] is False
 
 
+def test_nonstandard_json_constants_fail_contract() -> None:
+    outer = {
+        "model": "glm-5-turbo",
+        "choices": [{"message": {"content": '{"status":NaN}'}}],
+    }
+    result = module.validate_success(json.dumps(outer), "general_minimal_json")
+    assert result["outer_json_valid"] is True
+    assert result["content_present"] is True
+    assert result["content_json_valid"] is False
+    assert result["contract_pass"] is False
+
+    invalid_outer = (
+        '{"model":"glm-5-turbo","unexpected":Infinity,'
+        '"choices":[{"message":{"content":"OK"}}]}'
+    )
+    result = module.validate_success(invalid_outer, "general_minimal_text")
+    assert result["outer_json_valid"] is False
+    assert result["contract_pass"] is False
+
+
 def test_redirect_handler_rejects_redirects() -> None:
     handler = module.NoRedirectHandler()
     request = urllib.request.Request("https://example.invalid")
@@ -144,6 +164,27 @@ def test_timeout_is_recorded_without_aborting(monkeypatch) -> None:
     assert "not-a-real-key" not in json.dumps(result)
 
 
+def test_open_protocol_failure_is_recorded_without_aborting(monkeypatch) -> None:
+    class ProtocolFailureOpener:
+        def __init__(self, error):
+            self.error = error
+
+        def open(self, request, timeout):
+            raise self.error
+
+    for error in (
+        http.client.RemoteDisconnected("remote closed before headers"),
+        http.client.BadStatusLine("malformed status"),
+    ):
+        monkeypatch.setattr(module, "OPENER", ProtocolFailureOpener(error))
+        result = module.execute_one("not-a-real-key", module.request_matrix()[0])
+        assert result["stage"] == "open_transport_error"
+        assert result["http_status"] is None
+        assert result["network_error_type"] == type(error).__name__
+        assert result["contract_pass"] is False
+        assert "not-a-real-key" not in json.dumps(result)
+
+
 def test_truncated_success_body_is_recorded_without_aborting(monkeypatch) -> None:
     class TruncatedResponse:
         status = 200
@@ -154,7 +195,10 @@ def test_truncated_success_body_is_recorded_without_aborting(monkeypatch) -> Non
         def __exit__(self, exc_type, exc, tb):
             return False
 
-        def read(self):
+        def settimeout(self, timeout):
+            return None
+
+        def read1(self, size):
             raise http.client.IncompleteRead(b"partial", 100)
 
     class TruncatedOpener:
@@ -173,7 +217,10 @@ def test_truncated_success_body_is_recorded_without_aborting(monkeypatch) -> Non
 
 def test_http_error_body_timeout_is_recorded_without_aborting(monkeypatch) -> None:
     class TimeoutBody:
-        def read(self, *args, **kwargs):
+        def settimeout(self, timeout):
+            return None
+
+        def read1(self, size):
             raise TimeoutError("bounded error-body timeout")
 
         def close(self):
@@ -196,6 +243,39 @@ def test_http_error_body_timeout_is_recorded_without_aborting(monkeypatch) -> No
     assert result["response_read_error_type"] == "TimeoutError"
     assert result["contract_pass"] is False
     assert "not-a-real-key" not in json.dumps(result)
+
+
+def test_response_body_read_enforces_total_deadline(monkeypatch) -> None:
+    class FakeClock:
+        value = 0.0
+
+        def __call__(self):
+            return self.value
+
+    clock = FakeClock()
+
+    class DripResponse:
+        def __init__(self):
+            self.read_calls = 0
+            self.timeouts = []
+
+        def settimeout(self, timeout):
+            self.timeouts.append(timeout)
+
+        def read1(self, size):
+            self.read_calls += 1
+            clock.value += 0.6
+            return b"x"
+
+    response = DripResponse()
+    monkeypatch.setattr(module.time, "perf_counter", clock)
+    raw, error_type = module.read_response_body(response, timeout_seconds=1.0)
+    assert raw is None
+    assert error_type == "ReadDeadlineExceeded"
+    assert response.read_calls == 2
+    assert len(response.timeouts) == 2
+    assert response.timeouts[0] == 1.0
+    assert 0.39 < response.timeouts[1] < 0.41
 
 
 def test_qualification_requires_http_200() -> None:
