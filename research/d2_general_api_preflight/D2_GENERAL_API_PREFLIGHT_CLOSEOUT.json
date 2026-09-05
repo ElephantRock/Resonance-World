@@ -1,0 +1,82 @@
+{
+  "artifact": {
+    "digest": "sha256:4ce006afc0397847709f41100a291ae5ccf2a2637096afe15589e85e9e1ae665",
+    "expires_at": "2026-12-04T21:08:30Z",
+    "id": 9976954042,
+    "name": "d2-general-api-preflight-result",
+    "result_file_sha256": "607994b0e3679fa65ec89150cf58d09b1e560156dcf8009af499463004082a2f"
+  },
+  "authorization_commit_sha": "c1b10dcfab8fae38fb276adcd3199c978d0d5662",
+  "authorization_marker": {
+    "authorization": "D2_general_api_preflight_execution_explicitly_authorized",
+    "path": "research/d2_general_api_preflight/RUN_D2_GENERAL_API_PREFLIGHT",
+    "sole_child_of_candidate": true
+  },
+  "contract": {
+    "endpoint": "https://api.z.ai/api/paas/v4/chat/completions",
+    "max_attempts_per_request": 1,
+    "max_tokens": 256,
+    "request_body_sha256": {
+      "general_d2_shape_json": "12a053e25088a92a2a28f76913ee2639a78242dd51003dce407dd414109ef18d",
+      "general_minimal_json": "a468862adeb88c7dfceb3363ae289ef2cf18c21a6501758043641f9f7228bb80",
+      "general_minimal_text": "3094a2a721b363700dd148c76da5aca0c3463469bc2c5f8e23854391d43e8371"
+    },
+    "request_count": 3,
+    "requested_model": "glm-5-turbo",
+    "stream": false,
+    "temperature": 0.8,
+    "thinking_disabled": true
+  },
+  "engineering_only": true,
+  "frozen_candidate_sha": "2d3f46ad381fbe9d5da069239f0ab3e7ef2d678f",
+  "governance": {
+    "d2d_rerun_authorized": false,
+    "next_scientific_step_requires_new_prospective_design_freeze_and_execution_authorization": true,
+    "production_historical_substrate_enabled": false,
+    "registry_promotion_authorized": false,
+    "replacement_d2d_data_allowed": false
+  },
+  "interpretation": {
+    "does_not_authorize_scientific_campaign": true,
+    "does_not_create_source_acquisition_evidence": true,
+    "does_not_reinterpret_d2d": true,
+    "statement": "At this engineering preflight time, the General API route satisfied the frozen three-probe transport contract for exact glm-5-turbo model identity and required structured-output behavior.",
+    "transport_qualified_for_future_prospective_design": true
+  },
+  "issue": 202,
+  "pull_request": 203,
+  "result": {
+    "all_exact_model_match": true,
+    "all_http_200": true,
+    "d2_shape_actions_valid": true,
+    "d2_shape_json_valid": true,
+    "minimal_json_valid": true,
+    "probe_contract_pass": {
+      "general_d2_shape_json": true,
+      "general_minimal_json": true,
+      "general_minimal_text": true
+    },
+    "qualification_pass": true,
+    "request_count": 3,
+    "returned_models": {
+      "general_d2_shape_json": "glm-5-turbo",
+      "general_minimal_json": "glm-5-turbo",
+      "general_minimal_text": "glm-5-turbo"
+    }
+  },
+  "schema": "d2-general-api-preflight-closeout-v0.1",
+  "status": "completed_qualified",
+  "workflow": {
+    "attempt": 1,
+    "authorization_integrity": "success",
+    "completed_at": "2026-09-05T21:09:03Z",
+    "conclusion": "success",
+    "created_at": "2026-09-05T21:08:30Z",
+    "event": "push",
+    "execute_bounded_preflight": "success",
+    "head_sha": "c1b10dcfab8fae38fb276adcd3199c978d0d5662",
+    "name": "D2 General API Preflight Execution",
+    "rerun_prohibited_job": "skipped",
+    "run_id": 33992155068
+  }
+}
