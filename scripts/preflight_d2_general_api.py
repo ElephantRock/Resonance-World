@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import http.client
 import json
 import os
 import time
@@ -260,6 +261,34 @@ def validate_success(raw: str, diagnostic_id: str) -> dict[str, Any]:
     return result
 
 
+def read_response_body(stream: Any) -> tuple[bytes | None, str | None]:
+    """Read one response body without letting transport read failures abort the stream."""
+    try:
+        return stream.read(), None
+    except (TimeoutError, OSError, http.client.HTTPException) as exc:
+        return None, type(exc).__name__
+
+
+def read_failure_result(
+    diagnostic_id: str,
+    body: bytes,
+    started: float,
+    *,
+    stage: str,
+    http_status: int | None,
+    read_error_type: str,
+) -> dict[str, Any]:
+    return {
+        "diagnostic_id": diagnostic_id,
+        "stage": stage,
+        "http_status": http_status,
+        "latency_ms": round((time.perf_counter() - started) * 1000.0, 3),
+        "request_body_sha256": sha256_bytes(body),
+        "response_read_error_type": read_error_type,
+        "contract_pass": False,
+    }
+
+
 def execute_one(key: str, row: dict[str, Any]) -> dict[str, Any]:
     diagnostic_id = str(row["diagnostic_id"])
     body = canonical_bytes(row["body"])
@@ -274,17 +303,26 @@ def execute_one(key: str, row: dict[str, Any]) -> dict[str, Any]:
     )
     started = time.perf_counter()
     try:
-        with OPENER.open(request, timeout=TIMEOUT_SECONDS) as response:
-            raw_bytes = response.read()
-            status = int(response.status)
+        response = OPENER.open(request, timeout=TIMEOUT_SECONDS)
     except urllib.error.HTTPError as exc:
-        raw_bytes = exc.read()
+        status = int(exc.code)
+        raw_bytes, read_error_type = read_response_body(exc)
+        if read_error_type is not None:
+            return read_failure_result(
+                diagnostic_id,
+                body,
+                started,
+                stage="http_error_body_read_error",
+                http_status=status,
+                read_error_type=read_error_type,
+            )
+        assert raw_bytes is not None
         latency_ms = (time.perf_counter() - started) * 1000.0
         raw = raw_bytes.decode("utf-8", errors="replace")
         return {
             "diagnostic_id": diagnostic_id,
             "stage": "http_error",
-            "http_status": int(exc.code),
+            "http_status": status,
             "latency_ms": round(latency_ms, 3),
             "request_body_sha256": sha256_bytes(body),
             **summarize_error_body(raw),
@@ -312,6 +350,20 @@ def execute_one(key: str, row: dict[str, Any]) -> dict[str, Any]:
             "network_error_type": type(exc.reason).__name__,
             "contract_pass": False,
         }
+
+    with response:
+        status = int(response.status)
+        raw_bytes, read_error_type = read_response_body(response)
+    if read_error_type is not None:
+        return read_failure_result(
+            diagnostic_id,
+            body,
+            started,
+            stage="response_body_read_error",
+            http_status=status,
+            read_error_type=read_error_type,
+        )
+    assert raw_bytes is not None
 
     latency_ms = (time.perf_counter() - started) * 1000.0
     raw = raw_bytes.decode("utf-8", errors="replace")
