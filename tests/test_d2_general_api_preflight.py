@@ -112,5 +112,9 @@ def test_model_drift_fails_contract() -> None:
     assert result["contract_pass"] is False
 
 
-def test_execution_marker_absent_before_separate_authorization() -> None:
-    assert not MARKER.exists()
+def test_execution_marker_preserves_exact_authorization() -> None:
+    assert MARKER.read_text() == (
+        "candidate_sha=2d3f46ad381fbe9d5da069239f0ab3e7ef2d678f\n"
+        "issue=202\n"
+        "authorization=D2_general_api_preflight_execution_explicitly_authorized\n"
+    )
