@@ -19,6 +19,8 @@ MODEL = "glm-5-turbo"
 TEMPERATURE = 0.8
 MAX_TOKENS = 256
 TIMEOUT_SECONDS = 90
+BODY_READ_TIMEOUT_SECONDS = 90.0
+READ_CHUNK_BYTES = 64 * 1024
 ACTIONS = ("KAPPA", "MICA", "ORBIT", "VELA")
 REQUEST_IDS = (
     "general_minimal_text",
@@ -57,6 +59,15 @@ def sha256_bytes(value: bytes) -> str:
 
 def sha256_text(value: str) -> str:
     return sha256_bytes(value.encode())
+
+
+def strict_json_loads(raw: str) -> Any:
+    """Parse standards-compliant JSON and reject NaN/Infinity extensions."""
+
+    def reject_constant(value: str) -> None:
+        raise ValueError(f"non-standard JSON constant: {value}")
+
+    return json.loads(raw, parse_constant=reject_constant)
 
 
 def d2_shape_cases() -> list[dict[str, int]]:
@@ -173,8 +184,8 @@ def summarize_error_body(raw: str) -> dict[str, Any]:
         "response_body_sha256": sha256_text(raw),
     }
     try:
-        parsed = json.loads(raw)
-    except json.JSONDecodeError:
+        parsed = strict_json_loads(raw)
+    except ValueError:
         return summary
     if not isinstance(parsed, dict):
         return summary
@@ -204,8 +215,8 @@ def validate_success(raw: str, diagnostic_id: str) -> dict[str, Any]:
         "contract_pass": False,
     }
     try:
-        outer = json.loads(raw)
-    except json.JSONDecodeError:
+        outer = strict_json_loads(raw)
+    except ValueError:
         return result
     if not isinstance(outer, dict):
         return result
@@ -233,8 +244,8 @@ def validate_success(raw: str, diagnostic_id: str) -> dict[str, Any]:
     result["content_json_valid"] = False
     if content:
         try:
-            parsed = json.loads(content)
-        except json.JSONDecodeError:
+            parsed = strict_json_loads(content)
+        except ValueError:
             parsed = None
         if isinstance(parsed, dict):
             result["content_json_valid"] = True
@@ -261,12 +272,71 @@ def validate_success(raw: str, diagnostic_id: str) -> dict[str, Any]:
     return result
 
 
-def read_response_body(stream: Any) -> tuple[bytes | None, str | None]:
-    """Read one response body without letting transport read failures abort the stream."""
-    try:
-        return stream.read(), None
-    except (TimeoutError, OSError, http.client.HTTPException) as exc:
-        return None, type(exc).__name__
+def response_read1_stream(stream: Any) -> Any | None:
+    """Return a reader whose read1() performs at most one underlying data read."""
+    current = stream
+    seen: set[int] = set()
+    for _ in range(6):
+        if current is None or id(current) in seen:
+            break
+        seen.add(id(current))
+        if callable(getattr(current, "read1", None)):
+            return current
+        current = getattr(current, "fp", None)
+    return None
+
+
+def set_stream_socket_timeout(stream: Any, timeout_seconds: float) -> bool:
+    """Set the underlying socket timeout used by the current response reader."""
+    current = stream
+    seen: set[int] = set()
+    for _ in range(8):
+        if current is None or id(current) in seen:
+            break
+        seen.add(id(current))
+        setter = getattr(current, "settimeout", None)
+        if callable(setter):
+            setter(timeout_seconds)
+            return True
+        next_object = None
+        for attr in ("fp", "raw", "_sock", "sock"):
+            candidate = getattr(current, attr, None)
+            if candidate is not None and id(candidate) not in seen:
+                next_object = candidate
+                break
+        current = next_object
+    return False
+
+
+def read_response_body(
+    stream: Any,
+    *,
+    timeout_seconds: float | None = None,
+) -> tuple[bytes | None, str | None]:
+    """Read one body with an absolute deadline and bounded transport failures."""
+    if timeout_seconds is None:
+        timeout_seconds = BODY_READ_TIMEOUT_SECONDS
+    reader = response_read1_stream(stream)
+    if reader is None:
+        return None, "ReadDeadlineUnsupported"
+
+    deadline = time.perf_counter() + timeout_seconds
+    chunks: list[bytes] = []
+    while True:
+        remaining = deadline - time.perf_counter()
+        if remaining <= 0:
+            return None, "ReadDeadlineExceeded"
+        try:
+            if not set_stream_socket_timeout(reader, max(0.001, remaining)):
+                return None, "ReadDeadlineUnsupported"
+            chunk = reader.read1(READ_CHUNK_BYTES)
+        except (TimeoutError, OSError, http.client.HTTPException, ValueError) as exc:
+            return None, type(exc).__name__
+        if not chunk:
+            return b"".join(chunks), None
+        chunks.append(chunk)
+        if time.perf_counter() >= deadline:
+            return None, "ReadDeadlineExceeded"
 
 
 def read_failure_result(
@@ -348,6 +418,17 @@ def execute_one(key: str, row: dict[str, Any]) -> dict[str, Any]:
             "latency_ms": round(latency_ms, 3),
             "request_body_sha256": sha256_bytes(body),
             "network_error_type": type(exc.reason).__name__,
+            "contract_pass": False,
+        }
+    except (OSError, http.client.HTTPException) as exc:
+        latency_ms = (time.perf_counter() - started) * 1000.0
+        return {
+            "diagnostic_id": diagnostic_id,
+            "stage": "open_transport_error",
+            "http_status": None,
+            "latency_ms": round(latency_ms, 3),
+            "request_body_sha256": sha256_bytes(body),
+            "network_error_type": type(exc).__name__,
             "contract_pass": False,
         }
 
