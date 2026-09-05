@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import json
+import math
 import sys
 from pathlib import Path
 from typing import Any
+
+import pytest
 
 SCRIPTS = Path(__file__).resolve().parents[1] / "scripts"
 if str(SCRIPTS) not in sys.path:
@@ -18,6 +21,8 @@ import run_d2d_source_acquisition as runner  # noqa: E402
 
 COHORT = Path("research/d2d/d2d-source-acquisition-cohort-lock.json")
 SHARDS = Path("research/d2d/D2D_SHARD_MAP.json")
+SAMPLE_SIZE = Path("research/d2d/D2D_SAMPLE_SIZE.json")
+SAMPLE_SIZE_CORRECTION = Path("research/d2d/D2D_POSTEXEC_SAMPLE_SIZE_CORRECTION.json")
 
 
 def _wrong_actions(truth: list[str]) -> list[str]:
@@ -25,7 +30,20 @@ def _wrong_actions(truth: list[str]) -> list[str]:
     return [core.ACTIONS[(indices[action] + 1) % 4] for action in truth]
 
 
+def _call_records(count: int) -> list[dict[str, Any]]:
+    return [
+        {
+            "model": runner.MODEL,
+            "temperature": runner.TEMPERATURE,
+        }
+        for _ in range(count)
+    ]
+
+
 def _arm(actions: list[str], truth: list[str], development_cases: int) -> dict[str, Any]:
+    evaluation_calls = core.EVALUATION_COUNT // runner.EVAL_CHUNK_SIZE
+    development_calls = development_cases // runner.BATCH_SIZE
+    logical_calls = development_calls + evaluation_calls
     return {
         "development_cases": development_cases,
         "runner_final_score": sum(
@@ -34,6 +52,8 @@ def _arm(actions: list[str], truth: list[str], development_cases: int) -> dict[s
         )
         / len(truth),
         "evaluation_actions": actions,
+        "logical_calls": logical_calls,
+        "calls": _call_records(logical_calls),
     }
 
 
@@ -111,7 +131,39 @@ def _provider(
         "attempted_pairs": 384,
         "complete_pairs": complete,
         "failed_pairs": 384 - complete,
+        "model": runner.MODEL,
+        "temperature": runner.TEMPERATURE,
         "cohort_pairs_sha256": runner.EXPECTED_COHORT_SHA256,
+        "pair_records": rows,
+        "production_historical_substrate_enabled": False,
+    }
+
+
+def _provider_shard(
+    *,
+    shard_id: int = 0,
+    model: str = runner.MODEL,
+    temperature: float = runner.TEMPERATURE,
+) -> dict[str, Any]:
+    mapping = aggregator.load_shard_map(SHARDS)
+    start, end, schema_id = mapping[shard_id]
+    rows = [_failed_pair(index) for index in range(start, end + 1)]
+    return {
+        "schema": "d2d-source-acquisition-provider-shard-v0.1",
+        "status": "provider_shard_complete_unclassified",
+        "classification": None,
+        "shard_id": shard_id,
+        "schema_id": schema_id,
+        "start_pair": start,
+        "end_pair": end,
+        "attempted_pairs": len(rows),
+        "complete_pairs": 0,
+        "failed_pairs": len(rows),
+        "model": model,
+        "temperature": temperature,
+        "cohort_lock": {
+            "cohort_pairs_sha256": runner.EXPECTED_COHORT_SHA256,
+        },
         "pair_records": rows,
         "production_historical_substrate_enabled": False,
     }
@@ -179,7 +231,77 @@ def test_missing_provider_shards_are_registered_failures(tmp_path: Path) -> None
     assert output["attempted_pairs"] == 384
     assert output["complete_pairs"] == 0
     assert output["failed_pairs"] == 384
+    assert output["model"] == runner.MODEL
+    assert output["temperature"] == runner.TEMPERATURE
     assert all(row["status"] == "missing" for row in output["shard_inputs"])
+
+
+@pytest.mark.parametrize(
+    ("model", "temperature"),
+    [("wrong-model", runner.TEMPERATURE), (runner.MODEL, 0.7)],
+)
+def test_aggregator_rejects_wrong_frozen_provider_substrate(
+    tmp_path: Path,
+    model: str,
+    temperature: float,
+) -> None:
+    shard = _provider_shard(model=model, temperature=temperature)
+    shard_path = tmp_path / "d2d-provider-shard-00.json"
+    shard_path.write_text(json.dumps(shard))
+    output = aggregator.aggregate(tmp_path, shard_map_path=SHARDS)
+    assert output["shard_inputs"][0]["status"] == "invalid"
+    assert all(
+        row["failure_class"] == "invalid_provider_shard"
+        for row in output["pair_records"][:16]
+    )
+
+
+def test_evaluator_rejects_incomplete_registered_exposure_provenance(monkeypatch) -> None:
+    monkeypatch.setattr(stats, "BOOTSTRAP_REPS", 5)
+    provider = _provider()
+    arm = provider["pair_records"][0]["arms"]["developed_160"]
+    arm["development_cases"] = 0
+    arm["logical_calls"] = 4
+    arm["calls"] = arm["calls"][:4]
+    result = evaluator.evaluate(provider)
+    assert result["classification"] == "D2d-A0"
+    assert result["integrity"]["passed"] is False
+    defects = result["integrity"]["pair_defects"][0]["defects"]
+    assert "developed_160_development_cases_mismatch" in defects
+    assert "developed_160_logical_calls_mismatch" in defects
+    assert "developed_160_call_records_mismatch" in defects
+
+
+def test_evaluator_rejects_call_level_model_drift(monkeypatch) -> None:
+    monkeypatch.setattr(stats, "BOOTSTRAP_REPS", 5)
+    provider = _provider()
+    provider["pair_records"][0]["arms"]["developed_40"]["calls"][0]["model"] = (
+        "wrong-model"
+    )
+    result = evaluator.evaluate(provider)
+    assert result["classification"] == "D2d-A0"
+    defects = result["integrity"]["pair_defects"][0]["defects"]
+    assert "developed_40_call_0_model_mismatch" in defects
+
+
+def test_postexecution_sample_size_correction_is_reproducible() -> None:
+    frozen = json.loads(SAMPLE_SIZE.read_text())
+    correction = json.loads(SAMPLE_SIZE_CORRECTION.read_text())
+    recalculated = (
+        (frozen["z_alpha"] + frozen["z_power"])
+        * frozen["planning_paired_sd"]
+        / frozen["planning_effect_above_margin"]
+    ) ** 2
+    assert frozen["approx_required_n"] == correction["original_approx_required_n"]
+    assert math.isclose(
+        recalculated,
+        correction["recalculated_approx_required_n"],
+        rel_tol=0.0,
+        abs_tol=1e-12,
+    )
+    assert correction["frozen_artifact_modified"] is False
+    assert correction["scientific_decision_changed"] is False
+    assert correction["minimum_analyzable_n_per_schema"] == 88
 
 
 def test_execution_marker_preserves_exact_separate_authorization() -> None:

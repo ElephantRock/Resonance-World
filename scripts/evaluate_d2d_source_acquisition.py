@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Frozen credential-free evaluator for D2d source capability acquisition."""
+"""Credential-free evaluator for D2d source capability acquisition."""
 
 from __future__ import annotations
 
@@ -19,7 +19,16 @@ MINIMUM_ANALYZABLE_PER_SCHEMA = 88
 THRESHOLD = 0.10
 PRIMARY_ARMS = ("fresh", "developed_40", "developed_80", "developed_160")
 BUDGETS = (160, 80, 40)
+EXPECTED_MODEL = "glm-5-turbo"
+EXPECTED_TEMPERATURE = 0.8
 EXPECTED_COHORT_SHA256 = "a9c2077d4e76825d9ef1f6b245caf0231f5a4a3b1dc00cc0032793add8f9ea19"
+ARM_PROVENANCE = {
+    "fresh": {"development_cases": 0, "logical_calls": 4},
+    "developed_40": {"development_cases": 40, "logical_calls": 9},
+    "developed_80": {"development_cases": 80, "logical_calls": 14},
+    "developed_160": {"development_cases": 160, "logical_calls": 24},
+}
+ORACLE_LOGICAL_CALLS = 4
 BOOTSTRAP_SEEDS = {
     "threshold_at_4": 2026090201,
     "parity_pair": 2026090202,
@@ -58,6 +67,63 @@ def _score(truth: list[str], actions: list[str]) -> float:
     return sum(a == b for a, b in zip(truth, actions, strict=True)) / len(truth)
 
 
+def _temperature_matches(value: Any) -> bool:
+    return (
+        not isinstance(value, bool)
+        and isinstance(value, (int, float))
+        and abs(float(value) - EXPECTED_TEMPERATURE) <= 1e-12
+    )
+
+
+def _validate_call_records(
+    payload: dict[str, Any],
+    *,
+    arm: str,
+    expected_calls: int,
+    defects: list[str],
+) -> bool:
+    valid = True
+    logical_calls = payload.get("logical_calls")
+    if type(logical_calls) is not int or logical_calls != expected_calls:
+        defects.append(f"{arm}_logical_calls_mismatch")
+        valid = False
+    calls = payload.get("calls")
+    if not isinstance(calls, list) or len(calls) != expected_calls:
+        defects.append(f"{arm}_call_records_mismatch")
+        return False
+    for call_index, call in enumerate(calls):
+        if not isinstance(call, dict):
+            defects.append(f"{arm}_call_{call_index}_invalid")
+            valid = False
+            continue
+        if call.get("model") != EXPECTED_MODEL:
+            defects.append(f"{arm}_call_{call_index}_model_mismatch")
+            valid = False
+        if not _temperature_matches(call.get("temperature")):
+            defects.append(f"{arm}_call_{call_index}_temperature_mismatch")
+            valid = False
+    return valid
+
+
+def _validate_primary_arm_provenance(
+    arm: str, payload: dict[str, Any], defects: list[str]
+) -> bool:
+    expected = ARM_PROVENANCE[arm]
+    valid = True
+    development_cases = payload.get("development_cases")
+    if type(development_cases) is not int or development_cases != expected["development_cases"]:
+        defects.append(f"{arm}_development_cases_mismatch")
+        valid = False
+    if not _validate_call_records(
+        payload,
+        arm=arm,
+        expected_calls=expected["logical_calls"],
+        defects=defects,
+    ):
+        valid = False
+    return valid
+
+
 def _validate_complete_pair(
     record: dict[str, Any],
 ) -> tuple[dict[str, float] | None, float | None, list[str], list[str]]:
@@ -90,11 +156,14 @@ def _validate_complete_pair(
     arms = record.get("arms")
     if not isinstance(arms, dict):
         return None, None, defects + ["arms_missing"], diagnostic_defects
+
     scores: dict[str, float] = {}
     for arm in PRIMARY_ARMS:
         payload = arms.get(arm)
         if not isinstance(payload, dict):
             defects.append(f"{arm}_missing")
+            continue
+        if not _validate_primary_arm_provenance(arm, payload, defects):
             continue
         actions = payload.get("evaluation_actions")
         if not isinstance(actions, list):
@@ -112,11 +181,23 @@ def _validate_complete_pair(
             defects.append(f"{arm}_runner_score_mismatch")
             continue
         scores[arm] = score
+
     oracle_score: float | None = None
     oracle = arms.get("oracle_instruction")
     if isinstance(oracle, dict) and oracle.get("status") == "complete_diagnostic":
+        oracle_valid = True
+        if oracle.get("development_cases") != 0:
+            diagnostic_defects.append("oracle_development_cases_mismatch")
+            oracle_valid = False
+        if not _validate_call_records(
+            oracle,
+            arm="oracle_instruction",
+            expected_calls=ORACLE_LOGICAL_CALLS,
+            defects=diagnostic_defects,
+        ):
+            oracle_valid = False
         actions = oracle.get("evaluation_actions")
-        if isinstance(actions, list):
+        if isinstance(actions, list) and oracle_valid:
             try:
                 oracle_score = _score(expected_truth, [str(value) for value in actions])
                 runner_score = oracle.get("runner_final_score")
@@ -127,12 +208,13 @@ def _validate_complete_pair(
                     oracle_score = None
             except Exception:
                 diagnostic_defects.append("oracle_actions_invalid")
-        else:
+        elif not isinstance(actions, list):
             diagnostic_defects.append("oracle_actions_missing")
     elif isinstance(oracle, dict) and oracle.get("status") == "failed_diagnostic":
         oracle_score = None
     else:
         diagnostic_defects.append("oracle_status_invalid")
+
     if defects or set(scores) != set(PRIMARY_ARMS):
         return None, oracle_score, defects, diagnostic_defects
     return scores, oracle_score, defects, diagnostic_defects
@@ -212,6 +294,10 @@ def evaluate(provider: dict[str, Any]) -> dict[str, Any]:
         global_defects.append("provider_must_be_unclassified")
     if provider.get("attempted_pairs") != PAIR_COUNT:
         global_defects.append("attempted_pair_count_mismatch")
+    if provider.get("model") != EXPECTED_MODEL:
+        global_defects.append("provider_model_mismatch")
+    if not _temperature_matches(provider.get("temperature")):
+        global_defects.append("provider_temperature_mismatch")
     if provider.get("cohort_pairs_sha256") != EXPECTED_COHORT_SHA256:
         global_defects.append("cohort_hash_mismatch")
     if provider.get("production_historical_substrate_enabled") is not False:

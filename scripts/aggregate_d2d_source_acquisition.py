@@ -13,6 +13,8 @@ import d2d_acquisition_core as core
 
 PAIR_COUNT = 384
 SHARD_COUNT = 24
+EXPECTED_MODEL = "glm-5-turbo"
+EXPECTED_TEMPERATURE = 0.8
 EXPECTED_COHORT_SHA256 = "a9c2077d4e76825d9ef1f6b245caf0231f5a4a3b1dc00cc0032793add8f9ea19"
 
 
@@ -74,6 +76,16 @@ def _failure_rows(
     ]
 
 
+def _validated_temperature(payload: dict[str, Any]) -> float:
+    value = payload.get("temperature")
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        raise AssertionError("provider shard temperature missing or invalid")
+    temperature = float(value)
+    if abs(temperature - EXPECTED_TEMPERATURE) > 1e-12:
+        raise AssertionError("provider shard temperature mismatch")
+    return temperature
+
+
 def aggregate(root: Path, *, shard_map_path: Path) -> dict[str, Any]:
     mapping = load_shard_map(shard_map_path)
     all_records: list[dict[str, Any]] = []
@@ -101,6 +113,9 @@ def aggregate(root: Path, *, shard_map_path: Path) -> dict[str, Any]:
                 raise AssertionError("provider shard range mismatch")
             if str(payload["schema_id"]) != schema_id:
                 raise AssertionError("provider shard schema-id mismatch")
+            if payload.get("model") != EXPECTED_MODEL:
+                raise AssertionError("provider shard model mismatch")
+            temperature = _validated_temperature(payload)
             cohort = payload.get("cohort_lock", {})
             if cohort.get("cohort_pairs_sha256") != EXPECTED_COHORT_SHA256:
                 raise AssertionError("provider shard cohort hash mismatch")
@@ -114,7 +129,13 @@ def aggregate(root: Path, *, shard_map_path: Path) -> dict[str, Any]:
                 raise AssertionError("Historical Substrate drift")
             all_records.extend(records)
             shard_inputs.append(
-                {"shard_id": shard_id, "status": "loaded", "sha256": file_sha256(path)}
+                {
+                    "shard_id": shard_id,
+                    "status": "loaded",
+                    "sha256": file_sha256(path),
+                    "model": EXPECTED_MODEL,
+                    "temperature": temperature,
+                }
             )
         except Exception as exc:
             fingerprint = hashlib.sha256(
@@ -143,6 +164,8 @@ def aggregate(root: Path, *, shard_map_path: Path) -> dict[str, Any]:
         "attempted_pairs": PAIR_COUNT,
         "complete_pairs": len(complete),
         "failed_pairs": len(failed),
+        "model": EXPECTED_MODEL,
+        "temperature": EXPECTED_TEMPERATURE,
         "cohort_pairs_sha256": EXPECTED_COHORT_SHA256,
         "pair_records": all_records,
         "shard_inputs": shard_inputs,
@@ -168,6 +191,8 @@ def main() -> None:
         "attempted_pairs": PAIR_COUNT,
         "complete_pairs": output["complete_pairs"],
         "failed_pairs": output["failed_pairs"],
+        "model": EXPECTED_MODEL,
+        "temperature": EXPECTED_TEMPERATURE,
         "cohort_pairs_sha256": EXPECTED_COHORT_SHA256,
         "classification": None,
         "production_historical_substrate_enabled": False,
