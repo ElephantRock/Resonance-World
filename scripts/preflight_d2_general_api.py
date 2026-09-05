@@ -28,6 +28,24 @@ PLAN_PATH = Path("research/d2_general_api_preflight/PREFLIGHT_REQUEST_PLAN.json"
 MARKER_PATH = Path("research/d2_general_api_preflight/RUN_D2_GENERAL_API_PREFLIGHT")
 
 
+class NoRedirectHandler(urllib.request.HTTPRedirectHandler):
+    """Reject redirects so one logical probe cannot become multiple HTTP requests."""
+
+    def redirect_request(
+        self,
+        req: urllib.request.Request,
+        fp: Any,
+        code: int,
+        msg: str,
+        headers: Any,
+        newurl: str,
+    ) -> None:
+        return None
+
+
+OPENER = urllib.request.build_opener(NoRedirectHandler())
+
+
 def canonical_bytes(value: Any) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
 
@@ -256,7 +274,7 @@ def execute_one(key: str, row: dict[str, Any]) -> dict[str, Any]:
     )
     started = time.perf_counter()
     try:
-        with urllib.request.urlopen(request, timeout=TIMEOUT_SECONDS) as response:
+        with OPENER.open(request, timeout=TIMEOUT_SECONDS) as response:
             raw_bytes = response.read()
             status = int(response.status)
     except urllib.error.HTTPError as exc:
@@ -270,6 +288,17 @@ def execute_one(key: str, row: dict[str, Any]) -> dict[str, Any]:
             "latency_ms": round(latency_ms, 3),
             "request_body_sha256": sha256_bytes(body),
             **summarize_error_body(raw),
+            "contract_pass": False,
+        }
+    except TimeoutError as exc:
+        latency_ms = (time.perf_counter() - started) * 1000.0
+        return {
+            "diagnostic_id": diagnostic_id,
+            "stage": "timeout_error",
+            "http_status": None,
+            "latency_ms": round(latency_ms, 3),
+            "request_body_sha256": sha256_bytes(body),
+            "network_error_type": type(exc).__name__,
             "contract_pass": False,
         }
     except urllib.error.URLError as exc:
@@ -287,6 +316,7 @@ def execute_one(key: str, row: dict[str, Any]) -> dict[str, Any]:
     latency_ms = (time.perf_counter() - started) * 1000.0
     raw = raw_bytes.decode("utf-8", errors="replace")
     validated = validate_success(raw, diagnostic_id)
+    validated["contract_pass"] = bool(status == 200 and validated["contract_pass"])
     return {
         "diagnostic_id": diagnostic_id,
         "stage": "http_success",
@@ -297,6 +327,12 @@ def execute_one(key: str, row: dict[str, Any]) -> dict[str, Any]:
         "response_body_sha256": sha256_bytes(raw_bytes),
         **validated,
     }
+
+
+def qualification_pass(rows: list[dict[str, Any]]) -> bool:
+    return all(
+        row.get("http_status") == 200 and bool(row.get("contract_pass")) for row in rows
+    )
 
 
 def execute() -> dict[str, Any]:
@@ -315,7 +351,7 @@ def execute() -> dict[str, Any]:
         "requested_model": MODEL,
         "request_count": len(rows),
         "results": rows,
-        "qualification_pass": all(bool(row.get("contract_pass")) for row in rows),
+        "qualification_pass": qualification_pass(rows),
         "scientific_field_trajectory_executed": False,
         "scientific_scoring_performed": False,
         "replacement_d2d_data_allowed": False,
