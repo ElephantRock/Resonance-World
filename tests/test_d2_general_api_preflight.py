@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import urllib.request
 from pathlib import Path
 
 SCRIPT = Path("scripts/preflight_d2_general_api.py")
@@ -110,6 +111,40 @@ def test_model_drift_fails_contract() -> None:
     assert result["model_exact_match"] is False
     assert result["content_json_valid"] is True
     assert result["contract_pass"] is False
+
+
+def test_redirect_handler_rejects_redirects() -> None:
+    handler = module.NoRedirectHandler()
+    request = urllib.request.Request("https://example.invalid")
+    redirected = handler.redirect_request(
+        request,
+        None,
+        302,
+        "Found",
+        {},
+        "https://other.invalid",
+    )
+    assert redirected is None
+
+
+def test_timeout_is_recorded_without_aborting(monkeypatch) -> None:
+    class TimeoutOpener:
+        def open(self, request, timeout):
+            raise TimeoutError("bounded timeout")
+
+    monkeypatch.setattr(module, "OPENER", TimeoutOpener())
+    result = module.execute_one("not-a-real-key", module.request_matrix()[0])
+    assert result["stage"] == "timeout_error"
+    assert result["http_status"] is None
+    assert result["network_error_type"] == "TimeoutError"
+    assert result["contract_pass"] is False
+    assert "not-a-real-key" not in json.dumps(result)
+
+
+def test_qualification_requires_http_200() -> None:
+    assert module.qualification_pass([{"http_status": 200, "contract_pass": True}]) is True
+    assert module.qualification_pass([{"http_status": 201, "contract_pass": True}]) is False
+    assert module.qualification_pass([{"http_status": 200, "contract_pass": False}]) is False
 
 
 def test_execution_marker_preserves_exact_authorization() -> None:
