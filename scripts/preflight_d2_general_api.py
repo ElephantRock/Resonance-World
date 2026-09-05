@@ -323,6 +323,8 @@ def read_response_body(
     deadline = time.perf_counter() + timeout_seconds
     chunks: list[bytes] = []
     while True:
+        if getattr(reader, "length", None) == 0:
+            return b"".join(chunks), None
         remaining = deadline - time.perf_counter()
         if remaining <= 0:
             return None, "ReadDeadlineExceeded"
