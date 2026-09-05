@@ -1,13 +1,16 @@
 from __future__ import annotations
 
+import http.client
 import importlib.util
 import json
+import urllib.error
 import urllib.request
 from pathlib import Path
 
 SCRIPT = Path("scripts/preflight_d2_general_api.py")
 PLAN = Path("research/d2_general_api_preflight/PREFLIGHT_REQUEST_PLAN.json")
 MARKER = Path("research/d2_general_api_preflight/RUN_D2_GENERAL_API_PREFLIGHT")
+CLOSEOUT = Path("research/d2_general_api_preflight/D2_GENERAL_API_PREFLIGHT_CLOSEOUT.json")
 
 spec = importlib.util.spec_from_file_location("d2_general_preflight", SCRIPT)
 assert spec and spec.loader
@@ -141,10 +144,75 @@ def test_timeout_is_recorded_without_aborting(monkeypatch) -> None:
     assert "not-a-real-key" not in json.dumps(result)
 
 
+def test_truncated_success_body_is_recorded_without_aborting(monkeypatch) -> None:
+    class TruncatedResponse:
+        status = 200
+
+        def __enter__(self):
+            return self
+
+        def __exit__(self, exc_type, exc, tb):
+            return False
+
+        def read(self):
+            raise http.client.IncompleteRead(b"partial", 100)
+
+    class TruncatedOpener:
+        def open(self, request, timeout):
+            return TruncatedResponse()
+
+    monkeypatch.setattr(module, "OPENER", TruncatedOpener())
+    result = module.execute_one("not-a-real-key", module.request_matrix()[0])
+    assert result["stage"] == "response_body_read_error"
+    assert result["http_status"] == 200
+    assert result["response_read_error_type"] == "IncompleteRead"
+    assert result["contract_pass"] is False
+    assert "partial" not in json.dumps(result)
+    assert "not-a-real-key" not in json.dumps(result)
+
+
+def test_http_error_body_timeout_is_recorded_without_aborting(monkeypatch) -> None:
+    class TimeoutBody:
+        def read(self, *args, **kwargs):
+            raise TimeoutError("bounded error-body timeout")
+
+        def close(self):
+            return None
+
+    class HTTPErrorOpener:
+        def open(self, request, timeout):
+            raise urllib.error.HTTPError(
+                request.full_url,
+                503,
+                "Service Unavailable",
+                None,
+                TimeoutBody(),
+            )
+
+    monkeypatch.setattr(module, "OPENER", HTTPErrorOpener())
+    result = module.execute_one("not-a-real-key", module.request_matrix()[0])
+    assert result["stage"] == "http_error_body_read_error"
+    assert result["http_status"] == 503
+    assert result["response_read_error_type"] == "TimeoutError"
+    assert result["contract_pass"] is False
+    assert "not-a-real-key" not in json.dumps(result)
+
+
 def test_qualification_requires_http_200() -> None:
     assert module.qualification_pass([{"http_status": 200, "contract_pass": True}]) is True
     assert module.qualification_pass([{"http_status": 201, "contract_pass": True}]) is False
     assert module.qualification_pass([{"http_status": 200, "contract_pass": False}]) is False
+
+
+def test_closeout_marks_historical_redirect_limit() -> None:
+    closeout = json.loads(CLOSEOUT.read_text())
+    assert closeout["status"] == "completed_response_level_pass_redirect_unverified"
+    assert closeout["result"]["qualification_pass"] is True
+    interpretation = closeout["interpretation"]
+    assert interpretation["redirect_history_verified"] is False
+    assert interpretation["one_physical_request_per_probe_verified"] is False
+    assert interpretation["transport_qualified_for_future_prospective_design"] is False
+    assert interpretation["fresh_engineering_requalification_required"] is True
 
 
 def test_execution_marker_preserves_exact_authorization() -> None:
