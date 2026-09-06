@@ -15,6 +15,7 @@ import materialize_d2c_schema_generalization as materializer  # noqa: E402
 SCHEMA_SUITE = Path("research/d2c/D2C_SCHEMA_SUITE.json")
 SAMPLE_SIZE = Path("research/d2c/D2C_SAMPLE_SIZE.json")
 REQUEST_PLAN = Path("research/d2c/D2C_REQUEST_PLAN.json")
+RUN_MARKER = Path("research/d2c/RUN_D2C_SCHEMA_GENERALIZATION")
 
 
 def test_schema_suite_is_three_new_g2_families():
@@ -131,5 +132,8 @@ def test_request_plan_fixes_no_rerun_and_no_registry_mutation():
     assert request["historical_substrate_enabled"] is False
 
 
-def test_substantive_run_marker_is_absent_during_scaffold():
-    assert not Path("research/d2c/RUN_D2C_SCHEMA_GENERALIZATION").exists()
+def test_substantive_run_marker_preserves_authorized_candidate():
+    assert RUN_MARKER.read_text() == (
+        "candidate_sha=1db50eea77e71cda64b2f7dc0ec0bfb8ffb9e98c\n"
+        "issue=192\n"
+    )
