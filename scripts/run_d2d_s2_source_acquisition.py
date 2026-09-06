@@ -7,6 +7,7 @@ import argparse
 import hashlib
 import json
 import os
+from contextlib import contextmanager
 from pathlib import Path
 from typing import Any
 
@@ -24,11 +25,7 @@ TEMPERATURE = 0.8
 MARKER_PATH = Path("research/d2d_s2/RUN_D2D_S2_SOURCE_ACQUISITION")
 AUTH_ENV = "D2D_S2_PROVIDER_EXECUTION_AUTHORIZED"
 AUTHORIZATION_STRING = "D2d_S2_provider_execution_explicitly_authorized"
-
-base.core = core
-base.materializer = materializer
-base.EXPECTED_COHORT_SHA256 = EXPECTED_COHORT_SHA256
-base.BEHAVIORAL_OBJECTIVE = (
+BEHAVIORAL_OBJECTIVE = (
     "Choose exactly one action from KAPPA, MICA, ORBIT, VELA for each four-feature integer case. "
     "Each Field owns a fixed hidden local policy belonging to the registered D2d-S2 "
     "calibration schema."
@@ -41,6 +38,31 @@ def canonical_bytes(value: Any) -> bytes:
 
 def file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+@contextmanager
+def _fresh_base_context():
+    """Bind the historical runner to D2d-S2 only while one shard is executing."""
+
+    original = (
+        base.core,
+        base.materializer,
+        base.EXPECTED_COHORT_SHA256,
+        base.BEHAVIORAL_OBJECTIVE,
+    )
+    base.core = core
+    base.materializer = materializer
+    base.EXPECTED_COHORT_SHA256 = EXPECTED_COHORT_SHA256
+    base.BEHAVIORAL_OBJECTIVE = BEHAVIORAL_OBJECTIVE
+    try:
+        yield
+    finally:
+        (
+            base.core,
+            base.materializer,
+            base.EXPECTED_COHORT_SHA256,
+            base.BEHAVIORAL_OBJECTIVE,
+        ) = original
 
 
 def marker_record() -> dict[str, str]:
@@ -116,10 +138,11 @@ def main() -> None:
     if not key:
         raise RuntimeError("ZAI_API_KEY is required for authorized D2d-S2 execution")
     client = transport.Client(key)
-    pair_records = [
-        _rename_pair(base.run_pair_safe(client, index))
-        for index in range(start_pair, end_pair + 1)
-    ]
+    with _fresh_base_context():
+        pair_records = [
+            _rename_pair(base.run_pair_safe(client, index))
+            for index in range(start_pair, end_pair + 1)
+        ]
     complete = [row for row in pair_records if row["status"] == "complete"]
     failed = [row for row in pair_records if row["status"] != "complete"]
     output = {
