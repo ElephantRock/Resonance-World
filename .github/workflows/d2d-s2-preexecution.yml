@@ -61,6 +61,16 @@ jobs:
           python scripts/materialize_d2d_s2_source_acquisition.py --output-dir output/d2d-s2-materialization
           cmp output/d2d-s2-materialization/d2d-s2-source-acquisition-cohort-lock.json research/d2d_s2/d2d-s2-source-acquisition-cohort-lock.json
           cmp output/d2d-s2-materialization/D2D_S2_SHARD_MAP.json research/d2d_s2/D2D_S2_SHARD_MAP.json
+      - name: Emit frozen input hashes
+        if: steps.lifecycle.outputs.state == 'pre_execution'
+        run: |
+          sha256sum \
+            research/d2d_s2/PLAN.md \
+            research/d2d_s2/D2D_S2_REQUEST_PLAN.json \
+            research/d2d_s2/D2D_S2_SCHEMA_SUITE.json \
+            research/d2d_s2/D2D_S2_SAMPLE_SIZE.json \
+            research/d2d_s2/d2d-s2-source-acquisition-cohort-lock.json \
+            research/d2d_s2/D2D_S2_SHARD_MAP.json
       - name: Run D2d-S2 zero-provider tests
         if: steps.lifecycle.outputs.state == 'pre_execution'
         run: |
