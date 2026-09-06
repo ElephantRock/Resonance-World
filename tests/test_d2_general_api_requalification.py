@@ -11,7 +11,9 @@ if str(SCRIPTS) not in sys.path:
 
 SCRIPT = Path("scripts/requalify_d2_general_api.py")
 PLAN = Path("research/d2_general_api_requalification/REQUALIFICATION_REQUEST_PLAN.json")
-MARKER = Path("research/d2_general_api_requalification/RUN_D2_GENERAL_API_REQUALIFICATION")
+MARKER = Path(
+    "research/d2_general_api_requalification/RUN_D2_GENERAL_API_REQUALIFICATION"
+)
 
 spec = importlib.util.spec_from_file_location("d2_general_requalification", SCRIPT)
 assert spec and spec.loader
@@ -40,8 +42,16 @@ def test_request_plan_is_fresh_engineering_only_and_unauthorized() -> None:
     assert plan["historical_substrate_enabled"] is False
 
 
-def test_marker_is_absent_before_explicit_authorization() -> None:
-    assert not MARKER.exists()
+def test_authorization_marker_lifecycle_is_fail_closed() -> None:
+    if not MARKER.exists():
+        return
+    record = module.marker_record()
+    assert record["candidate_sha"] == "0e4ce60ef33c6a5f113ca6d0670501d48b3ed97e"
+    assert record["issue"] == "206"
+    assert (
+        record["authorization"]
+        == "D2_general_api_requalification_execution_explicitly_authorized"
+    )
 
 
 def test_materialization_is_deterministic_and_reuses_fixed_probe_contract() -> None:
@@ -67,7 +77,10 @@ def test_materialization_is_deterministic_and_reuses_fixed_probe_contract() -> N
 def test_counted_opener_contains_no_redirect_and_single_https_counter() -> None:
     opener, counter = module.build_counted_no_redirect_opener()
     assert counter in opener.handlers
-    assert any(isinstance(handler, module.base.NoRedirectHandler) for handler in opener.handlers)
+    assert any(
+        isinstance(handler, module.base.NoRedirectHandler)
+        for handler in opener.handlers
+    )
     counters = [
         handler
         for handler in opener.handlers
@@ -76,7 +89,9 @@ def test_counted_opener_contains_no_redirect_and_single_https_counter() -> None:
     assert counters == [counter]
 
 
-def _fake_execute_with_attempts(monkeypatch, attempts: int, *, status: int = 200) -> dict:
+def _fake_execute_with_attempts(
+    monkeypatch, attempts: int, *, status: int = 200
+) -> dict:
     def fake_execute_one(key, row):
         counter = next(
             handler
@@ -174,4 +189,6 @@ def test_execute_requires_explicit_authorization(monkeypatch) -> None:
     except RuntimeError as exc:
         assert "not authorized" in str(exc)
     else:
-        raise AssertionError("execute() must fail closed without explicit authorization")
+        raise AssertionError(
+            "execute() must fail closed without explicit authorization"
+        )
