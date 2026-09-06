@@ -90,7 +90,7 @@ Without another step-by-step human instruction, the operator may:
 - create and update issues, branches, PRs, documentation, tests, engineering code, and non-scientific tooling;
 - repair CI failures and review findings;
 - resolve review threads after the finding is actually addressed and verified;
-- run credential-free unit/integration tests, linting, static analysis, deterministic materialization, and ordinary repository CI;
+- run credential-free unit/integration tests, linting, static analysis, deterministic materialization, and ordinary repository CI only when any provider-execution path is provably gated off by the current workflow state;
 - perform fresh self-review on an exact head and open new blocking review findings when warranted;
 - preserve negative, mixed, null, or apparatus-failure outcomes without outcome-based retuning;
 - update explanatory documentation so it reflects current exact commits, workflow identities, and accepted claim ceilings;
@@ -104,7 +104,7 @@ The operator must stop and obtain explicit human authorization, or a separately 
 
 ### Scientific execution and authority
 
-- initiating provider/model calls that consume external paid resources for a frozen scientific or engineering campaign;
+- initiating any external provider/model call for a frozen scientific or engineering campaign, whether paid or free;
 - declaring a new scientific campaign authorized to execute;
 - changing a frozen preregistration, treatment, threshold, cohort, request stream, evaluator, or stopping rule after outcome-bearing data exist;
 - acting as both proposer/evidence generator and final Acceptance-plane authority for the same scientific promotion;
@@ -128,7 +128,7 @@ The operator must stop and obtain explicit human authorization, or a separately 
 
 An explicit human authorization may permit a bounded future action, but it does not retroactively rewrite already-frozen scientific history or remove required proposer/acceptor separation.
 
-## 7. Resource policy
+## 7. Resource and external-execution policy
 
 Default external discretionary spend is:
 
@@ -140,18 +140,18 @@ Allowed without new authorization:
 
 - local reasoning and analysis available in the active runtime;
 - repository-local computation;
-- ordinary GitHub Actions CI triggered by authorized repository changes;
+- ordinary GitHub Actions CI only when it is credential-free for external providers or the current workflow state provably gates every provider-execution job off;
 - credential-free deterministic tests and audits.
 
 Requires explicit authorization:
 
-- provider/model calls that can incur charges;
+- any external provider/model execution that is part of a frozen scientific or engineering campaign, whether paid or free;
 - paid compute or hosted jobs outside ordinary repository CI;
 - purchases, subscriptions, external services, or other billable commitments.
 
 No credential may be copied into chat, source control, artifacts, logs, issue text, PR text, or review comments.
 
-A later human-approved charter amendment may establish a bounded autonomous budget with explicit provider, purpose, amount, and stopping conditions.
+A later human-approved charter amendment may establish a bounded autonomous budget with explicit provider, purpose, amount, and stopping conditions. A budget does not by itself authorize scientific execution; the applicable prospective execution gate must still be satisfied.
 
 ## 8. Scientific gates remain unchanged
 
@@ -176,7 +176,7 @@ An AI-operated PR may be merged autonomously only if **all** of the following ar
 1. **scope** — the change is engineering, testing, maintenance, or explanatory documentation;
 2. **no authority mutation** — it does not alter scientific authority, a frozen experimental contract, registry status, provider authorization, credentials, deployment, billing, this charter, or another constitutional governance rule;
 3. **correct target** — the PR is non-draft, mechanically mergeable, and targets the intended base branch;
-4. **exact-head CI** — all required exact-head checks are complete and successful, excluding workflows whose registered contract intentionally fails or skips in the current state;
+4. **exact-head CI** — all required exact-head checks are complete and successful, excluding workflows whose registered contract intentionally fails or skips in the current state, and no provider-execution path ran without the authorization required by Section 6;
 5. **thread cleanliness** — all blocking review threads are resolved;
 6. **fresh review** — a fresh review of the current exact head finds no blocking issue;
 7. **evidence preservation** — the change does not rewrite preserved scientific evidence or authoritative historical artifacts;
