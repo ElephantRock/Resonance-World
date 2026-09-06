@@ -191,7 +191,14 @@ class Client:
                 self.logical_call_failures += 1
             suffix = read_error or "body_read_ok"
             raise RuntimeError(f"provider_http_failure:{http_status}:{suffix}") from exc
-        except (urllib.error.URLError, TimeoutError, OSError, http.client.HTTPException, ValueError, RuntimeError) as exc:
+        except (
+            urllib.error.URLError,
+            TimeoutError,
+            OSError,
+            http.client.HTTPException,
+            ValueError,
+            RuntimeError,
+        ) as exc:
             with self.counter_lock:
                 self.physical_attempts_started += counter.attempts
                 self.logical_call_failures += 1
