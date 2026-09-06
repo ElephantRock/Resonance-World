@@ -1,0 +1,74 @@
+name: D2d-S2 Source Acquisition Preexecution
+
+on:
+  push:
+    branches: ["research/d2d-s2-source-acquisition"]
+    paths:
+      - "research/d2d_s2/**"
+      - "scripts/d2d_s2_*.py"
+      - "scripts/materialize_d2d_s2_source_acquisition.py"
+      - "scripts/run_d2d_s2_source_acquisition.py"
+      - "scripts/aggregate_d2d_s2_source_acquisition.py"
+      - "scripts/evaluate_d2d_s2_source_acquisition.py"
+      - "tests/test_d2d_s2_source_acquisition.py"
+      - ".github/workflows/d2d-s2-*.yml"
+  pull_request:
+    paths:
+      - "research/d2d_s2/**"
+      - "scripts/d2d_s2_*.py"
+      - "scripts/materialize_d2d_s2_source_acquisition.py"
+      - "scripts/run_d2d_s2_source_acquisition.py"
+      - "scripts/aggregate_d2d_s2_source_acquisition.py"
+      - "scripts/evaluate_d2d_s2_source_acquisition.py"
+      - "tests/test_d2d_s2_source_acquisition.py"
+      - ".github/workflows/d2d-s2-*.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  preexecution:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@v4
+      - name: Detect lifecycle state without provider credentials
+        id: lifecycle
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          marker="research/d2d_s2/RUN_D2D_S2_SOURCE_ACQUISITION"
+          if test -f "$marker"; then
+            test "$(sed -n 's/^issue=//p' "$marker")" = "208"
+            test "$(sed -n 's/^authorization=//p' "$marker")" = "D2d_S2_provider_execution_explicitly_authorized"
+            test -n "$(sed -n 's/^candidate_sha=//p' "$marker")"
+            echo "state=post_execution" >> "$GITHUB_OUTPUT"
+          else
+            echo "state=pre_execution" >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        if: steps.lifecycle.outputs.state == 'pre_execution'
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Install research environment
+        if: steps.lifecycle.outputs.state == 'pre_execution'
+        run: python -m pip install -e '.[dev]'
+      - name: Materialize and compare frozen deterministic inputs
+        if: steps.lifecycle.outputs.state == 'pre_execution'
+        run: |
+          python scripts/materialize_d2d_s2_source_acquisition.py --output-dir output/d2d-s2-materialization
+          cmp output/d2d-s2-materialization/d2d-s2-source-acquisition-cohort-lock.json research/d2d_s2/d2d-s2-source-acquisition-cohort-lock.json
+          cmp output/d2d-s2-materialization/D2D_S2_SHARD_MAP.json research/d2d_s2/D2D_S2_SHARD_MAP.json
+      - name: Run D2d-S2 zero-provider tests
+        if: steps.lifecycle.outputs.state == 'pre_execution'
+        run: |
+          python -m pytest -q tests/test_d2d_s2_source_acquisition.py
+          python -m ruff check scripts/d2d_s2_acquisition_core.py scripts/d2d_s2_general_api_client.py scripts/materialize_d2d_s2_source_acquisition.py scripts/run_d2d_s2_source_acquisition.py scripts/aggregate_d2d_s2_source_acquisition.py scripts/evaluate_d2d_s2_source_acquisition.py tests/test_d2d_s2_source_acquisition.py
+      - name: Assert construction candidate has no execution marker
+        if: steps.lifecycle.outputs.state == 'pre_execution'
+        run: test ! -e research/d2d_s2/RUN_D2D_S2_SOURCE_ACQUISITION
+      - name: Completed-state no-op
+        if: steps.lifecycle.outputs.state == 'post_execution'
+        run: echo "D2d-S2 marker present; preexecution mutation checks are a successful no-op."
