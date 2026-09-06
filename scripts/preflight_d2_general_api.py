@@ -335,6 +335,9 @@ def read_response_body(
         except (TimeoutError, OSError, http.client.HTTPException, ValueError) as exc:
             return None, type(exc).__name__
         if not chunk:
+            remaining_length = getattr(reader, "length", None)
+            if isinstance(remaining_length, int) and remaining_length > 0:
+                return None, "IncompleteRead"
             return b"".join(chunks), None
         chunks.append(chunk)
         if time.perf_counter() >= deadline:
