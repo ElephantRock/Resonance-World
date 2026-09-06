@@ -30,7 +30,8 @@ base.materializer = materializer
 base.EXPECTED_COHORT_SHA256 = EXPECTED_COHORT_SHA256
 base.BEHAVIORAL_OBJECTIVE = (
     "Choose exactly one action from KAPPA, MICA, ORBIT, VELA for each four-feature integer case. "
-    "Each Field owns a fixed hidden local policy belonging to the registered D2d-S2 calibration schema."
+    "Each Field owns a fixed hidden local policy belonging to the registered D2d-S2 "
+    "calibration schema."
 )
 
 
