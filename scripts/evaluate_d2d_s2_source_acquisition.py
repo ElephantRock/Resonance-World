@@ -7,8 +7,9 @@ import argparse
 import copy
 import hashlib
 import json
+from contextlib import contextmanager
 from pathlib import Path
-from typing import Any
+from typing import Any, Iterator
 
 import d2d_s2_acquisition_core as core
 import evaluate_d2d_source_acquisition as base
@@ -23,11 +24,6 @@ BOOTSTRAP_SEEDS = {
     "pairwise_order": 2026090604,
 }
 
-base.core = core
-base.materializer = materializer
-base.EXPECTED_COHORT_SHA256 = EXPECTED_COHORT_SHA256
-base.BOOTSTRAP_SEEDS = BOOTSTRAP_SEEDS
-
 
 def canonical_bytes(value: Any) -> bytes:
     return (json.dumps(value, sort_keys=True, separators=(",", ":")) + "\n").encode()
@@ -35,6 +31,36 @@ def canonical_bytes(value: Any) -> bytes:
 
 def file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+@contextmanager
+def _fresh_base_context() -> Iterator[None]:
+    """Bind the historical evaluator to D2d-S2 only for one evaluation call.
+
+    The historical evaluator exposes its cohort dependencies as module globals. Keeping
+    these substitutions scoped prevents importing this module from mutating historical
+    D2d behavior elsewhere in the same test or analysis process.
+    """
+
+    original = (
+        base.core,
+        base.materializer,
+        base.EXPECTED_COHORT_SHA256,
+        base.BOOTSTRAP_SEEDS,
+    )
+    base.core = core
+    base.materializer = materializer
+    base.EXPECTED_COHORT_SHA256 = EXPECTED_COHORT_SHA256
+    base.BOOTSTRAP_SEEDS = BOOTSTRAP_SEEDS
+    try:
+        yield
+    finally:
+        (
+            base.core,
+            base.materializer,
+            base.EXPECTED_COHORT_SHA256,
+            base.BOOTSTRAP_SEEDS,
+        ) = original
 
 
 def _defect(pair_index: int, arm: str, call_index: int, defect: str) -> dict[str, Any]:
@@ -104,7 +130,8 @@ def evaluate(provider: dict[str, Any]) -> dict[str, Any]:
         raise ValueError("D2d-S2 provider stream mismatch")
     normalized = copy.deepcopy(provider)
     normalized["schema"] = "d2d-source-acquisition-provider-output-v0.1"
-    result = base.evaluate(normalized)
+    with _fresh_base_context():
+        result = base.evaluate(normalized)
     transport = transport_defects(provider)
     result["schema"] = "d2d-s2-source-acquisition-result-v0.1"
     result["study_stream"] = "D2d-S2"
