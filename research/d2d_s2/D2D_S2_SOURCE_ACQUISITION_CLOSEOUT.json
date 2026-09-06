@@ -1,0 +1,110 @@
+{
+  "schema": "d2d-s2-source-acquisition-closeout-v0.1",
+  "issue": 208,
+  "pull_request": 209,
+  "scientific_candidate_sha": "62a54c3d38a238a95744cba46a4e9e0241477217",
+  "authorization_commit_sha": "20c76cb9826589a02de9c82112cb0f10170c7d78",
+  "workflow_run_id": 34059455948,
+  "workflow_run_attempt": 1,
+  "workflow_conclusion": "success",
+  "workflow_created_at_utc": "2026-09-06T20:55:09Z",
+  "workflow_updated_at_utc": "2026-09-06T20:58:52Z",
+  "classification": "D2d-S2-A0",
+  "classification_label": "acquisition_envelope_integrity_or_minimum_n_failure",
+  "status": "completed_uninterpretable_minimum_n_failure",
+  "attempted_pairs": 384,
+  "complete_pairs": 0,
+  "failed_pairs": 384,
+  "minimum_analyzable_pairs_per_schema": 88,
+  "analyzable_pairs_by_schema": {
+    "threshold_at_4": 0,
+    "parity_pair": 0,
+    "interval_pair": 0,
+    "pairwise_order": 0
+  },
+  "integrity": {
+    "passed": true,
+    "global_defects": [],
+    "pair_defects": [],
+    "diagnostic_defects": []
+  },
+  "transport_integrity": {
+    "evaluator_passed": true,
+    "contract": "hardened_general_api_no_redirect_single_attempt_v0.1",
+    "interpretation": "The evaluator found no transport-contract defects among completed records, but there were zero completed pairs; this field does not establish successful campaign transport."
+  },
+  "positive_control": {
+    "schema_id": "threshold_at_4",
+    "continuity_requirement": "developed_40_minus_fresh_primary_gate_pass",
+    "continuity_pass": false,
+    "interpretation": "not_established_because_no_pairs_were_analyzable"
+  },
+  "common_confirmed_acquisition_budget": null,
+  "confirmatory_gates_entered": false,
+  "provider_failure_summary": {
+    "failure_class": "provider_pair_failure",
+    "error_type": "RuntimeError",
+    "records": 384,
+    "unique_error_sha256_values": 1,
+    "error_sha256": "f2f3f6035b2c5e66e2dca9e16ac270fec911215205034703a0fab02e21099b41",
+    "frozen_runner_fingerprint_preimage": "RuntimeError:provider_http_failure:429:body_read_ok",
+    "terminal_http_status": 429,
+    "raw_provider_error_body_preserved_in_canonical_output": false,
+    "specific_429_policy_cause_established": false,
+    "interpretation": "Every registered pair terminated with the same frozen-runner fingerprint for an HTTP 429 response whose body read completed. The evidence establishes the terminal HTTP status, not whether the provider policy cause was rate, quota, account, or another 429 condition."
+  },
+  "hashes": {
+    "cohort_pairs_sha256": "d74348dc2d15e2b1c1959726faa9ae473e01a3aeed46bcdc3b1c240e918b3d9f",
+    "cohort_lock_file_sha256": "e4b5719a77c35384eb0976a5f364c91f930efb675d23de9998d6913c6245133a",
+    "shard_map_sha256": "4ddd2513ed630fca3eb732a0515268b3fa2d3de35de055c6df8793054d779f74",
+    "plan_sha256": "4206e6d51f06873dcebcb0840598b8154b0a52e84f2a89ccdc958c892260cd8d",
+    "request_plan_sha256": "2094423d2e7d16ff124e46ba32c99892d9fee77438bfe87804930ff6e5296c46",
+    "sample_size_sha256": "a094d43dc96aeff3a3f466259170125caf2e3705120a98a83367fe0686e89f30",
+    "schema_suite_sha256": "1ae69bea53656459c3fb98a20f5bee46592be30e3cd644a695a913b92be66328",
+    "provider_output_sha256": "87478c3e2bcace47ee3022af94a9164a22b271651eea1d72cf7b27e3559ec70d",
+    "provider_output_manifest_sha256": "5977cd47a6c55f230fa801e5889455e941cf1b005c3fb2bee060a6ad10b65359",
+    "result_sha256": "ce462acf863de8a00aaa4e4db42560d359d0e8865d063d5f204c5e25f55872c7",
+    "evaluation_manifest_sha256": "32b62510678c1df0e8a9b811209a1c52a61d02545a05b9fb9ddc116bc7c92783"
+  },
+  "workflow_artifacts": {
+    "canonical_provider_output": {
+      "name": "d2d-s2-canonical-provider-output",
+      "artifact_id": 9997043003,
+      "digest": "sha256:cb44db6b6cc23e95c0fe9cf055406abcd018dcf437560164445ce22a4070525f",
+      "size_in_bytes": 6305,
+      "expires_at_utc": "2026-12-05T20:55:09Z"
+    },
+    "evaluation": {
+      "name": "d2d-s2-source-acquisition-evaluation",
+      "artifact_id": 9997046414,
+      "digest": "sha256:a1a8a39c8b9dedde8564f645691ab45a224854ca9caf0d048c9cbdab25619ec6",
+      "size_in_bytes": 2243,
+      "expires_at_utc": "2026-12-05T20:55:09Z"
+    },
+    "provider_shards": {
+      "count": 24,
+      "all_jobs_succeeded": true
+    }
+  },
+  "scientific_interpretation": {
+    "acquisition_envelope_interpretable": false,
+    "evidence_that_40_cases_fail_to_acquire_capability": false,
+    "evidence_that_80_cases_fail_to_acquire_capability": false,
+    "evidence_that_160_cases_fail_to_acquire_capability": false,
+    "d2e_acquisition_protocol_identified": false,
+    "d2e_reuse_of_d2d_s2_calibration_schemas_allowed": false,
+    "next_programmatic_question": "diagnose and prospectively qualify campaign-scale HTTP-429 compatibility in a separate engineering stream before any new source-acquisition characterization campaign"
+  },
+  "governance": {
+    "same_request_stream_rerun_authorized": false,
+    "replacement_or_adaptive_n_authorized": false,
+    "registry_promotion_authorized": false,
+    "registry_transition": null,
+    "registry_status_remains": "internally_replicated",
+    "independent_acceptance_review_required": false,
+    "reason_acceptance_not_entered": "D2d-S2-A0 is a non-inferential calibration minimum-N failure and is not registry-promotion evidence",
+    "production_historical_substrate_enabled": false,
+    "historical_substrate_default_state": "OFF"
+  },
+  "claim_ceiling": "No scientific source-acquisition efficacy claim is supported by D2d-S2-A0. The preserved result is limited to a one-shot single-model synthetic individual-agent D2d-S2 execution in which all 384 registered units terminated in provider_pair_failure records with the same HTTP-429 fingerprint and zero pairs were analyzable; no capability-reproduction, schema-generalization, cross-model/provider, naturalistic, team/swarm/institution, production-readiness, or Historical Substrate claim."
+}
