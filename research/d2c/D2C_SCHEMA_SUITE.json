@@ -1,0 +1,37 @@
+{
+  "schema": "d2c-schema-suite-v0.1",
+  "preregistration_issue": 192,
+  "governance_novelty": "G2_new_schema_same_abstract_operator",
+  "abstract_operator": "four integer features -> hidden two-bit state -> opaque one-to-one four-action mapping",
+  "feature_names": ["f0", "f1", "f2", "f3"],
+  "feature_domain": "integers_0_through_7",
+  "actions": ["KAPPA", "MICA", "ORBIT", "VELA"],
+  "schemas": [
+    {
+      "schema_id": "parity_pair",
+      "seed_base": 4200000,
+      "pairs_attempted": 180,
+      "public_ecology": "Two undisclosed distinct coordinates each contribute one latent bit equal to value mod 2; the two-bit state is mapped one-to-one to four opaque actions.",
+      "private_parameters": ["coordinate_a", "coordinate_b", "action_permutation"],
+      "legacy_d2_schema": false
+    },
+    {
+      "schema_id": "interval_pair",
+      "seed_base": 4400000,
+      "pairs_attempted": 180,
+      "public_ecology": "Two undisclosed distinct coordinates each contribute one latent bit indicating membership in the registered interval 2..5 inclusive; the two-bit state is mapped one-to-one to four opaque actions.",
+      "private_parameters": ["coordinate_a", "coordinate_b", "action_permutation"],
+      "legacy_d2_schema": false
+    },
+    {
+      "schema_id": "pairwise_order",
+      "seed_base": 4600000,
+      "pairs_attempted": 180,
+      "public_ecology": "The four coordinates are partitioned into two undisclosed ordered pairs; each pair contributes one latent bit indicating first >= second; the two-bit state is mapped one-to-one to four opaque actions.",
+      "private_parameters": ["ordered_pair_a", "ordered_pair_b", "action_permutation"],
+      "legacy_d2_schema": false
+    }
+  ],
+  "legacy_d2_threshold_schema_counted_as_test_schema": false,
+  "production_historical_substrate_enabled": false
+}

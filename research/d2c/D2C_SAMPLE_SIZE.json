@@ -1,0 +1,29 @@
+{
+  "schema": "d2c-schema-generalization-sample-size-v0.1",
+  "preregistration_issue": 192,
+  "alpha_one_sided": 0.05,
+  "target_power": 0.9,
+  "planning_sd": 0.4,
+  "planning_effects_are_conventional_not_observed_parent_effects": true,
+  "planning_alternative": {
+    "P0_source_minus_fresh": 0.2,
+    "P1_reproduced_minus_description": 0.2,
+    "P2_reproduced_minus_0_90_source": 0.1
+  },
+  "null_or_materiality_threshold": {
+    "P0_source_minus_fresh": 0.1,
+    "P1_reproduced_minus_description": 0.1,
+    "P2_reproduced_minus_0_90_source": 0.0
+  },
+  "margin_under_planning_alternative": 0.1,
+  "normal_approx_required_analyzable_n": 138,
+  "minimum_analyzable_pairs_per_schema": 165,
+  "attempted_pairs_per_schema": 180,
+  "schema_count": 3,
+  "total_attempted_pairs": 540,
+  "approx_power_at_minimum_n": 0.9413788757870064,
+  "approx_power_at_attempted_n_if_complete": 0.9562975209020743,
+  "multiplicity_structure": "within_schema_serial_P0_to_P1_to_P2; program_claim_is_all_three_schema_conjunction_intersection_union",
+  "planning_principle": "Prospective conservative planning assumptions fixed before D2c provider outcomes; D2-C2 and D2b observed effect magnitudes are not planning alternatives.",
+  "production_historical_substrate_enabled": false
+}
