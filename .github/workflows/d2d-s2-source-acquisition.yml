@@ -37,6 +37,10 @@ jobs:
           test "$(git rev-parse HEAD^)" = "$candidate"
           test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
           test "$(git diff --name-only "$candidate" HEAD | wc -l)" = "1"
+          if git cat-file -e "${candidate}:${marker}" 2>/dev/null; then
+            echo "Frozen candidate must not already contain the D2d-S2 authorization marker." >&2
+            exit 1
+          fi
           echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
 
   provider-shards:
@@ -73,6 +77,10 @@ jobs:
           test "$candidate" = "${{ needs.authorization-integrity.outputs.candidate_sha }}"
           test "$(git rev-parse HEAD^)" = "$candidate"
           test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          if git cat-file -e "${candidate}:${marker}" 2>/dev/null; then
+            echo "Frozen candidate must not already contain the D2d-S2 authorization marker." >&2
+            exit 1
+          fi
           python - <<'PY'
           import json
           from pathlib import Path
