@@ -21,6 +21,7 @@ SCHEMA_SUITE = Path("research/d2c/D2C_SCHEMA_SUITE.json")
 SAMPLE = Path("research/d2c/D2C_SAMPLE_SIZE.json")
 COHORT = Path("research/d2c/d2c-schema-cohort-lock.json")
 SHARDS = Path("research/d2c/D2C_SHARD_MAP.json")
+RUN_MARKER = Path("research/d2c/RUN_D2C_SCHEMA_GENERALIZATION")
 
 
 def _hashes() -> dict[str, str]:
@@ -244,5 +245,8 @@ def test_missing_full_shard_leaves_schema_max_160(tmp_path):
     assert output["aggregation_integrity"]["missing_shards"] == list(range(27))
 
 
-def test_execution_marker_absent_before_explicit_authorization():
-    assert not Path("research/d2c/RUN_D2C_SCHEMA_GENERALIZATION").exists()
+def test_execution_marker_preserves_authorized_candidate():
+    assert RUN_MARKER.read_text() == (
+        "candidate_sha=1db50eea77e71cda64b2f7dc0ec0bfb8ffb9e98c\n"
+        "issue=192\n"
+    )
