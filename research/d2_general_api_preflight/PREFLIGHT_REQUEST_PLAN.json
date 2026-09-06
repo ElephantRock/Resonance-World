@@ -1,0 +1,36 @@
+{
+  "schema": "d2-general-api-preflight-request-plan-v0.1",
+  "issue": 202,
+  "upstream_d2d_workflow_run_id": 33701860334,
+  "upstream_d2d_classification": "D2d-A0",
+  "upstream_diagnostic_workflow_run_id": 33773673338,
+  "engineering_only": true,
+  "provider_execution_authorized": false,
+  "endpoint": "https://api.z.ai/api/paas/v4/chat/completions",
+  "provider": "Z.AI",
+  "model": "glm-5-turbo",
+  "temperature": 0.8,
+  "thinking": "disabled",
+  "max_tokens": 256,
+  "stream": false,
+  "max_attempts_per_request": 1,
+  "request_count": 3,
+  "request_ids": [
+    "general_minimal_text",
+    "general_minimal_json",
+    "general_d2_shape_json"
+  ],
+  "scientific_field_trajectory_executed": false,
+  "scientific_scoring_performed": false,
+  "replacement_d2d_data_allowed": false,
+  "same_request_stream_rerun_allowed": false,
+  "registry_promotion_authorized": false,
+  "historical_substrate_enabled": false,
+  "execution_marker": "research/d2_general_api_preflight/RUN_D2_GENERAL_API_PREFLIGHT",
+  "execution_authorization_string": "D2_general_api_preflight_execution_explicitly_authorized",
+  "notes": [
+    "Construction and zero-provider validation are authorized under issue 202.",
+    "No provider preflight call is authorized until a separate explicit exact-candidate authorization is recorded.",
+    "A successful preflight does not authorize a scientific source-acquisition campaign."
+  ]
+}

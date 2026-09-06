@@ -1,0 +1,62 @@
+name: D2 General API Preflight Preexecution
+
+on:
+  push:
+    branches:
+      - engineering/d2-general-api-preflight
+  pull_request:
+    paths:
+      - 'research/d2_general_api_preflight/**'
+      - 'scripts/preflight_d2_general_api.py'
+      - 'tests/test_d2_general_api_preflight.py'
+      - '.github/workflows/d2-general-api-preflight*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-zero-provider:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert provider execution remains unauthorized
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e research/d2_general_api_preflight/RUN_D2_GENERAL_API_PREFLIGHT
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path(
+              'research/d2_general_api_preflight/PREFLIGHT_REQUEST_PLAN.json'
+          ).read_text())
+          assert p['provider_execution_authorized'] is False
+          assert p['endpoint'] == 'https://api.z.ai/api/paas/v4/chat/completions'
+          assert '/coding/' not in p['endpoint']
+          assert p['request_count'] == 3
+          assert p['max_attempts_per_request'] == 1
+          assert p['historical_substrate_enabled'] is False
+          PY
+      - name: Deterministic preflight materialization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/preflight_d2_general_api.py > /tmp/d2-general-a.json
+          python scripts/preflight_d2_general_api.py > /tmp/d2-general-b.json
+          cmp /tmp/d2-general-a.json /tmp/d2-general-b.json
+      - name: Test bounded preflight apparatus
+        run: python -m pytest -q tests/test_d2_general_api_preflight.py
+      - name: Ruff preflight files
+        run: >-
+          python -m ruff check
+          scripts/preflight_d2_general_api.py
+          tests/test_d2_general_api_preflight.py
