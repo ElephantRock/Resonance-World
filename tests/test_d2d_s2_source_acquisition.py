@@ -9,11 +9,15 @@ SCRIPTS = ROOT / "scripts"
 D2D_S2 = ROOT / "research" / "d2d_s2"
 sys.path.insert(0, str(SCRIPTS))
 
+import d2d_acquisition_core as historical_core  # noqa: E402
 import d2d_s2_acquisition_core as core  # noqa: E402
 import materialize_d2d_s2_source_acquisition as materializer  # noqa: E402
+import materialize_d2d_source_acquisition as historical_materializer  # noqa: E402
 import run_d2d_s2_source_acquisition as runner  # noqa: E402
+import run_d2d_source_acquisition as historical_runner  # noqa: E402
 
 EXPECTED_COHORT = "d74348dc2d15e2b1c1959726faa9ae473e01a3aeed46bcdc3b1c240e918b3d9f"
+HISTORICAL_COHORT = "a9c2077d4e76825d9ef1f6b245caf0231f5a4a3b1dc00cc0032793add8f9ea19"
 
 
 def load_json(name: str):
@@ -62,6 +66,31 @@ def test_materialization_matches_committed_frozen_inputs() -> None:
 
 def test_marker_absent_on_frozen_construction_candidate() -> None:
     assert not runner.MARKER_PATH.exists()
+
+
+def test_d2d_s2_import_and_binding_preserve_historical_runner() -> None:
+    before = (
+        historical_runner.core,
+        historical_runner.materializer,
+        historical_runner.EXPECTED_COHORT_SHA256,
+        historical_runner.BEHAVIORAL_OBJECTIVE,
+    )
+    assert before[0] is historical_core
+    assert before[1] is historical_materializer
+    assert before[2] == HISTORICAL_COHORT
+    assert "registered D2d calibration schema" in before[3]
+    with runner._fresh_base_context():
+        assert historical_runner.core is core
+        assert historical_runner.materializer is materializer
+        assert historical_runner.EXPECTED_COHORT_SHA256 == EXPECTED_COHORT
+        assert "registered D2d-S2 calibration schema" in historical_runner.BEHAVIORAL_OBJECTIVE
+    after = (
+        historical_runner.core,
+        historical_runner.materializer,
+        historical_runner.EXPECTED_COHORT_SHA256,
+        historical_runner.BEHAVIORAL_OBJECTIVE,
+    )
+    assert after == before
 
 
 def test_sample_size_margin_and_hierarchy() -> None:
