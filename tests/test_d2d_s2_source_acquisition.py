@@ -18,6 +18,7 @@ import run_d2d_source_acquisition as historical_runner  # noqa: E402
 
 EXPECTED_COHORT = "d74348dc2d15e2b1c1959726faa9ae473e01a3aeed46bcdc3b1c240e918b3d9f"
 HISTORICAL_COHORT = "a9c2077d4e76825d9ef1f6b245caf0231f5a4a3b1dc00cc0032793add8f9ea19"
+FROZEN_CANDIDATE = "62a54c3d38a238a95744cba46a4e9e0241477217"
 
 
 def load_json(name: str):
@@ -64,8 +65,15 @@ def test_materialization_matches_committed_frozen_inputs() -> None:
     assert shard_map["favorable_result_possible_with_missing_whole_shard"] is False
 
 
-def test_marker_absent_on_frozen_construction_candidate() -> None:
-    assert not runner.MARKER_PATH.exists()
+def test_authorization_marker_lifecycle() -> None:
+    if not runner.MARKER_PATH.exists():
+        return
+    marker = runner.marker_record()
+    assert marker == {
+        "candidate_sha": FROZEN_CANDIDATE,
+        "issue": "208",
+        "authorization": "D2d_S2_provider_execution_explicitly_authorized",
+    }
 
 
 def test_d2d_s2_import_and_binding_preserve_historical_runner() -> None:
