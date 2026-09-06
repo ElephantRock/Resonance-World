@@ -7,9 +7,10 @@ import argparse
 import copy
 import hashlib
 import json
+from collections.abc import Iterator
 from contextlib import contextmanager
 from pathlib import Path
-from typing import Any, Iterator
+from typing import Any
 
 import d2d_s2_acquisition_core as core
 import evaluate_d2d_source_acquisition as base
