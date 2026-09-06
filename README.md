@@ -87,6 +87,12 @@ Scale only after the field boundary, evidence model, transfer semantics, and exp
 - Side effects remain governed by explicit policy boundaries.
 - Every consequential cross-field event must be provenance-preserving and auditable.
 
+## Operating governance
+
+GitHub is the durable program state. The program-level North Star and cross-repository authority boundaries are defined in issue #111, prospective mechanism claims are governed by `docs/mechanism-governance-v0.1.md`, and bounded AI operational autonomy is defined by `docs/autonomous-operating-charter-v0.1.md` with a machine-readable companion at `configs/autonomous-operating-charter-v0.1.json`.
+
+The autonomous charter permits ordinary research-engineering work to continue without step-by-step prompting while preserving explicit boundaries around provider execution, scientific acceptance, resource spend, credentials, destructive evidence changes, production deployment, and Historical Substrate activation.
+
 ## Repository direction
 
 ```text
