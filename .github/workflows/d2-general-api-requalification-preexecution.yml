@@ -1,0 +1,85 @@
+name: D2 General API Requalification Preexecution
+
+on:
+  push:
+    branches:
+      - engineering/d2-general-api-requalification
+  pull_request:
+    paths:
+      - 'research/d2_general_api_requalification/**'
+      - 'scripts/requalify_d2_general_api.py'
+      - 'scripts/preflight_d2_general_api.py'
+      - 'tests/test_d2_general_api_requalification.py'
+      - 'tests/test_d2_general_api_preflight.py'
+      - 'tests/test_d2_general_api_content_length.py'
+      - '.github/workflows/d2-general-api-requalification*.yml'
+
+permissions:
+  contents: read
+
+jobs:
+  validate-zero-provider:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+          cache: pip
+      - name: Install research environment
+        run: python -m pip install -e '.[dev]'
+      - name: Assert provider lifecycle state is coherent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          marker='research/d2_general_api_requalification/RUN_D2_GENERAL_API_REQUALIFICATION'
+          if test -e "$marker"; then
+            candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+            issue="$(sed -n 's/^issue=//p' "$marker")"
+            authorization="$(sed -n 's/^authorization=//p' "$marker")"
+            test "$candidate" = '0e4ce60ef33c6a5f113ca6d0670501d48b3ed97e'
+            test "$issue" = '206'
+            test "$authorization" = \
+              'D2_general_api_requalification_execution_explicitly_authorized'
+            test -f research/d2_general_api_requalification/D2_GENERAL_API_REQUALIFICATION_CLOSEOUT.json
+            test -f research/d2_general_api_requalification/evidence/d2-general-api-requalification-result.json
+          fi
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path(
+              'research/d2_general_api_requalification/REQUALIFICATION_REQUEST_PLAN.json'
+          ).read_text())
+          assert p['issue'] == 206
+          assert p['engineering_only'] is True
+          assert p['provider_execution_authorized'] is False
+          assert p['endpoint'] == 'https://api.z.ai/api/paas/v4/chat/completions'
+          assert p['request_count'] == 3
+          assert p['max_attempts_per_request'] == 1
+          assert p['redirect_policy'] == 'reject_do_not_follow'
+          assert p['physical_attempt_accounting'] == 'instrumented_https_handler'
+          assert p['historical_preflight_closeout_status'] == 'completed_response_level_pass_redirect_unverified'
+          assert p['historical_substrate_enabled'] is False
+          PY
+      - name: Deterministic fresh materialization
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/requalify_d2_general_api.py > /tmp/d2-requal-a.json
+          python scripts/requalify_d2_general_api.py > /tmp/d2-requal-b.json
+          cmp /tmp/d2-requal-a.json /tmp/d2-requal-b.json
+      - name: Test hardened transport and requalification accounting
+        run: >-
+          python -m pytest -q
+          tests/test_d2_general_api_preflight.py
+          tests/test_d2_general_api_content_length.py
+          tests/test_d2_general_api_requalification.py
+      - name: Ruff requalification files
+        run: >-
+          python -m ruff check
+          scripts/requalify_d2_general_api.py
+          tests/test_d2_general_api_requalification.py

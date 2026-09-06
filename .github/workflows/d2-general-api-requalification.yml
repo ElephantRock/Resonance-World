@@ -1,0 +1,125 @@
+name: D2 General API Requalification Execution
+
+on:
+  push:
+    branches:
+      - engineering/d2-general-api-requalification
+    paths:
+      - 'research/d2_general_api_requalification/RUN_D2_GENERAL_API_REQUALIFICATION'
+
+permissions:
+  contents: read
+
+jobs:
+  authorization-integrity:
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      candidate_sha: ${{ steps.auth.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: auth
+        name: Verify sole post-freeze requalification authorization marker
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_general_api_requalification/RUN_D2_GENERAL_API_REQUALIFICATION'
+          test -f "$marker"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          authorization="$(sed -n 's/^authorization=//p' "$marker")"
+          test -n "$candidate"
+          test "$issue" = '206'
+          test "$authorization" = 'D2_general_api_requalification_execution_explicitly_authorized'
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          test "$(git diff --name-only "$candidate" HEAD | wc -l)" = '1'
+          python - "$candidate" <<'PY'
+          import json, subprocess, sys
+          candidate=sys.argv[1]
+          raw=subprocess.check_output([
+              'git','show',
+              f'{candidate}:research/d2_general_api_requalification/REQUALIFICATION_REQUEST_PLAN.json'
+          ], text=True)
+          p=json.loads(raw)
+          assert p['issue'] == 206
+          assert p['engineering_only'] is True
+          assert p['provider_execution_authorized'] is False
+          assert p['endpoint'] == 'https://api.z.ai/api/paas/v4/chat/completions'
+          assert p['model'] == 'glm-5-turbo'
+          assert p['request_count'] == 3
+          assert p['max_attempts_per_request'] == 1
+          assert p['redirect_policy'] == 'reject_do_not_follow'
+          assert p['physical_attempt_accounting'] == 'instrumented_https_handler'
+          assert p['redirect_history_must_be_verified'] is True
+          assert p['one_physical_request_per_probe_must_be_verified'] is True
+          assert p['historical_substrate_enabled'] is False
+          PY
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+
+  execute-bounded-requalification:
+    needs: authorization-integrity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      D2_GENERAL_API_REQUALIFICATION_AUTHORIZED: '1'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assert credential and sole-child candidate
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${ZAI_API_KEY:-}"
+          test "$(git rev-parse HEAD^)" = '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+      - name: Execute exactly three instrumented no-retry probes
+        run: |
+          python scripts/requalify_d2_general_api.py \
+            --execute \
+            --output output/d2-general-api-requalification.json
+      - name: Verify bounded engineering result schema
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('output/d2-general-api-requalification.json').read_text())
+          assert p['schema'] == 'd2-general-api-requalification-result-v0.1'
+          assert p['engineering_only'] is True
+          assert p['issue'] == 206
+          assert p['request_count'] == 3
+          assert isinstance(p['qualification_pass'], bool)
+          assert isinstance(p['redirect_history_verified'], bool)
+          assert isinstance(p['one_physical_request_per_probe_verified'], bool)
+          assert len(p['results']) == 3
+          for row in p['results']:
+              assert row['redirect_following_disabled'] is True
+              assert row['redirects_followed'] == 0
+              assert isinstance(row['physical_attempts_initiated'], int)
+              assert isinstance(row['one_physical_request_verified'], bool)
+          assert p['scientific_campaign_authorized'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['production_historical_substrate_enabled'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-general-api-requalification-result
+          path: output/d2-general-api-requalification.json
+          if-no-files-found: error
+          retention-days: 90
+
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo 'Requalification reruns are prohibited; freeze a new engineering candidate.' >&2
+          exit 1
