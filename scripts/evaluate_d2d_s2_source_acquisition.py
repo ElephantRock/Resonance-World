@@ -37,6 +37,15 @@ def file_sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def _defect(pair_index: int, arm: str, call_index: int, defect: str) -> dict[str, Any]:
+    return {
+        "pair_index": pair_index,
+        "arm": arm,
+        "call": call_index,
+        "defect": defect,
+    }
+
+
 def transport_defects(provider: dict[str, Any]) -> list[dict[str, Any]]:
     defects: list[dict[str, Any]] = []
     records = provider.get("pair_records")
@@ -55,15 +64,24 @@ def transport_defects(provider: dict[str, Any]) -> list[dict[str, Any]]:
                 continue
             calls = payload.get("calls")
             if not isinstance(calls, list):
-                defects.append({"pair_index": pair_index, "arm": arm, "defect": "calls_missing"})
+                defects.append(
+                    {"pair_index": pair_index, "arm": arm, "defect": "calls_missing"}
+                )
                 continue
             for call_index, call in enumerate(calls):
                 if not isinstance(call, dict):
-                    defects.append({"pair_index": pair_index, "arm": arm, "call": call_index, "defect": "call_invalid"})
+                    defects.append(_defect(pair_index, arm, call_index, "call_invalid"))
                     continue
                 attempts = call.get("attempt_log")
-                if call.get("physical_attempts") != 1 or not isinstance(attempts, list) or len(attempts) != 1:
-                    defects.append({"pair_index": pair_index, "arm": arm, "call": call_index, "defect": "physical_attempt_count"})
+                call_shape_ok = (
+                    call.get("physical_attempts") == 1
+                    and isinstance(attempts, list)
+                    and len(attempts) == 1
+                )
+                if not call_shape_ok:
+                    defects.append(
+                        _defect(pair_index, arm, call_index, "physical_attempt_count")
+                    )
                     continue
                 attempt = attempts[0]
                 if (
@@ -73,7 +91,9 @@ def transport_defects(provider: dict[str, Any]) -> list[dict[str, Any]]:
                     or attempt.get("http_status") != 200
                     or attempt.get("status") != "ok"
                 ):
-                    defects.append({"pair_index": pair_index, "arm": arm, "call": call_index, "defect": "hardened_transport_contract"})
+                    defects.append(
+                        _defect(pair_index, arm, call_index, "hardened_transport_contract")
+                    )
     return defects
 
 
