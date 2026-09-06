@@ -59,8 +59,21 @@ def test_materialization_is_deterministic_and_reuses_fixed_probe_contract() -> N
     assert first["physical_attempt_accounting"] == "instrumented_https_handler"
     assert len(first["hardened_transport_sha256"]) == 64
     assert len(first["requalification_wrapper_sha256"]) == 64
+    assert len(first["request_plan_sha256"]) == 64
     assert first["provider_execution_authorized"] is False
     assert first["production_historical_substrate_enabled"] is False
+
+
+def test_counted_opener_contains_no_redirect_and_single_https_counter() -> None:
+    opener, counter = module.build_counted_no_redirect_opener()
+    assert counter in opener.handlers
+    assert any(isinstance(handler, module.base.NoRedirectHandler) for handler in opener.handlers)
+    counters = [
+        handler
+        for handler in opener.handlers
+        if isinstance(handler, module.CountingHTTPSHandler)
+    ]
+    assert counters == [counter]
 
 
 def _fake_execute_with_attempts(monkeypatch, attempts: int, *, status: int = 200) -> dict:
@@ -125,6 +138,33 @@ def test_aggregate_qualification_requires_physical_and_redirect_verification() -
     bad_redirect = [dict(good) for _ in range(3)]
     bad_redirect[2]["redirect_history_verified"] = False
     assert module.qualification_pass(bad_redirect) is False
+
+
+def test_marker_parser_requires_exact_candidate_issue_and_authorization(
+    monkeypatch, tmp_path
+) -> None:
+    marker = tmp_path / "RUN"
+    marker.write_text(
+        "candidate_sha=0123456789abcdef0123456789abcdef01234567\n"
+        "issue=206\n"
+        "authorization=D2_general_api_requalification_execution_explicitly_authorized\n"
+    )
+    monkeypatch.setattr(module, "MARKER_PATH", marker)
+    record = module.marker_record()
+    assert record["candidate_sha"] == "0123456789abcdef0123456789abcdef01234567"
+    assert record["issue"] == "206"
+
+    marker.write_text(
+        "candidate_sha=0123456789abcdef0123456789abcdef01234567\n"
+        "issue=202\n"
+        "authorization=D2_general_api_requalification_execution_explicitly_authorized\n"
+    )
+    try:
+        module.marker_record()
+    except RuntimeError as exc:
+        assert "marker issue is invalid" in str(exc)
+    else:
+        raise AssertionError("marker parser must fail closed on issue mismatch")
 
 
 def test_execute_requires_explicit_authorization(monkeypatch) -> None:
