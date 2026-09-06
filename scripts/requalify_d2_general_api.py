@@ -45,6 +45,33 @@ def sha256_path(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
+def marker_record() -> dict[str, str]:
+    """Parse the sole-child authorization marker strictly and fail closed."""
+    lines = [line for line in MARKER_PATH.read_text().splitlines() if line]
+    if len(lines) != 3 or any("=" not in line for line in lines):
+        raise RuntimeError("General API requalification marker is malformed")
+    fields = dict(line.split("=", 1) for line in lines)
+    if set(fields) != {"candidate_sha", "issue", "authorization"}:
+        raise RuntimeError("General API requalification marker fields are invalid")
+    if len(fields["candidate_sha"]) != 40 or any(
+        ch not in "0123456789abcdef" for ch in fields["candidate_sha"]
+    ):
+        raise RuntimeError("General API requalification candidate SHA is invalid")
+    if fields["issue"] != str(ISSUE):
+        raise RuntimeError("General API requalification marker issue is invalid")
+    if fields["authorization"] != AUTHORIZATION_STRING:
+        raise RuntimeError("General API requalification authorization string is invalid")
+    return fields
+
+
+def apparatus_hashes() -> dict[str, str]:
+    return {
+        "hardened_transport_sha256": sha256_path(Path("scripts/preflight_d2_general_api.py")),
+        "requalification_wrapper_sha256": sha256_path(Path(__file__)),
+        "request_plan_sha256": sha256_path(REQUEST_PLAN_PATH),
+    }
+
+
 def materialized_plan() -> dict[str, Any]:
     payload = dict(base.materialized_plan())
     payload.update(
@@ -56,10 +83,7 @@ def materialized_plan() -> dict[str, Any]:
             "physical_attempt_accounting": "instrumented_https_handler",
             "redirect_history_must_be_verified": True,
             "one_physical_request_per_probe_must_be_verified": True,
-            "hardened_transport_sha256": sha256_path(
-                Path("scripts/preflight_d2_general_api.py")
-            ),
-            "requalification_wrapper_sha256": sha256_path(Path(__file__)),
+            **apparatus_hashes(),
             "historical_preflight_status": (
                 "completed_response_level_pass_redirect_unverified"
             ),
@@ -125,6 +149,7 @@ def execute() -> dict[str, Any]:
         raise RuntimeError("General API requalification execution is not authorized")
     if not MARKER_PATH.exists():
         raise RuntimeError("General API requalification execution marker is absent")
+    marker = marker_record()
     key = os.environ.get("ZAI_API_KEY", "")
     if not key:
         raise RuntimeError("ZAI_API_KEY is required for authorized execution")
@@ -139,6 +164,10 @@ def execute() -> dict[str, Any]:
         "schema": "d2-general-api-requalification-result-v0.1",
         "engineering_only": True,
         "issue": ISSUE,
+        "authorized_candidate_sha": marker["candidate_sha"],
+        "authorization_marker_sha256": sha256_path(MARKER_PATH),
+        **apparatus_hashes(),
+        "request_body_sha256": base.materialized_plan()["request_body_sha256"],
         "endpoint": base.ENDPOINT,
         "requested_model": base.MODEL,
         "request_count": len(rows),
