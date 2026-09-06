@@ -50,13 +50,14 @@
     "repair_ci_and_review_defects",
     "resolve_verified_review_threads",
     "run_credential_free_tests_lint_static_analysis_and_deterministic_audits",
+    "run_ordinary_ci_only_when_provider_execution_paths_are_provably_gated_off",
     "perform_fresh_exact_head_self_review",
     "preserve_negative_mixed_null_and_apparatus_failure_outcomes",
     "update_explanatory_docs_to_current_exact_state",
     "merge_only_when_autonomous_merge_policy_passes"
   ],
   "requires_human_or_separate_independent_authority": [
-    "paid_provider_or_model_execution",
+    "any_external_provider_or_model_execution_for_frozen_scientific_or_engineering_campaign",
     "scientific_campaign_execution_authorization",
     "post_outcome_change_to_frozen_scientific_contract",
     "same_operator_proposer_and_final_acceptance_authority",
@@ -73,8 +74,9 @@
   "resources": {
     "default_external_discretionary_spend_usd": 0,
     "ordinary_github_actions_ci_allowed": true,
+    "ordinary_github_actions_ci_condition": "credential_free_for_external_providers_or_all_provider_execution_jobs_provably_gated_off",
     "credential_free_repository_compute_allowed": true,
-    "provider_calls_require_explicit_authorization": true,
+    "campaign_provider_calls_require_explicit_authorization_even_if_free": true,
     "credential_persistence_allowed": false
   },
   "scientific_invariants": {
@@ -108,6 +110,7 @@
     "requires_intended_base": true,
     "requires_exact_head_ci": true,
     "allows_registered_expected_failure_or_skip": true,
+    "requires_no_unauthorized_provider_execution": true,
     "requires_zero_blocking_review_threads": true,
     "requires_fresh_exact_head_review": true,
     "requires_preserved_scientific_evidence_unchanged": true,
