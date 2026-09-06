@@ -1,0 +1,41 @@
+{
+  "schema": "d2-general-api-requalification-closeout-v0.1",
+  "issue": 206,
+  "pr": 207,
+  "stream": "engineering_only",
+  "authorized_candidate_sha": "0e4ce60ef33c6a5f113ca6d0670501d48b3ed97e",
+  "authorization_commit_sha": "a9511695e225e5495e72272f31f9e34a52702556",
+  "workflow_run_id": 34053215253,
+  "workflow_run_attempt": 1,
+  "workflow_conclusion": "success",
+  "artifact_id": 9995184080,
+  "artifact_digest": "sha256:76d2b29e313f50cd109b8ea966a5872828f117bef64f1919d0ff911aeb02c1fb",
+  "result_file_sha256": "e2bf6629fb9b0668f4a705153d106f5d762612912d634838900c21c1d4d7db81",
+  "result_path": "research/d2_general_api_requalification/evidence/d2-general-api-requalification-result.json",
+  "result": {
+    "qualification_pass": true,
+    "transport_qualified_for_future_prospective_design": true,
+    "redirect_history_verified": true,
+    "one_physical_request_per_probe_verified": true,
+    "request_count": 3,
+    "all_http_200": true,
+    "all_exact_model_match": true,
+    "all_contract_pass": true,
+    "all_physical_attempts_initiated": 1,
+    "redirects_followed_total": 0,
+    "requested_model": "glm-5-turbo"
+  },
+  "historical_preflight": {
+    "issue": 202,
+    "status": "completed_response_level_pass_redirect_unverified",
+    "replacement_allowed": false,
+    "claim_ceiling_unchanged": true
+  },
+  "interpretation": {
+    "engineering_transport_qualified": true,
+    "scientific_campaign_authorized": false,
+    "registry_promotion_authorized": false,
+    "historical_substrate_enabled": false,
+    "next_step": "A fresh prospective source-capability-acquisition study may now be constructed and frozen. Any external provider execution for that scientific study requires separate explicit authorization."
+  }
+}
