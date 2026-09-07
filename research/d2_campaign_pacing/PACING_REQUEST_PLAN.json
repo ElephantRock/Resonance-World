@@ -45,13 +45,13 @@
       "minimum_start_interval_seconds": 1.0
     },
     {
-      "id": "concurrency2_global1s",
+      "id": "concurrency2_1s",
       "calls": 8,
       "max_concurrency": 2,
       "minimum_start_interval_seconds": 1.0
     },
     {
-      "id": "concurrency4_global035s",
+      "id": "concurrency4_035s",
       "calls": 8,
       "max_concurrency": 4,
       "minimum_start_interval_seconds": 0.35
