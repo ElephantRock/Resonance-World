@@ -1,0 +1,5 @@
+RW_CODING_PLAN_COMPLETION_OK
+
+This is an engineering connectivity probe, not a scientific task.
+Do not call tools, browse, read files, or take external actions.
+Return only the short plain-text acknowledgement: RW_CODING_PLAN_COMPLETION_OK

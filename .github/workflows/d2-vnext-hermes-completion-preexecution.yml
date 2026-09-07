@@ -1,0 +1,50 @@
+name: D2-vNext Hermes Coding Plan Completion Preexecution
+
+on:
+  pull_request:
+    paths:
+      - "research/d2_coding_plan_hermes_completion/**"
+      - "scripts/qualify_d2_coding_plan_hermes_completion.py"
+      - "tests/test_d2_coding_plan_hermes_completion.py"
+      - ".github/workflows/d2-vnext-hermes-completion-preexecution.yml"
+      - ".github/workflows/d2-vnext-hermes-completion-qualification.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-preexecution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - id: lifecycle
+        name: Verify lifecycle state
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_coding_plan_hermes_completion/RUN_D2_CODING_PLAN_HERMES_COMPLETION_QUALIFICATION'
+          if test -f "$marker"; then
+            grep -Eq '^candidate_sha=[0-9a-f]{40}$' "$marker"
+            grep -Fxq 'issue=219' "$marker"
+            grep -Fxq 'authorization=D2_vNext_Hermes_Coding_Plan_completion_execution_explicitly_authorized' "$marker"
+            echo 'authorized=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'authorized=false' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Credential-free materialization / preflight
+        if: steps.lifecycle.outputs.authorized != 'true'
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_CODING_PLAN_HERMES_COMPLETION_AUTHORIZED:-}"
+          python scripts/qualify_d2_coding_plan_hermes_completion.py --preflight \
+            --output output/d2-vnext-hermes-completion-preflight.json
+      - name: Targeted tests
+        run: pytest -q tests/test_d2_coding_plan_hermes_completion.py
+      - name: Ruff
+        run: ruff check scripts/qualify_d2_coding_plan_hermes_completion.py tests/test_d2_coding_plan_hermes_completion.py
