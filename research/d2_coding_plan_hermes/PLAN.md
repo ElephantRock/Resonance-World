@@ -15,13 +15,15 @@ The historical General API evidence remains unchanged. Issue #212 records the co
 - Hermes repository: `hermes-agent-org/hermes`
 - Hermes revision: `036cbdfa0a3158454a0a2a7a7388cf70353326b4`
 - Hermes package version at that revision: `0.8.0`
+- pinned `run_agent.py` blob: `4c0d3be4b0c2d364c550fa663d34f6545c9e6d20`
 - OpenAI SDK: exactly `2.21.0`
+- httpx: exactly `0.28.1`
 - provider: `zai`
 - API mode: `chat_completions`
 - Coding Plan base URL: `https://api.z.ai/api/coding/paas/v4`
 - requested model: `glm-5.3`
 
-Hermes is used with explicit base URL, API key, provider, API mode, and model arguments. No General API or alternate-provider fallback is configured.
+The probe intentionally exercises Hermes' provider router. The process exposes `ZAI_API_KEY` as the sole provider credential and sets `GLM_BASE_URL` to the frozen Coding Plan base URL. `AIAgent` is not given an explicit API key or base URL, so bypassing the Hermes Z.AI provider router is not allowed. No General API or alternate-provider fallback is configured.
 
 ## Probe contract
 
@@ -41,11 +43,24 @@ The prompt is deterministic and non-scientific. Qualification requires only a no
 
 ## External-call bound
 
-Hermes revision `036cbdfa...` constructs a standard OpenAI client for explicit OpenAI-compatible credentials. OpenAI SDK `2.21.0` is frozen and its default `DEFAULT_MAX_RETRIES` must equal 2 at runtime. Therefore one logical probe can initiate at most three provider HTTP attempts (initial attempt plus two SDK retries).
+The first construction draft incorrectly treated the OpenAI SDK retry count as the complete retry envelope. Exact-source audit of pinned Hermes revision `036cbdfa...` shows that the main agent loop has three application attempts and may perform one additional direct-provider transport-recovery cycle. OpenAI SDK `2.21.0` is frozen with `DEFAULT_MAX_RETRIES == 2`, so a single application attempt can physically send at most three SDK requests.
 
-Registered maximum:
+The conservative registered envelope is therefore:
 
-`3 logical probes × 3 HTTP attempts/probe = 9 provider HTTP attempts`
+`3 Hermes application attempts/cycle × 2 cycles × 3 SDK attempts/application attempt = 18 physical provider attempts/probe`
+
+and:
+
+`3 logical probes × 18 physical provider attempts/probe = 54 physical provider attempts maximum`
+
+This is not merely an arithmetic assumption. During the authorized execution window, a process-wide guard wraps the pinned httpx `Client._send_single_request` and `AsyncClient._send_single_request` physical-send boundaries. The guard:
+
+1. permits only requests whose URL is under the frozen Coding Plan base URL;
+2. blocks any unregistered outbound HTTP request before it is physically sent;
+3. blocks the 19th attempted provider send within any probe before it is physically sent;
+4. blocks any send beyond 54 across the entire three-probe campaign.
+
+Thus unexpected Hermes recovery behavior can make the qualification fail but cannot increase provider exposure beyond the registered maximum.
 
 No application-level replacement probe is permitted. The GitHub Actions workflow may execute only at `run_attempt == 1`; reruns fail closed.
 
