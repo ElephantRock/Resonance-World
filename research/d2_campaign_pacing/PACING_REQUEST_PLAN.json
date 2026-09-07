@@ -1,0 +1,71 @@
+{
+  "schema": "d2-campaign-pacing-request-plan-v0.1",
+  "issue": 210,
+  "engineering_only": true,
+  "construction_base_main_sha": "50dafd41da9f60b9a61ebe7c43d0dda7cfc38b1e",
+  "upstream_general_api_requalification_issue": 206,
+  "upstream_general_api_requalification_pr": 207,
+  "upstream_d2d_s2_issue": 208,
+  "upstream_d2d_s2_pr": 209,
+  "upstream_d2d_s2_workflow_run": 34059455948,
+  "historical_d2d_s2_status": "D2d-S2-A0",
+  "historical_d2d_s2_http_status": 429,
+  "historical_provider_policy_cause_established": false,
+  "provider": "Z.AI",
+  "endpoint": "https://api.z.ai/api/paas/v4/chat/completions",
+  "model": "glm-5-turbo",
+  "temperature": 0.8,
+  "max_tokens": 768,
+  "response_format": "json_object",
+  "expected_actions": 8,
+  "actions": ["KAPPA", "MICA", "ORBIT", "VELA"],
+  "request_shape": "deterministic_synthetic_d2_representative_engineering_only",
+  "request_count_maximum": 31,
+  "profiles": [
+    {
+      "id": "baseline_serial_5s",
+      "calls": 3,
+      "max_concurrency": 1,
+      "minimum_start_interval_seconds": 5.0
+    },
+    {
+      "id": "serial_2s",
+      "calls": 6,
+      "max_concurrency": 1,
+      "minimum_start_interval_seconds": 2.0
+    },
+    {
+      "id": "serial_1s",
+      "calls": 6,
+      "max_concurrency": 1,
+      "minimum_start_interval_seconds": 1.0
+    },
+    {
+      "id": "concurrency2_1s",
+      "calls": 8,
+      "max_concurrency": 2,
+      "minimum_start_interval_seconds": 1.0
+    },
+    {
+      "id": "concurrency4_035s",
+      "calls": 8,
+      "max_concurrency": 4,
+      "minimum_start_interval_seconds": 0.35
+    }
+  ],
+  "qualification_rule": "highest_contiguous_passing_profile_before_first_failure",
+  "max_attempts_per_logical_call": 1,
+  "redirect_policy": "reject_do_not_follow",
+  "http_status_required": 200,
+  "strict_json_required": true,
+  "physical_attempt_accounting": "instrumented_https_handler_per_call",
+  "one_physical_request_per_probe_must_be_verified": true,
+  "redirect_history_must_be_verified": true,
+  "raw_provider_error_body_persisted": false,
+  "provider_execution_authorized": false,
+  "same_request_stream_rerun_allowed": false,
+  "scientific_campaign_authorized": false,
+  "scientific_scoring_performed": false,
+  "registry_promotion_authorized": false,
+  "historical_substrate_enabled": false
+}
