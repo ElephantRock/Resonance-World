@@ -1,0 +1,1 @@
+This is an engineering connectivity probe, not a scientific task. Reply with a short plain-text acknowledgement containing the token RW_CODING_PLAN_OK. Do not call tools, browse, execute code, or perform any external action.
