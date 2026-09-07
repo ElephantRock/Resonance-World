@@ -1,10 +1,9 @@
 #!/usr/bin/env python3
-"""Credential-free preflight and explicitly authorized Hermes/Coding Plan completion qualification."""
+"""Bounded Hermes/Coding Plan completion-envelope qualification."""
 
 from __future__ import annotations
 
 import argparse
-import importlib.metadata
 import json
 import os
 import sys
@@ -15,7 +14,8 @@ SCRIPT_DIR = Path(__file__).resolve().parent
 if str(SCRIPT_DIR) not in sys.path:
     sys.path.insert(0, str(SCRIPT_DIR))
 
-import qualify_d2_coding_plan_hermes as base
+# Direct-script execution requires the sibling predecessor module on sys.path.
+import qualify_d2_coding_plan_hermes as base  # noqa: E402
 
 ROOT = Path(__file__).resolve().parents[1]
 RESEARCH_DIR = ROOT / "research" / "d2_coding_plan_hermes_completion"
