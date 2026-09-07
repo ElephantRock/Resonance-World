@@ -1,0 +1,50 @@
+name: D2-vNext Hermes Coding Plan Preexecution
+
+on:
+  pull_request:
+    paths:
+      - "research/d2_coding_plan_hermes/**"
+      - "scripts/qualify_d2_coding_plan_hermes.py"
+      - "tests/test_d2_coding_plan_hermes.py"
+      - ".github/workflows/d2-vnext-hermes-preexecution.yml"
+      - ".github/workflows/d2-vnext-hermes-qualification.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-preexecution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - id: lifecycle
+        name: Verify lifecycle state
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_coding_plan_hermes/RUN_D2_CODING_PLAN_HERMES_QUALIFICATION'
+          if test -f "$marker"; then
+            grep -Eq '^candidate_sha=[0-9a-f]{40}$' "$marker"
+            grep -Fxq 'issue=213' "$marker"
+            grep -Fxq 'authorization=D2_vNext_Hermes_Coding_Plan_execution_explicitly_authorized' "$marker"
+            echo 'authorized=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'authorized=false' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Credential-free materialization / preflight
+        if: steps.lifecycle.outputs.authorized != 'true'
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_CODING_PLAN_HERMES_AUTHORIZED:-}"
+          python scripts/qualify_d2_coding_plan_hermes.py --preflight \
+            --output output/d2-vnext-hermes-preflight.json
+      - name: Targeted tests
+        run: pytest -q tests/test_d2_coding_plan_hermes.py
+      - name: Ruff
+        run: ruff check scripts/qualify_d2_coding_plan_hermes.py tests/test_d2_coding_plan_hermes.py
