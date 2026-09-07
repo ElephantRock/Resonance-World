@@ -10,6 +10,8 @@
   "upstream_d2d_s2_workflow_run": 34059455948,
   "historical_d2d_s2_status": "D2d-S2-A0",
   "historical_d2d_s2_http_status": 429,
+  "historical_d2d_s2_max_parallel_shards": 4,
+  "historical_d2d_s2_per_client_minimum_interval_seconds": 0.35,
   "historical_provider_policy_cause_established": false,
   "provider": "Z.AI",
   "endpoint": "https://api.z.ai/api/paas/v4/chat/completions",
@@ -21,6 +23,8 @@
   "actions": ["KAPPA", "MICA", "ORBIT", "VELA"],
   "request_shape": "deterministic_synthetic_d2_representative_engineering_only",
   "request_count_maximum": 31,
+  "global_request_start_gate": true,
+  "historical_failed_burst_schedule_reproduced": false,
   "profiles": [
     {
       "id": "baseline_serial_5s",
@@ -41,13 +45,13 @@
       "minimum_start_interval_seconds": 1.0
     },
     {
-      "id": "concurrency2_1s",
+      "id": "concurrency2_global1s",
       "calls": 8,
       "max_concurrency": 2,
       "minimum_start_interval_seconds": 1.0
     },
     {
-      "id": "concurrency4_035s",
+      "id": "concurrency4_global035s",
       "calls": 8,
       "max_concurrency": 4,
       "minimum_start_interval_seconds": 0.35
