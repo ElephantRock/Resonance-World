@@ -8,7 +8,7 @@ Issue: #210
 
 This stream diagnoses the operational dependency exposed by D2d-S2: the hardened Z.AI General API transport passed bounded requalification, but the one-shot D2d-S2 scientific campaign produced terminal HTTP 429 failures for all 384 attempted pairs. This stream is engineering-only. It does not rerun D2d-S2, does not generate source-acquisition evidence, does not mutate the Mechanism Registry, and does not activate Historical Substrate.
 
-The provider-side policy cause of HTTP 429 is not assumed. The only historical claim imported here is the observed terminal status under the frozen D2d-S2 runner.
+The provider-side policy cause of HTTP 429 is not assumed. The historical launch used up to four parallel shard jobs, each with its own client-local 0.35 s minimum interval. That historical burst schedule is not equivalent to, and is not reproduced by, the globally gated profiles below.
 
 ## Fixed transport contract
 
@@ -30,7 +30,7 @@ The engineering request uses deterministic synthetic cases, synthetic bounded fe
 
 ## Frozen pacing profiles
 
-Profiles execute in this order and all are bounded diagnostics:
+Profiles execute in this order and all are bounded diagnostics. **Each profile uses one global request-start gate**, even when more than one request may be in flight.
 
 | profile | calls | max concurrency | global minimum request-start interval |
 | --- | ---: | ---: | ---: |
@@ -42,13 +42,15 @@ Profiles execute in this order and all are bounded diagnostics:
 
 Maximum provider calls: **31**. No profile retries failed calls.
 
+`concurrency4_035s` is a bounded high-intensity globally gated diagnostic for a candidate future scheduler. It does **not** recreate D2d-S2's failed four-independent-client burst schedule and therefore cannot establish that the historical schedule itself has become safe.
+
 A profile passes only when every call returns HTTP 200, exact model identity, valid D2-shaped JSON, exactly one initiated physical attempt, and no redirect. HTTP 429 is always a profile failure.
 
 The recommended campaign profile is the most intense contiguous passing profile before the first failed profile. If the baseline fails, the recommendation is `null`. Later profiles still execute as bounded diagnostics, but a later isolated pass cannot leapfrog an earlier failure for qualification.
 
 ## Result authority
 
-The result may establish only a bounded engineering statement about the tested pacing profiles under the exact candidate and provider/account context at execution time. It does not establish provider policy, future unlimited quota, scientific efficacy, source capability acquisition, schema generalization, production readiness, or any registry/Acceptance claim.
+The result may establish only a bounded engineering statement about the tested globally gated pacing profiles under the exact candidate and provider/account context at execution time. It does not establish provider policy, future unlimited quota, the safety of the historical failed burst schedule, scientific efficacy, source capability acquisition, schema generalization, production readiness, or any registry/Acceptance claim.
 
 ## Authorization
 
