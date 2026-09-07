@@ -17,7 +17,7 @@ PAIRS_PER_SHARD = 16
 MINIMUM_ANALYZABLE_PER_SCHEMA = 88
 LOGICAL_CALLS_PER_COMPLETE_PAIR = 55
 MAX_PHYSICAL_SENDS_PER_SHARD = 1000
-EXPECTED_COHORT_SHA256: str | None = None
+EXPECTED_COHORT_SHA256 = "5f650a4c0c8054942781698f77dc918c50c1f3f685f7b9f1e7f1ce7539d4be8c"
 
 PREDECESSOR_NAMESPACES = {
     "D2-C1": [(1_200_000, 1_299_999)],
@@ -122,7 +122,7 @@ def build_cohort_lock() -> dict[str, Any]:
     if any(predecessor.values()):
         raise AssertionError(f"D2-vNext-S1 predecessor seed overlap: {predecessor}")
     cohort_hash = core.sha256(records)
-    if EXPECTED_COHORT_SHA256 is not None and cohort_hash != EXPECTED_COHORT_SHA256:
+    if cohort_hash != EXPECTED_COHORT_SHA256:
         raise AssertionError(f"D2-vNext-S1 cohort drift: {cohort_hash}")
     return {
         "schema": "d2-vnext-s1-source-acquisition-cohort-lock-v0.1",
