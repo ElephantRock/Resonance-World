@@ -28,6 +28,10 @@ def test_request_plan_is_engineering_only_and_bounded() -> None:
     assert plan["request_count_maximum"] == 31
     assert plan["max_attempts_per_logical_call"] == 1
     assert plan["redirect_policy"] == "reject_do_not_follow"
+    assert plan["global_request_start_gate"] is True
+    assert plan["historical_failed_burst_schedule_reproduced"] is False
+    assert plan["historical_d2d_s2_max_parallel_shards"] == 4
+    assert plan["historical_d2d_s2_per_client_minimum_interval_seconds"] == 0.35
     assert plan["provider_execution_authorized"] is False
     assert plan["same_request_stream_rerun_allowed"] is False
     assert plan["scientific_campaign_authorized"] is False
