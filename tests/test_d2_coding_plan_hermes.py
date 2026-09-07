@@ -20,6 +20,10 @@ def test_frozen_request_plan_contract() -> None:
     assert plan["endpoint_base_url"] == "https://api.z.ai/api/coding/paas/v4"
     assert plan["requested_model"] == "glm-5.3"
     assert plan["supported_product_environment"] == "Hermes Agent Python library"
+    assert plan["provider_base_url_env_var"] == "GLM_BASE_URL"
+    assert plan["credential_env_var"] == "ZAI_API_KEY"
+    assert plan["provider_router_required"] is True
+    assert plan["explicit_openai_client_bypass_allowed"] is False
     assert plan["provider_execution_authorized"] is False
     assert plan["scientific_campaign_authorized"] is False
     assert plan["historical_substrate_enabled"] is False
@@ -28,9 +32,35 @@ def test_frozen_request_plan_contract() -> None:
 def test_registered_provider_attempt_bound() -> None:
     assert mod.LOGICAL_PROBES == 3
     assert mod.OPENAI_DEFAULT_MAX_RETRIES == 2
-    assert mod.MAX_HTTP_ATTEMPTS_PER_PROBE == 3
-    assert mod.MAX_PROVIDER_HTTP_ATTEMPTS == 9
-    assert mod.LOGICAL_PROBES * mod.MAX_HTTP_ATTEMPTS_PER_PROBE == 9
+    assert mod.HERMES_APPLICATION_MAX_ATTEMPTS_PER_RETRY_CYCLE == 3
+    assert mod.HERMES_PRIMARY_TRANSPORT_RECOVERY_ADDITIONAL_CYCLES_MAXIMUM == 1
+    assert mod.MAX_HTTP_ATTEMPTS_PER_PROBE == 18
+    assert mod.MAX_PROVIDER_HTTP_ATTEMPTS == 54
+    assert mod.LOGICAL_PROBES * mod.MAX_HTTP_ATTEMPTS_PER_PROBE == 54
+
+
+def test_physical_attempt_budget_blocks_nineteenth_send() -> None:
+    budget = mod._PhysicalAttemptBudget(probe_count=3, max_per_probe=18, max_total=54)
+    budget.begin_probe(0)
+    for _ in range(18):
+        budget.reserve(mod.BASE_URL + "/chat/completions")
+    assert budget.counts[0] == 18
+    assert budget.total == 18
+    with pytest.raises(mod.ProviderAttemptBudgetExceeded):
+        budget.reserve(mod.BASE_URL + "/chat/completions")
+    assert budget.counts[0] == 18
+    assert budget.total == 18
+    assert budget.blocked_budget_counts[0] == 1
+
+
+def test_physical_attempt_budget_blocks_unregistered_outbound() -> None:
+    budget = mod._PhysicalAttemptBudget(probe_count=3, max_per_probe=18, max_total=54)
+    budget.begin_probe(1)
+    with pytest.raises(mod.UnexpectedOutboundRequest):
+        budget.reserve("https://api.z.ai/api/paas/v4/chat/completions")
+    assert budget.counts[1] == 0
+    assert budget.total == 0
+    assert budget.blocked_unexpected_counts[1] == 1
 
 
 def test_sentinel_prompt_is_non_scientific_and_deterministic() -> None:
@@ -56,7 +86,9 @@ def test_construction_candidate_has_no_execution_marker() -> None:
         assert not mod.MARKER_PATH.exists()
 
 
-def test_preflight_is_zero_provider_when_marker_absent(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_preflight_is_zero_provider_when_marker_absent(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     if mod.MARKER_PATH.exists():
         pytest.skip("authorized/post-execution lifecycle")
     monkeypatch.delenv("ZAI_API_KEY", raising=False)
@@ -64,11 +96,14 @@ def test_preflight_is_zero_provider_when_marker_absent(monkeypatch: pytest.Monke
     result = mod.preflight()
     assert result["provider_execution_performed"] is False
     assert result["execution_marker_absent"] is True
-    assert result["provider_http_attempt_count_maximum"] == 9
+    assert result["provider_http_attempt_count_maximum"] == 54
+    assert result["physical_http_attempt_cap_enforced"] is True
 
 
 def test_bounded_error_never_persists_raw_text() -> None:
-    exc = RuntimeError('Error code: 429 - {"error":{"code":"1113","message":"secret detail"}}')
+    exc = RuntimeError(
+        'Error code: 429 - {"error":{"code":"1113","message":"secret detail"}}'
+    )
     row = mod._bounded_error(exc)
     assert row["http_status"] == 429
     assert row["provider_code"] == 1113
@@ -84,7 +119,9 @@ def test_bounded_error_never_persists_raw_text() -> None:
     }
 
 
-def test_execute_requires_explicit_process_authorization(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_execute_requires_explicit_process_authorization(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
     monkeypatch.delenv("D2_CODING_PLAN_HERMES_AUTHORIZED", raising=False)
     monkeypatch.delenv("ZAI_API_KEY", raising=False)
     with pytest.raises(RuntimeError, match="provider execution is not authorized"):
