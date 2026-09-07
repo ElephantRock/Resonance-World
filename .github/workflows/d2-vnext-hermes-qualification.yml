@@ -48,6 +48,7 @@ jobs:
               f'{candidate}:research/d2_coding_plan_hermes/CODING_PLAN_HERMES_REQUEST_PLAN.json'
           ], text=True)
           p=json.loads(raw)
+          assert p['schema']=='d2-vnext-hermes-coding-plan-request-plan-v0.2'
           assert p['issue']==213
           assert p['engineering_only'] is True
           assert p['subscription_product']=='GLM Coding Plan'
@@ -55,14 +56,25 @@ jobs:
           assert p['hermes_repository']=='hermes-agent-org/hermes'
           assert p['hermes_revision']=='036cbdfa0a3158454a0a2a7a7388cf70353326b4'
           assert p['hermes_package_version']=='0.8.0'
+          assert p['hermes_run_agent_blob_sha']=='4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
           assert p['openai_sdk_version']=='2.21.0'
           assert p['openai_sdk_default_max_retries']==2
+          assert p['httpx_version']=='0.28.1'
+          assert p['hermes_application_max_attempts_per_retry_cycle']==3
+          assert p['hermes_primary_transport_recovery_additional_cycles_maximum']==1
           assert p['endpoint_base_url']=='https://api.z.ai/api/coding/paas/v4'
           assert p['provider_id']=='zai'
+          assert p['provider_base_url_env_var']=='GLM_BASE_URL'
+          assert p['credential_env_var']=='ZAI_API_KEY'
+          assert p['provider_router_required'] is True
+          assert p['explicit_openai_client_bypass_allowed'] is False
           assert p['api_mode']=='chat_completions'
           assert p['requested_model']=='glm-5.3'
           assert p['logical_probe_count']==3
-          assert p['provider_http_attempt_count_maximum']==9
+          assert p['max_provider_http_attempts_per_probe']==18
+          assert p['provider_http_attempt_count_maximum']==54
+          assert p['physical_http_attempt_cap_enforced'] is True
+          assert p['unregistered_outbound_http_blocked'] is True
           assert p['enabled_toolsets']==[]
           assert p['fallback_provider_configured'] is False
           assert p['general_api_fallback_allowed'] is False
@@ -82,6 +94,7 @@ jobs:
     timeout-minutes: 45
     env:
       ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      GLM_BASE_URL: https://api.z.ai/api/coding/paas/v4
       D2_CODING_PLAN_HERMES_AUTHORIZED: "1"
     steps:
       - name: Checkout Resonance World
@@ -105,19 +118,31 @@ jobs:
           set -euo pipefail
           test "${GITHUB_RUN_ATTEMPT}" = '1'
           test -n "${ZAI_API_KEY:-}"
+          test "${GLM_BASE_URL}" = 'https://api.z.ai/api/coding/paas/v4'
           test "$(git rev-parse HEAD^)" = '${{ needs.authorization-integrity.outputs.candidate_sha }}'
           test "$(git -C .hermes-src rev-parse HEAD)" = '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = \
+            '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
           grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
           grep -Fq '"openai>=2.21.0,<3"' .hermes-src/pyproject.toml
+          grep -Fq 'max_retries = 3' .hermes-src/run_agent.py
+          grep -Fq 'primary_recovery_attempted = False' .hermes-src/run_agent.py
+          grep -Fq 'if not primary_recovery_attempted and self._try_recover_primary_transport(' \
+            .hermes-src/run_agent.py
       - name: Install frozen supported-product environment
         run: |
-          python -m pip install ./.hermes-src 'openai==2.21.0'
+          python -m pip install ./.hermes-src 'openai==2.21.0' 'httpx==0.28.1'
           python - <<'PY'
           import importlib.metadata
+          import httpx
           from openai._constants import DEFAULT_MAX_RETRIES
           assert importlib.metadata.version('hermes-agent') == '0.8.0'
           assert importlib.metadata.version('openai') == '2.21.0'
+          assert importlib.metadata.version('httpx') == '0.28.1'
+          assert httpx.__version__ == '0.28.1'
           assert DEFAULT_MAX_RETRIES == 2
+          assert hasattr(httpx.Client, '_send_single_request')
+          assert hasattr(httpx.AsyncClient, '_send_single_request')
           PY
       - name: Execute three bounded Hermes probes
         shell: bash
@@ -126,12 +151,17 @@ jobs:
           env \
             -u OPENROUTER_API_KEY \
             -u OPENAI_API_KEY \
+            -u OPENAI_BASE_URL \
             -u ANTHROPIC_API_KEY \
             -u ANTHROPIC_TOKEN \
             -u NOUS_API_KEY \
+            -u GLM_API_KEY \
+            -u Z_AI_API_KEY \
             -u KIMI_API_KEY \
             -u MINIMAX_API_KEY \
             -u DEEPSEEK_API_KEY \
+            -u DASHSCOPE_API_KEY \
+            -u XAI_API_KEY \
             python scripts/qualify_d2_coding_plan_hermes.py \
               --execute \
               --output output/d2-vnext-hermes-coding-plan-qualification.json
@@ -142,28 +172,43 @@ jobs:
           import json
           from pathlib import Path
           p=json.loads(Path('output/d2-vnext-hermes-coding-plan-qualification.json').read_text())
-          assert p['schema']=='d2-vnext-hermes-coding-plan-qualification-result-v0.1'
+          assert p['schema']=='d2-vnext-hermes-coding-plan-qualification-result-v0.2'
           assert p['issue']==213
           assert p['engineering_only'] is True
           assert p['subscription_product']=='GLM Coding Plan'
           assert p['supported_product_environment']=='Hermes Agent Python library'
           assert p['hermes_revision']=='036cbdfa0a3158454a0a2a7a7388cf70353326b4'
           assert p['hermes_package_version']=='0.8.0'
+          assert p['hermes_run_agent_blob_sha']=='4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
           assert p['openai_sdk_version']=='2.21.0'
+          assert p['openai_sdk_default_max_retries']==2
+          assert p['httpx_version']=='0.28.1'
           assert p['endpoint_base_url']=='https://api.z.ai/api/coding/paas/v4'
           assert p['provider_id']=='zai'
+          assert p['provider_base_url_env_var']=='GLM_BASE_URL'
+          assert p['credential_env_var']=='ZAI_API_KEY'
+          assert p['provider_routed_via_hermes'] is True
           assert p['api_mode']=='chat_completions'
           assert p['requested_model']=='glm-5.3'
           assert p['logical_probe_count']==3
-          assert p['provider_http_attempt_count_maximum']==9
+          assert p['provider_http_attempt_count_maximum']==54
+          assert 0 <= p['provider_http_attempts_observed_total'] <= 54
+          assert p['physical_http_attempt_cap_enforced'] is True
+          assert p['unregistered_outbound_http_blocked'] is True
           assert len(p['probes'])==3
           assert isinstance(p['qualification_pass'], bool)
+          assert p['provider_http_attempts_observed_total'] == sum(
+              row['provider_http_attempts_observed'] for row in p['probes']
+          )
           for row in p['probes']:
               assert row['requested_model']=='glm-5.3'
               assert row['tools_exposed']==0
               assert row['max_agent_iterations']==1
               assert row['openai_sdk_max_retries']==2
-              assert row['provider_http_attempts_maximum']==3
+              assert row['provider_http_attempts_maximum']==18
+              assert 0 <= row['provider_http_attempts_observed'] <= 18
+              assert row['provider_attempts_blocked_by_cap'] >= 0
+              assert row['unexpected_outbound_http_requests_blocked'] >= 0
               assert row['effective_model_identity_observed'] is False
               assert row['effective_model'] is None
           assert p['scientific_field_trajectory_executed'] is False
