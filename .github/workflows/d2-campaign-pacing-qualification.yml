@@ -1,0 +1,146 @@
+name: D2 Campaign Pacing Qualification Execution
+
+on:
+  push:
+    branches: ["engineering/d2-campaign-pacing-qualification"]
+    paths:
+      - "research/d2_campaign_pacing/RUN_D2_CAMPAIGN_PACING_QUALIFICATION"
+
+permissions:
+  contents: read
+
+jobs:
+  authorization-integrity:
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      candidate_sha: ${{ steps.auth.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: auth
+        name: Verify sole-child authorization and frozen contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_campaign_pacing/RUN_D2_CAMPAIGN_PACING_QUALIFICATION'
+          test -f "$marker"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          authorization="$(sed -n 's/^authorization=//p' "$marker")"
+          test -n "$candidate"
+          test "$issue" = '210'
+          test "$authorization" = 'D2_campaign_pacing_execution_explicitly_authorized'
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          test "$(git diff --name-only "$candidate" HEAD | wc -l)" = '1'
+          if git cat-file -e "${candidate}:${marker}" 2>/dev/null; then
+            echo 'Frozen candidate already contains execution marker.' >&2
+            exit 1
+          fi
+          python - "$candidate" <<'PY'
+          import json, subprocess, sys
+          candidate=sys.argv[1]
+          raw=subprocess.check_output([
+              'git','show',
+              f'{candidate}:research/d2_campaign_pacing/PACING_REQUEST_PLAN.json'
+          ], text=True)
+          p=json.loads(raw)
+          assert p['issue']==210
+          assert p['engineering_only'] is True
+          assert p['provider']=='Z.AI'
+          assert p['endpoint']=='https://api.z.ai/api/paas/v4/chat/completions'
+          assert p['model']=='glm-5-turbo'
+          assert p['request_count_maximum']==31
+          assert p['global_request_start_gate'] is True
+          assert p['historical_failed_burst_schedule_reproduced'] is False
+          assert p['max_attempts_per_logical_call']==1
+          assert p['redirect_policy']=='reject_do_not_follow'
+          assert p['provider_execution_authorized'] is False
+          assert p['same_request_stream_rerun_allowed'] is False
+          assert p['scientific_campaign_authorized'] is False
+          assert p['scientific_scoring_performed'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['historical_substrate_enabled'] is False
+          PY
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+
+  execute-bounded-qualification:
+    needs: authorization-integrity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 90
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      D2_CAMPAIGN_PACING_AUTHORIZED: "1"
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Reverify exact authorized parent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = '1'
+          test -n "${ZAI_API_KEY:-}"
+          test "$(git rev-parse HEAD^)" = '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+      - name: Execute bounded qualification
+        run: |
+          python scripts/qualify_d2_campaign_pacing.py \
+            --execute \
+            --output output/d2-campaign-pacing-qualification.json
+      - name: Verify bounded result authority
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('output/d2-campaign-pacing-qualification.json').read_text())
+          assert p['schema']=='d2-campaign-pacing-qualification-result-v0.1'
+          assert p['issue']==210
+          assert p['engineering_only'] is True
+          assert p['request_count_maximum']==31
+          assert p['request_count_executed']==31
+          assert len(p['profiles'])==5
+          allowed={
+              'baseline_serial_5s','serial_2s','serial_1s',
+              'concurrency2_1s','concurrency4_035s'
+          }
+          assert p['recommended_profile'] is None or p['recommended_profile'] in allowed
+          for profile in p['profiles']:
+              assert profile['profile_id'] in allowed
+              assert isinstance(profile['profile_pass'], bool)
+              assert isinstance(profile['http_429_count'], int)
+              assert len(profile['results'])==profile['calls']
+              for row in profile['results']:
+                  assert row['redirect_following_disabled'] is True
+                  assert row['redirects_followed']==0
+                  assert isinstance(row['physical_attempts_initiated'], int)
+                  assert isinstance(row['one_physical_request_verified'], bool)
+          assert p['provider_policy_cause_established'] is False
+          assert p['scientific_field_trajectory_executed'] is False
+          assert p['scientific_scoring_performed'] is False
+          assert p['scientific_campaign_authorized'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['production_historical_substrate_enabled'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-campaign-pacing-qualification-result
+          path: output/d2-campaign-pacing-qualification.json
+          if-no-files-found: error
+          retention-days: 90
+
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo 'D2 campaign pacing qualification reruns are prohibited.' >&2
+          exit 1

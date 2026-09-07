@@ -1,0 +1,70 @@
+name: D2 Campaign Pacing Preexecution
+
+on:
+  push:
+    branches: ["engineering/d2-campaign-pacing-qualification"]
+    paths:
+      - ".github/workflows/d2-campaign-pacing-preexecution.yml"
+      - ".github/workflows/d2-campaign-pacing-qualification.yml"
+      - "research/d2_campaign_pacing/**"
+      - "scripts/qualify_d2_campaign_pacing.py"
+      - "tests/test_d2_campaign_pacing.py"
+  pull_request:
+    paths:
+      - ".github/workflows/d2-campaign-pacing-preexecution.yml"
+      - ".github/workflows/d2-campaign-pacing-qualification.yml"
+      - "research/d2_campaign_pacing/**"
+      - "scripts/qualify_d2_campaign_pacing.py"
+      - "tests/test_d2_campaign_pacing.py"
+
+permissions:
+  contents: read
+
+jobs:
+  preexecution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Assert credential-free preexecution
+        run: test -z "${ZAI_API_KEY:-}"
+      - name: Validate frozen engineering request contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/d2_campaign_pacing/PACING_REQUEST_PLAN.json').read_text())
+          assert p['schema']=='d2-campaign-pacing-request-plan-v0.1'
+          assert p['issue']==210
+          assert p['engineering_only'] is True
+          assert p['endpoint']=='https://api.z.ai/api/paas/v4/chat/completions'
+          assert p['model']=='glm-5-turbo'
+          assert p['request_count_maximum']==31
+          assert p['max_attempts_per_logical_call']==1
+          assert p['redirect_policy']=='reject_do_not_follow'
+          assert p['provider_execution_authorized'] is False
+          assert p['same_request_stream_rerun_allowed'] is False
+          assert p['scientific_campaign_authorized'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['historical_substrate_enabled'] is False
+          PY
+      - name: Deterministic materialization
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p output
+          python scripts/qualify_d2_campaign_pacing.py --output output/materialized-a.json
+          python scripts/qualify_d2_campaign_pacing.py --output output/materialized-b.json
+          cmp output/materialized-a.json output/materialized-b.json
+          cat output/materialized-a.json
+      - name: Targeted tests
+        run: pytest -q tests/test_d2_campaign_pacing.py tests/test_d2_general_api_requalification.py tests/test_d2_general_api_preflight.py
+      - name: Ruff
+        run: ruff check scripts/qualify_d2_campaign_pacing.py tests/test_d2_campaign_pacing.py
