@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import importlib.util
+import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -61,6 +63,37 @@ def test_physical_attempt_budget_blocks_unregistered_outbound() -> None:
     assert budget.counts[1] == 0
     assert budget.total == 0
     assert budget.blocked_unexpected_counts[1] == 1
+
+
+def test_httpx_guard_wraps_and_restores_physical_send_boundary(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    class FakeClient:
+        def _send_single_request(self, request: object) -> str:
+            return "sync-ok"
+
+    class FakeAsyncClient:
+        async def _send_single_request(self, request: object) -> str:
+            return "async-ok"
+
+    fake_httpx = SimpleNamespace(Client=FakeClient, AsyncClient=FakeAsyncClient)
+    monkeypatch.setitem(sys.modules, "httpx", fake_httpx)
+    budget = mod._PhysicalAttemptBudget(probe_count=3, max_per_probe=18, max_total=54)
+    budget.begin_probe(0)
+    request = SimpleNamespace(url=mod.BASE_URL + "/chat/completions")
+
+    original_sync = FakeClient._send_single_request
+    original_async = FakeAsyncClient._send_single_request
+    with mod._enforce_physical_http_attempt_cap(budget):
+        assert FakeClient()._send_single_request(request) == "sync-ok"
+        assert budget.counts[0] == 1
+        assert FakeClient._send_single_request is not original_sync
+        assert FakeAsyncClient._send_single_request is not original_async
+
+    assert FakeClient._send_single_request is original_sync
+    assert FakeAsyncClient._send_single_request is original_async
+    assert FakeClient()._send_single_request(request) == "sync-ok"
+    assert budget.counts[0] == 1
 
 
 def test_sentinel_prompt_is_non_scientific_and_deterministic() -> None:
