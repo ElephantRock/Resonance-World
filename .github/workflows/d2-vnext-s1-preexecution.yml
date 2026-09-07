@@ -1,0 +1,147 @@
+name: D2-vNext-S1 Source Acquisition Preexecution
+
+on:
+  pull_request:
+    paths:
+      - "research/d2_vnext_s1/**"
+      - "scripts/d2_vnext_s1_acquisition_core.py"
+      - "scripts/d2_vnext_s1_hermes_client.py"
+      - "scripts/materialize_d2_vnext_s1_source_acquisition.py"
+      - "scripts/run_d2_vnext_s1_source_acquisition.py"
+      - "scripts/aggregate_d2_vnext_s1_source_acquisition.py"
+      - "scripts/evaluate_d2_vnext_s1_source_acquisition.py"
+      - "tests/test_d2_vnext_s1_source_acquisition.py"
+      - ".github/workflows/d2-vnext-s1-preexecution.yml"
+      - ".github/workflows/d2-vnext-s1-source-acquisition.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-preexecution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - id: lifecycle
+        name: Verify lifecycle state
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_vnext_s1/RUN_D2_VNEXT_S1_SOURCE_ACQUISITION'
+          if test -f "$marker"; then
+            grep -Eq '^candidate_sha=[0-9a-f]{40}$' "$marker"
+            grep -Fxq 'issue=221' "$marker"
+            grep -Fxq 'authorization=D2_vNext_S1_scientific_campaign_and_provider_execution_explicitly_authorized' "$marker"
+            echo 'authorized=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'authorized=false' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Credential-free deterministic materialization
+        if: steps.lifecycle.outputs.authorized != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_VNEXT_S1_SCIENTIFIC_EXECUTION_AUTHORIZED:-}"
+          rm -rf output/d2-vnext-s1-preflight-a output/d2-vnext-s1-preflight-b
+          python scripts/materialize_d2_vnext_s1_source_acquisition.py \
+            --output-dir output/d2-vnext-s1-preflight-a
+          python scripts/materialize_d2_vnext_s1_source_acquisition.py \
+            --output-dir output/d2-vnext-s1-preflight-b
+          cmp output/d2-vnext-s1-preflight-a/d2-vnext-s1-source-acquisition-cohort-lock.json \
+              output/d2-vnext-s1-preflight-b/d2-vnext-s1-source-acquisition-cohort-lock.json
+          cmp output/d2-vnext-s1-preflight-a/D2_VNEXT_S1_SHARD_MAP.json \
+              output/d2-vnext-s1-preflight-b/D2_VNEXT_S1_SHARD_MAP.json
+          cmp output/d2-vnext-s1-preflight-a/d2-vnext-s1-source-acquisition-cohort-lock.json \
+              research/d2_vnext_s1/d2-vnext-s1-source-acquisition-cohort-lock.json
+          cmp output/d2-vnext-s1-preflight-a/D2_VNEXT_S1_SHARD_MAP.json \
+              research/d2_vnext_s1/D2_VNEXT_S1_SHARD_MAP.json
+      - name: Verify frozen request contract
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('research/d2_vnext_s1/D2_VNEXT_S1_REQUEST_PLAN.json').read_text())
+          assert p['schema']=='d2-vnext-s1-source-acquisition-request-plan-v0.1'
+          assert p['issue']==221
+          assert p['study_stream']=='D2-vNext-S1'
+          assert p['subscription_product']=='GLM Coding Plan'
+          assert p['supported_product_environment']=='Hermes Agent Python library'
+          assert p['hermes_repository']=='hermes-agent-org/hermes'
+          assert p['hermes_revision']=='036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          assert p['hermes_package_version']=='0.8.0'
+          assert p['hermes_run_agent_blob_sha']=='4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          assert p['openai_sdk_version']=='2.21.0'
+          assert p['openai_sdk_default_max_retries']==2
+          assert p['httpx_version']=='0.28.1'
+          assert p['endpoint_base_url']=='https://api.z.ai/api/coding/paas/v4'
+          assert p['provider_id']=='zai'
+          assert p['api_mode']=='chat_completions'
+          assert p['requested_model']=='glm-5.3'
+          assert p['sampling_temperature']==0.8
+          assert p['thinking']=={'type':'disabled'}
+          assert p['max_agent_iterations_per_logical_call']==1
+          assert p['max_tokens_per_logical_call']==768
+          assert p['max_physical_provider_sends_per_logical_call']==18
+          assert p['registered_logical_calls_if_all_pairs_complete']==21120
+          assert p['max_physical_provider_sends_per_shard']==1000
+          assert p['max_physical_provider_sends_campaign']==24000
+          assert p['attempted_pairs_total']==384
+          assert p['attempted_pairs_per_schema']==96
+          assert p['minimum_analyzable_pairs_per_schema']==88
+          assert p['scientific_campaign_authorized'] is False
+          assert p['provider_execution_authorized'] is False
+          assert p['workflow_rerun_allowed'] is False
+          assert p['same_request_stream_rerun_allowed'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['acceptance_action_authorized'] is False
+          assert p['historical_substrate_enabled'] is False
+          PY
+      - name: Targeted tests
+        run: pytest -q tests/test_d2_vnext_s1_source_acquisition.py
+      - name: Ruff
+        run: |
+          ruff check \
+            scripts/d2_vnext_s1_acquisition_core.py \
+            scripts/d2_vnext_s1_hermes_client.py \
+            scripts/materialize_d2_vnext_s1_source_acquisition.py \
+            scripts/run_d2_vnext_s1_source_acquisition.py \
+            scripts/aggregate_d2_vnext_s1_source_acquisition.py \
+            scripts/evaluate_d2_vnext_s1_source_acquisition.py \
+            tests/test_d2_vnext_s1_source_acquisition.py
+
+  pinned-hermes-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+      - name: Checkout pinned Hermes Agent
+        uses: actions/checkout@v4
+        with:
+          repository: hermes-agent-org/hermes
+          ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4
+          path: .hermes-src
+          fetch-depth: 1
+      - name: Verify supported-product source contract without credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test "$(git -C .hermes-src rev-parse HEAD)" = \
+            '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = \
+            '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
+          grep -Fq '"openai>=2.21.0,<3"' .hermes-src/pyproject.toml
+          grep -Fq 'request_overrides: Dict[str, Any] = None' .hermes-src/run_agent.py
+          grep -Fq 'api_kwargs.update(self.request_overrides)' .hermes-src/run_agent.py
+          grep -Fq 'max_retries = 3' .hermes-src/run_agent.py
+          grep -Fq 'primary_recovery_attempted = False' .hermes-src/run_agent.py
