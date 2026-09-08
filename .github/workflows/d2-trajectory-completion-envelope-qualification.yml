@@ -1,0 +1,273 @@
+name: D2 Trajectory Completion Envelope Qualification
+
+on:
+  push:
+    branches: ["engineering/d2-trajectory-completion-envelope"]
+    paths:
+      - "research/d2_trajectory_completion_envelope/RUN_D2_TRAJECTORY_COMPLETION_ENVELOPE"
+
+permissions:
+  contents: read
+
+jobs:
+  authorization-integrity:
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      candidate_sha: ${{ steps.auth.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 100
+      - id: auth
+        name: Verify sole-child activation and frozen trajectory contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_trajectory_completion_envelope/RUN_D2_TRAJECTORY_COMPLETION_ENVELOPE'
+          test -f "$marker"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          authorization="$(sed -n 's/^authorization=//p' "$marker")"
+          test -n "$candidate"
+          test "$issue" = '234'
+          test "$authorization" = 'Autonomous_Operating_Charter_Amendment_A1_standing_execution_authority'
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          test "$(git diff --name-only "$candidate" HEAD | wc -l)" = '1'
+          git merge-base --is-ancestor \
+            'f8ac997112efb1b677691f50029415cc6274f7b2' "$candidate"
+          git merge-base --is-ancestor \
+            '47383f2b18c993965c89350609a4c9691897bdde' "$candidate"
+          if git cat-file -e "${candidate}:${marker}" 2>/dev/null; then
+            echo 'Frozen candidate already contains execution marker.' >&2
+            exit 1
+          fi
+          test "$(git rev-parse "${candidate}:src/resonance_world/provider_send_guard.py")" = \
+            '4b8896235d8048523d007400d0acfe85470f628c'
+          test "$(git show "${candidate}:research/evidence/d2_stage1_completion_envelope/RESULT.json" | sha256sum | awk '{print $1}')" = \
+            '9982e3c059e864cc06027173cfc3e3c17de7276393c501b15d4a4831a722f6a5'
+          python - "$candidate" <<'PY'
+          import json, subprocess, sys
+          candidate = sys.argv[1]
+          raw = subprocess.check_output([
+              'git', 'show',
+              f'{candidate}:research/d2_trajectory_completion_envelope/REQUEST_PLAN.json'
+          ], text=True)
+          p = json.loads(raw)
+          assert p['schema'] == 'd2-trajectory-completion-envelope-request-plan-v0.1'
+          assert p['issue'] == 234
+          assert p['engineering_only'] is True
+          assert p['purpose'] == 'trajectory_scale_d2_shaped_completion_on_repaired_hermes_transport'
+          assert p['predecessor_apparatus_issue'] == 223
+          assert p['predecessor_apparatus_result'] == 'FAIL'
+          assert p['transport_conformance_issue'] == 229
+          assert p['transport_conformance_result'] == 'FAIL'
+          assert p['stage1_completion_issue'] == 231
+          assert p['stage1_completion_result'] == 'PASS'
+          assert p['stage1_evidence_merge_sha'] == 'f8ac997112efb1b677691f50029415cc6274f7b2'
+          assert p['stage1_result_sha256'] == '9982e3c059e864cc06027173cfc3e3c17de7276393c501b15d4a4831a722f6a5'
+          assert p['selected_profile'] == {
+              'name':'iterations2_tokens768','max_iterations':2,'max_tokens':768
+          }
+          assert p['guard_repair_pr'] == 228
+          assert p['guard_repair_merge_sha'] == '47383f2b18c993965c89350609a4c9691897bdde'
+          assert p['provider_send_guard_git_blob_sha'] == '4b8896235d8048523d007400d0acfe85470f628c'
+          assert p['subscription_product'] == 'GLM Coding Plan'
+          assert p['hermes_revision'] == '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          assert p['hermes_package_version'] == '0.8.0'
+          assert p['hermes_run_agent_blob_sha'] == '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          assert p['openai_sdk_version'] == '2.21.0'
+          assert p['openai_sdk_default_max_retries'] == 2
+          assert p['httpx_version'] == '0.28.1'
+          assert p['endpoint_base_url'] == 'https://api.z.ai/api/coding/paas/v4'
+          assert p['provider_id'] == 'zai'
+          assert p['api_mode'] == 'chat_completions'
+          assert p['requested_model'] == 'glm-5.3'
+          assert p['sampling_temperature'] == 0.8
+          assert p['thinking'] == {'type': 'disabled'}
+          assert p['trajectory_names'] == ['schema_like_0','schema_like_1','schema_like_2','schema_like_3']
+          assert p['trajectory_logical_calls_each'] == 55
+          assert p['trajectory_logical_calls_total'] == 220
+          assert p['trajectory_max_concurrency'] == 4
+          assert p['maximum_registered_logical_calls'] == 220
+          assert p['maximum_physical_sends_per_logical_call'] == 36
+          assert p['maximum_physical_sends_total'] == 400
+          assert p['independent_request_origin_header'] == 'X-Resonance-World-Logical-Index'
+          assert p['origin_reservation_match_required'] is True
+          assert p['attribution_mismatch_fail_closed'] is True
+          assert p['provider_worker_tracking_required'] is True
+          assert p['provider_worker_target_module'] == 'run_agent'
+          assert p['provider_worker_target_name'] == '_call'
+          assert p['pinned_hermes_worker_join_until_exit_required'] is True
+          assert p['provider_worker_drain_before_guard_restore'] is True
+          assert p['provider_worker_leak_fail_closed'] is True
+          assert p['provider_execution_authorized'] is False
+          assert p['workflow_rerun_allowed'] is False
+          assert p['same_request_stream_rerun_allowed'] is False
+          assert p['replacement_logical_call_allowed'] is False
+          assert p['predecessor_stream_rerun_or_replacement_allowed'] is False
+          assert p['scientific_scoring_performed'] is False
+          assert p['source_acquisition_evidence_generated'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['acceptance_action_authorized'] is False
+          assert p['historical_substrate_enabled'] is False
+          PY
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+
+  execute-bounded-trajectory:
+    needs: authorization-integrity
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      GLM_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      D2_TRAJECTORY_COMPLETION_ENVELOPE_AUTHORIZED: "1"
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Checkout pinned Hermes Agent
+        uses: actions/checkout@v4
+        with:
+          repository: hermes-agent-org/hermes
+          ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4
+          path: .hermes-src
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Reverify exact parent and pinned source contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = '1'
+          test -n "${ZAI_API_KEY:-}"
+          test "${GLM_BASE_URL}" = 'https://api.z.ai/api/coding/paas/v4'
+          test "$(git rev-parse HEAD^)" = '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+          test "$(git rev-parse HEAD^:src/resonance_world/provider_send_guard.py)" = \
+            '4b8896235d8048523d007400d0acfe85470f628c'
+          test "$(git show HEAD^:research/evidence/d2_stage1_completion_envelope/RESULT.json | sha256sum | awk '{print $1}')" = \
+            '9982e3c059e864cc06027173cfc3e3c17de7276393c501b15d4a4831a722f6a5'
+          test "$(git -C .hermes-src rev-parse HEAD)" = \
+            '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = \
+            '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
+          grep -Fq '"openai>=2.21.0,<3"' .hermes-src/pyproject.toml
+          grep -Fq 'request_overrides: Dict[str, Any] = None' .hermes-src/run_agent.py
+          grep -Fq 'api_kwargs.update(self.request_overrides)' .hermes-src/run_agent.py
+          grep -Fq 't = threading.Thread(target=_call, daemon=True)' .hermes-src/run_agent.py
+          grep -Fq 'while t.is_alive():' .hermes-src/run_agent.py
+          grep -Fq 't.join(timeout=0.3)' .hermes-src/run_agent.py
+          grep -Fq 'max_retries = 3' .hermes-src/run_agent.py
+          grep -Fq 'primary_recovery_attempted = False' .hermes-src/run_agent.py
+      - name: Install frozen supported-product environment
+        run: |
+          python -m pip install -e .
+          python -m pip install ./.hermes-src 'openai==2.21.0' 'httpx==0.28.1'
+          python - <<'PY'
+          import importlib.metadata
+          import httpx
+          from openai._constants import DEFAULT_MAX_RETRIES
+          assert importlib.metadata.version('hermes-agent') == '0.8.0'
+          assert importlib.metadata.version('openai') == '2.21.0'
+          assert importlib.metadata.version('httpx') == '0.28.1'
+          assert httpx.__version__ == '0.28.1'
+          assert DEFAULT_MAX_RETRIES == 2
+          assert hasattr(httpx.Client, '_send_single_request')
+          assert hasattr(httpx.AsyncClient, '_send_single_request')
+          PY
+      - name: Execute bounded trajectory qualification once
+        shell: bash
+        run: |
+          set -euo pipefail
+          env \
+            -u OPENROUTER_API_KEY \
+            -u OPENAI_API_KEY \
+            -u OPENAI_BASE_URL \
+            -u ANTHROPIC_API_KEY \
+            -u ANTHROPIC_TOKEN \
+            -u NOUS_API_KEY \
+            -u GLM_API_KEY \
+            -u Z_AI_API_KEY \
+            -u KIMI_API_KEY \
+            -u MINIMAX_API_KEY \
+            -u DEEPSEEK_API_KEY \
+            -u DASHSCOPE_API_KEY \
+            -u XAI_API_KEY \
+            python scripts/qualify_d2_trajectory_completion_envelope.py \
+              --execute \
+              --output output/d2-trajectory-completion-envelope-result.json
+      - name: Verify bounded result authority
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('output/d2-trajectory-completion-envelope-result.json').read_text())
+          assert p['schema'] == 'd2-trajectory-completion-envelope-result-v0.1'
+          assert p['issue'] == 234
+          assert p['engineering_only'] is True
+          assert p['candidate_sha'] == '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+          assert p['predecessor_apparatus_result_unchanged'] == 'FAIL'
+          assert p['transport_conformance_result_unchanged'] == 'FAIL'
+          assert p['stage1_completion_result_unchanged'] == 'PASS'
+          assert p['stage1_evidence_merge_sha'] == 'f8ac997112efb1b677691f50029415cc6274f7b2'
+          assert p['stage1_result_sha256'] == '9982e3c059e864cc06027173cfc3e3c17de7276393c501b15d4a4831a722f6a5'
+          assert p['selected_profile'] == {'name':'iterations2_tokens768','max_iterations':2,'max_tokens':768}
+          assert p['guard_repair_pr'] == 228
+          assert p['provider_send_guard_git_blob_sha'] == '4b8896235d8048523d007400d0acfe85470f628c'
+          assert p['subscription_product'] == 'GLM Coding Plan'
+          assert p['hermes_revision'] == '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          assert p['hermes_package_version'] == '0.8.0'
+          assert p['provider_id'] == 'zai'
+          assert p['api_mode'] == 'chat_completions'
+          assert p['requested_model'] == 'glm-5.3'
+          assert p['sampling_temperature'] == 0.8
+          assert p['thinking'] == {'type':'disabled'}
+          assert len(p['trajectories']) == 4
+          assert p['trajectory_logical_calls_each'] == 55
+          assert p['trajectory_logical_calls_registered'] == 220
+          assert 0 <= p['logical_calls_attempted'] <= 220
+          assert 0 <= p['logical_calls_completed'] <= p['logical_calls_attempted']
+          assert p['trajectory_max_concurrency'] == 4
+          assert p['maximum_physical_sends_per_logical_call'] == 36
+          assert p['maximum_physical_sends_total'] == 400
+          assert 0 <= p['physical_provider_sends_observed_total'] <= 400
+          assert p['logical_context_thread_propagation_used'] is True
+          assert p['independent_request_origin_header'] == 'X-Resonance-World-Logical-Index'
+          assert p['provider_worker_threads_observed'] >= 0
+          assert p['provider_worker_threads_alive_after_drain'] >= 0
+          assert p['provider_worker_drain_timeout_seconds'] == 60.0
+          assert isinstance(p['transport_hooks_restored_after_worker_drain'], bool)
+          assert isinstance(p['qualification_pass'], bool)
+          assert p['scientific_scoring_performed'] is False
+          assert p['source_acquisition_evidence_generated'] is False
+          assert p['scientific_campaign_executed'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['acceptance_action_authorized'] is False
+          assert p['production_historical_substrate_enabled'] is False
+          assert p['raw_credentials_persisted'] is False
+          assert p['raw_provider_response_body_persisted'] is False
+          assert p['raw_provider_error_body_persisted'] is False
+          assert p['raw_provider_error_message_persisted'] is False
+          assert p['same_request_stream_rerun_allowed'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-trajectory-completion-envelope-result
+          path: output/d2-trajectory-completion-envelope-result.json
+          if-no-files-found: error
+
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo 'Workflow reruns are prohibited for this request stream.' >&2
+          exit 1
