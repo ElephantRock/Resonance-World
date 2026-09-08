@@ -1,0 +1,49 @@
+{
+  "schema": "d2-trajectory-completion-envelope-topology-v0.1",
+  "issue": 234,
+  "system_prompt_sha256": "081d8348b1d5faf88022bd4bb83985b20844b630e05e68993d504d2234454e79",
+  "selected_profile": {
+    "name": "iterations2_tokens768",
+    "max_iterations": 2,
+    "max_tokens": 768
+  },
+  "trajectories": [
+    {
+      "trajectory": "schema_like_0",
+      "logical_calls": 55,
+      "logical_index_start": 0,
+      "logical_index_stop_exclusive": 55,
+      "topology_sha256": "4424fe124029e71c5c8677c0395e05e033182637ea804e4396bd1e51c9512ab1"
+    },
+    {
+      "trajectory": "schema_like_1",
+      "logical_calls": 55,
+      "logical_index_start": 55,
+      "logical_index_stop_exclusive": 110,
+      "topology_sha256": "d1cd63014fa5d21c07efec1a3f3f75b6cc20e46b59b6454872e4ae1310b12143"
+    },
+    {
+      "trajectory": "schema_like_2",
+      "logical_calls": 55,
+      "logical_index_start": 110,
+      "logical_index_stop_exclusive": 165,
+      "topology_sha256": "70beb0e393b0697889ce8ce04bc4e1471943acfb50431f1476277e861c3fc14b"
+    },
+    {
+      "trajectory": "schema_like_3",
+      "logical_calls": 55,
+      "logical_index_start": 165,
+      "logical_index_stop_exclusive": 220,
+      "topology_sha256": "03eb392e00fb202c968897447fcf3f15510adb0f7a56e19b19604b1a55add3e1"
+    }
+  ],
+  "trajectory_logical_calls_each": 55,
+  "trajectory_logical_calls_total": 220,
+  "trajectory_max_concurrency": 4,
+  "maximum_registered_logical_calls": 220,
+  "maximum_physical_sends_per_logical_call": 36,
+  "maximum_physical_sends_total": 400,
+  "scientific_hidden_policy_used": false,
+  "scientific_scoring_performed": false,
+  "production_historical_substrate_enabled": false
+}
