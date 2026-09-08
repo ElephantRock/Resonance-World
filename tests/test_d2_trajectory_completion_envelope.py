@@ -193,6 +193,45 @@ def test_call_pass_requires_clean_bounded_success() -> None:
     assert not mod.call_pass(bad)
 
 
+def test_only_development_strategy_is_propagated(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    seen: list[tuple[str, str]] = []
+
+    def fake_run_call(
+        budget: object,
+        ledger: object,
+        logical: int,
+        call_id: str,
+        shape: str,
+        seed: int,
+        strategy: str,
+    ) -> tuple[dict[str, object], str]:
+        del budget, ledger, call_id, seed
+        seen.append((shape, strategy))
+        row: dict[str, object] = {
+            "status": "success",
+            "agent_api_calls_observed": 1,
+            "logical_attribution_integrity": True,
+            "unexpected_outbound_blocks": 0,
+            "provider_budget_blocks": 0,
+            "attribution_mismatch_blocks": 0,
+            "terminal_http_429_code_1113": False,
+        }
+        return row, f"{shape}:{logical}"
+
+    monkeypatch.setattr(mod, "run_call", fake_run_call)
+    result = mod.run_trajectory(_budget(), transport.TransportLedger(), 0)
+    assert result["complete_55_of_55"] is True
+    assert len(seen) == 55
+    for shape, strategy in seen:
+        if shape in {"fresh_evaluation", "oracle_evaluation"}:
+            assert strategy == ""
+        elif shape == "developed_evaluation":
+            assert strategy.startswith("developed_development:")
+            assert not strategy.startswith("developed_evaluation:")
+
+
 def _make_run_agent_call_target(stop_event: threading.Event):
     def _call() -> None:
         stop_event.wait()
