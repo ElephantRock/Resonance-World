@@ -1,0 +1,224 @@
+name: D2-vNext Scientific Completion Qualification
+
+on:
+  push:
+    branches: ["engineering/d2-vnext-scientific-completion-qualification"]
+    paths:
+      - "research/d2_vnext_scientific_completion/RUN_D2_VNEXT_SCIENTIFIC_COMPLETION_QUALIFICATION"
+
+permissions:
+  contents: read
+
+jobs:
+  authorization-integrity:
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      candidate_sha: ${{ steps.auth.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - id: auth
+        name: Verify sole-child authorization and frozen engineering contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_vnext_scientific_completion/RUN_D2_VNEXT_SCIENTIFIC_COMPLETION_QUALIFICATION'
+          test -f "$marker"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          authorization="$(sed -n 's/^authorization=//p' "$marker")"
+          test -n "$candidate"
+          test "$issue" = '223'
+          test "$authorization" = 'D2_vNext_scientific_completion_engineering_execution_explicitly_authorized'
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          test "$(git diff --name-only "$candidate" HEAD | wc -l)" = '1'
+          if git cat-file -e "${candidate}:${marker}" 2>/dev/null; then
+            echo 'Frozen candidate already contains execution marker.' >&2
+            exit 1
+          fi
+          python - "$candidate" <<'PY'
+          import json, subprocess, sys
+          candidate = sys.argv[1]
+          raw = subprocess.check_output([
+              'git', 'show',
+              f'{candidate}:research/d2_vnext_scientific_completion/D2_VNEXT_SCIENTIFIC_COMPLETION_REQUEST_PLAN.json'
+          ], text=True)
+          p = json.loads(raw)
+          assert p['schema'] == 'd2-vnext-scientific-completion-request-plan-v0.1'
+          assert p['issue'] == 223
+          assert p['engineering_only'] is True
+          assert p['subscription_product'] == 'GLM Coding Plan'
+          assert p['supported_product_environment'] == 'Hermes Agent Python library'
+          assert p['hermes_revision'] == '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          assert p['hermes_package_version'] == '0.8.0'
+          assert p['hermes_run_agent_blob_sha'] == '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          assert p['openai_sdk_version'] == '2.21.0'
+          assert p['openai_sdk_default_max_retries'] == 2
+          assert p['httpx_version'] == '0.28.1'
+          assert p['endpoint_base_url'] == 'https://api.z.ai/api/coding/paas/v4'
+          assert p['provider_id'] == 'zai'
+          assert p['api_mode'] == 'chat_completions'
+          assert p['requested_model'] == 'glm-5.3'
+          assert p['sampling_temperature'] == 0.8
+          assert p['thinking'] == {'type': 'disabled'}
+          assert p['profiles'] == [
+              {'name':'iterations2_tokens768','max_iterations':2,'max_tokens':768},
+              {'name':'iterations2_tokens1024','max_iterations':2,'max_tokens':1024},
+              {'name':'iterations3_tokens1024','max_iterations':3,'max_tokens':1024},
+          ]
+          assert p['profile_logical_calls'] == 12
+          assert p['trajectory_logical_calls_each'] == 55
+          assert p['trajectory_logical_calls_total'] == 220
+          assert p['trajectory_max_concurrency'] == 4
+          assert p['maximum_registered_logical_calls'] == 232
+          assert p['maximum_physical_sends_per_logical_call'] == 54
+          assert p['maximum_physical_sends_total'] == 400
+          assert p['physical_send_guard_fail_closed'] is True
+          assert p['unregistered_outbound_http_blocked'] is True
+          assert p['scientific_hidden_policy_used'] is False
+          assert p['scientific_scoring_performed'] is False
+          assert p['source_acquisition_evidence_generated'] is False
+          assert p['scientific_campaign_authorized'] is False
+          assert p['provider_execution_authorized'] is False
+          assert p['workflow_rerun_allowed'] is False
+          assert p['same_request_stream_rerun_allowed'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['acceptance_action_authorized'] is False
+          assert p['historical_substrate_enabled'] is False
+          PY
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+
+  execute-bounded-qualification:
+    needs: authorization-integrity
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      GLM_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      D2_VNEXT_SCIENTIFIC_COMPLETION_AUTHORIZED: "1"
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+      - name: Checkout pinned Hermes Agent
+        uses: actions/checkout@v4
+        with:
+          repository: hermes-agent-org/hermes
+          ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4
+          path: .hermes-src
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Reverify exact authorized parent and pinned Hermes source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = '1'
+          test -n "${ZAI_API_KEY:-}"
+          test "${GLM_BASE_URL}" = 'https://api.z.ai/api/coding/paas/v4'
+          test "$(git rev-parse HEAD^)" = '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+          test "$(git -C .hermes-src rev-parse HEAD)" = '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
+          grep -Fq '"openai>=2.21.0,<3"' .hermes-src/pyproject.toml
+          grep -Fq 'request_overrides: Dict[str, Any] = None' .hermes-src/run_agent.py
+          grep -Fq 'api_kwargs.update(self.request_overrides)' .hermes-src/run_agent.py
+          grep -Fq 'max_retries = 3' .hermes-src/run_agent.py
+          grep -Fq 'primary_recovery_attempted = False' .hermes-src/run_agent.py
+      - name: Install frozen supported-product environment
+        run: |
+          python -m pip install ./.hermes-src 'openai==2.21.0' 'httpx==0.28.1'
+          python - <<'PY'
+          import importlib.metadata
+          import httpx
+          from openai._constants import DEFAULT_MAX_RETRIES
+          assert importlib.metadata.version('hermes-agent') == '0.8.0'
+          assert importlib.metadata.version('openai') == '2.21.0'
+          assert importlib.metadata.version('httpx') == '0.28.1'
+          assert httpx.__version__ == '0.28.1'
+          assert DEFAULT_MAX_RETRIES == 2
+          assert hasattr(httpx.Client, '_send_single_request')
+          assert hasattr(httpx.AsyncClient, '_send_single_request')
+          PY
+      - name: Execute bounded scientific-shaped completion qualification once
+        shell: bash
+        run: |
+          set -euo pipefail
+          env \
+            -u OPENROUTER_API_KEY \
+            -u OPENAI_API_KEY \
+            -u OPENAI_BASE_URL \
+            -u ANTHROPIC_API_KEY \
+            -u ANTHROPIC_TOKEN \
+            -u NOUS_API_KEY \
+            -u GLM_API_KEY \
+            -u Z_AI_API_KEY \
+            -u KIMI_API_KEY \
+            -u MINIMAX_API_KEY \
+            -u DEEPSEEK_API_KEY \
+            -u DASHSCOPE_API_KEY \
+            -u XAI_API_KEY \
+            python scripts/qualify_d2_vnext_scientific_completion.py \
+              --execute \
+              --output output/d2-vnext-scientific-completion-qualification-result.json
+      - name: Verify bounded result authority
+        shell: bash
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('output/d2-vnext-scientific-completion-qualification-result.json').read_text())
+          assert p['schema'] == 'd2-vnext-scientific-completion-qualification-result-v0.1'
+          assert p['issue'] == 223
+          assert p['engineering_only'] is True
+          assert p['subscription_product'] == 'GLM Coding Plan'
+          assert p['supported_product_environment'] == 'Hermes Agent Python library'
+          assert p['hermes_revision'] == '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          assert p['hermes_package_version'] == '0.8.0'
+          assert p['endpoint_base_url'] == 'https://api.z.ai/api/coding/paas/v4'
+          assert p['provider_id'] == 'zai'
+          assert p['api_mode'] == 'chat_completions'
+          assert p['requested_model'] == 'glm-5.3'
+          assert p['sampling_temperature'] == 0.8
+          assert p['thinking'] == {'type':'disabled'}
+          assert p['profile_logical_calls_registered'] == 12
+          assert p['trajectory_logical_calls_registered_maximum'] == 220
+          assert p['trajectory_max_concurrency'] == 4
+          assert p['maximum_registered_logical_calls'] == 232
+          assert 0 <= p['logical_calls_attempted'] <= 232
+          assert p['maximum_physical_sends_total'] == 400
+          assert 0 <= p['physical_provider_sends_observed_total'] <= 400
+          assert p['scientific_hidden_policy_used'] is False
+          assert p['scientific_scoring_performed'] is False
+          assert p['scientific_campaign_executed'] is False
+          assert p['source_acquisition_evidence_generated'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['acceptance_action_authorized'] is False
+          assert p['production_historical_substrate_enabled'] is False
+          assert p['raw_credentials_persisted'] is False
+          assert p['raw_provider_response_body_persisted'] is False
+          assert p['raw_provider_error_body_persisted'] is False
+          assert p['raw_provider_error_message_persisted'] is False
+          assert p['same_request_stream_rerun_allowed'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-vnext-scientific-completion-qualification-result
+          path: output/d2-vnext-scientific-completion-qualification-result.json
+          if-no-files-found: error
+
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo 'Workflow reruns are prohibited for this request stream.' >&2
+          exit 1

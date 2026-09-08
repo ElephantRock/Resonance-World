@@ -1,0 +1,87 @@
+name: D2-vNext Scientific Completion Preexecution
+
+on:
+  pull_request:
+    paths:
+      - "research/d2_vnext_scientific_completion/**"
+      - "scripts/qualify_d2_vnext_scientific_completion.py"
+      - "tests/test_d2_vnext_scientific_completion.py"
+      - ".github/workflows/d2-vnext-scientific-completion-preexecution.yml"
+      - ".github/workflows/d2-vnext-scientific-completion-qualification.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-preexecution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - id: lifecycle
+        name: Verify lifecycle state
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_vnext_scientific_completion/RUN_D2_VNEXT_SCIENTIFIC_COMPLETION_QUALIFICATION'
+          if test -f "$marker"; then
+            grep -Eq '^candidate_sha=[0-9a-f]{40}$' "$marker"
+            grep -Fxq 'issue=223' "$marker"
+            grep -Fxq 'authorization=D2_vNext_scientific_completion_engineering_execution_explicitly_authorized' "$marker"
+            echo 'authorized=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'authorized=false' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Credential-free deterministic preflight twice
+        if: steps.lifecycle.outputs.authorized != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_VNEXT_SCIENTIFIC_COMPLETION_AUTHORIZED:-}"
+          python scripts/qualify_d2_vnext_scientific_completion.py --preflight \
+            --output output/preflight-a.json
+          python scripts/qualify_d2_vnext_scientific_completion.py --preflight \
+            --output output/preflight-b.json
+          cmp output/preflight-a.json output/preflight-b.json
+      - name: Targeted tests
+        run: pytest -q tests/test_d2_vnext_scientific_completion.py
+      - name: Ruff
+        run: |
+          ruff check \
+            scripts/qualify_d2_vnext_scientific_completion.py \
+            tests/test_d2_vnext_scientific_completion.py
+
+  pinned-hermes-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+      - name: Checkout pinned Hermes Agent
+        uses: actions/checkout@v4
+        with:
+          repository: hermes-agent-org/hermes
+          ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4
+          path: .hermes-src
+          fetch-depth: 1
+      - name: Verify supported-product source contract without credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test "$(git -C .hermes-src rev-parse HEAD)" = \
+            '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = \
+            '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
+          grep -Fq '"openai>=2.21.0,<3"' .hermes-src/pyproject.toml
+          grep -Fq 'request_overrides: Dict[str, Any] = None' .hermes-src/run_agent.py
+          grep -Fq 'api_kwargs.update(self.request_overrides)' .hermes-src/run_agent.py
+          grep -Fq 'max_retries = 3' .hermes-src/run_agent.py
+          grep -Fq 'primary_recovery_attempted = False' .hermes-src/run_agent.py

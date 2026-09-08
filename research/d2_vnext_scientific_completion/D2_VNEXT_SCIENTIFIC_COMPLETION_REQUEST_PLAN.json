@@ -1,0 +1,89 @@
+{
+  "acceptance_action_authorized": false,
+  "all_profiles_execute": true,
+  "api_mode": "chat_completions",
+  "credential_env_var": "ZAI_API_KEY",
+  "enabled_toolsets": [],
+  "endpoint_base_url": "https://api.z.ai/api/coding/paas/v4",
+  "engineering_only": true,
+  "fallback_provider_configured": false,
+  "general_api_fallback_allowed": false,
+  "hermes_package_version": "0.8.0",
+  "hermes_repository": "hermes-agent-org/hermes",
+  "hermes_revision": "036cbdfa0a3158454a0a2a7a7388cf70353326b4",
+  "hermes_run_agent_blob_sha": "4c0d3be4b0c2d364c550fa663d34f6545c9e6d20",
+  "historical_substrate_enabled": false,
+  "httpx_version": "0.28.1",
+  "issue": 223,
+  "maximum_physical_sends_per_logical_call": 54,
+  "maximum_physical_sends_total": 400,
+  "maximum_registered_logical_calls": 232,
+  "memory_context_files_enabled": false,
+  "openai_sdk_default_max_retries": 2,
+  "openai_sdk_version": "2.21.0",
+  "persistent_session_enabled": false,
+  "physical_send_guard_fail_closed": true,
+  "predecessor_issue": 221,
+  "predecessor_merge_sha": "f2d4e5158a875a4a3ffa0bd69312eecba55e4940",
+  "predecessor_pr": 222,
+  "profile_call_shapes": [
+    "fresh_evaluation",
+    "developed_development",
+    "developed_evaluation",
+    "oracle_evaluation"
+  ],
+  "profile_logical_calls": 12,
+  "profiles": [
+    {
+      "max_iterations": 2,
+      "max_tokens": 768,
+      "name": "iterations2_tokens768"
+    },
+    {
+      "max_iterations": 2,
+      "max_tokens": 1024,
+      "name": "iterations2_tokens1024"
+    },
+    {
+      "max_iterations": 3,
+      "max_tokens": 1024,
+      "name": "iterations3_tokens1024"
+    }
+  ],
+  "provider": "Z.AI",
+  "provider_base_url_env_var": "GLM_BASE_URL",
+  "provider_execution_authorized": false,
+  "provider_id": "zai",
+  "raw_credentials_persisted": false,
+  "raw_provider_error_body_persisted": false,
+  "raw_provider_error_message_persisted": false,
+  "raw_provider_response_body_persisted": false,
+  "registry_promotion_authorized": false,
+  "requested_model": "glm-5.3",
+  "same_request_stream_rerun_allowed": false,
+  "sampling_temperature": 0.8,
+  "schema": "d2-vnext-scientific-completion-request-plan-v0.1",
+  "scientific_campaign_authorized": false,
+  "scientific_hidden_policy_used": false,
+  "scientific_scoring_performed": false,
+  "selected_profile_rule": "first_passing_profile_in_registered_order",
+  "source_acquisition_evidence_generated": false,
+  "subscription_product": "GLM Coding Plan",
+  "supported_product_environment": "Hermes Agent Python library",
+  "thinking": {
+    "type": "disabled"
+  },
+  "trajectory_executes_only_if_profile_selected": true,
+  "trajectory_logical_calls_each": 55,
+  "trajectory_logical_calls_total": 220,
+  "trajectory_max_concurrency": 4,
+  "trajectory_names": [
+    "schema_like_0",
+    "schema_like_1",
+    "schema_like_2",
+    "schema_like_3"
+  ],
+  "trajectory_qualification_requires_all_four_complete_55_of_55": true,
+  "unregistered_outbound_http_blocked": true,
+  "workflow_rerun_allowed": false
+}

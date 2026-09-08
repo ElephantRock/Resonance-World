@@ -1,0 +1,73 @@
+{
+  "issue": 223,
+  "maximum_physical_sends_total": 400,
+  "maximum_registered_logical_calls": 232,
+  "production_historical_substrate_enabled": false,
+  "profile_call_shapes": [
+    {
+      "prompt_bytes": 1069,
+      "prompt_sha256": "2d5b6e772c10a171187e48583e42582f0194f4fe841ab0c4f57043538bf1e9c4",
+      "shape": "fresh_evaluation"
+    },
+    {
+      "prompt_bytes": 2020,
+      "prompt_sha256": "c15c7e2e6e1c5fc5ed6b48c62d53c420557be489b0172e5cdd0d49a2bfbf7d2f",
+      "shape": "developed_development"
+    },
+    {
+      "prompt_bytes": 2006,
+      "prompt_sha256": "a981cff0cfd408e6f54d962dfd588ce67504b2a266a8dd2d37e0198bb93efea6",
+      "shape": "developed_evaluation"
+    },
+    {
+      "prompt_bytes": 1178,
+      "prompt_sha256": "1f8266bf55938f7ced757fcab517a9350f3127fe9bd6b79267e6a7aa8486ae5c",
+      "shape": "oracle_evaluation"
+    }
+  ],
+  "profile_logical_calls": 12,
+  "profiles": [
+    {
+      "max_iterations": 2,
+      "max_tokens": 768,
+      "name": "iterations2_tokens768"
+    },
+    {
+      "max_iterations": 2,
+      "max_tokens": 1024,
+      "name": "iterations2_tokens1024"
+    },
+    {
+      "max_iterations": 3,
+      "max_tokens": 1024,
+      "name": "iterations3_tokens1024"
+    }
+  ],
+  "schema": "d2-vnext-scientific-completion-topology-v0.1",
+  "scientific_hidden_policy_used": false,
+  "scientific_scoring_performed": false,
+  "trajectories": [
+    {
+      "logical_calls": 55,
+      "topology_sha256": "4424fe124029e71c5c8677c0395e05e033182637ea804e4396bd1e51c9512ab1",
+      "trajectory": "schema_like_0"
+    },
+    {
+      "logical_calls": 55,
+      "topology_sha256": "d1cd63014fa5d21c07efec1a3f3f75b6cc20e46b59b6454872e4ae1310b12143",
+      "trajectory": "schema_like_1"
+    },
+    {
+      "logical_calls": 55,
+      "topology_sha256": "70beb0e393b0697889ce8ce04bc4e1471943acfb50431f1476277e861c3fc14b",
+      "trajectory": "schema_like_2"
+    },
+    {
+      "logical_calls": 55,
+      "topology_sha256": "03eb392e00fb202c968897447fcf3f15510adb0f7a56e19b19604b1a55add3e1",
+      "trajectory": "schema_like_3"
+    }
+  ],
+  "trajectory_logical_calls_total": 220,
+  "trajectory_max_concurrency": 4
+}
