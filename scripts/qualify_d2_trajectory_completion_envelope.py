@@ -120,6 +120,7 @@ def run_call(
         "prompt_sha256": contract.sha(prompt),
     }
     agent: Any | None = None
+    response_strategy = ""
     next_strategy = strategy
     try:
         with budget.logical_call(logical):
@@ -141,7 +142,9 @@ def run_call(
             )
         if not 1 <= api_calls <= int(contract.PROFILE["max_iterations"]):
             raise RuntimeError(f"Hermes semantic API-call count drift: {api_calls}")
-        next_strategy = contract.parse_response(final)
+        response_strategy = contract.parse_response(final)
+        if shape == "developed_development" and response_strategy:
+            next_strategy = response_strategy
         attempts = ledger.rows(logical)
         send_count = budget.sends_for_logical_call(logical)
         if not 1 <= send_count <= contract.MAX_SENDS_PER_LOGICAL:
@@ -161,9 +164,9 @@ def run_call(
                 "agent_api_calls_observed": api_calls,
                 "final_response_length": len(final),
                 "final_response_sha256": contract.sha(final),
-                "strategy_present": bool(next_strategy),
-                "strategy_length": len(next_strategy),
-                "strategy_sha256": contract.sha(next_strategy) if next_strategy else None,
+                "strategy_present": bool(response_strategy),
+                "strategy_length": len(response_strategy),
+                "strategy_sha256": contract.sha(response_strategy) if response_strategy else None,
                 "finish_reason": finish,
                 "stop_reason": stop,
                 "provider_http_attempts_observed": send_count,
@@ -237,7 +240,8 @@ def run_trajectory(
         rows.append(row)
         if not call_pass(row):
             break
-        strategies[arm] = next_strategy or prior_strategy
+        if spec["shape"] == "developed_development":
+            strategies[arm] = next_strategy
     complete = len(rows) == contract.TRAJECTORY_CALLS_EACH and all(
         call_pass(row) for row in rows
     )
