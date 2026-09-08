@@ -201,3 +201,18 @@ def test_committed_materialization_matches_builder() -> None:
     )
     assert lock == materializer.build_cohort_lock()
     assert shards == materializer.build_shard_map()
+
+
+def test_campaign_closeout_survives_partial_provider_shard_failure() -> None:
+    workflow = (
+        ROOT / ".github/workflows/d2-vnext-s1-source-acquisition.yml"
+    ).read_text()
+    aggregate = workflow.split("  aggregate-provider:\n", 1)[1].split(
+        "  evaluate-frozen:\n", 1
+    )[0]
+    assert "needs: [authorization-integrity, provider-shards]" in aggregate
+    assert "always()" in aggregate
+    assert "needs.authorization-integrity.result == 'success'" in aggregate
+    assert "needs.provider-shards.result != 'skipped'" in aggregate
+    assert "mkdir -p output/provider-shards" in aggregate
+    assert "continue-on-error: true" in aggregate
