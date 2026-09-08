@@ -81,6 +81,9 @@ jobs:
           assert p['maximum_physical_sends_per_logical_probe'] == 18
           assert p['maximum_physical_sends_total'] == 72
           assert p['logical_context_thread_propagation_required'] is True
+          assert p['independent_probe_origin_header'] == 'X-Resonance-World-Probe-Index'
+          assert p['origin_reservation_match_required'] is True
+          assert p['attribution_mismatch_fail_closed'] is True
           assert p['unregistered_outbound_http_blocked'] is True
           assert p['d2_scientific_call_shapes_executed'] is False
           assert p['scientific_scoring_performed'] is False
@@ -202,9 +205,11 @@ jobs:
           assert p['requested_model'] == 'glm-5.3'
           assert p['logical_probe_count'] == 4
           assert p['logical_probe_max_concurrency'] == 4
+          assert p['independent_probe_origin_header'] == 'X-Resonance-World-Probe-Index'
           assert p['maximum_physical_sends_per_logical_probe'] == 18
           assert p['maximum_physical_sends_total'] == 72
           assert 0 <= p['physical_provider_sends_observed_total'] <= 72
+          assert p['logical_attribution_mismatch_blocks'] >= 0
           assert p['logical_context_thread_propagation_used'] is True
           assert len(p['probes']) == 4
           assert p['d2_scientific_call_shapes_executed'] is False
