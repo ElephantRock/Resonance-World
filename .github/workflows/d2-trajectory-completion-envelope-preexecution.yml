@@ -45,12 +45,17 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          test "$(sha256sum research/evidence/d2_stage1_completion_envelope/RESULT.json | awk '{print $1}')" = \
-            '9982e3c059e864cc06027173cfc3e3c17de7276393c501b15d4a4831a722f6a5'
           python - <<'PY'
+          import hashlib
           import json
           from pathlib import Path
-          p = json.loads(Path('research/evidence/d2_stage1_completion_envelope/RESULT.json').read_text())
+
+          path = Path('research/evidence/d2_stage1_completion_envelope/RESULT.json')
+          p = json.loads(path.read_text())
+          canonical = (json.dumps(p, sort_keys=True, separators=(',', ':')) + '\n').encode()
+          assert hashlib.sha256(canonical).hexdigest() == (
+              '9982e3c059e864cc06027173cfc3e3c17de7276393c501b15d4a4831a722f6a5'
+          )
           assert p['schema'] == 'd2-stage1-completion-envelope-result-v0.1'
           assert p['issue'] == 231
           assert p['qualification_pass'] is True
