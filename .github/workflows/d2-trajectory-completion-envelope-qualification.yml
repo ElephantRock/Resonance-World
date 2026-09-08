@@ -46,11 +46,33 @@ jobs:
           fi
           test "$(git rev-parse "${candidate}:src/resonance_world/provider_send_guard.py")" = \
             '4b8896235d8048523d007400d0acfe85470f628c'
-          test "$(git show "${candidate}:research/evidence/d2_stage1_completion_envelope/RESULT.json" | sha256sum | awk '{print $1}')" = \
-            '9982e3c059e864cc06027173cfc3e3c17de7276393c501b15d4a4831a722f6a5'
           python - "$candidate" <<'PY'
-          import json, subprocess, sys
+          import hashlib
+          import json
+          import subprocess
+          import sys
+
           candidate = sys.argv[1]
+          stage1_raw = subprocess.check_output([
+              'git', 'show',
+              f'{candidate}:research/evidence/d2_stage1_completion_envelope/RESULT.json'
+          ], text=True)
+          stage1 = json.loads(stage1_raw)
+          stage1_canonical = (
+              json.dumps(stage1, sort_keys=True, separators=(',', ':')) + '\n'
+          ).encode()
+          assert hashlib.sha256(stage1_canonical).hexdigest() == (
+              '9982e3c059e864cc06027173cfc3e3c17de7276393c501b15d4a4831a722f6a5'
+          )
+          assert stage1['schema'] == 'd2-stage1-completion-envelope-result-v0.1'
+          assert stage1['issue'] == 231
+          assert stage1['qualification_pass'] is True
+          assert stage1['selected_profile'] == {
+              'name': 'iterations2_tokens768',
+              'max_iterations': 2,
+              'max_tokens': 768,
+          }
+
           raw = subprocess.check_output([
               'git', 'show',
               f'{candidate}:research/d2_trajectory_completion_envelope/REQUEST_PLAN.json'
@@ -151,8 +173,27 @@ jobs:
           test "$(git rev-parse HEAD^)" = '${{ needs.authorization-integrity.outputs.candidate_sha }}'
           test "$(git rev-parse HEAD^:src/resonance_world/provider_send_guard.py)" = \
             '4b8896235d8048523d007400d0acfe85470f628c'
-          test "$(git show HEAD^:research/evidence/d2_stage1_completion_envelope/RESULT.json | sha256sum | awk '{print $1}')" = \
-            '9982e3c059e864cc06027173cfc3e3c17de7276393c501b15d4a4831a722f6a5'
+          python - <<'PY'
+          import hashlib
+          import json
+          import subprocess
+
+          raw = subprocess.check_output([
+              'git', 'show',
+              'HEAD^:research/evidence/d2_stage1_completion_envelope/RESULT.json'
+          ], text=True)
+          p = json.loads(raw)
+          canonical = (json.dumps(p, sort_keys=True, separators=(',', ':')) + '\n').encode()
+          assert hashlib.sha256(canonical).hexdigest() == (
+              '9982e3c059e864cc06027173cfc3e3c17de7276393c501b15d4a4831a722f6a5'
+          )
+          assert p['qualification_pass'] is True
+          assert p['selected_profile'] == {
+              'name': 'iterations2_tokens768',
+              'max_iterations': 2,
+              'max_tokens': 768,
+          }
+          PY
           test "$(git -C .hermes-src rev-parse HEAD)" = \
             '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
           test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = \
