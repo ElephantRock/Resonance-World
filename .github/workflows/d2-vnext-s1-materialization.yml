@@ -1,0 +1,65 @@
+name: D2-vNext-S1 Source Acquisition Materialization
+
+on:
+  push:
+    branches:
+      - research/d2-vnext-s1-source-acquisition
+    paths:
+      - 'scripts/d2_vnext_s1_acquisition_core.py'
+      - 'scripts/materialize_d2_vnext_s1_source_acquisition.py'
+      - '.github/workflows/d2-vnext-s1-materialization.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  materialize-zero-provider:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Assert provider credentials absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${GLM_API_KEY:-}"
+          test -z "${OPENAI_API_KEY:-}"
+      - name: Materialize deterministic cohort twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          python scripts/materialize_d2_vnext_s1_source_acquisition.py --output-dir output/first
+          python scripts/materialize_d2_vnext_s1_source_acquisition.py --output-dir output/second
+          cmp output/first/d2-vnext-s1-source-acquisition-cohort-lock.json output/second/d2-vnext-s1-source-acquisition-cohort-lock.json
+          cmp output/first/D2_VNEXT_S1_SHARD_MAP.json output/second/D2_VNEXT_S1_SHARD_MAP.json
+          cmp output/first/materialization-manifest.json output/second/materialization-manifest.json
+      - name: Verify registered topology
+        shell: bash
+        run: |
+          set -euo pipefail
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          lock = json.loads(Path('output/first/d2-vnext-s1-source-acquisition-cohort-lock.json').read_text())
+          shards = json.loads(Path('output/first/D2_VNEXT_S1_SHARD_MAP.json').read_text())
+          assert lock['pair_count'] == 384
+          assert lock['pairs_per_schema'] == 96
+          assert lock['cross_schema_seed_overlap'] == 0
+          assert all(v == 0 for v in lock['predecessor_seed_namespace_overlap'].values())
+          assert lock['production_historical_substrate_enabled'] is False
+          assert shards['shard_count'] == 24
+          assert shards['registered_logical_calls_if_all_pairs_complete'] == 21120
+          assert shards['maximum_physical_provider_sends_per_shard'] == 1000
+          assert shards['maximum_physical_provider_sends_campaign'] == 24000
+          assert shards['favorable_result_possible_with_missing_whole_shard'] is False
+          PY
+      - uses: actions/upload-artifact@v4
+        with:
+          name: d2-vnext-s1-source-acquisition-materialization
+          path: output/first/
+          if-no-files-found: error
