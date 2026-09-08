@@ -9,6 +9,7 @@ from contextlib import contextmanager
 from typing import Any
 
 import d2_trajectory_completion_contract as contract
+
 from resonance_world.provider_send_guard import ProviderSendBudget, SendReservation
 
 
