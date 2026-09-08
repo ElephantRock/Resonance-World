@@ -18,6 +18,7 @@ if str(SCRIPT_DIR) not in sys.path:
 
 import d2_trajectory_completion_contract as contract  # noqa: E402
 import d2_trajectory_completion_transport as transport  # noqa: E402
+
 from resonance_world.provider_send_guard import ProviderSendBudget  # noqa: E402
 
 
