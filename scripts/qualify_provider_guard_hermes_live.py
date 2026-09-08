@@ -45,6 +45,7 @@ MAX_AGENT_ITERATIONS = 1
 MAX_TOKENS = 64
 MAX_SENDS_PER_LOGICAL = 18
 MAX_SENDS_TOTAL = 72
+PROBE_ORIGIN_HEADER = "X-Resonance-World-Probe-Index"
 GUARD_REPAIR_MERGE_SHA = "47383f2b18c993965c89350609a4c9691897bdde"
 GUARD_GIT_BLOB_SHA = "4b8896235d8048523d007400d0acfe85470f628c"
 AUTH_ENV = "PROVIDER_GUARD_HERMES_LIVE_AUTHORIZED"
@@ -64,6 +65,10 @@ _FORBIDDEN_PROVIDER_CREDENTIAL_ENV_VARS = (
     "DASHSCOPE_API_KEY",
     "XAI_API_KEY",
 )
+
+
+class LogicalAttributionMismatch(RuntimeError):
+    """Raised before transmission when independent probe origin disagrees with context."""
 
 
 def sha256_bytes(value: bytes) -> str:
@@ -124,6 +129,9 @@ def validate_plan(plan: dict[str, Any]) -> None:
         "maximum_physical_sends_total": MAX_SENDS_TOTAL,
         "physical_send_guard_fail_closed": True,
         "logical_context_thread_propagation_required": True,
+        "independent_probe_origin_header": PROBE_ORIGIN_HEADER,
+        "origin_reservation_match_required": True,
+        "attribution_mismatch_fail_closed": True,
         "unregistered_outbound_http_blocked": True,
         "enabled_toolsets": [],
         "memory_context_files_enabled": False,
@@ -175,6 +183,7 @@ def preflight() -> dict[str, Any]:
         "provider_send_guard_git_blob_sha": git_blob_sha(GUARD_PATH),
         "logical_probe_count": LOGICAL_PROBES,
         "logical_probe_max_concurrency": MAX_CONCURRENCY,
+        "independent_probe_origin_header": PROBE_ORIGIN_HEADER,
         "maximum_physical_sends_total": MAX_SENDS_TOTAL,
         "scientific_scoring_performed": False,
         "historical_substrate_enabled": False,
@@ -235,9 +244,23 @@ class TransportLedger:
     def __init__(self) -> None:
         self._lock = threading.Lock()
         self._rows = {index: [] for index in range(LOGICAL_PROBES)}
+        self._attribution_mismatches = 0
 
-    def begin(self, reservation: SendReservation) -> int:
+    def record_attribution_mismatch(self) -> None:
+        with self._lock:
+            self._attribution_mismatches += 1
+
+    @property
+    def attribution_mismatches(self) -> int:
+        with self._lock:
+            return self._attribution_mismatches
+
+    def begin(self, reservation: SendReservation, origin_probe_index: int) -> int:
+        if origin_probe_index != reservation.logical_index:
+            self.record_attribution_mismatch()
+            raise LogicalAttributionMismatch("probe origin disagrees with send reservation")
         row = {
+            "origin_probe_index": origin_probe_index,
             "logical_index": reservation.logical_index,
             "logical_send_index": reservation.logical_send_index,
             "total_send_index": reservation.total_send_index,
@@ -264,6 +287,29 @@ class TransportLedger:
             return [dict(row) for row in self._rows[logical_index]]
 
 
+def _verified_origin_probe_index(
+    request: Any,
+    budget: ProviderSendBudget,
+    ledger: TransportLedger,
+) -> int:
+    raw = request.headers.get(PROBE_ORIGIN_HEADER)
+    try:
+        origin_probe_index = int(raw) if raw is not None else -1
+    except (TypeError, ValueError):
+        origin_probe_index = -1
+    logical_index = budget.current_logical_index()
+    if (
+        not 0 <= origin_probe_index < LOGICAL_PROBES
+        or logical_index is None
+        or origin_probe_index != logical_index
+    ):
+        ledger.record_attribution_mismatch()
+        raise LogicalAttributionMismatch(
+            "independent probe origin does not match registered logical context"
+        )
+    return origin_probe_index
+
+
 @contextmanager
 def _enforce_physical_http_attempt_cap(
     budget: ProviderSendBudget,
@@ -275,8 +321,9 @@ def _enforce_physical_http_attempt_cap(
     original_async = httpx.AsyncClient._send_single_request
 
     def capped_sync(client: Any, request: Any) -> Any:
+        origin_probe_index = _verified_origin_probe_index(request, budget, ledger)
         reservation = budget.reserve(str(request.url))
-        row_index = ledger.begin(reservation)
+        row_index = ledger.begin(reservation, origin_probe_index)
         try:
             response = original_sync(client, request)
         except Exception as exc:
@@ -286,8 +333,9 @@ def _enforce_physical_http_attempt_cap(
         return response
 
     async def capped_async(client: Any, request: Any) -> Any:
+        origin_probe_index = _verified_origin_probe_index(request, budget, ledger)
         reservation = budget.reserve(str(request.url))
-        row_index = ledger.begin(reservation)
+        row_index = ledger.begin(reservation, origin_probe_index)
         try:
             response = await original_async(client, request)
         except Exception as exc:
@@ -305,7 +353,7 @@ def _enforce_physical_http_attempt_cap(
         httpx.AsyncClient._send_single_request = original_async
 
 
-def _new_agent() -> Any:
+def _new_agent(probe_index: int) -> Any:
     from run_agent import AIAgent
 
     agent = AIAgent(
@@ -324,6 +372,7 @@ def _new_agent() -> Any:
         request_overrides={
             "temperature": TEMPERATURE,
             "extra_body": {"thinking": THINKING},
+            "extra_headers": {PROBE_ORIGIN_HEADER: str(probe_index)},
         },
         skip_context_files=True,
         skip_memory=True,
@@ -379,7 +428,7 @@ def execute() -> dict[str, Any]:
         agent: Any | None = None
         try:
             with budget.logical_call(probe_index):
-                agent = _new_agent()
+                agent = _new_agent(probe_index)
                 result = agent.run_conversation(user_message=prompt)
             final_response = str(result.get("final_response") or "")
             terminal_error = str(result.get("error") or "")
@@ -424,7 +473,9 @@ def execute() -> dict[str, Any]:
                 "provider_http_attempts_observed": budget.sends_for_logical_call(probe_index),
                 "transport_attempts": attempts,
                 "logical_attribution_integrity": all(
-                    attempt["logical_index"] == probe_index for attempt in attempts
+                    attempt["origin_probe_index"] == probe_index
+                    and attempt["logical_index"] == probe_index
+                    for attempt in attempts
                 ),
             }
         )
@@ -438,6 +489,7 @@ def execute() -> dict[str, Any]:
     qualified = (
         budget.blocked_unexpected == 0
         and budget.blocked_budget == 0
+        and ledger.attribution_mismatches == 0
         and budget.total_sends <= MAX_SENDS_TOTAL
         and all(
             row.get("status") == "success"
@@ -480,11 +532,13 @@ def execute() -> dict[str, Any]:
         "thinking": THINKING,
         "logical_probe_count": LOGICAL_PROBES,
         "logical_probe_max_concurrency": MAX_CONCURRENCY,
+        "independent_probe_origin_header": PROBE_ORIGIN_HEADER,
         "maximum_physical_sends_per_logical_probe": MAX_SENDS_PER_LOGICAL,
         "maximum_physical_sends_total": MAX_SENDS_TOTAL,
         "physical_provider_sends_observed_total": budget.total_sends,
         "unexpected_outbound_http_requests_blocked": budget.blocked_unexpected,
         "provider_attempts_blocked_by_cap": budget.blocked_budget,
+        "logical_attribution_mismatch_blocks": ledger.attribution_mismatches,
         "logical_context_thread_propagation_used": True,
         "probes": rows,
         "qualification_pass": qualified,
