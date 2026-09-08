@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -25,6 +26,9 @@ def test_request_plan_is_exact_and_provider_execution_is_disabled() -> None:
     assert plan["maximum_physical_sends_total"] == 72
     assert plan["logical_probe_count"] == 4
     assert plan["logical_probe_max_concurrency"] == 4
+    assert plan["independent_probe_origin_header"] == mod.PROBE_ORIGIN_HEADER
+    assert plan["origin_reservation_match_required"] is True
+    assert plan["attribution_mismatch_fail_closed"] is True
 
 
 def test_preflight_is_deterministic_and_credential_free(
@@ -39,6 +43,7 @@ def test_preflight_is_deterministic_and_credential_free(
     assert first["provider_execution_performed"] is False
     assert first["execution_marker_absent"] is True
     assert first["provider_send_guard_git_blob_sha"] == mod.GUARD_GIT_BLOB_SHA
+    assert first["independent_probe_origin_header"] == mod.PROBE_ORIGIN_HEADER
     assert first["maximum_physical_sends_total"] == 72
 
 
@@ -74,3 +79,54 @@ def test_bounded_error_persists_only_fingerprint_metadata() -> None:
     assert result["error_text_length"] > 0
     assert len(result["error_text_sha256"]) == 64
     assert "secret body text" not in json.dumps(result)
+
+
+def _budget() -> mod.ProviderSendBudget:
+    return mod.ProviderSendBudget(
+        allowed_url_prefix=mod.BASE_URL,
+        maximum_logical_calls=mod.LOGICAL_PROBES,
+        maximum_sends_per_logical_call=mod.MAX_SENDS_PER_LOGICAL,
+        maximum_sends_total=mod.MAX_SENDS_TOTAL,
+    )
+
+
+def test_independent_origin_matches_registered_logical_context() -> None:
+    budget = _budget()
+    ledger = mod.TransportLedger()
+    request = SimpleNamespace(headers={mod.PROBE_ORIGIN_HEADER: "2"})
+    with budget.logical_call(2):
+        assert mod._verified_origin_probe_index(request, budget, ledger) == 2
+    assert ledger.attribution_mismatches == 0
+
+
+def test_cross_attribution_is_blocked_before_send_reservation() -> None:
+    budget = _budget()
+    ledger = mod.TransportLedger()
+    request = SimpleNamespace(headers={mod.PROBE_ORIGIN_HEADER: "3"})
+    with budget.logical_call(1):
+        with pytest.raises(mod.LogicalAttributionMismatch, match="does not match"):
+            mod._verified_origin_probe_index(request, budget, ledger)
+    assert ledger.attribution_mismatches == 1
+    assert budget.total_sends == 0
+
+
+def test_missing_independent_origin_is_blocked() -> None:
+    budget = _budget()
+    ledger = mod.TransportLedger()
+    request = SimpleNamespace(headers={})
+    with budget.logical_call(0):
+        with pytest.raises(mod.LogicalAttributionMismatch):
+            mod._verified_origin_probe_index(request, budget, ledger)
+    assert ledger.attribution_mismatches == 1
+    assert budget.total_sends == 0
+
+
+def test_ledger_persists_independent_origin_separately_from_reservation() -> None:
+    budget = _budget()
+    ledger = mod.TransportLedger()
+    with budget.logical_call(1):
+        reservation = budget.reserve(mod.BASE_URL + "/chat/completions")
+    row_index = ledger.begin(reservation, 1)
+    assert row_index == 0
+    assert ledger.rows(1)[0]["origin_probe_index"] == 1
+    assert ledger.rows(1)[0]["logical_index"] == 1
