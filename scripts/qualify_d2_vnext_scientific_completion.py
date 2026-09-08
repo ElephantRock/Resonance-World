@@ -599,6 +599,7 @@ def run_trajectory(
     rows = []
     for offset, spec in enumerate(trajectory_specs(index)):
         arm = str(spec["arm"])
+        prior_strategy = strategies.get(arm, "")
         row, strategy = run_call(
             budget,
             start + offset,
@@ -606,12 +607,12 @@ def run_trajectory(
             profile,
             str(spec["shape"]),
             int(spec["seed"]),
-            strategies.get(arm, ""),
+            prior_strategy,
         )
         rows.append(row)
         if row["status"] != "success":
             break
-        strategies[arm] = strategy
+        strategies[arm] = strategy or prior_strategy
     complete = len(rows) == 55 and all(x["status"] == "success" for x in rows)
     return {
         "trajectory": TRAJECTORIES[index],
