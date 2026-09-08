@@ -1,0 +1,48 @@
+{
+  "schema": "d2-stage1-completion-envelope-topology-v0.1",
+  "issue": 231,
+  "system_prompt_sha256": "081d8348b1d5faf88022bd4bb83985b20844b630e05e68993d504d2234454e79",
+  "profile_call_shapes": [
+    {
+      "shape": "fresh_evaluation",
+      "seed": 100,
+      "prior_strategy_length": 320,
+      "prompt_bytes": 1069,
+      "prompt_sha256": "2d5b6e772c10a171187e48583e42582f0194f4fe841ab0c4f57043538bf1e9c4"
+    },
+    {
+      "shape": "developed_development",
+      "seed": 101,
+      "prior_strategy_length": 320,
+      "prompt_bytes": 2020,
+      "prompt_sha256": "c15c7e2e6e1c5fc5ed6b48c62d53c420557be489b0172e5cdd0d49a2bfbf7d2f"
+    },
+    {
+      "shape": "developed_evaluation",
+      "seed": 102,
+      "prior_strategy_length": 320,
+      "prompt_bytes": 2006,
+      "prompt_sha256": "a981cff0cfd408e6f54d962dfd588ce67504b2a266a8dd2d37e0198bb93efea6"
+    },
+    {
+      "shape": "oracle_evaluation",
+      "seed": 103,
+      "prior_strategy_length": 320,
+      "prompt_bytes": 1178,
+      "prompt_sha256": "1f8266bf55938f7ced757fcab517a9350f3127fe9bd6b79267e6a7aa8486ae5c"
+    }
+  ],
+  "profiles": [
+    {"name": "iterations2_tokens768", "max_iterations": 2, "max_tokens": 768},
+    {"name": "iterations2_tokens1024", "max_iterations": 2, "max_tokens": 1024},
+    {"name": "iterations3_tokens1024", "max_iterations": 3, "max_tokens": 1024}
+  ],
+  "profile_logical_calls": 12,
+  "maximum_registered_logical_calls": 12,
+  "maximum_physical_sends_per_logical_call": 54,
+  "maximum_physical_sends_total": 120,
+  "trajectory_stage_registered": false,
+  "scientific_hidden_policy_used": false,
+  "scientific_scoring_performed": false,
+  "production_historical_substrate_enabled": false
+}
