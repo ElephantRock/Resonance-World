@@ -188,7 +188,9 @@ class ProviderSendBudget:
                 self._validate_logical_index(inherited)
                 original_target = target
 
-                def target_with_logical_context(*target_args: object, **target_kwargs: object) -> object:
+                def target_with_logical_context(
+                    *target_args: object, **target_kwargs: object
+                ) -> object:
                     with self.logical_call(inherited):
                         return original_target(*target_args, **target_kwargs)
 
