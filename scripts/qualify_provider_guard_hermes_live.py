@@ -255,7 +255,9 @@ class TransportLedger:
 
     def error(self, reservation: SendReservation, row_index: int, exc: BaseException) -> None:
         with self._lock:
-            self._rows[reservation.logical_index][row_index]["transport_error_type"] = type(exc).__name__
+            self._rows[reservation.logical_index][row_index]["transport_error_type"] = (
+                type(exc).__name__
+            )
 
     def rows(self, logical_index: int) -> list[dict[str, Any]]:
         with self._lock:
