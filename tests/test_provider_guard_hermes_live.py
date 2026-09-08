@@ -27,9 +27,12 @@ def test_request_plan_is_exact_and_provider_execution_is_disabled() -> None:
     assert plan["logical_probe_max_concurrency"] == 4
 
 
-def test_preflight_is_deterministic_and_credential_free(monkeypatch: pytest.MonkeyPatch) -> None:
+def test_preflight_is_deterministic_and_credential_free(
+    monkeypatch: pytest.MonkeyPatch, tmp_path: Path
+) -> None:
     monkeypatch.delenv("ZAI_API_KEY", raising=False)
     monkeypatch.delenv(mod.AUTH_ENV, raising=False)
+    monkeypatch.setattr(mod, "MARKER", tmp_path / "absent-marker")
     first = mod.preflight()
     second = mod.preflight()
     assert first == second
