@@ -1,0 +1,94 @@
+name: D2 Stage-1 Completion Envelope Preexecution
+
+on:
+  pull_request:
+    paths:
+      - "research/d2_stage1_completion_envelope/**"
+      - "scripts/qualify_d2_stage1_completion_envelope.py"
+      - "tests/test_d2_stage1_completion_envelope.py"
+      - "src/resonance_world/provider_send_guard.py"
+      - ".github/workflows/d2-stage1-completion-envelope-preexecution.yml"
+      - ".github/workflows/d2-stage1-completion-envelope-qualification.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-preexecution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - id: lifecycle
+        name: Verify lifecycle state
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_stage1_completion_envelope/RUN_D2_STAGE1_COMPLETION_ENVELOPE'
+          if test -f "$marker"; then
+            grep -Eq '^candidate_sha=[0-9a-f]{40}$' "$marker"
+            grep -Fxq 'issue=231' "$marker"
+            grep -Fxq 'authorization=Autonomous_Operating_Charter_Amendment_A1_standing_execution_authority' "$marker"
+            echo 'authorized=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'authorized=false' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Credential-free deterministic preflight twice
+        if: steps.lifecycle.outputs.authorized != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_STAGE1_COMPLETION_ENVELOPE_AUTHORIZED:-}"
+          python scripts/qualify_d2_stage1_completion_envelope.py --preflight \
+            --output output/preflight-a.json
+          python scripts/qualify_d2_stage1_completion_envelope.py --preflight \
+            --output output/preflight-b.json
+          cmp output/preflight-a.json output/preflight-b.json
+      - name: Targeted tests
+        run: |
+          pytest -q \
+            tests/test_provider_send_guard.py \
+            tests/test_d2_stage1_completion_envelope.py
+      - name: Ruff
+        run: |
+          ruff check \
+            scripts/qualify_d2_stage1_completion_envelope.py \
+            tests/test_d2_stage1_completion_envelope.py
+
+  pinned-hermes-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+      - name: Checkout pinned Hermes Agent
+        uses: actions/checkout@v4
+        with:
+          repository: hermes-agent-org/hermes
+          ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4
+          path: .hermes-src
+          fetch-depth: 1
+      - name: Verify supported-product source contract without credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test "$(git -C .hermes-src rev-parse HEAD)" = \
+            '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = \
+            '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          test "$(git rev-parse HEAD:src/resonance_world/provider_send_guard.py)" = \
+            '4b8896235d8048523d007400d0acfe85470f628c'
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
+          grep -Fq '"openai>=2.21.0,<3"' .hermes-src/pyproject.toml
+          grep -Fq 'request_overrides: Dict[str, Any] = None' .hermes-src/run_agent.py
+          grep -Fq 'api_kwargs.update(self.request_overrides)' .hermes-src/run_agent.py
+          grep -Fq 't = threading.Thread(target=_call, daemon=True)' .hermes-src/run_agent.py
+          grep -Fq 'max_retries = 3' .hermes-src/run_agent.py
+          grep -Fq 'primary_recovery_attempted = False' .hermes-src/run_agent.py
