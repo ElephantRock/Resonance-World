@@ -1,0 +1,1 @@
+This is a bounded engineering transport-conformance probe only. Do not use tools, browse, retrieve external information, or perform any action other than replying. Return a short plain-text acknowledgement containing the token RW_PROVIDER_GUARD_OK. There is no scientific task, hidden answer, score, or follow-up action.
