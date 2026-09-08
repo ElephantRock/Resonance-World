@@ -4,6 +4,11 @@ import json
 import sys
 from pathlib import Path
 
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
+
 import d2_vnext_s1_acquisition_core as core
 import d2_vnext_s1_hermes_client as hermes
 import evaluate_d2_vnext_s1_source_acquisition as evaluator
@@ -188,12 +193,11 @@ def test_all_failed_provider_output_is_valid_negative_a0() -> None:
 
 
 def test_committed_materialization_matches_builder() -> None:
-    root = Path(__file__).resolve().parents[1]
     lock = json.loads(
-        (root / "research/d2_vnext_s1/d2-vnext-s1-source-acquisition-cohort-lock.json").read_text()
+        (ROOT / "research/d2_vnext_s1/d2-vnext-s1-source-acquisition-cohort-lock.json").read_text()
     )
     shards = json.loads(
-        (root / "research/d2_vnext_s1/D2_VNEXT_S1_SHARD_MAP.json").read_text()
+        (ROOT / "research/d2_vnext_s1/D2_VNEXT_S1_SHARD_MAP.json").read_text()
     )
     assert lock == materializer.build_cohort_lock()
     assert shards == materializer.build_shard_map()
