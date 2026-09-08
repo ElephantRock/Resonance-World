@@ -1,0 +1,129 @@
+{
+  "schema": "d2-vnext-s1-source-acquisition-closeout-v0.1",
+  "issue": 221,
+  "pull_request": 222,
+  "scientific_candidate_sha": "816b19273632cd28a77df510bc9f252eaeb08766",
+  "authorization_commit_sha": "da56e93bb98c339dc0caf738f5132d091ede6a90",
+  "workflow_run_id": 34183465027,
+  "workflow_run_attempt": 1,
+  "workflow_conclusion": "success",
+  "workflow_created_at_utc": "2026-09-08T03:25:34Z",
+  "workflow_updated_at_utc": "2026-09-08T03:41:10Z",
+  "classification": "D2-vNext-S1-A0",
+  "classification_label": "acquisition_envelope_integrity_or_minimum_n_failure",
+  "status": "completed_uninterpretable_minimum_n_failure",
+  "attempted_pairs": 384,
+  "complete_pairs": 0,
+  "failed_pairs": 384,
+  "minimum_analyzable_pairs_per_schema": 88,
+  "analyzable_pairs_by_schema": {
+    "threshold_at_4": 0,
+    "parity_pair": 0,
+    "interval_pair": 0,
+    "pairwise_order": 0
+  },
+  "integrity": {
+    "diagnostic_defects": [],
+    "global_defects": [],
+    "pair_defects": [],
+    "passed": true
+  },
+  "transport_integrity": {
+    "passed": true,
+    "contract": "pinned_hermes_coding_plan_fail_closed_physical_send_guard_v0.1",
+    "observed_physical_provider_sends": 398,
+    "maximum_physical_provider_sends_campaign": 24000,
+    "maximum_physical_provider_sends_per_logical_call": 18,
+    "defects": [],
+    "interpretation": "The frozen fail-closed transport/accounting contract passed. This establishes bounded registered Coding Plan sends without transport-contract defects; it does not establish successful scientific logical-call completion."
+  },
+  "positive_control": {
+    "continuity_pass": false,
+    "continuity_requirement": "developed_40_minus_fresh_primary_gate_pass",
+    "schema_id": "threshold_at_4",
+    "interpretation": "not_established_because_no_pairs_were_analyzable"
+  },
+  "common_confirmed_acquisition_budget": null,
+  "confirmatory_gates_entered": false,
+  "provider_failure_summary": {
+    "failure_class": "provider_pair_failure",
+    "error_type": "RuntimeError",
+    "records": 384,
+    "unique_error_sha256_values": 1,
+    "error_sha256": "12a1edde2a58000642c02a20fe4b32986d44495eac7c7a066f88029d493821de",
+    "frozen_runner_fingerprint_preimage": "RuntimeError:Hermes returned a non-completed scientific logical call",
+    "physical_provider_sends_observed_total": 398,
+    "raw_hermes_result_or_provider_response_preserved_in_canonical_output": false,
+    "specific_noncompletion_cause_established": false,
+    "interpretation": "Every registered pair terminated in the same frozen-runner application-level non-completion fingerprint. The evidence does not distinguish which frozen Client non-completion predicate was true for each call and does not preserve an upstream finish reason; therefore no provider-side causal label is assigned."
+  },
+  "bounded_shard_diagnostic": {
+    "shard_id": 0,
+    "schema_id": "threshold_at_4",
+    "attempted_pairs": 16,
+    "complete_pairs": 0,
+    "failed_pairs": 16,
+    "logical_calls_started": 16,
+    "logical_calls_completed": 0,
+    "logical_call_failures": 16,
+    "physical_provider_sends_observed": 18,
+    "provider_sends_blocked_by_budget": 0,
+    "unexpected_outbound_http_requests_blocked": 0,
+    "interpretation": "Shard 0 shows every pair failed on its first registered logical call. This bounded shard observation is not generalized to an exact campaign-wide logical-call count because the canonical aggregate does not preserve those per-shard counters."
+  },
+  "hashes": {
+    "cohort_pairs_sha256": "5f650a4c0c8054942781698f77dc918c50c1f3f685f7b9f1e7f1ce7539d4be8c",
+    "cohort_lock_file_sha256": "8ea44fbeaccfb6e6031a1980e8b498afe58fc805084353055e56524b83511b88",
+    "shard_map_sha256": "22ba9b7cb26aeaf349ed562aab2e62aab643f73ca89a632a06bf7ca419bba1ef",
+    "plan_sha256": "6575bbe9f4801072b639d1cbe9f0fb3d6ca390fd2e6a40a4299d2f21328af9cb",
+    "request_plan_sha256": "c0284da1f010764032bd26549e359dfc8ab3818bff60b8bb0cfe976797b65ea9",
+    "sample_size_sha256": "ffda8effa314419ed8e7888f3fdb6e7ccae1c8d8a3da956584ec0bda17f0482a",
+    "schema_suite_sha256": "451bc172fe58fdef3561f3987a3f830de14b6b92861b2fb03617b42c28480ee7",
+    "provider_output_sha256": "757389293069e8aebfa4c78f8e2c036b9040b5674416730c72c49b332bbf0fd5",
+    "provider_output_manifest_sha256": "fad64992819b073ee1b3c9461994ff8c800f74f1a6416acbf047331b09b27248",
+    "result_sha256": "4597df707287f32545a71cbc34fe7b396fe4ff71a3f09dd25af5ed2b5b8f1543",
+    "evaluation_manifest_sha256": "da872cc2d8b74d2bee75e3199f8b1532691a700c539f51c8d0eb23359f820108"
+  },
+  "workflow_artifacts": {
+    "canonical_provider_output": {
+      "name": "d2-vnext-s1-canonical-provider-output",
+      "artifact_id": 10039977080,
+      "digest": "sha256:6f9768cee1e855a97078705c9761f21a9321f133fa4d7cfefe81a5c34087edaf",
+      "size_in_bytes": 6591,
+      "expires_at_utc": "2026-12-07T03:25:34Z"
+    },
+    "evaluation": {
+      "name": "d2-vnext-s1-source-acquisition-evaluation",
+      "artifact_id": 10039982178,
+      "digest": "sha256:4e65775d12a531b8975d81b80cd825bb16131e770632c67444ed78d04643d15d",
+      "size_in_bytes": 2445,
+      "expires_at_utc": "2026-12-07T03:25:34Z"
+    },
+    "provider_shards": {
+      "count": 24,
+      "all_jobs_succeeded": true
+    }
+  },
+  "scientific_interpretation": {
+    "acquisition_envelope_interpretable": false,
+    "evidence_that_40_cases_fail_to_acquire_capability": false,
+    "evidence_that_80_cases_fail_to_acquire_capability": false,
+    "evidence_that_160_cases_fail_to_acquire_capability": false,
+    "evidence_that_any_registered_budget_succeeds": false,
+    "d2e_acquisition_protocol_identified": false,
+    "d2e_reuse_of_calibration_schemas_allowed": false,
+    "next_programmatic_question": "prospectively qualify a representative D2 scientific logical-call completion envelope on the intended pinned Hermes/Coding Plan substrate before constructing any fresh source-acquisition calibration stream"
+  },
+  "governance": {
+    "same_request_stream_rerun_authorized": false,
+    "replacement_or_adaptive_n_authorized": false,
+    "registry_promotion_authorized": false,
+    "registry_transition": null,
+    "acceptance_action_authorized": false,
+    "independent_acceptance_review_required": false,
+    "reason_acceptance_not_entered": "D2-vNext-S1-A0 is a non-inferential calibration minimum-N failure and is not registry-promotion evidence",
+    "production_historical_substrate_enabled": false,
+    "historical_substrate_default_state": "OFF"
+  },
+  "claim_ceiling": "single supported-product synthetic individual-agent source capability-acquisition calibration under four frozen D2-vNext-S1 schemas using pinned Hermes Agent, Z.AI GLM Coding Plan, and requested model glm-5.3 with effective upstream model identity unobserved; no capability-reproduction, schema-generalization, provider/model-generalization, naturalistic, team/swarm/institution, registry, Acceptance, production-readiness, or Historical Substrate claim"
+}
