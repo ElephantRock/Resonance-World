@@ -25,7 +25,9 @@ PROBES = DIR / "PROBES.json"
 MARKER = DIR / "RUN_TERMINAL_ITERATION_COMPLETION"
 GUARD_PATH = ROOT / "src" / "resonance_world" / "provider_send_guard.py"
 COMPLETION_PATH = ROOT / "src" / "resonance_world" / "structured_completion.py"
-PREDECESSOR_RESULT = ROOT / "research" / "evidence" / "d2_trajectory_completion_envelope" / "RESULT.json"
+PREDECESSOR_RESULT = (
+    ROOT / "research" / "evidence" / "d2_trajectory_completion_envelope" / "RESULT.json"
+)
 
 ISSUE = 237
 AUTH_ENV = "TERMINAL_ITERATION_COMPLETION_AUTHORIZED"
