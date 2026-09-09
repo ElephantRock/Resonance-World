@@ -6,8 +6,12 @@ from resonance_world.structured_completion import evaluate_structured_completion
 
 
 def _result(**overrides: object) -> dict[str, object]:
+    final_response = (
+        '{"actions":["KAPPA","MICA","ORBIT","VELA",'
+        '"KAPPA","MICA","ORBIT","VELA"]}'
+    )
     result: dict[str, object] = {
-        "final_response": '{"actions":["KAPPA","MICA","ORBIT","VELA","KAPPA","MICA","ORBIT","VELA"]}',
+        "final_response": final_response,
         "completed": True,
         "failed": False,
         "partial": False,
