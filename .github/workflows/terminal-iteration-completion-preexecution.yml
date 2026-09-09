@@ -1,0 +1,106 @@
+name: Terminal Iteration Structured Completion Preexecution
+
+on:
+  pull_request:
+    paths:
+      - "research/terminal_iteration_completion/**"
+      - "scripts/qualify_terminal_iteration_completion.py"
+      - "src/resonance_world/structured_completion.py"
+      - "src/resonance_world/provider_send_guard.py"
+      - "tests/test_structured_completion.py"
+      - "tests/test_terminal_iteration_completion.py"
+      - "research/evidence/d2_trajectory_completion_envelope/RESULT.json"
+      - ".github/workflows/terminal-iteration-completion-preexecution.yml"
+      - ".github/workflows/terminal-iteration-completion-qualification.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-preexecution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - id: lifecycle
+        name: Verify lifecycle state
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/terminal_iteration_completion/RUN_TERMINAL_ITERATION_COMPLETION'
+          if test -f "$marker"; then
+            grep -Eq '^candidate_sha=[0-9a-f]{40}$' "$marker"
+            grep -Fxq 'issue=237' "$marker"
+            grep -Fxq 'authorization=Autonomous_Operating_Charter_Amendment_A1_standing_execution_authority' "$marker"
+            echo 'authorized=true' >> "$GITHUB_OUTPUT"
+          else
+            echo 'authorized=false' >> "$GITHUB_OUTPUT"
+          fi
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Credential-free deterministic preflight twice
+        if: steps.lifecycle.outputs.authorized != 'true'
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${TERMINAL_ITERATION_COMPLETION_AUTHORIZED:-}"
+          python scripts/qualify_terminal_iteration_completion.py --preflight \
+            --output output/preflight-a.json
+          python scripts/qualify_terminal_iteration_completion.py --preflight \
+            --output output/preflight-b.json
+          cmp output/preflight-a.json output/preflight-b.json
+      - name: Targeted tests
+        run: |
+          pytest -q \
+            tests/test_provider_send_guard.py \
+            tests/test_structured_completion.py \
+            tests/test_terminal_iteration_completion.py
+      - name: Ruff
+        run: |
+          ruff check \
+            src/resonance_world/structured_completion.py \
+            scripts/qualify_terminal_iteration_completion.py \
+            tests/test_structured_completion.py \
+            tests/test_terminal_iteration_completion.py
+
+  pinned-hermes-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+      - name: Checkout pinned Hermes Agent
+        uses: actions/checkout@v4
+        with:
+          repository: hermes-agent-org/hermes
+          ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4
+          path: .hermes-src
+          fetch-depth: 1
+      - name: Verify source-level terminal-iteration boundary without credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test "$(git -C .hermes-src rev-parse HEAD)" = \
+            '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = \
+            '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          test "$(git rev-parse HEAD:src/resonance_world/provider_send_guard.py)" = \
+            '4b8896235d8048523d007400d0acfe85470f628c'
+          test "$(git rev-parse HEAD:src/resonance_world/structured_completion.py)" = \
+            'c318705e60b907b969d2b3757f688dd7c984de72'
+          test "$(sha256sum research/terminal_iteration_completion/REQUEST_PLAN.json | awk '{print $1}')" = \
+            '4113c42aa681d81a44b92041e8cbeb23ac4855b300c51f75579f380272ea52c9'
+          test "$(sha256sum research/terminal_iteration_completion/PROBES.json | awk '{print $1}')" = \
+            '1d2132d3dfca9f703b28eb2290e046b36886bc64b101d0b08659505d2ee1422a'
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
+          grep -Fq '"openai>=2.21.0,<3"' .hermes-src/pyproject.toml
+          grep -Fq 't = threading.Thread(target=_call, daemon=True)' .hermes-src/run_agent.py
+          grep -Fq 'restart_with_length_continuation = True' .hermes-src/run_agent.py
+          grep -Fq 'if restart_with_length_continuation:' .hermes-src/run_agent.py
+          grep -Fq 'completed = final_response is not None and api_call_count < self.max_iterations' \
+            .hermes-src/run_agent.py
