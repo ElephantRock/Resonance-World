@@ -141,6 +141,10 @@ jobs:
           grep -Fq 't = threading.Thread(target=_call, daemon=True)' .hermes-src/run_agent.py
           grep -Fq 'completed = final_response is not None and api_call_count < self.max_iterations' \
             .hermes-src/run_agent.py
+          grep -Fq 'while (api_call_count < self.max_iterations and self.iteration_budget.remaining > 0) or self._budget_grace_call:' \
+            .hermes-src/run_agent.py
+          grep -Fq 'api_call_count += 1' .hermes-src/run_agent.py
+          grep -Fq 'if self._budget_grace_call:' .hermes-src/run_agent.py
           grep -Fq '"api_calls": api_call_count' .hermes-src/run_agent.py
           grep -Fq 'api_kwargs.update(self.request_overrides)' .hermes-src/run_agent.py
       - name: Install frozen supported-product environment
@@ -210,6 +214,17 @@ jobs:
           assert p['maximum_physical_sends_per_logical_call'] == 36
           assert p['maximum_physical_sends_total'] == 180
           assert 0 <= p['physical_provider_sends_observed_total'] <= 180
+          assert p['terminal_two_call_requires_exact_clean_physical_sends'] == 2
+          assert isinstance(p['terminal_two_call_transport_unambiguous_count'], int)
+          assert 0 <= p['terminal_two_call_transport_unambiguous_count'] <= 72
+          for row in p['probes']:
+              if row['valid_terminal_response_observed']:
+                  assert row['api_calls'] == 2
+                  assert row['terminal_two_call_transport_unambiguous'] is True
+                  assert row['physical_provider_sends_observed'] == 2
+                  assert len(row['attempts']) == 2
+                  assert all(a['http_status'] == 200 for a in row['attempts'])
+                  assert all(a['transport_error_type'] is None for a in row['attempts'])
           assert p['diagnostic_outcome'] in {
               'VALID_TERMINAL_RESPONSE_OBSERVED',
               'NO_VALID_TERMINAL_RESPONSE_OBSERVED',
