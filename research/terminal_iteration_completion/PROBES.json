@@ -1,0 +1,26 @@
+{
+  "schema": "terminal-iteration-structured-completion-probes-v0.1",
+  "issue": 237,
+  "probes": [
+    {
+      "probe_id": "terminal_semantics_0",
+      "actions": ["KAPPA", "MICA", "ORBIT", "VELA", "KAPPA", "MICA", "ORBIT", "VELA"],
+      "strategy": "57da9af55a162e8c2b1a1f69b39c7745330aa783b5d60f0fbc8b444ab281f7a9f43e348fc596bfd567c155c0a5666efac07d5c3ec754fb2fc4f492ef7f690aeb"
+    },
+    {
+      "probe_id": "terminal_semantics_1",
+      "actions": ["VELA", "ORBIT", "MICA", "KAPPA", "VELA", "ORBIT", "MICA", "KAPPA"],
+      "strategy": "7af704a7d798ef948ea17fa004c66147f332bf67cf5cca0bad68a866e250ac0608fb17187ecbba5917cf24301a60bd2a39c31f4fe1fb225dd20a5c9c8373b7da"
+    },
+    {
+      "probe_id": "terminal_semantics_2",
+      "actions": ["MICA", "KAPPA", "VELA", "ORBIT", "MICA", "KAPPA", "VELA", "ORBIT"],
+      "strategy": "2e956d334a31ce4e01ee1d1829d2adf7c7e54fb368e1169ae46d9f72b4c55bce6cf3f3bf7d60bb45601cbd4af763866d97c3d8efaff1b0368a429fcc41995b70"
+    },
+    {
+      "probe_id": "terminal_semantics_3",
+      "actions": ["ORBIT", "VELA", "KAPPA", "MICA", "ORBIT", "VELA", "KAPPA", "MICA"],
+      "strategy": "486bde2bea93e5b21927bd2839d1892819cbe26831c7fe492e08df162bdd4def2360268e1c8201431f9ce883690924212acae9bae1218785feac7b12531c4851"
+    }
+  ]
+}
