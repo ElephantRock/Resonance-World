@@ -333,15 +333,34 @@ def run_probe(
     return row
 
 
-def probe_has_apparatus_failure(row: dict[str, Any]) -> bool:
-    """Treat handled Hermes failure states as apparatus failures, not negative evidence."""
+def exact_two_clean_provider_sends(attempts: list[dict[str, Any]], sends: int) -> bool:
+    """Prove a two-call candidate was not contaminated by retry/grace/summary sends."""
 
+    return bool(
+        sends == MAX_ITERATIONS
+        and len(attempts) == MAX_ITERATIONS
+        and all(
+            attempt.get("http_status") == 200
+            and attempt.get("transport_error_type") is None
+            for attempt in attempts
+        )
+    )
+
+
+def probe_has_apparatus_failure(row: dict[str, Any]) -> bool:
+    """Treat handled Hermes or terminal-transport ambiguity as apparatus failure."""
+
+    terminal_transport_ambiguous = (
+        int(row.get("api_calls") or 0) == MAX_ITERATIONS
+        and row.get("terminal_two_call_transport_unambiguous") is not True
+    )
     return bool(
         row.get("runtime_exception")
         or row.get("hermes_failed")
         or row.get("hermes_partial")
         or row.get("hermes_interrupted")
         or row.get("hermes_error_present")
+        or terminal_transport_ambiguous
     )
 
 
@@ -386,25 +405,30 @@ def execute() -> dict[str, Any]:
                 for attempt in attempts
             )
         )
-        valid_terminal = contract.is_valid_terminal_observation(
-            api_calls=int(row["api_calls"]),
-            hermes_completed=bool(row["hermes_completed"]),
-            hermes_failed=bool(row["hermes_failed"]),
-            hermes_partial=bool(row["hermes_partial"]),
-            hermes_interrupted=bool(row["hermes_interrupted"]),
-            hermes_error_present=bool(row["hermes_error_present"]),
-            final_nonempty=int(row["final_response_length"]) > 0,
-            parse_valid=bool(row["structured_parse_valid"]),
-            attribution_integrity=attribution_ok,
-            unexpected_outbound_blocks=budget.blocked_unexpected,
-            provider_budget_blocks=budget.blocked_budget,
-            attribution_mismatch_blocks=ledger.attribution_mismatches,
+        terminal_transport_unambiguous = exact_two_clean_provider_sends(attempts, sends)
+        valid_terminal = (
+            terminal_transport_unambiguous
+            and contract.is_valid_terminal_observation(
+                api_calls=int(row["api_calls"]),
+                hermes_completed=bool(row["hermes_completed"]),
+                hermes_failed=bool(row["hermes_failed"]),
+                hermes_partial=bool(row["hermes_partial"]),
+                hermes_interrupted=bool(row["hermes_interrupted"]),
+                hermes_error_present=bool(row["hermes_error_present"]),
+                final_nonempty=int(row["final_response_length"]) > 0,
+                parse_valid=bool(row["structured_parse_valid"]),
+                attribution_integrity=attribution_ok,
+                unexpected_outbound_blocks=budget.blocked_unexpected,
+                provider_budget_blocks=budget.blocked_budget,
+                attribution_mismatch_blocks=ledger.attribution_mismatches,
+            )
         )
         row.update(
             {
                 "physical_provider_sends_observed": sends,
                 "attempts": attempts,
                 "logical_attribution_integrity": attribution_ok,
+                "terminal_two_call_transport_unambiguous": terminal_transport_unambiguous,
                 "valid_terminal_response_observed": valid_terminal,
             }
         )
@@ -415,6 +439,11 @@ def execute() -> dict[str, Any]:
         or not global_transport_clean
     )
     valid_terminal_count = sum(bool(row["valid_terminal_response_observed"]) for row in rows)
+    unambiguous_two_call_count = sum(
+        bool(row["terminal_two_call_transport_unambiguous"])
+        and int(row["api_calls"]) == MAX_ITERATIONS
+        for row in rows
+    )
     if apparatus_failure:
         diagnostic_outcome = "APPARATUS_FAILURE"
     elif valid_terminal_count > 0:
@@ -470,6 +499,8 @@ def execute() -> dict[str, Any]:
         "provider_worker_threads_observed": workers.observed,
         "provider_worker_threads_alive_after_drain": workers.alive_after_drain,
         "transport_hooks_restored_after_worker_drain": workers.transport_hooks_restored,
+        "terminal_two_call_transport_unambiguous_count": unambiguous_two_call_count,
+        "terminal_two_call_requires_exact_clean_physical_sends": MAX_ITERATIONS,
         "probes": rows,
         "valid_terminal_response_count": valid_terminal_count,
         "valid_terminal_response_observed": valid_terminal_count > 0,
