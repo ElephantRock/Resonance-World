@@ -3,6 +3,7 @@ from __future__ import annotations
 import importlib.util
 import json
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -108,8 +109,6 @@ def test_valid_terminal_observation_requires_every_registered_condition() -> Non
 
 
 def test_transport_origin_must_match_registered_context() -> None:
-    import httpx
-
     budget = ProviderSendBudget(
         allowed_url_prefix="https://api.z.ai/api/coding/paas/v4",
         maximum_logical_calls=72,
@@ -117,11 +116,7 @@ def test_transport_origin_must_match_registered_context() -> None:
         maximum_sends_total=180,
     )
     ledger = transport.TransportLedger()
-    request = httpx.Request(
-        "POST",
-        "https://api.z.ai/api/coding/paas/v4/chat/completions",
-        headers={transport.ORIGIN_HEADER: "3"},
-    )
+    request = SimpleNamespace(headers={transport.ORIGIN_HEADER: "3"})
     with budget.logical_call(3):
         assert transport.verified_origin_logical_index(request, budget, ledger) == 3
     with budget.logical_call(4):
