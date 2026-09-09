@@ -125,6 +125,31 @@ def test_transport_origin_must_match_registered_context() -> None:
     assert ledger.attribution_mismatches == 1
 
 
+def test_handled_hermes_failure_is_apparatus_failure() -> None:
+    script = load_script()
+    clean_terminal_negative = {
+        "runtime_exception": False,
+        "hermes_completed": False,
+        "hermes_failed": False,
+        "hermes_partial": False,
+        "hermes_interrupted": False,
+        "hermes_error_present": False,
+        "final_response_length": 0,
+        "structured_parse_valid": False,
+    }
+    assert script.probe_has_apparatus_failure(clean_terminal_negative) is False
+    for key in (
+        "runtime_exception",
+        "hermes_failed",
+        "hermes_partial",
+        "hermes_interrupted",
+        "hermes_error_present",
+    ):
+        handled_failure = dict(clean_terminal_negative)
+        handled_failure[key] = True
+        assert script.probe_has_apparatus_failure(handled_failure) is True
+
+
 def test_preflight_is_deterministic_and_credential_free(monkeypatch: pytest.MonkeyPatch) -> None:
     script = load_script()
     monkeypatch.setattr(script, "MARKER", ROOT / "does-not-exist-terminal-observability-marker")
