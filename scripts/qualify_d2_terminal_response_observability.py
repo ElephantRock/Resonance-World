@@ -333,6 +333,18 @@ def run_probe(
     return row
 
 
+def probe_has_apparatus_failure(row: dict[str, Any]) -> bool:
+    """Treat handled Hermes failure states as apparatus failures, not negative evidence."""
+
+    return bool(
+        row.get("runtime_exception")
+        or row.get("hermes_failed")
+        or row.get("hermes_partial")
+        or row.get("hermes_interrupted")
+        or row.get("hermes_error_present")
+    )
+
+
 def execute() -> dict[str, Any]:
     assert_execution_environment()
     probes = validate_frozen_files()
@@ -399,7 +411,7 @@ def execute() -> dict[str, Any]:
 
     apparatus_failure = (
         len(rows) != contract.PROBE_COUNT
-        or any(row["runtime_exception"] for row in rows)
+        or any(probe_has_apparatus_failure(row) for row in rows)
         or not global_transport_clean
     )
     valid_terminal_count = sum(bool(row["valid_terminal_response_observed"]) for row in rows)
