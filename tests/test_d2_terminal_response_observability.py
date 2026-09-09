@@ -125,7 +125,33 @@ def test_transport_origin_must_match_registered_context() -> None:
     assert ledger.attribution_mismatches == 1
 
 
-def test_handled_hermes_failure_is_apparatus_failure() -> None:
+def test_terminal_two_call_transport_requires_exact_two_clean_http_200_sends() -> None:
+    script = load_script()
+    clean = [
+        {"http_status": 200, "transport_error_type": None},
+        {"http_status": 200, "transport_error_type": None},
+    ]
+    assert script.exact_two_clean_provider_sends(clean, 2) is True
+
+    extra_grace_or_summary = clean + [
+        {"http_status": 200, "transport_error_type": None}
+    ]
+    assert script.exact_two_clean_provider_sends(extra_grace_or_summary, 3) is False
+
+    retry_or_error = [
+        {"http_status": 500, "transport_error_type": None},
+        {"http_status": 200, "transport_error_type": None},
+    ]
+    assert script.exact_two_clean_provider_sends(retry_or_error, 2) is False
+
+    transport_error = [
+        {"http_status": None, "transport_error_type": "ConnectError"},
+        {"http_status": 200, "transport_error_type": None},
+    ]
+    assert script.exact_two_clean_provider_sends(transport_error, 2) is False
+
+
+def test_handled_hermes_failure_or_terminal_transport_ambiguity_is_apparatus_failure() -> None:
     script = load_script()
     clean_terminal_negative = {
         "runtime_exception": False,
@@ -134,6 +160,8 @@ def test_handled_hermes_failure_is_apparatus_failure() -> None:
         "hermes_partial": False,
         "hermes_interrupted": False,
         "hermes_error_present": False,
+        "api_calls": 2,
+        "terminal_two_call_transport_unambiguous": True,
         "final_response_length": 0,
         "structured_parse_valid": False,
     }
@@ -148,6 +176,15 @@ def test_handled_hermes_failure_is_apparatus_failure() -> None:
         handled_failure = dict(clean_terminal_negative)
         handled_failure[key] = True
         assert script.probe_has_apparatus_failure(handled_failure) is True
+
+    ambiguous_transport = dict(clean_terminal_negative)
+    ambiguous_transport["terminal_two_call_transport_unambiguous"] = False
+    assert script.probe_has_apparatus_failure(ambiguous_transport) is True
+
+    one_call_negative = dict(clean_terminal_negative)
+    one_call_negative["api_calls"] = 1
+    one_call_negative["terminal_two_call_transport_unambiguous"] = False
+    assert script.probe_has_apparatus_failure(one_call_negative) is False
 
 
 def test_preflight_is_deterministic_and_credential_free(monkeypatch: pytest.MonkeyPatch) -> None:
