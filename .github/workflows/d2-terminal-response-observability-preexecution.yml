@@ -86,6 +86,10 @@ jobs:
           grep -Fq 't = threading.Thread(target=_call, daemon=True)' .hermes-src/run_agent.py
           grep -Fq 'completed = final_response is not None and api_call_count < self.max_iterations' \
             .hermes-src/run_agent.py
+          grep -Fq 'while (api_call_count < self.max_iterations and self.iteration_budget.remaining > 0) or self._budget_grace_call:' \
+            .hermes-src/run_agent.py
+          grep -Fq 'api_call_count += 1' .hermes-src/run_agent.py
+          grep -Fq 'if self._budget_grace_call:' .hermes-src/run_agent.py
           grep -Fq '"api_calls": api_call_count' .hermes-src/run_agent.py
           grep -Fq 'request_overrides: Dict[str, Any] = None' .hermes-src/run_agent.py
           grep -Fq 'api_kwargs.update(self.request_overrides)' .hermes-src/run_agent.py
