@@ -1,0 +1,92 @@
+name: D2 Terminal Response Observability Preexecution
+
+on:
+  pull_request:
+    paths:
+      - "research/d2_terminal_response_observability/**"
+      - "scripts/qualify_d2_terminal_response_observability.py"
+      - "src/resonance_world/d2_terminal_observability.py"
+      - "src/resonance_world/d2_terminal_transport.py"
+      - "src/resonance_world/provider_send_guard.py"
+      - "tests/test_d2_terminal_response_observability.py"
+      - ".github/workflows/d2-terminal-response-observability-*.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  zero-provider-preexecution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify lifecycle state
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_terminal_response_observability/RUN_D2_TERMINAL_RESPONSE_OBSERVABILITY'
+          test ! -f "$marker"
+          test "$(git hash-object research/d2_terminal_response_observability/REQUEST_PLAN.json)" = \
+            '787923348c5aa403d0cfdc62d4a8b7f026d31c3a'
+          test "$(git hash-object research/d2_terminal_response_observability/PROBES.json)" = \
+            '342b212dcf8d42af6cbaf239ffb16e83db694236'
+          test "$(git hash-object src/resonance_world/provider_send_guard.py)" = \
+            '4b8896235d8048523d007400d0acfe85470f628c'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - name: Credential-free deterministic preflight twice
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_TERMINAL_RESPONSE_OBSERVABILITY_AUTHORIZED:-}"
+          python scripts/qualify_d2_terminal_response_observability.py \
+            --preflight --output output/preflight-a.json
+          python scripts/qualify_d2_terminal_response_observability.py \
+            --preflight --output output/preflight-b.json
+          cmp output/preflight-a.json output/preflight-b.json
+      - name: Targeted tests
+        run: |
+          pytest -q \
+            tests/test_provider_send_guard.py \
+            tests/test_d2_terminal_response_observability.py
+      - name: Ruff
+        run: |
+          ruff check \
+            src/resonance_world/d2_terminal_observability.py \
+            src/resonance_world/d2_terminal_transport.py \
+            scripts/qualify_d2_terminal_response_observability.py \
+            tests/test_d2_terminal_response_observability.py
+
+  pinned-hermes-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 15
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@v4
+      - name: Checkout pinned Hermes Agent
+        uses: actions/checkout@v4
+        with:
+          repository: hermes-agent-org/hermes
+          ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4
+          path: .hermes-src
+          fetch-depth: 1
+      - name: Verify pinned source terminal and worker contracts without credentials
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "$(git -C .hermes-src rev-parse HEAD)" = \
+            '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = \
+            '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
+          grep -Fq 't = threading.Thread(target=_call, daemon=True)' .hermes-src/run_agent.py
+          grep -Fq 'completed = final_response is not None and api_call_count < self.max_iterations' \
+            .hermes-src/run_agent.py
+          grep -Fq '"api_calls": api_call_count' .hermes-src/run_agent.py
+          grep -Fq 'request_overrides: Dict[str, Any] = None' .hermes-src/run_agent.py
+          grep -Fq 'api_kwargs.update(self.request_overrides)' .hermes-src/run_agent.py
+          grep -Fq 'max_retries = 3' .hermes-src/run_agent.py
