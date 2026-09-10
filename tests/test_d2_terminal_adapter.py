@@ -212,6 +212,7 @@ def test_handled_failure_and_transport_ambiguity_are_apparatus_failures() -> Non
     script = load_script()
     clean = {
         "runtime_exception": False,
+        "hermes_completed_flag_valid": True,
         "hermes_failed": False,
         "hermes_partial": False,
         "hermes_interrupted": False,
@@ -229,6 +230,10 @@ def test_handled_failure_and_transport_ambiguity_are_apparatus_failures() -> Non
         failed = dict(clean)
         failed[key] = True
         assert script.probe_has_apparatus_failure(failed) is True
+    invalid_completed = dict(clean)
+    invalid_completed["hermes_completed_flag_valid"] = False
+    assert script.probe_has_apparatus_failure(invalid_completed) is True
+
     ambiguous = dict(clean)
     ambiguous["adapter_reason"] = "transport_not_exact_clean"
     assert script.probe_has_apparatus_failure(ambiguous) is True

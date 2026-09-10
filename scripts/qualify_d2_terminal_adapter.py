@@ -123,7 +123,11 @@ def _bounded_result_view(row: dict[str, Any]) -> dict[str, Any]:
     """Reconstruct only fields consumed by the pure adapter from bounded metadata."""
 
     return {
-        "completed": bool(row["hermes_completed"]),
+        "completed": (
+            bool(row["hermes_completed"])
+            if row.get("hermes_completed_flag_valid", True)
+            else None
+        ),
         "failed": bool(row["hermes_failed"]),
         "partial": bool(row["hermes_partial"]),
         "interrupted": bool(row["hermes_interrupted"]),
@@ -374,9 +378,11 @@ def run_probe(
         final = result.get("final_response")
         final_text = final if isinstance(final, str) else ""
         parse_valid, strategy = adapter.parse_response(final_text)
+        completed_value = result.get("completed")
         row.update(
             {
-                "hermes_completed": result.get("completed") is True,
+                "hermes_completed_flag_valid": isinstance(completed_value, bool),
+                "hermes_completed": completed_value is True,
                 "hermes_failed": result.get("failed") is True,
                 "hermes_partial": result.get("partial") is True,
                 "hermes_interrupted": result.get("interrupted") is True,
@@ -419,6 +425,7 @@ def probe_has_apparatus_failure(row: dict[str, Any]) -> bool:
 
     return bool(
         row.get("runtime_exception")
+        or row.get("hermes_completed_flag_valid") is False
         or row.get("hermes_failed")
         or row.get("hermes_partial")
         or row.get("hermes_interrupted")
