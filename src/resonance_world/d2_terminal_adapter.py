@@ -4,8 +4,9 @@ from __future__ import annotations
 
 import json
 from collections import Counter
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
-from typing import Any, Mapping, Sequence
+from typing import Any
 
 ACTIONS = ("KAPPA", "MICA", "ORBIT", "VELA")
 ALLOWED_BUDGETS = (40, 80, 160)
@@ -254,7 +255,12 @@ def evaluate_terminal_completion(
 
     if completed:
         if api_calls >= max_iterations:
-            return TerminalCompletionDecision(False, True, False, "native_completion_count_inconsistent")
+            return TerminalCompletionDecision(
+                False,
+                True,
+                False,
+                "native_completion_count_inconsistent",
+            )
         return TerminalCompletionDecision(True, True, False, "hermes_completed")
 
     if api_calls == max_iterations:
