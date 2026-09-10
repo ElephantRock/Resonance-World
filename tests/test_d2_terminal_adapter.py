@@ -46,7 +46,10 @@ def result(*, completed: bool, api_calls: int) -> dict[str, object]:
         "interrupted": False,
         "error": None,
         "api_calls": api_calls,
-        "final_response": '{"actions":["KAPPA","MICA","ORBIT","VELA","KAPPA","MICA","ORBIT","VELA"]}',
+        "final_response": (
+            '{"actions":["KAPPA","MICA","ORBIT","VELA",'
+            '"KAPPA","MICA","ORBIT","VELA"]}'
+        ),
     }
 
 
