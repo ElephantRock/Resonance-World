@@ -8,6 +8,7 @@ on:
 
 permissions:
   contents: read
+  pull-requests: read
 
 jobs:
   authorization-integrity:
@@ -22,14 +23,16 @@ jobs:
           fetch-depth: 0
       - id: auth
         name: Verify sole-child activation and frozen adapter contract
+        env:
+          GH_TOKEN: ${{ github.token }}
         shell: bash
         run: |
           set -euo pipefail
           marker='research/d2_terminal_adapter/RUN_D2_TERMINAL_ADAPTER_QUALIFICATION'
-          test -f "$marker"
           candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
           issue="$(sed -n 's/^issue=//p' "$marker")"
           authorization="$(sed -n 's/^authorization=//p' "$marker")"
+          test -f "$marker"
           test -n "$candidate"
           test "$issue" = '246'
           test "$authorization" = \
@@ -41,6 +44,10 @@ jobs:
             echo 'Frozen candidate already contains execution marker.' >&2
             exit 1
           fi
+          review_count="$(gh api \
+            "/repos/${GITHUB_REPOSITORY}/pulls/247/reviews?per_page=100" \
+            --jq "[.[] | select(.commit_id == \"${candidate}\" and .user.login == \"chatgpt-codex-connector[bot]\")] | length")"
+          test "$review_count" -ge 1
           git merge-base --is-ancestor \
             '83257f740262726e906fb203c4657163bf36079f' "$candidate"
           git merge-base --is-ancestor \
@@ -53,6 +60,15 @@ jobs:
           test "$(git rev-parse \
             "${candidate}:research/d2_terminal_adapter/PROBES.json")" = \
             '81ad8a9df6cc7862286ea2e42d100770a6abbaee'
+          test "$(git rev-parse \
+            "${candidate}:scripts/qualify_d2_terminal_adapter.py")" = \
+            'b66e9282166e8a180f804f0f414f394ee8d18562'
+          test "$(git rev-parse \
+            "${candidate}:src/resonance_world/d2_terminal_adapter.py")" = \
+            'ba16d2eb4b7255437c8ab224e91d5ed093897990'
+          test "$(git rev-parse \
+            "${candidate}:src/resonance_world/d2_terminal_transport.py")" = \
+            '7cf40ff7534ea028d584f0751f1d1b921b8acd82'
           python - "$candidate" <<'PY'
           import hashlib
           import json
@@ -133,6 +149,12 @@ jobs:
             '${{ needs.authorization-integrity.outputs.candidate_sha }}'
           test "$(git rev-parse HEAD^:src/resonance_world/provider_send_guard.py)" = \
             '4b8896235d8048523d007400d0acfe85470f628c'
+          test "$(git rev-parse HEAD^:scripts/qualify_d2_terminal_adapter.py)" = \
+            'b66e9282166e8a180f804f0f414f394ee8d18562'
+          test "$(git rev-parse HEAD^:src/resonance_world/d2_terminal_adapter.py)" = \
+            'ba16d2eb4b7255437c8ab224e91d5ed093897990'
+          test "$(git rev-parse HEAD^:src/resonance_world/d2_terminal_transport.py)" = \
+            '7cf40ff7534ea028d584f0751f1d1b921b8acd82'
           echo \
             'cde58890d2d6bd1027381ffa559b385f11883c15e08860a823a1a5017495a9d6  research/evidence/d2_terminal_response_observability/RESULT.json' \
             | sha256sum -c -
