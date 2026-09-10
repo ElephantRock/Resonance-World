@@ -50,7 +50,7 @@ jobs:
           test "${marker_commits[0]}" = "$(git rev-parse HEAD)"
           prior_run_count="$(gh api \
             --paginate --slurp \
-            "/repos/${GITHUB_REPOSITORY}/actions/workflows/d2-terminal-adapter-qualification.yml/runs?branch=engineering%2Fd2-terminal-adapter-qualification&event=push&per_page=100" \
+            "/repos/${GITHUB_REPOSITORY}/actions/workflows/d2-terminal-adapter-qualification.yml/runs?per_page=100" \
             --jq "[.[].workflow_runs[] | select((.id | tostring) != \"${GITHUB_RUN_ID}\")] | length")"
           test "$prior_run_count" -eq 0
           review_count="$(gh api \
@@ -295,7 +295,7 @@ jobs:
           assert p['same_request_stream_rerun_allowed'] is False
           PY
       - name: Upload bounded evidence
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: d2-terminal-adapter-qualification-result
           path: output/d2-terminal-adapter-qualification-result.json
