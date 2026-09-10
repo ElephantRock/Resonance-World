@@ -7,6 +7,7 @@ on:
       - "research/d2_terminal_adapter/RUN_D2_TERMINAL_ADAPTER_QUALIFICATION"
 
 permissions:
+  actions: read
   contents: read
   pull-requests: read
 
@@ -44,6 +45,13 @@ jobs:
             echo 'Frozen candidate already contains execution marker.' >&2
             exit 1
           fi
+          mapfile -t marker_commits < <(git log --format=%H -- "$marker")
+          test "${#marker_commits[@]}" -eq 1
+          test "${marker_commits[0]}" = "$(git rev-parse HEAD)"
+          prior_run_count="$(gh api \
+            "/repos/${GITHUB_REPOSITORY}/actions/runs?branch=engineering%2Fd2-terminal-adapter-qualification&event=push&per_page=100" \
+            --jq "[.workflow_runs[] | select((.id | tostring) != \"${GITHUB_RUN_ID}\" and .path == \".github/workflows/d2-terminal-adapter-qualification.yml\")] | length")"
+          test "$prior_run_count" -eq 0
           review_count="$(gh api \
             "/repos/${GITHUB_REPOSITORY}/pulls/247/reviews?per_page=100" \
             --jq "[.[] | select(.commit_id == \"${candidate}\" and .user.login == \"chatgpt-codex-connector[bot]\")] | length")"
