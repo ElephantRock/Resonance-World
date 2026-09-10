@@ -19,7 +19,7 @@ jobs:
     outputs:
       candidate_sha: ${{ steps.auth.outputs.candidate_sha }}
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 0
       - id: auth
@@ -50,8 +50,8 @@ jobs:
           test "${marker_commits[0]}" = "$(git rev-parse HEAD)"
           prior_run_count="$(gh api \
             --paginate --slurp \
-            "/repos/${GITHUB_REPOSITORY}/actions/runs?branch=engineering%2Fd2-terminal-adapter-qualification&event=push&per_page=100" \
-            --jq "[.[].workflow_runs[] | select((.id | tostring) != \"${GITHUB_RUN_ID}\" and .path == \".github/workflows/d2-terminal-adapter-qualification.yml\")] | length")"
+            "/repos/${GITHUB_REPOSITORY}/actions/workflows/d2-terminal-adapter-qualification.yml/runs?branch=engineering%2Fd2-terminal-adapter-qualification&event=push&per_page=100" \
+            --jq "[.[].workflow_runs[] | select((.id | tostring) != \"${GITHUB_RUN_ID}\")] | length")"
           test "$prior_run_count" -eq 0
           review_count="$(gh api \
             --paginate --slurp \
@@ -128,23 +128,19 @@ jobs:
     if: ${{ github.run_attempt == 1 }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
-    env:
-      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
-      GLM_BASE_URL: https://api.z.ai/api/coding/paas/v4
-      D2_TERMINAL_ADAPTER_AUTHORIZED: "1"
     steps:
       - name: Checkout Resonance World
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           fetch-depth: 2
       - name: Checkout pinned Hermes Agent
-        uses: actions/checkout@v4
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
         with:
           repository: hermes-agent-org/hermes
           ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4
           path: .hermes-src
           fetch-depth: 1
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.12"
           cache: pip
@@ -153,8 +149,9 @@ jobs:
         run: |
           set -euo pipefail
           test "${GITHUB_RUN_ATTEMPT}" = '1'
-          test -n "${ZAI_API_KEY:-}"
-          test "${GLM_BASE_URL}" = 'https://api.z.ai/api/coding/paas/v4'
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${GLM_BASE_URL:-}"
+          test -z "${D2_TERMINAL_ADAPTER_AUTHORIZED:-}"
           test "$(git rev-parse HEAD^)" = \
             '${{ needs.authorization-integrity.outputs.candidate_sha }}'
           test "$(git rev-parse HEAD^:src/resonance_world/provider_send_guard.py)" = \
@@ -198,9 +195,16 @@ jobs:
           assert DEFAULT_MAX_RETRIES == 2
           PY
       - name: Execute bounded adapter qualification once
+        env:
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          GLM_BASE_URL: https://api.z.ai/api/coding/paas/v4
+          D2_TERMINAL_ADAPTER_AUTHORIZED: "1"
         shell: bash
         run: |
           set -euo pipefail
+          test -n "${ZAI_API_KEY:-}"
+          test "${GLM_BASE_URL}" = 'https://api.z.ai/api/coding/paas/v4'
+          test "${D2_TERMINAL_ADAPTER_AUTHORIZED}" = '1'
           env \
             -u OPENROUTER_API_KEY \
             -u OPENAI_API_KEY \
@@ -221,6 +225,9 @@ jobs:
       - name: Verify bounded result authority
         shell: bash
         run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_TERMINAL_ADAPTER_AUTHORIZED:-}"
           python - <<'PY'
           import json
           from pathlib import Path
