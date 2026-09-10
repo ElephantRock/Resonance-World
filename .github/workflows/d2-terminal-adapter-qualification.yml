@@ -49,12 +49,14 @@ jobs:
           test "${#marker_commits[@]}" -eq 1
           test "${marker_commits[0]}" = "$(git rev-parse HEAD)"
           prior_run_count="$(gh api \
+            --paginate --slurp \
             "/repos/${GITHUB_REPOSITORY}/actions/runs?branch=engineering%2Fd2-terminal-adapter-qualification&event=push&per_page=100" \
-            --jq "[.workflow_runs[] | select((.id | tostring) != \"${GITHUB_RUN_ID}\" and .path == \".github/workflows/d2-terminal-adapter-qualification.yml\")] | length")"
+            --jq "[.[].workflow_runs[] | select((.id | tostring) != \"${GITHUB_RUN_ID}\" and .path == \".github/workflows/d2-terminal-adapter-qualification.yml\")] | length")"
           test "$prior_run_count" -eq 0
           review_count="$(gh api \
+            --paginate --slurp \
             "/repos/${GITHUB_REPOSITORY}/pulls/247/reviews?per_page=100" \
-            --jq "[.[] | select(.commit_id == \"${candidate}\" and .user.login == \"chatgpt-codex-connector[bot]\")] | length")"
+            --jq "[.[].[] | select(.commit_id == \"${candidate}\" and .user.login == \"chatgpt-codex-connector[bot]\")] | length")"
           test "$review_count" -ge 1
           git merge-base --is-ancestor \
             '83257f740262726e906fb203c4657163bf36079f' "$candidate"
