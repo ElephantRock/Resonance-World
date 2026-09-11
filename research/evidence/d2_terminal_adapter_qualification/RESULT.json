@@ -1,0 +1,69 @@
+{
+  "schema": "d2-terminal-adapter-qualification-integrity-failure-preservation-v0.1",
+  "issue": 246,
+  "pull_request": 247,
+  "engineering_only": true,
+  "frozen_candidate_sha": "e3aa97da750352ad12be202b457db88217cbe16f",
+  "activation_sha": "50cf8ed1ade2cef456ed9715a16fdccfd90932c3",
+  "workflow": {
+    "name": "D2 Terminal Adapter Qualification",
+    "path": ".github/workflows/d2-terminal-adapter-qualification.yml",
+    "run_id": 34561367646,
+    "run_attempt": 1,
+    "conclusion": "failure"
+  },
+  "outcome": "INTEGRITY_APPARATUS_FAILURE_PRE_PROVIDER",
+  "terminal_adapter_qualification": "NOT_EVALUATED",
+  "failure": {
+    "stage": "authorization-integrity",
+    "job_conclusion": "failure",
+    "failing_operation": "gh api --paginate --slurp combined with --jq",
+    "runner_error": "the `--slurp` option is not supported with `--jq` or `--template`",
+    "classification": "workflow_integrity_apparatus_failure",
+    "root_cause": "The one-use authorization gate used a GitHub CLI flag combination rejected by the runner CLI before the candidate could reach the credentialed execution job."
+  },
+  "execution": {
+    "authorization_integrity_job_started": true,
+    "authorization_integrity_job_conclusion": "failure",
+    "execute_bounded_adapter_qualification_job_started": false,
+    "execute_bounded_adapter_qualification_job_conclusion": "skipped",
+    "provider_model_traffic_occurred": false,
+    "physical_provider_sends_observed_total": 0,
+    "result_artifact_produced": false,
+    "artifacts": []
+  },
+  "frozen_contract": {
+    "provider_id": "zai",
+    "api_mode": "chat_completions",
+    "requested_model": "glm-5.3",
+    "max_iterations": 2,
+    "max_tokens": 768,
+    "sampling_temperature": 0.8,
+    "maximum_concurrency": 4,
+    "maximum_physical_sends_total": 180,
+    "probe_count": 72,
+    "request_plan_blob": "05f3e9ab10e8d8f1ac833d6cf033a5fd0a32a4cb",
+    "probes_blob": "81ad8a9df6cc7862286ea2e42d100770a6abbaee",
+    "qualification_script_blob": "b66e9282166e8a180f804f0f414f394ee8d18562",
+    "adapter_blob": "ba16d2eb4b7255437c8ab224e91d5ed093897990",
+    "transport_blob": "7cf40ff7534ea028d584f0751f1d1b921b8acd82",
+    "provider_send_guard_blob": "4b8896235d8048523d007400d0acfe85470f628c"
+  },
+  "predecessors": {
+    "trajectory_completion_issue": 236,
+    "trajectory_completion_result_unchanged": "APPARATUS_FAILURE",
+    "terminal_response_observability_issue": 243,
+    "terminal_response_observability_result_unchanged": "VALID_TERMINAL_RESPONSE_OBSERVED",
+    "terminal_response_observability_evidence_sha256": "cde58890d2d6bd1027381ffa559b385f11883c15e08860a823a1a5017495a9d6"
+  },
+  "authority_boundaries": {
+    "same_request_stream_rerun_allowed": false,
+    "scientific_scoring_performed": false,
+    "source_acquisition_evidence_generated": false,
+    "acceptance_action_authorized": false,
+    "registry_promotion_authorized": false,
+    "production_historical_substrate_enabled": false,
+    "claim_ceiling": "engineering_terminal_adapter_qualification_only"
+  },
+  "interpretation": "This run is an integrity/apparatus failure before provider execution. It neither passes nor fails the terminal structured-completion adapter itself. The request stream is consumed and is not rerun or rescued in place."
+}
