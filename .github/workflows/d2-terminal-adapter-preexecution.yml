@@ -137,7 +137,7 @@ jobs:
         with:
           version: "0.12.13"
           enable-cache: false
-      - name: Materialize Hermes hash-locked runtime without Resonance build backend
+      - name: Materialize hash-locked runtime without project build backends
         shell: bash
         run: |
           set -euo pipefail
@@ -146,7 +146,32 @@ jobs:
           test "$(git -C .hermes-src rev-parse HEAD:uv.lock)" = \
             '45efc2d93ff627fee4f94ce2b068440873a22188'
           uv lock --check --project .hermes-src
-          uv sync --project .hermes-src --locked --no-dev --python "$(command -v python)"
+          uv sync \
+            --project .hermes-src \
+            --locked \
+            --no-dev \
+            --no-install-project \
+            --python "$(command -v python)"
+          cat > /tmp/openai-2.21.0.txt <<'EOF'
+          openai==2.21.0 --hash=sha256:0bc1c775e5b1536c294eded39ee08f8407656537ccc71b1004104fe1602e267c
+          EOF
+          uv pip install \
+            --python "$UV_PROJECT_ENVIRONMENT/bin/python" \
+            --no-deps \
+            --require-hashes \
+            -r /tmp/openai-2.21.0.txt
+          purelib="$($UV_PROJECT_ENVIRONMENT/bin/python - <<'PY'
+          import sysconfig
+          print(sysconfig.get_paths()['purelib'])
+          PY
+          )"
+          dist_info="$purelib/hermes_agent-0.8.0.dist-info"
+          mkdir -p "$dist_info"
+          cat > "$dist_info/METADATA" <<'EOF'
+          Metadata-Version: 2.1
+          Name: hermes-agent
+          Version: 0.8.0
+          EOF
       - name: Verify locked runtime and protected files after installation
         env:
           PYTHONPATH: ${{ github.workspace }}/src:${{ github.workspace }}/.hermes-src
