@@ -1,0 +1,275 @@
+name: D2 Trajectory Terminal Adapter Qualification
+
+on:
+  push:
+    branches: ["engineering/d2-trajectory-terminal-adapter-qualification"]
+    paths:
+      - "research/d2_trajectory_terminal_adapter/RUN_D2_TRAJECTORY_TERMINAL_ADAPTER"
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+jobs:
+  authorization-integrity:
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      candidate_sha: ${{ steps.auth.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - id: auth
+        name: Verify sole-child activation and frozen trajectory adapter contract
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: ${{ github.workspace }}/src
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_trajectory_terminal_adapter/RUN_D2_TRAJECTORY_TERMINAL_ADAPTER'
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          authorization="$(sed -n 's/^authorization=//p' "$marker")"
+          test -f "$marker"
+          test -n "$candidate"
+          test "$issue" = '255'
+          test "$authorization" = 'Autonomous_Operating_Charter_Amendment_A1_standing_execution_authority'
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          test "$(git diff --name-only "$candidate" HEAD | wc -l)" = '1'
+          if git cat-file -e "${candidate}:${marker}" 2>/dev/null; then
+            echo 'Frozen candidate already contains execution marker.' >&2
+            exit 1
+          fi
+          mapfile -t marker_commits < <(git log --format=%H -- "$marker")
+          test "${#marker_commits[@]}" -eq 1
+          test "${marker_commits[0]}" = "$(git rev-parse HEAD)"
+
+          prior_run_count="$(python -m resonance_world.github_authorization_queries \
+            workflow-runs \
+            --repository "$GITHUB_REPOSITORY" \
+            --workflow d2-trajectory-terminal-adapter-qualification.yml \
+            --exclude-run-id "$GITHUB_RUN_ID")"
+          test "$prior_run_count" -eq 0
+
+          accepted_review_count="$(python -m resonance_world.github_authorization_queries \
+            reviews \
+            --repository "$GITHUB_REPOSITORY" \
+            --pull-request 256 \
+            --candidate-sha "$candidate")"
+          test "$accepted_review_count" -ge 1
+
+          unresolved_review_thread_count="$(python -m resonance_world.github_authorization_queries \
+            threads \
+            --repository "$GITHUB_REPOSITORY" \
+            --pull-request 256)"
+          test "$unresolved_review_thread_count" -eq 0
+
+          git merge-base --is-ancestor '01e7abc79eb84326c1705073e92d145f703854c8' "$candidate"
+          git merge-base --is-ancestor '83257f740262726e906fb203c4657163bf36079f' "$candidate"
+          git merge-base --is-ancestor '47383f2b18c993965c89350609a4c9691897bdde' "$candidate"
+          test "$(git rev-parse "${candidate}:src/resonance_world/provider_send_guard.py")" = '4b8896235d8048523d007400d0acfe85470f628c'
+          test "$(git rev-parse "${candidate}:src/resonance_world/github_authorization_queries.py")" = '4fec4f0bfac06ae17a87a7c148dea6521736a97a'
+          test "$(git rev-parse "${candidate}:src/resonance_world/d2_terminal_adapter.py")" = 'ba16d2eb4b7255437c8ab224e91d5ed093897990'
+          test "$(git rev-parse "${candidate}:scripts/d2_trajectory_completion_contract.py")" = '9d91e35937dfb4f6eadbc23ab240c84d20535ee5'
+          test "$(git rev-parse "${candidate}:scripts/d2_trajectory_completion_transport.py")" = '877112d82d0612d027e13bf93bd0393733fc3c89'
+          test "$(git rev-parse "${candidate}:scripts/qualify_d2_trajectory_terminal_adapter.py")" = 'ba42cf31dab8c6c1fc2db15baab12715eb416578'
+          test "$(git rev-parse "${candidate}:research/d2_trajectory_terminal_adapter/REQUEST_PLAN.json")" = 'e3e877a3738bddc2f3c8e0458d957e560aa153f3'
+          test "$(git rev-parse "${candidate}:research/d2_trajectory_terminal_adapter/TOPOLOGY.json")" = 'b6e68e5a1953ca5ead88a230ec16ea818000dacf'
+          echo 'f0c9ba663642bfec83b04287b71991ec3da275e9c231a3666acf88c3ce5b956e  research/evidence/d2_terminal_adapter_v2_qualification/RESULT.json' | sha256sum -c -
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+
+  execute-bounded-trajectory-adapter-qualification:
+    needs: authorization-integrity
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/.locked-hermes-venv
+      UV_PYTHON_DOWNLOADS: never
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 2
+      - name: Checkout pinned Hermes Agent
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: hermes-agent-org/hermes
+          ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4
+          path: .hermes-src
+          fetch-depth: 1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Install exact uv tool
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          version: "0.12.13"
+          enable-cache: false
+      - name: Reverify exact parent, protected files, and pinned source
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = '1'
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${GLM_BASE_URL:-}"
+          test -z "${D2_TRAJECTORY_TERMINAL_ADAPTER_AUTHORIZED:-}"
+          test "$(git rev-parse HEAD^)" = '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+          test "$(git rev-parse HEAD^:src/resonance_world/provider_send_guard.py)" = '4b8896235d8048523d007400d0acfe85470f628c'
+          test "$(git rev-parse HEAD^:src/resonance_world/github_authorization_queries.py)" = '4fec4f0bfac06ae17a87a7c148dea6521736a97a'
+          test "$(git rev-parse HEAD^:src/resonance_world/d2_terminal_adapter.py)" = 'ba16d2eb4b7255437c8ab224e91d5ed093897990'
+          test "$(git rev-parse HEAD^:scripts/d2_trajectory_completion_contract.py)" = '9d91e35937dfb4f6eadbc23ab240c84d20535ee5'
+          test "$(git rev-parse HEAD^:scripts/d2_trajectory_completion_transport.py)" = '877112d82d0612d027e13bf93bd0393733fc3c89'
+          test "$(git rev-parse HEAD^:scripts/qualify_d2_trajectory_terminal_adapter.py)" = 'ba42cf31dab8c6c1fc2db15baab12715eb416578'
+          test "$(git rev-parse HEAD^:research/d2_trajectory_terminal_adapter/REQUEST_PLAN.json)" = 'e3e877a3738bddc2f3c8e0458d957e560aa153f3'
+          test "$(git rev-parse HEAD^:research/d2_trajectory_terminal_adapter/TOPOLOGY.json)" = 'b6e68e5a1953ca5ead88a230ec16ea818000dacf'
+          echo 'f0c9ba663642bfec83b04287b71991ec3da275e9c231a3666acf88c3ce5b956e  research/evidence/d2_terminal_adapter_v2_qualification/RESULT.json' | sha256sum -c -
+          test "$(git -C .hermes-src rev-parse HEAD)" = '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          test "$(git -C .hermes-src rev-parse HEAD:uv.lock)" = '45efc2d93ff627fee4f94ce2b068440873a22188'
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
+          grep -Fq 't = threading.Thread(target=_call, daemon=True)' .hermes-src/run_agent.py
+          grep -Fq 'while t.is_alive():' .hermes-src/run_agent.py
+          grep -Fq 't.join(timeout=0.3)' .hermes-src/run_agent.py
+          grep -Fq 'completed = final_response is not None and api_call_count < self.max_iterations' .hermes-src/run_agent.py
+          grep -Fq 'api_kwargs.update(self.request_overrides)' .hermes-src/run_agent.py
+
+      - name: Materialize hash-locked runtime
+        shell: bash
+        run: |
+          set -euo pipefail
+          uv lock --check --project .hermes-src
+          uv sync --project .hermes-src --locked --no-dev --no-install-project --python "$(command -v python)"
+          cat > /tmp/openai-2.21.0.txt <<'EOF'
+          openai==2.21.0 --hash=sha256:0bc1c775e5b1536c294eded39ee08f8407656537ccc71b1004104fe1602e267c
+          EOF
+          uv pip install --python "$UV_PROJECT_ENVIRONMENT/bin/python" --no-deps --require-hashes -r /tmp/openai-2.21.0.txt
+          purelib="$($UV_PROJECT_ENVIRONMENT/bin/python - <<'PY'
+          import sysconfig
+          print(sysconfig.get_paths()['purelib'])
+          PY
+          )"
+          dist_info="$purelib/hermes_agent-0.8.0.dist-info"
+          mkdir -p "$dist_info"
+          cat > "$dist_info/METADATA" <<'EOF'
+          Metadata-Version: 2.1
+          Name: hermes-agent
+          Version: 0.8.0
+          EOF
+
+      - name: Reverify locked runtime
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src:${{ github.workspace }}/.hermes-src
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_TRAJECTORY_TERMINAL_ADAPTER_AUTHORIZED:-}"
+          .locked-hermes-venv/bin/python - <<'PY'
+          import importlib.metadata
+          from pathlib import Path
+          import httpx
+          import openai
+          import run_agent
+          from openai._constants import DEFAULT_MAX_RETRIES
+          from resonance_world import d2_terminal_adapter, provider_send_guard
+          root = Path.cwd().resolve()
+          assert importlib.metadata.version('hermes-agent') == '0.8.0'
+          assert importlib.metadata.version('openai') == '2.21.0'
+          assert importlib.metadata.version('httpx') == '0.28.1'
+          assert openai.__version__ == '2.21.0'
+          assert httpx.__version__ == '0.28.1'
+          assert DEFAULT_MAX_RETRIES == 2
+          assert Path(run_agent.__file__).resolve() == root / '.hermes-src' / 'run_agent.py'
+          assert Path(d2_terminal_adapter.__file__).resolve() == root / 'src' / 'resonance_world' / 'd2_terminal_adapter.py'
+          assert Path(provider_send_guard.__file__).resolve() == root / 'src' / 'resonance_world' / 'provider_send_guard.py'
+          PY
+
+      - name: Execute bounded trajectory qualification once
+        env:
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          GLM_BASE_URL: https://api.z.ai/api/coding/paas/v4
+          D2_TRAJECTORY_TERMINAL_ADAPTER_AUTHORIZED: "1"
+          PYTHONPATH: ${{ github.workspace }}/src:${{ github.workspace }}/.hermes-src
+        shell: bash
+        run: |
+          set -euo pipefail
+          env \
+            -u OPENROUTER_API_KEY \
+            -u OPENAI_API_KEY \
+            -u OPENAI_BASE_URL \
+            -u ANTHROPIC_API_KEY \
+            -u ANTHROPIC_TOKEN \
+            -u NOUS_API_KEY \
+            -u GLM_API_KEY \
+            -u Z_AI_API_KEY \
+            -u KIMI_API_KEY \
+            -u MINIMAX_API_KEY \
+            -u DEEPSEEK_API_KEY \
+            -u DASHSCOPE_API_KEY \
+            -u XAI_API_KEY \
+            .locked-hermes-venv/bin/python scripts/qualify_d2_trajectory_terminal_adapter.py \
+              --execute \
+              --output output/d2-trajectory-terminal-adapter-result.json
+
+      - name: Verify bounded result authority
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          .locked-hermes-venv/bin/python - <<'PY'
+          import json
+          from pathlib import Path
+          p = json.loads(Path('output/d2-trajectory-terminal-adapter-result.json').read_text())
+          assert p['schema'] == 'd2-trajectory-terminal-adapter-result-v0.1'
+          assert p['issue'] == 255
+          assert p['candidate_sha'] == '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+          assert p['fresh_namespace'] == 'rw.d2-trajectory-terminal-adapter.v1'
+          assert p['predecessor_trajectory_result_unchanged'] == 'FAIL'
+          assert p['terminal_observability_result_unchanged'] == 'VALID_TERMINAL_RESPONSE_OBSERVED'
+          assert p['qualified_adapter_result_unchanged'] == 'PASS'
+          assert p['qualified_adapter_result_sha256'] == 'f0c9ba663642bfec83b04287b71991ec3da275e9c231a3666acf88c3ce5b956e'
+          assert p['terminal_adapter_git_blob_sha'] == 'ba16d2eb4b7255437c8ab224e91d5ed093897990'
+          assert p['hermes_completed_mutated'] is False
+          assert p['trajectory_logical_calls_registered'] == 220
+          assert 0 <= p['logical_calls_attempted'] <= 220
+          assert 0 <= p['effective_completed_count'] <= 220
+          assert 0 <= p['physical_provider_sends_observed_total'] <= 400
+          assert p['qualification_outcome'] in {'PASS', 'FAIL', 'ADAPTER_PATH_NOT_EXERCISED', 'APPARATUS_FAILURE'}
+          if p['qualification_pass']:
+              assert p['qualification_outcome'] == 'PASS'
+              assert p['logical_calls_attempted'] == 220
+              assert p['effective_completed_count'] == 220
+              assert p['terminal_iteration_override_count'] > 0
+          assert p['scientific_scoring_performed'] is False
+          assert p['source_acquisition_evidence_generated'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['acceptance_action_authorized'] is False
+          assert p['production_historical_substrate_enabled'] is False
+          assert p['raw_final_response_content_persisted'] is False
+          assert p['same_request_stream_rerun_allowed'] is False
+          PY
+
+      - name: Upload bounded evidence
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: d2-trajectory-terminal-adapter-result
+          path: output/d2-trajectory-terminal-adapter-result.json
+          if-no-files-found: error
+          retention-days: 90
+
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo 'Same-stream workflow rerun is prohibited after outcome-bearing execution.' >&2
+          exit 1
