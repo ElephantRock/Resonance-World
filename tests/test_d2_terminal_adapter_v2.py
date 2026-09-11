@@ -21,7 +21,8 @@ def test_v2_probe_stream_is_fresh_and_balanced() -> None:
     probes = module.generate_probes()
     assert len(probes) == 72
     assert [row["logical_index"] for row in probes] == list(range(72))
-    assert Counter(row["development_budget"] for row in probes) == Counter({40: 24, 80: 24, 160: 24})
+    budgets = Counter(row["development_budget"] for row in probes)
+    assert budgets == Counter({40: 24, 80: 24, 160: 24})
     assert {row["seed"] for row in probes}.isdisjoint(set(range(1_000_000, 1_000_072)))
     assert min(row["seed"] for row in probes) == 2_000_000
     assert max(row["seed"] for row in probes) == 2_000_071
