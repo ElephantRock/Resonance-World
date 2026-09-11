@@ -117,7 +117,8 @@ def validate_frozen_files() -> list[dict[str, Any]]:
     probes = generate_probes()
     if len(probes) != PROBE_COUNT:
         raise AssertionError("probe count drift")
-    if Counter(int(row["development_budget"]) for row in probes) != Counter({40: 24, 80: 24, 160: 24}):
+    budgets = Counter(int(row["development_budget"]) for row in probes)
+    if budgets != Counter({40: 24, 80: 24, 160: 24}):
         raise AssertionError("probe budget balance drift")
     if len({row["probe_id"] for row in probes}) != PROBE_COUNT:
         raise AssertionError("probe id reuse")
@@ -184,11 +185,16 @@ def execute() -> dict[str, Any]:
         {
             "schema": "d2-terminal-adapter-v2-qualification-result-v0.1",
             "issue": ISSUE,
-            "purpose": "requalify_terminal_structured_completion_adapter_after_authorization_gate_repair",
+            "purpose": (
+                "requalify_terminal_structured_completion_adapter_"
+                "after_authorization_gate_repair"
+            ),
             "fresh_seed_namespace": SEED_NAMESPACE,
             "fresh_seed_start": SEED_START,
             "consumed_predecessor_issue": 246,
-            "consumed_predecessor_outcome_unchanged": "INTEGRITY_APPARATUS_FAILURE_PRE_PROVIDER",
+            "consumed_predecessor_outcome_unchanged": (
+                "INTEGRITY_APPARATUS_FAILURE_PRE_PROVIDER"
+            ),
             "consumed_predecessor_provider_traffic": False,
             "authorization_gate_repair_issue": 249,
             "authorization_gate_repair_pr": 250,
