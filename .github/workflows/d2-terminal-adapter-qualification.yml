@@ -53,11 +53,16 @@ jobs:
             "/repos/${GITHUB_REPOSITORY}/actions/workflows/d2-terminal-adapter-qualification.yml/runs?per_page=100" \
             --jq "[.[].workflow_runs[] | select((.id | tostring) != \"${GITHUB_RUN_ID}\")] | length")"
           test "$prior_run_count" -eq 0
-          review_count="$(gh api \
+          codex_review_count="$(gh api \
             --paginate --slurp \
             "/repos/${GITHUB_REPOSITORY}/pulls/247/reviews?per_page=100" \
             --jq "[.[].[] | select(.commit_id == \"${candidate}\" and .user.login == \"chatgpt-codex-connector[bot]\")] | length")"
-          test "$review_count" -ge 1
+          operator_review_count="$(gh api \
+            --paginate --slurp \
+            "/repos/${GITHUB_REPOSITORY}/pulls/247/reviews?per_page=100" \
+            --jq "[.[].[] | select(.commit_id == \"${candidate}\" and .user.login == \"Alajmah\" and ((.body // \"\") | contains(\"Autonomous-Operator-Exact-Head-Review: PASS\")) and ((.body // \"\") | contains(\"candidate_sha=${candidate}\")))] | length")"
+          accepted_review_count=$((codex_review_count + operator_review_count))
+          test "$accepted_review_count" -ge 1
           unresolved_review_thread_count="$(gh api graphql \
             --paginate --slurp \
             -F owner='ElephantRock' \
