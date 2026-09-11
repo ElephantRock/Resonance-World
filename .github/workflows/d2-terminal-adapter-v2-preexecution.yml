@@ -8,8 +8,10 @@ on:
       - "scripts/qualify_d2_terminal_adapter_v2.py"
       - "src/resonance_world/d2_terminal_adapter.py"
       - "src/resonance_world/d2_terminal_transport.py"
+      - "src/resonance_world/github_authorization_queries.py"
       - "tests/test_d2_terminal_adapter_v2.py"
       - ".github/workflows/d2-terminal-adapter-v2-preexecution.yml"
+      - ".github/workflows/d2-terminal-adapter-v2-qualification.yml"
 
 permissions:
   contents: read
@@ -27,6 +29,19 @@ jobs:
         run: python -m pip install pytest==9.1.1 ruff==0.16.7 httpx==0.28.1
       - name: Verify marker absent
         run: test ! -e research/d2_terminal_adapter_v2/RUN_D2_TERMINAL_ADAPTER_V2_QUALIFICATION
+      - name: Verify authorization workflow contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          workflow='.github/workflows/d2-terminal-adapter-v2-qualification.yml'
+          test -f "$workflow"
+          grep -Fq 'python -m resonance_world.github_authorization_queries' "$workflow"
+          if grep -Eq -- '--jq|--template' "$workflow"; then
+            echo 'Qualification workflow reintroduced forbidden gh formatting flags.' >&2
+            exit 1
+          fi
+          grep -Fq 'D2_TERMINAL_ADAPTER_V2_AUTHORIZED' "$workflow"
+          grep -Fq 'research/d2_terminal_adapter_v2/RUN_D2_TERMINAL_ADAPTER_V2_QUALIFICATION' "$workflow"
       - name: Targeted tests
         env:
           PYTHONPATH: ${{ github.workspace }}/src
