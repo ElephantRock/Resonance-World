@@ -15,7 +15,6 @@ from resonance_world.github_authorization_queries import (
     fetch_workflow_runs,
 )
 
-
 CANDIDATE = "a" * 40
 
 
