@@ -147,11 +147,20 @@ def count_exact_candidate_reviews(
 
 
 def count_unresolved_review_threads(text: str) -> int:
-    """Count unresolved PR review threads across slurped GraphQL pages."""
+    """Count unresolved PR review threads across complete slurped GraphQL pages."""
+
+    pages = _slurped_pages(text)
+    if not pages:
+        raise AuthorizationQueryError("GraphQL pagination returned no pages")
 
     count = 0
-    for page_index, page_value in enumerate(_slurped_pages(text)):
+    for page_index, page_value in enumerate(pages):
         page = _require_dict(page_value, f"GraphQL page {page_index}")
+        if "errors" in page:
+            errors = _require_list(page.get("errors"), f"GraphQL page {page_index}.errors")
+            if errors:
+                raise AuthorizationQueryError("GraphQL response contains errors")
+
         data = _require_dict(page.get("data"), f"GraphQL page {page_index}.data")
         repository = _require_dict(data.get("repository"), "GraphQL repository")
         pull_request = _require_dict(
@@ -167,10 +176,23 @@ def count_unresolved_review_threads(text: str) -> int:
             threads.get("pageInfo"),
             "GraphQL reviewThreads.pageInfo",
         )
-        _require_bool(page_info.get("hasNextPage"), "GraphQL pageInfo.hasNextPage")
+        has_next_page = _require_bool(
+            page_info.get("hasNextPage"),
+            "GraphQL pageInfo.hasNextPage",
+        )
         end_cursor = page_info.get("endCursor")
         if end_cursor is not None and not isinstance(end_cursor, str):
             raise AuthorizationQueryError("GraphQL pageInfo.endCursor must be string or null")
+
+        is_final_page = page_index == len(pages) - 1
+        if is_final_page and has_next_page:
+            raise AuthorizationQueryError("GraphQL pagination incomplete at final returned page")
+        if not is_final_page:
+            if not has_next_page:
+                raise AuthorizationQueryError("GraphQL pagination ended before final slurped page")
+            if not isinstance(end_cursor, str) or not end_cursor:
+                raise AuthorizationQueryError("GraphQL non-final page requires a next-page cursor")
+
         for node_index, node_value in enumerate(nodes):
             node = _require_dict(node_value, f"review thread {node_index}")
             is_resolved = _require_bool(
