@@ -1,0 +1,124 @@
+name: Preserve D2 Terminal Adapter V2 Evidence
+
+on:
+  push:
+    branches: ["evidence/preserve-d2-terminal-adapter-v2-pass"]
+    paths:
+      - ".github/workflows/preserve-d2-terminal-adapter-v2-evidence.yml"
+
+permissions:
+  actions: read
+  contents: write
+
+jobs:
+  preserve:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 1
+      - name: Download and verify exact result artifact
+        env:
+          GH_TOKEN: ${{ github.token }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          mkdir -p /tmp/d2v2-artifact
+          gh api \
+            -H 'Accept: application/vnd.github+json' \
+            /repos/ElephantRock/Resonance-World/actions/artifacts/10190577392/zip \
+            > /tmp/d2v2-artifact.zip
+          unzip -q /tmp/d2v2-artifact.zip -d /tmp/d2v2-artifact
+          result='/tmp/d2v2-artifact/d2-terminal-adapter-v2-qualification-result.json'
+          test -f "$result"
+          echo 'f0c9ba663642bfec83b04287b71991ec3da275e9c231a3666acf88c3ce5b956e  '"$result" | sha256sum -c -
+          python - "$result" <<'PY'
+          import json
+          import sys
+          p = json.load(open(sys.argv[1]))
+          assert p['schema'] == 'd2-terminal-adapter-v2-qualification-result-v0.1'
+          assert p['issue'] == 251
+          assert p['candidate_sha'] == '65f80d7f66bda043a581c30494175c6361fa8e4f'
+          assert p['qualification_outcome'] == 'PASS'
+          assert p['qualification_pass'] is True
+          assert p['apparatus_failure'] is False
+          assert p['effective_completed_count'] == 72
+          assert p['native_hermes_completed_count'] == 71
+          assert p['terminal_iteration_override_count'] == 1
+          assert p['physical_provider_sends_observed_total'] == 73
+          assert p['unexpected_outbound_http_requests_blocked'] == 0
+          assert p['provider_attempts_blocked_by_cap'] == 0
+          assert p['logical_attribution_mismatch_blocks'] == 0
+          assert p['provider_worker_threads_alive_after_drain'] == 0
+          assert p['transport_hooks_restored_after_worker_drain'] is True
+          assert p['same_request_stream_rerun_allowed'] is False
+          PY
+      - name: Materialize bounded evidence record
+        shell: bash
+        run: |
+          set -euo pipefail
+          dir='research/evidence/d2_terminal_adapter_v2_qualification'
+          mkdir -p "$dir"
+          cp /tmp/d2v2-artifact/d2-terminal-adapter-v2-qualification-result.json "$dir/RESULT.json"
+          cat > "$dir/PROVENANCE.md" <<'EOF'
+          # D2 terminal adapter v2 qualification — provenance
+
+          ## Execution identity
+
+          - Issue: #251
+          - Apparatus PR: #253
+          - Frozen candidate: `65f80d7f66bda043a581c30494175c6361fa8e4f`
+          - Sole-child activation: `bfc3defaa9a008735183b502fd147f6db16cec73`
+          - Workflow: `D2 Terminal Adapter V2 Qualification`
+          - Workflow run: `34578268112`, attempt 1
+          - Artifact ID: `10190577392`
+          - Artifact ZIP digest: `sha256:d50aa105c89f5faf9bbfe7b3456553b1a3d17e62832967e02fd846124cbbf870`
+          - Exact `RESULT.json` SHA-256: `f0c9ba663642bfec83b04287b71991ec3da275e9c231a3666acf88c3ce5b956e`
+
+          ## Frozen substrate
+
+          - Provider: Z.AI GLM Coding Plan
+          - Provider/API mode/model: `zai` / `chat_completions` / `glm-5.3`
+          - Hermes revision: `036cbdfa0a3158454a0a2a7a7388cf70353326b4`
+          - Hermes package: `0.8.0`
+          - Hermes `run_agent.py` blob: `4c0d3be4b0c2d364c550fa663d34f6545c9e6d20`
+          - Provider-send guard blob: `4b8896235d8048523d007400d0acfe85470f628c`
+          - GitHub authorization helper blob: `4fec4f0bfac06ae17a87a7c148dea6521736a97a`
+          - Authorization-gate repair merge: `09d6c5c6ac7884213b492da62a1c236f08f1d62c`
+          - Fresh request namespace: `rw.d2-terminal-adapter.v2`
+          - Fresh seeds: `2000000..2000071`
+
+          ## Authoritative outcome
+
+          `PASS` under the registered engineering rule. All 72 fresh probes were effective completions: 71 native Hermes completions and 1 terminal-iteration override. The override was logical index 36 (`adapter_v2_b80_36`, seed 2000036, budget 80), with exactly two Hermes API calls and two attributed HTTP-200 physical sends, a non-empty parse-valid structured response, and no Hermes failure/partial/interrupted/error flags.
+
+          Transport/accounting remained clean: 73 total physical sends; zero unexpected-outbound, provider-cap, and attribution-mismatch blocks; zero provider workers alive after drain; transport hooks restored after drain.
+
+          Preserved #243 causal evidence remained unchanged and its credential-free regression reproduced 72 effective completions = 64 native + 8 terminal overrides. Preserved #246 remains `INTEGRITY_APPARATUS_FAILURE_PRE_PROVIDER` with zero provider/model traffic and is not reinterpreted.
+
+          ## Authority ceiling
+
+          This is engineering-only terminal structured-completion qualification evidence. It performs no scientific scoring or source acquisition and creates no Acceptance-plane decision, Mechanism Registry promotion, Historical Substrate activation, deployment, publication, billing/purchase, credential, or permission authority. Same-stream rerun or replacement is prohibited.
+          EOF
+          cat > "$dir/README.md" <<'EOF'
+          # D2 terminal adapter v2 qualification evidence
+
+          This directory preserves the exact outcome of issue #251 / PR #253.
+
+          The registered result is **PASS**: 72/72 fresh probes were effective completions, comprising 71 native Hermes completions and one valid terminal-iteration override. The request stream is consumed and must not be rerun or replaced in place.
+
+          `RESULT.json` is copied byte-for-byte from GitHub Actions artifact `10190577392` and has SHA-256 `f0c9ba663642bfec83b04287b71991ec3da275e9c231a3666acf88c3ce5b956e`.
+
+          This evidence is engineering-only. It does not authorize scientific scoring/source acquisition, Acceptance/registry action, Historical Substrate activation, deployment/publication, billing/purchase, or credential/permission changes.
+          EOF
+      - name: Self-delete bootstrap and commit evidence
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm .github/workflows/preserve-d2-terminal-adapter-v2-evidence.yml
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add research/evidence/d2_terminal_adapter_v2_qualification .github/workflows/preserve-d2-terminal-adapter-v2-evidence.yml
+          git commit -m 'Evidence: preserve D2 terminal adapter v2 PASS'
+          git push origin HEAD:evidence/preserve-d2-terminal-adapter-v2-pass
