@@ -2,7 +2,7 @@ from __future__ import annotations
 
 import json
 import subprocess
-from unittest.mock import Mock
+import unittest.mock
 
 import pytest
 
@@ -153,8 +153,12 @@ def test_review_threads_fail_closed_on_non_boolean_resolution() -> None:
         count_unresolved_review_threads(payload)
 
 
-def test_fetch_workflow_runs_uses_slurp_without_formatting_flags(monkeypatch: pytest.MonkeyPatch) -> None:
-    run = Mock(return_value=subprocess.CompletedProcess([], 0, stdout="[]", stderr=""))
+def test_fetch_workflow_runs_uses_slurp_without_formatting_flags(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    run = unittest.mock.Mock(
+        return_value=subprocess.CompletedProcess([], 0, stdout="[]", stderr="")
+    )
     monkeypatch.setattr(subprocess, "run", run)
 
     assert fetch_workflow_runs(repository="ElephantRock/Resonance-World", workflow="ci.yml") == "[]"
@@ -171,7 +175,9 @@ def test_fetch_workflow_runs_uses_slurp_without_formatting_flags(monkeypatch: py
 
 
 def test_fetch_reviews_uses_slurp_without_formatting_flags(monkeypatch: pytest.MonkeyPatch) -> None:
-    run = Mock(return_value=subprocess.CompletedProcess([], 0, stdout="[]", stderr=""))
+    run = unittest.mock.Mock(
+        return_value=subprocess.CompletedProcess([], 0, stdout="[]", stderr="")
+    )
     monkeypatch.setattr(subprocess, "run", run)
 
     assert fetch_reviews(repository="ElephantRock/Resonance-World", pull_request=248) == "[]"
@@ -184,7 +190,9 @@ def test_fetch_reviews_uses_slurp_without_formatting_flags(monkeypatch: pytest.M
 def test_fetch_review_threads_uses_graphql_slurp_without_formatting_flags(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    run = Mock(return_value=subprocess.CompletedProcess([], 0, stdout="[]", stderr=""))
+    run = unittest.mock.Mock(
+        return_value=subprocess.CompletedProcess([], 0, stdout="[]", stderr="")
+    )
     monkeypatch.setattr(subprocess, "run", run)
 
     assert fetch_review_threads(repository="ElephantRock/Resonance-World", pull_request=248) == "[]"
