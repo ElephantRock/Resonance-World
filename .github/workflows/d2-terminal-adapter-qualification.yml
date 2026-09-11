@@ -58,6 +58,33 @@ jobs:
             "/repos/${GITHUB_REPOSITORY}/pulls/247/reviews?per_page=100" \
             --jq "[.[].[] | select(.commit_id == \"${candidate}\" and .user.login == \"chatgpt-codex-connector[bot]\")] | length")"
           test "$review_count" -ge 1
+          unresolved_review_thread_count="$(gh api graphql \
+            --paginate --slurp \
+            -F owner='ElephantRock' \
+            -F name='Resonance-World' \
+            -F number=247 \
+            -f query='query(
+              $owner: String!,
+              $name: String!,
+              $number: Int!,
+              $endCursor: String
+            ) {
+              repository(owner: $owner, name: $name) {
+                pullRequest(number: $number) {
+                  reviewThreads(first: 100, after: $endCursor) {
+                    nodes {
+                      isResolved
+                    }
+                    pageInfo {
+                      hasNextPage
+                      endCursor
+                    }
+                  }
+                }
+              }
+            }' \
+            --jq '[.[].data.repository.pullRequest.reviewThreads.nodes[] | select(.isResolved == false)] | length')"
+          test "$unresolved_review_thread_count" -eq 0
           git merge-base --is-ancestor \
             '83257f740262726e906fb203c4657163bf36079f' "$candidate"
           git merge-base --is-ancestor \
