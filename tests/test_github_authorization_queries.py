@@ -40,6 +40,31 @@ def _capture_subprocess(
     return captured
 
 
+def _thread_page(
+    nodes: list[dict[str, bool]],
+    has_next_page: bool,
+    *,
+    end_cursor: str | None = None,
+) -> dict[str, object]:
+    if has_next_page and end_cursor is None:
+        end_cursor = "cursor"
+    return {
+        "data": {
+            "repository": {
+                "pullRequest": {
+                    "reviewThreads": {
+                        "nodes": nodes,
+                        "pageInfo": {
+                            "hasNextPage": has_next_page,
+                            "endCursor": end_cursor,
+                        },
+                    }
+                }
+            }
+        }
+    }
+
+
 def test_count_prior_workflow_runs_across_pages() -> None:
     payload = json.dumps(
         [
@@ -123,53 +148,42 @@ def test_operator_review_requires_candidate_binding_and_pass_marker() -> None:
 
 
 def test_count_unresolved_review_threads_across_graphql_pages() -> None:
-    def page(nodes: list[dict[str, bool]], has_next_page: bool) -> dict[str, object]:
-        return {
-            "data": {
-                "repository": {
-                    "pullRequest": {
-                        "reviewThreads": {
-                            "nodes": nodes,
-                            "pageInfo": {
-                                "hasNextPage": has_next_page,
-                                "endCursor": "cursor" if has_next_page else None,
-                            },
-                        }
-                    }
-                }
-            }
-        }
-
     payload = json.dumps(
         [
-            page([{"isResolved": True}, {"isResolved": False}], True),
-            page([{"isResolved": False}], False),
+            _thread_page([{"isResolved": True}, {"isResolved": False}], True),
+            _thread_page([{"isResolved": False}], False),
         ]
     )
     assert count_unresolved_review_threads(payload) == 2
 
 
 def test_review_threads_fail_closed_on_non_boolean_resolution() -> None:
+    payload = json.dumps([_thread_page([{"isResolved": "false"}], False)])
+    with pytest.raises(AuthorizationQueryError, match="must be boolean"):
+        count_unresolved_review_threads(payload)
+
+
+def test_review_threads_fail_closed_on_graphql_errors() -> None:
+    page = _thread_page([], False)
+    page["errors"] = [{"message": "partial failure"}]
+    with pytest.raises(AuthorizationQueryError, match="contains errors"):
+        count_unresolved_review_threads(json.dumps([page]))
+
+
+def test_review_threads_fail_closed_on_truncated_final_page() -> None:
+    payload = json.dumps([_thread_page([], True, end_cursor="more")])
+    with pytest.raises(AuthorizationQueryError, match="pagination incomplete"):
+        count_unresolved_review_threads(payload)
+
+
+def test_review_threads_fail_closed_on_inconsistent_intermediate_page() -> None:
     payload = json.dumps(
         [
-            {
-                "data": {
-                    "repository": {
-                        "pullRequest": {
-                            "reviewThreads": {
-                                "nodes": [{"isResolved": "false"}],
-                                "pageInfo": {
-                                    "hasNextPage": False,
-                                    "endCursor": None,
-                                },
-                            }
-                        }
-                    }
-                }
-            }
+            _thread_page([], False),
+            _thread_page([], False),
         ]
     )
-    with pytest.raises(AuthorizationQueryError, match="must be boolean"):
+    with pytest.raises(AuthorizationQueryError, match="ended before final"):
         count_unresolved_review_threads(payload)
 
 
