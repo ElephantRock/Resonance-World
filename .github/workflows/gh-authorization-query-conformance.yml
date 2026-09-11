@@ -1,0 +1,71 @@
+name: GitHub Authorization Query Conformance
+
+on:
+  pull_request:
+    paths:
+      - "src/resonance_world/github_authorization_queries.py"
+      - "tests/test_github_authorization_queries.py"
+      - ".github/workflows/gh-authorization-query-conformance.yml"
+
+permissions:
+  actions: read
+  contents: read
+  pull-requests: read
+
+jobs:
+  hosted-runner-cli-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Exercise exact paginated authorization-query shapes
+        env:
+          GH_TOKEN: ${{ github.token }}
+          REPOSITORY: ${{ github.repository }}
+          PULL_REQUEST: ${{ github.event.pull_request.number }}
+          CANDIDATE_SHA: ${{ github.event.pull_request.head.sha }}
+          PYTHONPATH: ${{ github.workspace }}/src
+        shell: bash
+        run: |
+          set -euo pipefail
+          gh --version
+          workflow_count="$(python -m resonance_world.github_authorization_queries \
+            workflow-runs \
+            --repository "$REPOSITORY" \
+            --workflow ci.yml \
+            --exclude-run-id 0)"
+          test "$workflow_count" -ge 1
+
+          review_count="$(python -m resonance_world.github_authorization_queries \
+            reviews \
+            --repository "$REPOSITORY" \
+            --pull-request "$PULL_REQUEST" \
+            --candidate-sha "$CANDIDATE_SHA")"
+          test "$review_count" -ge 0
+
+          unresolved_count="$(python -m resonance_world.github_authorization_queries \
+            threads \
+            --repository "$REPOSITORY" \
+            --pull-request "$PULL_REQUEST")"
+          test "$unresolved_count" -ge 0
+
+          printf 'workflow_count=%s review_count=%s unresolved_count=%s\n' \
+            "$workflow_count" "$review_count" "$unresolved_count"
+
+  deterministic-tests:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+      - name: Install development test tools
+        run: python -m pip install -e '.[dev]'
+      - name: Targeted tests
+        run: pytest -q tests/test_github_authorization_queries.py
+      - name: Ruff
+        run: ruff check src/resonance_world/github_authorization_queries.py tests/test_github_authorization_queries.py
