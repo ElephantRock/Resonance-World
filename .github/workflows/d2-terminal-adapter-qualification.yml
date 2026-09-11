@@ -128,6 +128,9 @@ jobs:
     if: ${{ github.run_attempt == 1 }}
     runs-on: ubuntu-24.04
     timeout-minutes: 90
+    env:
+      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/.locked-hermes-venv
+      UV_PYTHON_DOWNLOADS: never
     steps:
       - name: Checkout Resonance World
         uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
@@ -143,7 +146,11 @@ jobs:
       - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.12"
-          cache: pip
+      - name: Install exact uv tool
+        uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with:
+          version: "0.12.13"
+          enable-cache: false
       - name: Reverify exact parent, evidence, and pinned source contract
         shell: bash
         run: |
@@ -169,6 +176,9 @@ jobs:
             '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
           test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = \
             '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          test "$(git -C .hermes-src rev-parse HEAD:uv.lock)" = \
+            '45efc2d93ff627fee4f94ce2b068440873a22188'
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
           grep -Fq 't = threading.Thread(target=_call, daemon=True)' .hermes-src/run_agent.py
           grep -Fq \
             'completed = final_response is not None and api_call_count < self.max_iterations' \
@@ -180,25 +190,109 @@ jobs:
           grep -Fq 'if self._budget_grace_call:' .hermes-src/run_agent.py
           grep -Fq '"api_calls": api_call_count' .hermes-src/run_agent.py
           grep -Fq 'api_kwargs.update(self.request_overrides)' .hermes-src/run_agent.py
-      - name: Install frozen supported-product environment
+      - name: Materialize hash-locked runtime without project build backends
+        shell: bash
         run: |
-          python -m pip install -e .
-          python -m pip install ./.hermes-src 'openai==2.21.0' 'httpx==0.28.1'
-          python - <<'PY'
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_TERMINAL_ADAPTER_AUTHORIZED:-}"
+          uv lock --check --project .hermes-src
+          uv sync \
+            --project .hermes-src \
+            --locked \
+            --no-dev \
+            --no-install-project \
+            --python "$(command -v python)"
+          cat > /tmp/openai-2.21.0.txt <<'EOF'
+          openai==2.21.0 --hash=sha256:0bc1c775e5b1536c294eded39ee08f8407656537ccc71b1004104fe1602e267c
+          EOF
+          uv pip install \
+            --python "$UV_PROJECT_ENVIRONMENT/bin/python" \
+            --no-deps \
+            --require-hashes \
+            -r /tmp/openai-2.21.0.txt
+          purelib="$($UV_PROJECT_ENVIRONMENT/bin/python - <<'PY'
+          import sysconfig
+          print(sysconfig.get_paths()['purelib'])
+          PY
+          )"
+          dist_info="$purelib/hermes_agent-0.8.0.dist-info"
+          mkdir -p "$dist_info"
+          cat > "$dist_info/METADATA" <<'EOF'
+          Metadata-Version: 2.1
+          Name: hermes-agent
+          Version: 0.8.0
+          EOF
+      - name: Reverify locked runtime and protected execution files
+        env:
+          PYTHONPATH: ${{ github.workspace }}/src:${{ github.workspace }}/.hermes-src
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_TERMINAL_ADAPTER_AUTHORIZED:-}"
+          test "$(git hash-object scripts/qualify_d2_terminal_adapter.py)" = \
+            'b66e9282166e8a180f804f0f414f394ee8d18562'
+          test "$(git hash-object src/resonance_world/d2_terminal_adapter.py)" = \
+            'ba16d2eb4b7255437c8ab224e91d5ed093897990'
+          test "$(git hash-object src/resonance_world/d2_terminal_transport.py)" = \
+            '7cf40ff7534ea028d584f0751f1d1b921b8acd82'
+          test "$(git hash-object src/resonance_world/provider_send_guard.py)" = \
+            '4b8896235d8048523d007400d0acfe85470f628c'
+          test "$(git hash-object research/d2_terminal_adapter/REQUEST_PLAN.json)" = \
+            '05f3e9ab10e8d8f1ac833d6cf033a5fd0a32a4cb'
+          test "$(git hash-object research/d2_terminal_adapter/PROBES.json)" = \
+            '81ad8a9df6cc7862286ea2e42d100770a6abbaee'
+          echo \
+            'cde58890d2d6bd1027381ffa559b385f11883c15e08860a823a1a5017495a9d6  research/evidence/d2_terminal_response_observability/RESULT.json' \
+            | sha256sum -c -
+          test "$(git -C .hermes-src hash-object run_agent.py)" = \
+            '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          test "$(git -C .hermes-src hash-object uv.lock)" = \
+            '45efc2d93ff627fee4f94ce2b068440873a22188'
+          git diff --exit-code -- \
+            scripts/qualify_d2_terminal_adapter.py \
+            src/resonance_world/d2_terminal_adapter.py \
+            src/resonance_world/d2_terminal_transport.py \
+            src/resonance_world/provider_send_guard.py \
+            research/d2_terminal_adapter/REQUEST_PLAN.json \
+            research/d2_terminal_adapter/PROBES.json \
+            research/evidence/d2_terminal_response_observability/RESULT.json
+          git -C .hermes-src diff --exit-code -- run_agent.py pyproject.toml uv.lock
+          .locked-hermes-venv/bin/python - <<'PY'
           import importlib.metadata
+          from pathlib import Path
           import httpx
+          import openai
+          import run_agent
+          from resonance_world import d2_terminal_adapter, d2_terminal_transport
+          from resonance_world import provider_send_guard
           from openai._constants import DEFAULT_MAX_RETRIES
+
+          root = Path.cwd().resolve()
           assert importlib.metadata.version('hermes-agent') == '0.8.0'
           assert importlib.metadata.version('openai') == '2.21.0'
           assert importlib.metadata.version('httpx') == '0.28.1'
+          assert openai.__version__ == '2.21.0'
           assert httpx.__version__ == '0.28.1'
           assert DEFAULT_MAX_RETRIES == 2
+          assert Path(run_agent.__file__).resolve() == root / '.hermes-src' / 'run_agent.py'
+          assert Path(d2_terminal_adapter.__file__).resolve() == (
+              root / 'src' / 'resonance_world' / 'd2_terminal_adapter.py'
+          )
+          assert Path(d2_terminal_transport.__file__).resolve() == (
+              root / 'src' / 'resonance_world' / 'd2_terminal_transport.py'
+          )
+          assert Path(provider_send_guard.__file__).resolve() == (
+              root / 'src' / 'resonance_world' / 'provider_send_guard.py'
+          )
           PY
       - name: Execute bounded adapter qualification once
         env:
           ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
           GLM_BASE_URL: https://api.z.ai/api/coding/paas/v4
           D2_TERMINAL_ADAPTER_AUTHORIZED: "1"
+          PYTHONPATH: ${{ github.workspace }}/src:${{ github.workspace }}/.hermes-src
         shell: bash
         run: |
           set -euo pipefail
@@ -219,7 +313,7 @@ jobs:
             -u DEEPSEEK_API_KEY \
             -u DASHSCOPE_API_KEY \
             -u XAI_API_KEY \
-            python scripts/qualify_d2_terminal_adapter.py \
+            .locked-hermes-venv/bin/python scripts/qualify_d2_terminal_adapter.py \
               --execute \
               --output output/d2-terminal-adapter-qualification-result.json
       - name: Verify bounded result authority
@@ -228,7 +322,7 @@ jobs:
           set -euo pipefail
           test -z "${ZAI_API_KEY:-}"
           test -z "${D2_TERMINAL_ADAPTER_AUTHORIZED:-}"
-          python - <<'PY'
+          .locked-hermes-venv/bin/python - <<'PY'
           import json
           from pathlib import Path
           p = json.loads(Path(
