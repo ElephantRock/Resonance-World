@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import json
 import subprocess
-import unittest.mock
 
 import pytest
 
@@ -18,6 +17,28 @@ from resonance_world.github_authorization_queries import (
 
 
 CANDIDATE = "a" * 40
+
+
+def _capture_subprocess(
+    monkeypatch: pytest.MonkeyPatch,
+) -> list[list[str]]:
+    captured: list[list[str]] = []
+
+    def fake_run(
+        command: list[str],
+        *,
+        check: bool,
+        capture_output: bool,
+        text: bool,
+    ) -> subprocess.CompletedProcess[str]:
+        assert check is True
+        assert capture_output is True
+        assert text is True
+        captured.append(command)
+        return subprocess.CompletedProcess(command, 0, stdout="[]", stderr="")
+
+    monkeypatch.setattr(subprocess, "run", fake_run)
+    return captured
 
 
 def test_count_prior_workflow_runs_across_pages() -> None:
@@ -156,13 +177,10 @@ def test_review_threads_fail_closed_on_non_boolean_resolution() -> None:
 def test_fetch_workflow_runs_uses_slurp_without_formatting_flags(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    run = unittest.mock.Mock(
-        return_value=subprocess.CompletedProcess([], 0, stdout="[]", stderr="")
-    )
-    monkeypatch.setattr(subprocess, "run", run)
+    captured = _capture_subprocess(monkeypatch)
 
     assert fetch_workflow_runs(repository="ElephantRock/Resonance-World", workflow="ci.yml") == "[]"
-    command = run.call_args.args[0]
+    command = captured[0]
     assert command == [
         "gh",
         "api",
@@ -175,13 +193,10 @@ def test_fetch_workflow_runs_uses_slurp_without_formatting_flags(
 
 
 def test_fetch_reviews_uses_slurp_without_formatting_flags(monkeypatch: pytest.MonkeyPatch) -> None:
-    run = unittest.mock.Mock(
-        return_value=subprocess.CompletedProcess([], 0, stdout="[]", stderr="")
-    )
-    monkeypatch.setattr(subprocess, "run", run)
+    captured = _capture_subprocess(monkeypatch)
 
     assert fetch_reviews(repository="ElephantRock/Resonance-World", pull_request=248) == "[]"
-    command = run.call_args.args[0]
+    command = captured[0]
     assert command[-1] == "/repos/ElephantRock/Resonance-World/pulls/248/reviews?per_page=100"
     assert "--slurp" in command
     assert "--jq" not in command
@@ -190,13 +205,10 @@ def test_fetch_reviews_uses_slurp_without_formatting_flags(monkeypatch: pytest.M
 def test_fetch_review_threads_uses_graphql_slurp_without_formatting_flags(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    run = unittest.mock.Mock(
-        return_value=subprocess.CompletedProcess([], 0, stdout="[]", stderr="")
-    )
-    monkeypatch.setattr(subprocess, "run", run)
+    captured = _capture_subprocess(monkeypatch)
 
     assert fetch_review_threads(repository="ElephantRock/Resonance-World", pull_request=248) == "[]"
-    command = run.call_args.args[0]
+    command = captured[0]
     assert command[:5] == ["gh", "api", "graphql", "--paginate", "--slurp"]
     assert "--jq" not in command
     assert "--template" not in command
