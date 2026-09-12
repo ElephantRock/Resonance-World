@@ -7,6 +7,7 @@ from typing import Any
 import d2_json_mode_contract as contract
 import d2_json_mode_transport as transport
 from d2_json_mode_agent import new_agent
+
 from resonance_world import d2_terminal_adapter as adapter
 from resonance_world.provider_send_guard import ProviderSendBudget
 
@@ -19,7 +20,11 @@ def _view(row: dict[str, Any]) -> dict[str, Any]:
         "interrupted": row["hermes_interrupted"],
         "error": "bounded-error-present" if row["hermes_error_present"] else None,
         "api_calls": row["api_calls"],
-        "final_response": "bounded-nonempty-response-sentinel" if row["final_response_length"] else "",
+        "final_response": (
+            "bounded-nonempty-response-sentinel"
+            if row["final_response_length"]
+            else ""
+        ),
     }
 
 
