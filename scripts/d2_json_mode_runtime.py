@@ -10,6 +10,7 @@ import d2_json_mode_contract as contract
 import d2_json_mode_transport as transport
 from d2_json_mode_agent import new_agent, preflight, request_overrides
 from d2_json_mode_probe import apparatus_failure, run_probe
+
 from resonance_world.provider_send_guard import ProviderSendBudget
 
 __all__ = ["execute", "new_agent", "preflight", "request_overrides", "run_probe"]
@@ -142,7 +143,7 @@ def execute() -> dict[str, Any]:
         "acceptance_action_authorized": False,
         "production_historical_substrate_enabled": False,
         "raw_credentials_persisted": False,
-      "raw_provider_response_body_persisted": False,
+        "raw_provider_response_body_persisted": False,
         "raw_provider_error_body_or_message_persisted": False,
         "raw_final_response_content_persisted": False,
         "same_request_stream_rerun_allowed": False,
