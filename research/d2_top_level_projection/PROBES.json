@@ -1,0 +1,1 @@
+{"developed_budget_order":[40,80,160],"issue":263,"namespace":"rw.d2-top-level-projection.v1","probes_per_developed_budget":6,"probes_per_shape":18,"schema":"d2-top-level-projection-probes-v0.1","seed_start":4200000,"shape_order":["fresh_evaluation","developed_development","developed_evaluation","oracle_evaluation"]}

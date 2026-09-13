@@ -1,0 +1,62 @@
+# ruff: noqa
+"""Frozen constants and validation for #263 top-level projection conformance."""
+from __future__ import annotations
+import hashlib, importlib.metadata, json, os, re
+from collections import Counter
+from pathlib import Path
+from typing import Any
+
+ROOT=Path(__file__).resolve().parents[1]; DIR=ROOT/'research'/'d2_top_level_projection'
+PLAN=DIR/'REQUEST_PLAN.json'; PROBES=DIR/'PROBES.json'; MARKER=DIR/'RUN_D2_TOP_LEVEL_PROJECTION'
+GUARD_PATH=ROOT/'src'/'resonance_world'/'provider_send_guard.py'; ADAPTER_PATH=ROOT/'src'/'resonance_world'/'d2_terminal_adapter.py'; PROJECTION_PATH=ROOT/'src'/'resonance_world'/'d2_top_level_projection.py'
+ISSUE=263; PR_NUMBER=265; NAMESPACE='rw.d2-top-level-projection.v1'; BASE_URL='https://api.z.ai/api/coding/paas/v4'; PROVIDER='zai'; API_MODE='chat_completions'; MODEL='glm-5.3'
+HERMES_REVISION='036cbdfa0a3158454a0a2a7a7388cf70353326b4'; HERMES_VERSION='0.8.0'; HERMES_RUN_AGENT_BLOB_SHA='4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+OPENAI_VERSION='2.21.0'; HTTPX_VERSION='0.28.1'; OPENAI_DEFAULT_MAX_RETRIES=2; MAX_ITERATIONS=2; MAX_TOKENS=768; TEMPERATURE=0.8; THINKING={'type':'disabled'}; RESPONSE_FORMAT={'type':'json_object'}
+MAX_CONCURRENCY=4; MAX_LOGICAL_CALLS=72; MAX_SENDS_PER_LOGICAL=36; MAX_SENDS_TOTAL=180; PROBE_ORIGIN_HEADER='X-Resonance-World-Logical-Index'; PROVIDER_WORKER_TARGET_MODULE='run_agent'; PROVIDER_WORKER_TARGET_NAME='_call'; PROVIDER_WORKER_DRAIN_TIMEOUT_SECONDS=60.0
+AUTH_ENV='D2_TOP_LEVEL_PROJECTION_AUTHORIZED'; AUTH_STRING='Autonomous_Operating_Charter_Amendment_A1_standing_execution_authority'
+GUARD_GIT_BLOB_SHA='4b8896235d8048523d007400d0acfe85470f628c'; ADAPTER_GIT_BLOB_SHA='ba16d2eb4b7255437c8ab224e91d5ed093897990'; PROJECTION_GIT_BLOB_SHA='84ee0c1624f35ff0b8c68aad3721e48d134dea9e'; PLAN_GIT_BLOB_SHA='cf1491572c3910a7a73e2f9f8427ae9e995ec0d5'; PROBES_GIT_BLOB_SHA='fe76a63adfb59922db9a9c9f490ca31bf067d198'
+FORBIDDEN=('OPENROUTER_API_KEY','OPENAI_API_KEY','OPENAI_BASE_URL','ANTHROPIC_API_KEY','ANTHROPIC_TOKEN','NOUS_API_KEY','GLM_API_KEY','Z_AI_API_KEY','KIMI_API_KEY','MINIMAX_API_KEY','DEEPSEEK_API_KEY','DASHSCOPE_API_KEY','XAI_API_KEY')
+
+def sha(text:str)->str:return hashlib.sha256(text.encode()).hexdigest()
+def git_blob_sha(path:Path)->str:
+ b=path.read_bytes(); return hashlib.sha1(b'blob '+str(len(b)).encode()+b'\0'+b).hexdigest()
+def load_probes()->list[dict[str,Any]]:
+ p=json.loads(PROBES.read_text()); expected={'schema':'d2-top-level-projection-probes-v0.1','issue':ISSUE,'namespace':NAMESPACE,'seed_start':4200000,'shape_order':['fresh_evaluation','developed_development','developed_evaluation','oracle_evaluation'],'probes_per_shape':18,'developed_budget_order':[40,80,160],'probes_per_developed_budget':6}
+ if p!=expected: raise AssertionError('probe manifest drift')
+ rows=[]; logical=0
+ for shape in p['shape_order']:
+  for local in range(18):
+   budget=p['developed_budget_order'][local//6] if shape.startswith('developed_') else None
+   rows.append({'logical_index':logical,'probe_id':f'projection_{shape}_{local:02d}','call_shape':shape,'development_budget':budget,'seed':p['seed_start']+logical}); logical+=1
+ return rows
+
+def validate_frozen_contract()->list[dict[str,Any]]:
+ for path,expected in ((PLAN,PLAN_GIT_BLOB_SHA),(PROBES,PROBES_GIT_BLOB_SHA),(GUARD_PATH,GUARD_GIT_BLOB_SHA),(ADAPTER_PATH,ADAPTER_GIT_BLOB_SHA),(PROJECTION_PATH,PROJECTION_GIT_BLOB_SHA)):
+  if git_blob_sha(path)!=expected: raise AssertionError(f'blob drift: {path.name}')
+ p=json.loads(PLAN.read_text())
+ required={'schema':'d2-top-level-projection-request-plan-v0.1','issue':ISSUE,'fresh_namespace':NAMESPACE,'predecessor_json_mode_issue':258,'predecessor_json_mode_outcome_unchanged':'FAIL_STRUCTURED_CONTRACT','qualified_terminal_adapter_issue':251,'qualified_terminal_adapter_outcome_unchanged':'PASS','endpoint_base_url':BASE_URL,'provider_id':PROVIDER,'api_mode':API_MODE,'requested_model':MODEL,'hermes_revision':HERMES_REVISION,'hermes_package_version':HERMES_VERSION,'hermes_run_agent_blob_sha':HERMES_RUN_AGENT_BLOB_SHA,'openai_sdk_version':OPENAI_VERSION,'httpx_version':HTTPX_VERSION,'max_iterations':2,'max_tokens':768,'sampling_temperature':0.8,'thinking':THINKING,'request_intervention':{'response_format':RESPONSE_FORMAT},'parser_intervention':'ignore_unknown_top_level_keys_only','recognized_top_level_keys':['actions','strategy'],'terminal_adapter_git_blob_sha':ADAPTER_GIT_BLOB_SHA,'provider_send_guard_git_blob_sha':GUARD_GIT_BLOB_SHA,'probe_count':72,'maximum_concurrency':4,'maximum_physical_sends_per_logical_call':36,'maximum_physical_sends_total':180}
+ for k,v in required.items():
+  if p.get(k)!=v: raise AssertionError(f'plan drift: {k}')
+ for k in ('logical_context_thread_propagation_required','independent_logical_origin_attribution_required','provider_worker_drain_before_hook_restore_required','unknown_top_level_projection_only'):
+  if p.get(k) is not True: raise AssertionError(f'plan drift: {k}')
+ forbidden_false=('embedded_json_extraction_allowed','markdown_fence_stripping_allowed','json_syntax_repair_allowed','required_field_coercion_allowed','action_vocabulary_expansion_allowed','action_count_change_allowed','strategy_bound_change_allowed','hermes_completed_mutation_allowed','provider_derived_strategy_propagation_allowed','raw_final_response_content_persisted','raw_provider_response_body_persisted','raw_provider_error_body_or_message_persisted','scientific_scoring_performed','acceptance_action_authorized','historical_substrate_enabled','workflow_rerun_allowed','same_request_stream_rerun_allowed','replacement_or_rescue_allowed')
+ if any(p.get(k) is not False for k in forbidden_false): raise AssertionError('plan authority drift')
+ rows=load_probes(); shapes=Counter(r['call_shape'] for r in rows); developed=Counter((r['call_shape'],r['development_budget']) for r in rows if r['call_shape'].startswith('developed_'))
+ if shapes!=Counter({s:18 for s in ('fresh_evaluation','developed_development','developed_evaluation','oracle_evaluation')}): raise AssertionError('shape balance drift')
+ if developed!=Counter({(s,b):6 for s in ('developed_development','developed_evaluation') for b in (40,80,160)}): raise AssertionError('budget balance drift')
+ if len({r['probe_id'] for r in rows})!=72 or len({r['seed'] for r in rows})!=72 or min(r['seed'] for r in rows)<4100000: raise AssertionError('fresh identity drift')
+ return rows
+
+def bounded_error(exc:BaseException)->dict[str,Any]:
+ text=str(exc); status=re.search(r'(?:status(?:_code)?[=: ]+|HTTP\s+)(\d{3})',text,re.I); code=re.search(r'''["']code["']\s*:\s*["']?(\d{3,6})''',text,re.I)
+ return {'error_type':type(exc).__name__,'http_status':int(status.group(1)) if status else None,'provider_code':int(code.group(1)) if code else None,'error_text_length':len(text),'error_text_sha256':sha(text)}
+def assert_execution_environment()->None:
+ if os.getenv(AUTH_ENV)!='1' or not os.getenv('ZAI_API_KEY','').strip(): raise RuntimeError('provider execution not authorized')
+ if os.getenv('GLM_BASE_URL','').strip().rstrip('/')!=BASE_URL: raise RuntimeError('base URL drift')
+ if any(os.getenv(k) for k in FORBIDDEN): raise RuntimeError('unexpected provider credential exposed')
+def validate_runtime_versions()->tuple[str,int,str]:
+ import httpx
+ from openai._constants import DEFAULT_MAX_RETRIES
+ h=importlib.metadata.version('hermes-agent'); o=importlib.metadata.version('openai'); x=importlib.metadata.version('httpx')
+ if (h,o,x,httpx.__version__,DEFAULT_MAX_RETRIES)!=(HERMES_VERSION,OPENAI_VERSION,HTTPX_VERSION,HTTPX_VERSION,2): raise AssertionError('runtime version drift')
+ return h,DEFAULT_MAX_RETRIES,x
