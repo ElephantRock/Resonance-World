@@ -10,7 +10,12 @@
 - Workflow run: `34789327898`, attempt 1
 - Artifact ID: `10328290005`
 - Artifact ZIP digest: `sha256:274b850954c167397646fa86b8baf9e505f47159984475550482fc6644405997`
+- Exact `RESULT.json` size: 99,064 bytes
 - Exact `RESULT.json` SHA-256: `03944abb3ac19ec57b5cca743d797bf06c99e09d37f0c5f3461192153983a6a3`
+- Lossless evidence encoding: deterministic gzip (`mtime=0`) stored as base64 text in `RESULT.json.gz.b64`
+- Deterministic gzip SHA-256: `c9dcad9b1162f0f0ceb6ccdfff9d0b155f24ce14079b0326ea2b079b8c802030`
+
+The exact result can be reconstructed with `base64 -d RESULT.json.gz.b64 | gzip -dc > RESULT.json`; its SHA-256 must match the value above. `RESULT.sha256` records the result, gzip, and original artifact ZIP digests.
 
 ## Frozen substrate
 
@@ -39,7 +44,7 @@ Across all 72 probes, bounded parse diagnostics were: 53 `exact_valid`, 16 `acti
 
 Logical index 24 (`projection_developed_development_06`, `developed_development`, budget 80, seed 4200024) made two clean attributed HTTP-200 provider sends but had an empty final response. It therefore recorded `json_decode_failure`, adapter reason `final_response_empty`, and did not count in the 18 non-empty projected-parse-invalid responses.
 
-The repeated unknown-key fingerprint observed on the 16 projection-used probes is retained only as the bounded diagnostic already present in `RESULT.json`; this provenance does not attempt to reverse or reveal the raw unknown key name.
+The repeated unknown-key fingerprint observed on the 16 projection-used probes is retained only as the bounded diagnostic already present in the exact result evidence; this provenance does not attempt to reverse or reveal the raw unknown key name.
 
 Because clean non-empty responses remained invalid after the registered unknown-key-only projection, the registered outcome is `FAIL_STRUCTURED_CONTRACT`. This is not a JSON-mode compatibility failure and not an apparatus failure. The preserved #258 result remains `FAIL_STRUCTURED_CONTRACT`, #255 remains `FAIL`, and #251 remains `PASS`; none is rerun, rescued, replaced, or reinterpreted.
 
