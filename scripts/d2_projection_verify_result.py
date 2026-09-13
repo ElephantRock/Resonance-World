@@ -4,6 +4,7 @@
 import json,sys
 from pathlib import Path
 p=json.loads(Path('output/d2-top-level-projection-result.json').read_text())
+outcome=p['qualification_outcome']
 assert p['schema']=='d2-top-level-projection-result-v0.1' and p['issue']==263 and p['candidate_sha']==sys.argv[1]
 assert p['fresh_namespace']=='rw.d2-top-level-projection.v1'
 assert p['request_intervention']=={'response_format':{'type':'json_object'}}
@@ -13,6 +14,19 @@ assert p['projection_adapter_git_blob_sha']=='84ee0c1624f35ff0b8c68aad3721e48d13
 assert p['registered_probe_count']==p['attempted_probe_count']==72
 assert 0<=p['effective_completed_count']<=72 and 0<=p['projection_used_probe_count']<=72
 assert 0<=p['physical_provider_sends_observed_total']<=180
-assert p['qualification_outcome'] in {'PASS','ADAPTER_PATH_NOT_EXERCISED','FAIL_STRUCTURED_CONTRACT','FAIL_JSON_MODE_COMPATIBILITY','FAIL_COMPLETION','APPARATUS_FAILURE'}
+assert outcome in {'PASS','ADAPTER_PATH_NOT_EXERCISED','FAIL_STRUCTURED_CONTRACT','FAIL_JSON_MODE_COMPATIBILITY','FAIL_COMPLETION','APPARATUS_FAILURE'}
+assert p['qualification_pass'] is (outcome=='PASS')
+if outcome=='PASS':
+ assert p['effective_completed_count']==72
+ assert p['projected_structured_parse_invalid_count']==0
+ assert p['json_mode_compatibility_failure_count']==0
+ assert p['projection_used_probe_count']>=1
+ assert p['apparatus_failure'] is False
+ assert p['unexpected_outbound_http_requests_blocked']==0
+ assert p['provider_attempts_blocked_by_cap']==0
+ assert p['logical_attribution_mismatch_blocks']==0
+ assert p['provider_worker_threads_alive_after_drain']==0
+ assert p['transport_hooks_restored_after_worker_drain'] is True
+ assert all(r['final_response_length']>0 and r['projected_structured_parse_valid'] and r['exact_attributed_clean_transport'] for r in p['probes'])
 for k in ('scientific_scoring_performed','acceptance_action_authorized','production_historical_substrate_enabled','raw_credentials_persisted','raw_provider_response_body_persisted','raw_provider_error_body_or_message_persisted','raw_final_response_content_persisted','same_request_stream_rerun_allowed'):
  assert p[k] is False
