@@ -11,6 +11,7 @@ if str(SCRIPTS) not in sys.path:
 
 import d2_json_mode_agent as agent  # noqa: E402
 import d2_json_mode_contract as contract  # noqa: E402
+
 from resonance_world import d2_terminal_adapter as exact_adapter  # noqa: E402
 from resonance_world import d2_top_level_projection as projection  # noqa: E402
 
