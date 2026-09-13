@@ -1,4 +1,4 @@
-"""Pinned Hermes request construction and zero-provider preflight for #258."""
+"""Pinned Hermes request construction and zero-provider preflight for #263."""
 
 from __future__ import annotations
 
@@ -30,7 +30,7 @@ def preflight() -> dict[str, Any]:
             raise AssertionError("logical origin header drift")
     lengths = [len(contract.user_prompt(probe).encode()) for probe in probes]
     return {
-        "schema": "d2-json-mode-conformance-preflight-v0.1",
+        "schema": "d2-top-level-projection-preflight-v0.1",
         "issue": contract.ISSUE,
         "provider_execution_performed": False,
         "execution_marker_absent": True,
@@ -39,10 +39,12 @@ def preflight() -> dict[str, Any]:
         "minimum_prompt_bytes": min(lengths),
         "maximum_prompt_bytes": max(lengths),
         "request_intervention": {"response_format": {"type": "json_object"}},
+        "parser_intervention": "ignore_unknown_top_level_keys_only",
         "request_plan_git_blob_sha": contract.git_blob_sha(contract.PLAN),
         "probes_git_blob_sha": contract.git_blob_sha(contract.PROBES),
         "provider_send_guard_git_blob_sha": contract.git_blob_sha(contract.GUARD_PATH),
         "terminal_adapter_git_blob_sha": contract.git_blob_sha(contract.ADAPTER_PATH),
+        "projection_adapter_git_blob_sha": contract.git_blob_sha(contract.PROJECTION_PATH),
         "scientific_scoring_performed": False,
         "acceptance_action_authorized": False,
         "historical_substrate_enabled": False,
