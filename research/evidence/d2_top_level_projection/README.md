@@ -12,6 +12,6 @@ cat RESULT.json.gz.b64.part{01..08} | tr -d '\n' | base64 -d | gzip -dc > RESULT
 
 The recovered file must have SHA-256 `03944abb3ac19ec57b5cca743d797bf06c99e09d37f0c5f3461192153983a6a3`. The deterministic gzip bytes have SHA-256 `c9dcad9b1162f0f0ceb6ccdfff9d0b155f24ce14079b0326ea2b079b8c802030`, and the original artifact ZIP digest is `sha256:274b850954c167397646fa86b8baf9e505f47159984475550482fc6644405997`. `RESULT.sha256` records all three digests.
 
-PR #268 repairs only the evidence packaging after the single-file base64 payload merged by #267 was found to contain one extra character. It does not rerun, replace, rescue, or reinterpret the qualification result.
+PR #268 repairs only the evidence packaging after the single-file base64 payload merged by #267 was found to contain multiple character-level corruptions. Relative to the exact encoding, repair required two character substitutions and removal of one spurious character. It does not rerun, replace, rescue, or reinterpret the qualification result.
 
 The request stream is consumed and must not be rerun, cycled, replaced, or rescued in place. This evidence is engineering-only and does not authorize scientific scoring/source acquisition, Acceptance/registry action, Historical Substrate activation, deployment/publication, billing/purchase, or credential/permission changes. The preserved #258 `FAIL_STRUCTURED_CONTRACT`, #255 `FAIL`, and #251 `PASS` remain unchanged.
