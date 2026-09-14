@@ -12,10 +12,20 @@
 - Artifact ZIP digest: `sha256:274b850954c167397646fa86b8baf9e505f47159984475550482fc6644405997`
 - Exact `RESULT.json` size: 99,064 bytes
 - Exact `RESULT.json` SHA-256: `03944abb3ac19ec57b5cca743d797bf06c99e09d37f0c5f3461192153983a6a3`
-- Lossless evidence encoding: deterministic gzip (`mtime=0`) stored as base64 text in `RESULT.json.gz.b64`
+- Lossless evidence encoding: deterministic gzip (`mtime=0`), encoded to 15,104 base64 characters and split exactly across `RESULT.json.gz.b64.part01` through `RESULT.json.gz.b64.part08`
 - Deterministic gzip SHA-256: `c9dcad9b1162f0f0ceb6ccdfff9d0b155f24ce14079b0326ea2b079b8c802030`
 
-The exact result can be reconstructed with `base64 -d RESULT.json.gz.b64 | gzip -dc > RESULT.json`; its SHA-256 must match the value above. `RESULT.sha256` records the result, gzip, and original artifact ZIP digests.
+Each base64 part contains exactly 1,888 payload characters plus one terminating newline. The exact result can be reconstructed with:
+
+```sh
+cat RESULT.json.gz.b64.part{01..08} | tr -d '\n' | base64 -d | gzip -dc > RESULT.json
+```
+
+The reconstructed `RESULT.json` SHA-256 must match the value above. `RESULT.sha256` records the result, gzip, and original artifact ZIP digests.
+
+### Evidence-packaging repair
+
+Evidence PR #267 initially preserved the result with a single `RESULT.json.gz.b64` file, but a post-merge Codex review correctly found that the stored base64 payload contained one extra character and therefore could not be decoded losslessly. PR #268 repairs only that packaging defect by replacing the malformed single-file representation with the eight exact multipart base64 segments described above. The source artifact, authoritative result bytes, checksums, qualification classification, and all execution facts are unchanged. No provider call, rerun, rescue, replacement, or reinterpretation occurs in this repair.
 
 ## Frozen substrate
 
