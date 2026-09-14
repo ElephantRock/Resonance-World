@@ -25,7 +25,7 @@ The reconstructed `RESULT.json` SHA-256 must match the value above. `RESULT.sha2
 
 ### Evidence-packaging repair
 
-Evidence PR #267 initially preserved the result with a single `RESULT.json.gz.b64` file, but a post-merge Codex review correctly found that the stored base64 payload contained one extra character and therefore could not be decoded losslessly. PR #268 repairs only that packaging defect by replacing the malformed single-file representation with the eight exact multipart base64 segments described above. The source artifact, authoritative result bytes, checksums, qualification classification, and all execution facts are unchanged. No provider call, rerun, rescue, replacement, or reinterpretation occurs in this repair.
+Evidence PR #267 initially preserved the result with a single `RESULT.json.gz.b64` file, but post-merge review correctly found that the stored base64 payload was corrupted and therefore could not be decoded losslessly. Comparison against the exact encoding later showed that the defect was not merely one extra character: transforming the #267 payload into the verified exact encoding required two character substitutions and removal of one spurious character. PR #268 repairs only that packaging defect by replacing the malformed single-file representation with the eight exact multipart base64 segments described above. The source artifact, authoritative result bytes, checksums, qualification classification, and all execution facts are unchanged. No provider call, rerun, rescue, replacement, or reinterpretation occurs in this repair.
 
 ## Frozen substrate
 
