@@ -1,3 +1,4 @@
+# ruff: noqa: I001,E501
 """Fail-closed transport instrumentation for #270 canonical-JSON prompt conformance."""
 from __future__ import annotations
 

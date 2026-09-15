@@ -1,3 +1,4 @@
+# ruff: noqa: I001,E501
 """Deterministic fresh D2-shaped prompts for #270 canonical-JSON prompt qualification."""
 from __future__ import annotations
 

@@ -1,4 +1,5 @@
 #!/usr/bin/env python3
+# ruff: noqa: I001,E501
 """CLI for #270 D2 canonical-JSON prompt structured-completion conformance."""
 from __future__ import annotations
 

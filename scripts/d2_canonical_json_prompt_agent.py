@@ -1,3 +1,4 @@
+# ruff: noqa: I001,E501
 """Pinned Hermes request construction and zero-provider preflight for #270."""
 from __future__ import annotations
 
