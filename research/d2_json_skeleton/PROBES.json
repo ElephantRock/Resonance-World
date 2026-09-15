@@ -1,0 +1,1 @@
+{"developed_budget_order":[40,80,160],"issue":273,"namespace":"rw.d2-json-skeleton-selfcheck.v1","probes_per_developed_budget":6,"probes_per_shape":18,"schema":"d2-json-skeleton-probes-v0.1","seed_start":4400001,"shape_order":["fresh_evaluation","developed_development","developed_evaluation","oracle_evaluation"]}

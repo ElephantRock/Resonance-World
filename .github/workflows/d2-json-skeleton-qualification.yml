@@ -1,0 +1,89 @@
+name: D2 JSON Skeleton Qualification
+on:
+  push:
+    branches: ["engineering/d2-json-skeleton-candidate"]
+    paths: ["research/d2_json_skeleton/RUN_D2_JSON_SKELETON"]
+permissions: {actions: read, contents: read, pull-requests: read}
+jobs:
+  authorization-integrity:
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs: {candidate_sha: "${{ steps.auth.outputs.candidate_sha }}"}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {fetch-depth: 0}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: "3.12"}
+      - id: auth
+        env:
+          GH_TOKEN: ${{ github.token }}
+          PYTHONPATH: ${{ github.workspace }}/src
+        run: |
+          set -euo pipefail
+          candidate="$(python scripts/d2_json_skeleton_authorize.py)"
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+  execute-bounded-json-skeleton-qualification:
+    needs: authorization-integrity
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 120
+    env:
+      UV_PROJECT_ENVIRONMENT: ${{ github.workspace }}/.locked-hermes-venv
+      UV_PYTHON_DOWNLOADS: never
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {fetch-depth: 2}
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with: {repository: hermes-agent-org/hermes, ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4, path: .hermes-src, fetch-depth: 1}
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with: {python-version: "3.12"}
+      - uses: astral-sh/setup-uv@d0cc045d04ccac9d8b7881df0226f9e82c39688e
+        with: {version: "0.12.13", enable-cache: false}
+      - name: Reverify parent and pinned source
+        run: |
+          set -euo pipefail
+          test "$GITHUB_RUN_ATTEMPT" = 1
+          test -z "${ZAI_API_KEY:-}" && test -z "${D2_JSON_SKELETON_AUTHORIZED:-}"
+          test "$(git rev-parse HEAD^)" = '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+          test "$(git -C .hermes-src rev-parse HEAD)" = 036cbdfa0a3158454a0a2a7a7388cf70353326b4
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = 4c0d3be4b0c2d364c550fa663d34f6545c9e6d20
+          test "$(git -C .hermes-src rev-parse HEAD:uv.lock)" = 45efc2d93ff627fee4f94ce2b068440873a22188
+          test "$(git -C .hermes-src rev-parse HEAD:pyproject.toml)" = 95a1dfddd74bc399dd7f23f8d0143852b5689463
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
+      - name: Materialize hash-locked runtime
+        run: |
+          set -euo pipefail
+          uv lock --check --project .hermes-src
+          uv sync --project .hermes-src --locked --no-dev --no-install-project --python "$(command -v python)"
+          printf '%s\n' 'openai==2.21.0 --hash=sha256:0bc1c775e5b1536c294eded39ee08f8407656537ccc71b1004104fe1602e267c' > /tmp/openai.txt
+          uv pip install --python "$UV_PROJECT_ENVIRONMENT/bin/python" --no-deps --require-hashes -r /tmp/openai.txt
+          purelib="$($UV_PROJECT_ENVIRONMENT/bin/python -c 'import sysconfig; print(sysconfig.get_paths()["purelib"])')"
+          mkdir -p "$purelib/hermes_agent-0.8.0.dist-info"
+          printf 'Metadata-Version: 2.1\nName: hermes-agent\nVersion: 0.8.0\n' > "$purelib/hermes_agent-0.8.0.dist-info/METADATA"
+      - name: Reverify locked runtime
+        env: {PYTHONPATH: "${{ github.workspace }}/src:${{ github.workspace }}/scripts:${{ github.workspace }}/.hermes-src"}
+        run: |
+          .locked-hermes-venv/bin/python - <<'PY'
+          import importlib.metadata, httpx, openai
+          from openai._constants import DEFAULT_MAX_RETRIES
+          assert (importlib.metadata.version('hermes-agent'), openai.__version__, httpx.__version__, DEFAULT_MAX_RETRIES) == ('0.8.0','2.21.0','0.28.1',2)
+          PY
+      - name: Execute bounded JSON-skeleton qualification once
+        env:
+          ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+          GLM_BASE_URL: https://api.z.ai/api/coding/paas/v4
+          D2_JSON_SKELETON_AUTHORIZED: "1"
+          PYTHONPATH: ${{ github.workspace }}/src:${{ github.workspace }}/scripts:${{ github.workspace }}/.hermes-src
+        run: |
+          set -euo pipefail
+          env -u OPENROUTER_API_KEY -u OPENAI_API_KEY -u OPENAI_BASE_URL -u ANTHROPIC_API_KEY -u ANTHROPIC_TOKEN -u NOUS_API_KEY -u GLM_API_KEY -u Z_AI_API_KEY -u KIMI_API_KEY -u MINIMAX_API_KEY -u DEEPSEEK_API_KEY -u DASHSCOPE_API_KEY -u XAI_API_KEY .locked-hermes-venv/bin/python scripts/qualify_d2_json_skeleton.py --execute --output output/d2-json-skeleton-result.json
+      - name: Verify bounded result authority
+        run: .locked-hermes-venv/bin/python scripts/d2_json_skeleton_verify_result.py '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with: {name: d2-json-skeleton-result, path: output/d2-json-skeleton-result.json, if-no-files-found: error, retention-days: 90}
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-24.04
+    steps:
+      - run: "echo 'Same-stream workflow rerun is prohibited.' >&2; exit 1"
