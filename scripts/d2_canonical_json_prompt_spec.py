@@ -51,7 +51,7 @@ AUTH_STRING = "Autonomous_Operating_Charter_Amendment_A1_standing_execution_auth
 GUARD_GIT_BLOB_SHA = "4b8896235d8048523d007400d0acfe85470f628c"
 ADAPTER_GIT_BLOB_SHA = "ba16d2eb4b7255437c8ab224e91d5ed093897990"
 PLAN_GIT_BLOB_SHA = "66b23953edb7620a8c1c67bbaf78960d54ffb283"
-PROBES_GIT_BLOB_SHA = "fcf7e3bee404c3247498cd95cd4095d13c993032"
+PROBES_GIT_BLOB_SHA = "80ed965fdc6dea168294ca9dfd0a689bb29465a6"
 SYSTEM_PROMPT_SHA256 = "fb35b51c6a6243543cb628a66607ca77f06fbdcc504c923d3c3b2c342eeab7f7"
 
 FORBIDDEN = (
@@ -74,7 +74,7 @@ def load_probes() -> list[dict[str, Any]]:
         "schema": "d2-canonical-json-prompt-probes-v0.1",
         "issue": ISSUE,
         "namespace": NAMESPACE,
-        "seed_start": 4300000,
+        "seed_start": 4300001,
         "shape_order": ["fresh_evaluation", "developed_development", "developed_evaluation", "oracle_evaluation"],
         "probes_per_shape": 18,
         "developed_budget_order": [40, 80, 160],
@@ -178,7 +178,7 @@ def validate_frozen_contract() -> list[dict[str, Any]]:
         raise AssertionError("shape balance drift")
     if developed != Counter({(shape, budget): 6 for shape in ("developed_development", "developed_evaluation") for budget in (40, 80, 160)}):
         raise AssertionError("budget balance drift")
-    if len({row["probe_id"] for row in rows}) != 72 or len({row["seed"] for row in rows}) != 72 or min(row["seed"] for row in rows) < 4_300_000:
+    if len({row["probe_id"] for row in rows}) != 72 or len({row["seed"] for row in rows}) != 72 or min(row["seed"] for row in rows) <= 4_300_000:
         raise AssertionError("fresh identity drift")
     return rows
 

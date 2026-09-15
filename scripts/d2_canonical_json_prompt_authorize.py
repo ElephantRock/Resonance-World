@@ -15,7 +15,7 @@ BLOBS = {
     "src/resonance_world/provider_send_guard.py": "4b8896235d8048523d007400d0acfe85470f628c",
     "src/resonance_world/github_authorization_queries.py": "4fec4f0bfac06ae17a87a7c148dea6521736a97a",
     "src/resonance_world/d2_terminal_adapter.py": "ba16d2eb4b7255437c8ab224e91d5ed093897990",
-    "scripts/d2_canonical_json_prompt_spec.py": "68015fccafbeb0f09dd57100409298fc4ffdb5fb",
+    "scripts/d2_canonical_json_prompt_spec.py": "21eb69e53d1e6d389bd4d20afb3516eeb5b9204c",
     "scripts/d2_canonical_json_prompt_prompts.py": "6f94d5f5999c6d8e72967374d1db09b5ce669d54",
     "scripts/d2_canonical_json_prompt_contract.py": "9fbc96e9c84567646dcba09e4df61b9cea806467",
     "scripts/d2_canonical_json_prompt_transport.py": "5c5033cd72f8881afe313302068266738a2b16f1",
@@ -26,7 +26,7 @@ BLOBS = {
     "scripts/d2_canonical_json_prompt_verify_result.py": "1f0c74bdb6855f0c199a8799d22d7c26196974aa",
     "tests/test_d2_canonical_json_prompt.py": "ee42cdc996f295f640711e005c91b8cf408e054d",
     "research/d2_canonical_json_prompt/REQUEST_PLAN.json": "66b23953edb7620a8c1c67bbaf78960d54ffb283",
-    "research/d2_canonical_json_prompt/PROBES.json": "fcf7e3bee404c3247498cd95cd4095d13c993032",
+    "research/d2_canonical_json_prompt/PROBES.json": "80ed965fdc6dea168294ca9dfd0a689bb29465a6",
     ".github/workflows/d2-canonical-json-prompt-preexecution.yml": "ef9a5e4be2180c6200afca7faead66d37434c407",
     ".github/workflows/d2-canonical-json-prompt-qualification.yml": "1aaf284b69608b109b1bb9e787b854586c80fe84",
 }
