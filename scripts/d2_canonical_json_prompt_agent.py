@@ -52,6 +52,8 @@ def preflight() -> dict[str, Any]:
         "prompt_intervention": "canonical_json_exemplar_and_explicit_array_positional_constraints",
         "system_prompt_sha256": contract.SYSTEM_PROMPT_SHA256,
         "parser_intervention": "none_unchanged_exact_eight_action_contract",
+        "canonical_exemplar_copy_disqualifies_pass": True,
+        "prompt_contract_failure_outcome": "FAIL_PROMPT_CONTRACT",
         "request_plan_git_blob_sha": contract.git_blob_sha(contract.PLAN),
         "probes_git_blob_sha": contract.git_blob_sha(contract.PROBES),
         "provider_send_guard_git_blob_sha": contract.git_blob_sha(contract.GUARD_PATH),

@@ -12,7 +12,14 @@ from d2_canonical_json_prompt_probe import apparatus_failure, run_probe
 
 from resonance_world.provider_send_guard import ProviderSendBudget
 
-__all__ = ["execute", "new_agent", "preflight", "request_overrides", "run_probe"]
+__all__ = [
+    "classify_outcome",
+    "execute",
+    "new_agent",
+    "preflight",
+    "request_overrides",
+    "run_probe",
+]
 
 def parse_marker() -> dict[str, str]:
     if not contract.MARKER.exists():
@@ -29,6 +36,31 @@ def parse_marker() -> dict[str, str]:
     if not re.fullmatch(r"[0-9a-f]{40}", fields["candidate_sha"]):
         raise RuntimeError("candidate SHA invalid")
     return fields
+
+def classify_outcome(
+    *,
+    apparatus: bool,
+    compatibility: int,
+    exact_invalid: int,
+    exemplar_copies: int,
+    attempted: int,
+    effective: int,
+    base_pass: bool,
+) -> str:
+    """Classify the bounded result with explicit, testable precedence."""
+    if apparatus:
+        return "APPARATUS_FAILURE"
+    if compatibility:
+        return "FAIL_JSON_MODE_COMPATIBILITY"
+    if exact_invalid:
+        return "FAIL_STRUCTURED_CONTRACT"
+    if exemplar_copies:
+        return "FAIL_PROMPT_CONTRACT"
+    if attempted != contract.MAX_LOGICAL_CALLS or effective != contract.MAX_LOGICAL_CALLS:
+        return "FAIL_COMPLETION"
+    if base_pass:
+        return "PASS"
+    return "FAIL_COMPLETION"
 
 def execute() -> dict[str, Any]:
     contract.assert_execution_environment()
@@ -56,6 +88,7 @@ def execute() -> dict[str, Any]:
         bool(row["final_response_length"]) and not bool(row["exact_structured_parse_valid"])
         for row in rows
     )
+    exemplar_copies = sum(bool(row["canonical_exemplar_copy"]) for row in rows)
     compatibility = sum(bool(row["json_mode_compatibility_failure"]) for row in rows)
     global_clean = (
         budget.blocked_unexpected == 0
@@ -70,22 +103,20 @@ def execute() -> dict[str, Any]:
         attempted == effective == contract.MAX_LOGICAL_CALLS
         and all(row["final_response_length"] > 0 for row in rows)
         and all(row["exact_structured_parse_valid"] for row in rows)
+        and exemplar_copies == 0
         and all(row["exact_attributed_clean_transport"] for row in rows)
         and compatibility == 0
         and not apparatus
     )
-    if apparatus:
-        outcome = "APPARATUS_FAILURE"
-    elif compatibility:
-        outcome = "FAIL_JSON_MODE_COMPATIBILITY"
-    elif exact_invalid:
-        outcome = "FAIL_STRUCTURED_CONTRACT"
-    elif attempted != contract.MAX_LOGICAL_CALLS or effective != contract.MAX_LOGICAL_CALLS:
-        outcome = "FAIL_COMPLETION"
-    elif base_pass:
-        outcome = "PASS"
-    else:
-        outcome = "FAIL_COMPLETION"
+    outcome = classify_outcome(
+        apparatus=apparatus,
+        compatibility=compatibility,
+        exact_invalid=exact_invalid,
+        exemplar_copies=exemplar_copies,
+        attempted=attempted,
+        effective=effective,
+        base_pass=base_pass,
+    )
 
     return {
         "schema": "d2-canonical-json-prompt-result-v0.1",
@@ -109,6 +140,8 @@ def execute() -> dict[str, Any]:
         "prompt_intervention": "canonical_json_exemplar_and_explicit_array_positional_constraints",
         "system_prompt_sha256": contract.SYSTEM_PROMPT_SHA256,
         "parser_intervention": "none_unchanged_exact_eight_action_contract",
+        "canonical_exemplar_copy_disqualifies_pass": True,
+        "prompt_contract_failure_outcome": "FAIL_PROMPT_CONTRACT",
         "hermes_revision": contract.HERMES_REVISION,
         "hermes_package_version": hermes,
         "hermes_run_agent_blob_sha": contract.HERMES_RUN_AGENT_BLOB_SHA,
@@ -127,6 +160,7 @@ def execute() -> dict[str, Any]:
         "native_hermes_completed_count": native,
         "terminal_iteration_override_count": overrides,
         "exact_structured_parse_invalid_count": exact_invalid,
+        "canonical_exemplar_copy_count": exemplar_copies,
         "json_mode_compatibility_failure_count": compatibility,
         "physical_provider_sends_observed_total": budget.total_sends,
         "unexpected_outbound_http_requests_blocked": budget.blocked_unexpected,

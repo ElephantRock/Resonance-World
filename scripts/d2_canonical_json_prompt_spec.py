@@ -50,7 +50,7 @@ AUTH_STRING = "Autonomous_Operating_Charter_Amendment_A1_standing_execution_auth
 
 GUARD_GIT_BLOB_SHA = "4b8896235d8048523d007400d0acfe85470f628c"
 ADAPTER_GIT_BLOB_SHA = "ba16d2eb4b7255437c8ab224e91d5ed093897990"
-PLAN_GIT_BLOB_SHA = "66b23953edb7620a8c1c67bbaf78960d54ffb283"
+PLAN_GIT_BLOB_SHA = "77973b907ac919af534f725ab4696854e6bf1ec8"
 PROBES_GIT_BLOB_SHA = "80ed965fdc6dea168294ca9dfd0a689bb29465a6"
 SYSTEM_PROMPT_SHA256 = "fb35b51c6a6243543cb628a66607ca77f06fbdcc504c923d3c3b2c342eeab7f7"
 
@@ -132,6 +132,7 @@ def validate_frozen_contract() -> list[dict[str, Any]]:
         "thinking": THINKING,
         "request_intervention": {"response_format": RESPONSE_FORMAT},
         "prompt_intervention": "canonical_json_exemplar_and_explicit_array_positional_constraints",
+        "prompt_contract_failure_outcome": "FAIL_PROMPT_CONTRACT",
         "system_prompt_sha256": SYSTEM_PROMPT_SHA256,
         "parser_intervention": "none_unchanged_exact_eight_action_contract",
         "recognized_top_level_keys": ["actions", "strategy"],
@@ -149,6 +150,7 @@ def validate_frozen_contract() -> list[dict[str, Any]]:
         "provider_worker_drain_before_hook_restore_required",
         "canonical_exemplar_shape_only",
         "canonical_exemplar_copy_prohibited",
+        "canonical_exemplar_copy_disqualifies_pass",
         "actions_array_required",
         "actions_positionally_correspond_to_cases",
     ):

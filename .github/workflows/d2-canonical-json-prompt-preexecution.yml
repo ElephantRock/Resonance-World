@@ -46,5 +46,7 @@ jobs:
           test "$(git rev-parse HEAD)" = 036cbdfa0a3158454a0a2a7a7388cf70353326b4
           test "$(git rev-parse HEAD:run_agent.py)" = 4c0d3be4b0c2d364c550fa663d34f6545c9e6d20
           test "$(git rev-parse HEAD:uv.lock)" = 45efc2d93ff627fee4f94ce2b068440873a22188
+          test "$(git rev-parse HEAD:pyproject.toml)" = 95a1dfddd74bc399dd7f23f8d0143852b5689463
+          grep -Fq 'version = "0.8.0"' pyproject.toml
           grep -Fq 'completed = final_response is not None and api_call_count < self.max_iterations' run_agent.py
           grep -Fq 'api_kwargs.update(self.request_overrides)' run_agent.py

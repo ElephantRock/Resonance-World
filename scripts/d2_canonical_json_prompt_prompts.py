@@ -9,6 +9,10 @@ from resonance_world import d2_terminal_adapter as adapter
 
 from d2_canonical_json_prompt_spec import NAMESPACE, SYSTEM_PROMPT_SHA256, sha
 
+CANONICAL_EXEMPLAR_ACTIONS = (
+    "KAPPA", "MICA", "ORBIT", "VELA", "KAPPA", "MICA", "ORBIT", "VELA"
+)
+
 SYSTEM_PROMPT = (
     'Engineering structured-completion qualification only. Return exactly one JSON object and no surrounding text. '
     'The object MUST contain "actions" as a JSON square-bracket array of exactly 8 strings. '
@@ -87,6 +91,19 @@ def user_prompt(probe: dict[str, Any]) -> str:
         ),
     ])
     return "\n\n".join(sections)
+
+def canonical_exemplar_copy(text: str) -> bool:
+    """Detect literal exemplar action copying without changing parser acceptance."""
+    def reject_constant(value: str) -> None:
+        raise ValueError(value)
+    try:
+        payload = json.loads(text, parse_constant=reject_constant)
+    except (json.JSONDecodeError, TypeError, ValueError):
+        return False
+    if not isinstance(payload, dict):
+        return False
+    actions = payload.get("actions")
+    return isinstance(actions, list) and tuple(actions) == CANONICAL_EXEMPLAR_ACTIONS
 
 def bounded_parse_diagnostic(text: str) -> str:
     """Observe rejection shape without changing exact-parser acceptance."""

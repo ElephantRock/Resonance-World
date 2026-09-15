@@ -64,6 +64,7 @@ def _failure_row(row: dict[str, Any], agent: Any | None, exc: BaseException) -> 
         "exact_structured_parse_valid": False,
         "structured_parse_valid": False,
         "parse_diagnostic": "no_response_runtime_exception",
+        "canonical_exemplar_copy": False,
         "strategy_length": 0,
         "strategy_sha256": None,
         **contract.bounded_error(exc),
@@ -100,6 +101,7 @@ def run_probe(
         final_text = final if isinstance(final, str) else ""
         exact_valid, strategy = adapter.parse_response(final_text)
         diagnostic = contract.bounded_parse_diagnostic(final_text)
+        copied = contract.canonical_exemplar_copy(final_text)
         if exact_valid != (diagnostic == "exact_valid"):
             raise AssertionError("diagnostic/exact parser consistency drift")
         completed = result.get("completed")
@@ -117,6 +119,7 @@ def run_probe(
             "exact_structured_parse_valid": exact_valid,
             "structured_parse_valid": exact_valid,
             "parse_diagnostic": diagnostic,
+            "canonical_exemplar_copy": copied,
             "strategy_length": len(strategy) if exact_valid else 0,
             "strategy_sha256": contract.sha(strategy) if exact_valid and strategy else None,
         })
