@@ -1,0 +1,1 @@
+{"schema":"d2-format-regeneration-probes-v0.1","issue":276,"namespace":"rw.d2-format-regeneration-retry.v1","seed_start":4500001,"shape_order":["fresh_evaluation","developed_development","developed_evaluation","oracle_evaluation"],"probes_per_shape":18,"developed_budget_order":[40,80,160],"probes_per_developed_budget":6}

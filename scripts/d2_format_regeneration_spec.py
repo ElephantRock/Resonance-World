@@ -1,0 +1,237 @@
+# ruff: noqa
+"""Frozen constants and validation for #276 bounded format-regeneration qualification."""
+from __future__ import annotations
+
+import hashlib
+import importlib.metadata
+import json
+import os
+import re
+from collections import Counter
+from pathlib import Path
+from typing import Any
+
+ROOT = Path(__file__).resolve().parents[1]
+DIR = ROOT / "research" / "d2_format_regeneration"
+PLAN = DIR / "REQUEST_PLAN.json"
+PROBES = DIR / "PROBES.json"
+MARKER = DIR / "RUN_D2_FORMAT_REGENERATION"
+GUARD_PATH = ROOT / "src" / "resonance_world" / "provider_send_guard.py"
+ADAPTER_PATH = ROOT / "src" / "resonance_world" / "d2_terminal_adapter.py"
+
+ISSUE = 276
+NAMESPACE = "rw.d2-format-regeneration-retry.v1"
+BASE_URL = "https://api.z.ai/api/coding/paas/v4"
+PROVIDER = "zai"
+API_MODE = "chat_completions"
+MODEL = "glm-5.3"
+HERMES_REVISION = "036cbdfa0a3158454a0a2a7a7388cf70353326b4"
+HERMES_VERSION = "0.8.0"
+HERMES_RUN_AGENT_BLOB_SHA = "4c0d3be4b0c2d364c550fa663d34f6545c9e6d20"
+HERMES_PYPROJECT_BLOB_SHA = "95a1dfddd74bc399dd7f23f8d0143852b5689463"
+OPENAI_VERSION = "2.21.0"
+HTTPX_VERSION = "0.28.1"
+OPENAI_DEFAULT_MAX_RETRIES = 2
+MAX_ITERATIONS = 2
+MAX_AGENT_INVOCATIONS = 2
+MAX_TOKENS = 768
+TEMPERATURE = 0.8
+THINKING = {"type": "disabled"}
+RESPONSE_FORMAT = {"type": "json_object"}
+MAX_CONCURRENCY = 4
+MAX_LOGICAL_CALLS = 72
+MAX_SENDS_PER_LOGICAL = 36
+MAX_SENDS_TOTAL = 180
+PROBE_ORIGIN_HEADER = "X-Resonance-World-Logical-Index"
+PROVIDER_WORKER_TARGET_MODULE = "run_agent"
+PROVIDER_WORKER_TARGET_NAME = "_call"
+PROVIDER_WORKER_DRAIN_TIMEOUT_SECONDS = 60.0
+AUTH_ENV = "D2_FORMAT_REGENERATION_AUTHORIZED"
+AUTH_STRING = "Autonomous_Operating_Charter_Amendment_A1_standing_execution_authority"
+
+GUARD_GIT_BLOB_SHA = "4b8896235d8048523d007400d0acfe85470f628c"
+ADAPTER_GIT_BLOB_SHA = "ba16d2eb4b7255437c8ab224e91d5ed093897990"
+PLAN_GIT_BLOB_SHA = "c170288e4f0a250187f35890977f2bc4732f8ca1"
+PROBES_GIT_BLOB_SHA = "0c2f4aca3d5aecdd7428374aa5ec60804a2b1d4f"
+SYSTEM_PROMPT_SHA256 = "92ba97ccc1e5aec273114785d0d8a5c533ba46a6340d7c74f9fc085efe516c6e"
+
+FORBIDDEN = (
+    "OPENROUTER_API_KEY", "OPENAI_API_KEY", "OPENAI_BASE_URL",
+    "ANTHROPIC_API_KEY", "ANTHROPIC_TOKEN", "NOUS_API_KEY", "GLM_API_KEY",
+    "Z_AI_API_KEY", "KIMI_API_KEY", "MINIMAX_API_KEY", "DEEPSEEK_API_KEY",
+    "DASHSCOPE_API_KEY", "XAI_API_KEY",
+)
+
+
+def sha(text: str) -> str:
+    return hashlib.sha256(text.encode()).hexdigest()
+
+
+def git_blob_sha(path: Path) -> str:
+    data = path.read_bytes()
+    return hashlib.sha1(b"blob " + str(len(data)).encode() + b"\0" + data).hexdigest()
+
+
+def load_probes() -> list[dict[str, Any]]:
+    payload = json.loads(PROBES.read_text())
+    expected = {
+        "schema": "d2-format-regeneration-probes-v0.1",
+        "issue": ISSUE,
+        "namespace": NAMESPACE,
+        "seed_start": 4500001,
+        "shape_order": ["fresh_evaluation", "developed_development", "developed_evaluation", "oracle_evaluation"],
+        "probes_per_shape": 18,
+        "developed_budget_order": [40, 80, 160],
+        "probes_per_developed_budget": 6,
+    }
+    if payload != expected:
+        raise AssertionError("probe manifest drift")
+    rows: list[dict[str, Any]] = []
+    logical = 0
+    for shape in payload["shape_order"]:
+        for local in range(18):
+            budget = payload["developed_budget_order"][local // 6] if shape.startswith("developed_") else None
+            rows.append({
+                "logical_index": logical,
+                "probe_id": f"regeneration_{shape}_{local:02d}",
+                "call_shape": shape,
+                "development_budget": budget,
+                "seed": payload["seed_start"] + logical,
+            })
+            logical += 1
+    return rows
+
+
+def validate_frozen_contract() -> list[dict[str, Any]]:
+    for path, expected in (
+        (PLAN, PLAN_GIT_BLOB_SHA),
+        (PROBES, PROBES_GIT_BLOB_SHA),
+        (GUARD_PATH, GUARD_GIT_BLOB_SHA),
+        (ADAPTER_PATH, ADAPTER_GIT_BLOB_SHA),
+    ):
+        if git_blob_sha(path) != expected:
+            raise AssertionError(f"blob drift: {path.name}")
+    plan = json.loads(PLAN.read_text())
+    required = {
+        "schema": "d2-format-regeneration-request-plan-v0.1",
+        "issue": ISSUE,
+        "fresh_namespace": NAMESPACE,
+        "predecessor_json_skeleton_issue": 273,
+        "predecessor_json_skeleton_outcome_unchanged": "FAIL_STRUCTURED_CONTRACT",
+        "predecessor_canonical_prompt_issue": 270,
+        "predecessor_canonical_prompt_outcome_unchanged": "FAIL_STRUCTURED_CONTRACT",
+        "qualified_terminal_adapter_issue": 251,
+        "qualified_terminal_adapter_outcome_unchanged": "PASS",
+        "endpoint_base_url": BASE_URL,
+        "provider_id": PROVIDER,
+        "api_mode": API_MODE,
+        "requested_model": MODEL,
+        "hermes_revision": HERMES_REVISION,
+        "hermes_package_version": HERMES_VERSION,
+        "hermes_run_agent_blob_sha": HERMES_RUN_AGENT_BLOB_SHA,
+        "hermes_pyproject_blob_sha": HERMES_PYPROJECT_BLOB_SHA,
+        "openai_sdk_version": OPENAI_VERSION,
+        "httpx_version": HTTPX_VERSION,
+        "max_iterations_per_agent_invocation": MAX_ITERATIONS,
+        "maximum_agent_invocations_per_probe": MAX_AGENT_INVOCATIONS,
+        "max_tokens": MAX_TOKENS,
+        "sampling_temperature": TEMPERATURE,
+        "thinking": THINKING,
+        "request_intervention": {"response_format": RESPONSE_FORMAT},
+        "primary_prompt_intervention": "unchanged_non_copyable_positional_json_skeleton_and_final_selfcheck",
+        "retry_intervention": "one_bounded_format_regeneration_agent_invocation_after_clean_nonempty_exact_parse_invalid_first_result",
+        "parser_intervention": "none_unchanged_exact_eight_action_contract",
+        "recognized_top_level_keys": ["actions", "strategy"],
+        "probe_count": MAX_LOGICAL_CALLS,
+        "maximum_concurrency": MAX_CONCURRENCY,
+        "maximum_physical_sends_per_logical_probe": MAX_SENDS_PER_LOGICAL,
+        "maximum_physical_sends_total": MAX_SENDS_TOTAL,
+    }
+    for key, value in required.items():
+        if plan.get(key) != value:
+            raise AssertionError(f"plan drift: {key}")
+    required_true = (
+        "logical_context_thread_propagation_required",
+        "independent_logical_origin_attribution_required",
+        "provider_worker_drain_before_hook_restore_required",
+        "retry_bounded_diagnostic_only",
+        "retry_only_after_clean_nonempty_exact_parse_invalid",
+        "no_retry_after_valid_first_response",
+        "no_retry_after_empty_or_transport_unclean_first_result",
+        "no_third_agent_invocation",
+    )
+    if any(plan.get(key) is not True for key in required_true):
+        raise AssertionError("plan positive invariant drift")
+    forbidden_false = (
+        "retry_raw_first_response_content_allowed", "provider_derived_strategy_propagation_allowed",
+        "unknown_top_level_projection_allowed", "embedded_json_extraction_allowed",
+        "markdown_fence_stripping_allowed", "json_syntax_repair_allowed",
+        "required_field_coercion_allowed", "object_to_array_conversion_allowed",
+        "action_vocabulary_expansion_allowed", "action_count_change_allowed",
+        "strategy_bound_change_allowed", "hermes_completed_mutation_allowed",
+        "raw_final_response_content_persisted", "raw_provider_response_body_persisted",
+        "raw_provider_error_body_or_message_persisted", "scientific_scoring_performed",
+        "acceptance_action_authorized", "historical_substrate_enabled", "workflow_rerun_allowed",
+        "same_request_stream_rerun_allowed", "replacement_or_rescue_allowed",
+    )
+    if any(plan.get(key) is not False for key in forbidden_false):
+        raise AssertionError("plan authority drift")
+    rows = load_probes()
+    shapes = Counter(row["call_shape"] for row in rows)
+    expected_shapes = Counter({
+        "fresh_evaluation": 18, "developed_development": 18,
+        "developed_evaluation": 18, "oracle_evaluation": 18,
+    })
+    if shapes != expected_shapes:
+        raise AssertionError("shape balance drift")
+    developed = Counter(
+        (row["call_shape"], row["development_budget"])
+        for row in rows if row["call_shape"].startswith("developed_")
+    )
+    expected_developed = Counter({
+        (shape, budget): 6
+        for shape in ("developed_development", "developed_evaluation")
+        for budget in (40, 80, 160)
+    })
+    if developed != expected_developed:
+        raise AssertionError("budget balance drift")
+    if len({row["probe_id"] for row in rows}) != 72 or len({row["seed"] for row in rows}) != 72:
+        raise AssertionError("fresh identity drift")
+    if min(row["seed"] for row in rows) <= 4_500_000:
+        raise AssertionError("fresh seed drift")
+    return rows
+
+
+def bounded_error(exc: BaseException) -> dict[str, Any]:
+    text = str(exc)
+    status = re.search(r"(?:status(?:_code)?[=: ]+|HTTP\s+)(\d{3})", text, re.I)
+    code = re.search(r"[\"']code[\"']\s*:\s*[\"']?(\d{3,6})", text, re.I)
+    return {
+        "error_type": type(exc).__name__,
+        "http_status": int(status.group(1)) if status else None,
+        "provider_code": int(code.group(1)) if code else None,
+        "error_text_length": len(text),
+        "error_text_sha256": sha(text),
+    }
+
+
+def assert_execution_environment() -> None:
+    if os.getenv(AUTH_ENV) != "1" or not os.getenv("ZAI_API_KEY", "").strip():
+        raise RuntimeError("provider execution not authorized")
+    if os.getenv("GLM_BASE_URL", "").strip().rstrip("/") != BASE_URL:
+        raise RuntimeError("base URL drift")
+    if any(os.getenv(key) for key in FORBIDDEN):
+        raise RuntimeError("unexpected provider credential exposed")
+
+
+def validate_runtime_versions() -> tuple[str, int, str]:
+    import httpx
+    from openai._constants import DEFAULT_MAX_RETRIES
+    hermes = importlib.metadata.version("hermes-agent")
+    openai_version = importlib.metadata.version("openai")
+    httpx_version = importlib.metadata.version("httpx")
+    if (hermes, openai_version, httpx_version, httpx.__version__, DEFAULT_MAX_RETRIES) != (
+        HERMES_VERSION, OPENAI_VERSION, HTTPX_VERSION, HTTPX_VERSION, OPENAI_DEFAULT_MAX_RETRIES
+    ):
+        raise AssertionError("runtime version drift")
+    return hermes, DEFAULT_MAX_RETRIES, httpx_version
