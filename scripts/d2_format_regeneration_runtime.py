@@ -1,3 +1,4 @@
+# ruff: noqa: I001,E501
 """One-shot execution aggregation for #276 bounded format-regeneration qualification."""
 from __future__ import annotations
 
