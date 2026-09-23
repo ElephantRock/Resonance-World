@@ -19,7 +19,7 @@ LOGICAL_CALLS_PER_COMPLETE_PAIR = 55
 MAX_PHYSICAL_SENDS_PER_LOGICAL_CALL = 36
 MAX_PHYSICAL_SENDS_PER_SHARD = 2000
 MAX_PHYSICAL_SENDS_CAMPAIGN = SHARD_COUNT * MAX_PHYSICAL_SENDS_PER_SHARD
-EXPECTED_COHORT_SHA256 = ""
+EXPECTED_COHORT_SHA256 = "a61a2667b088301bfedc9158662511179a4e806d4aaf679fb865e1c42ded6c94"
 
 PREDECESSOR_NAMESPACES = {
     "D2-C1": [(1_200_000, 1_299_999)],
@@ -30,7 +30,12 @@ PREDECESSOR_NAMESPACES = {
     "D2-engineering-4.5m": [(4_500_000, 4_599_999)],
     "D2d": [(5_000_000, 5_699_999)],
     "D2d-S2": [(6_000_000, 6_699_999)],
-    "D2-vNext-S1": [(9_000_000, 9_099_999), (9_200_000, 9_299_999), (9_400_000, 9_499_999), (9_600_000, 9_699_999)],
+    "D2-vNext-S1": [
+        (9_000_000, 9_099_999),
+        (9_200_000, 9_299_999),
+        (9_400_000, 9_499_999),
+        (9_600_000, 9_699_999),
+    ],
 }
 
 
@@ -181,7 +186,9 @@ def build_shard_map() -> dict[str, Any]:
         "provider_local_concurrency_per_shard": 1,
         "workflow_max_parallel": 4,
         "logical_calls_per_complete_pair": LOGICAL_CALLS_PER_COMPLETE_PAIR,
-        "registered_logical_calls_if_all_pairs_complete": PAIR_COUNT * LOGICAL_CALLS_PER_COMPLETE_PAIR,
+        "registered_logical_calls_if_all_pairs_complete": (
+            PAIR_COUNT * LOGICAL_CALLS_PER_COMPLETE_PAIR
+        ),
         "maximum_physical_provider_sends_per_logical_call": MAX_PHYSICAL_SENDS_PER_LOGICAL_CALL,
         "maximum_physical_provider_sends_per_shard": MAX_PHYSICAL_SENDS_PER_SHARD,
         "maximum_physical_provider_sends_campaign": MAX_PHYSICAL_SENDS_CAMPAIGN,
