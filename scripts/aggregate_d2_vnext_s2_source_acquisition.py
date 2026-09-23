@@ -69,6 +69,11 @@ def _validate_retry_call(call: dict[str, Any]) -> None:
         raise AssertionError("bounded retry observability invalid")
     if invocations != (2 if used else 1):
         raise AssertionError("agent invocation count inconsistent with retry flag")
+    if accepted == 1:
+        if used:
+            raise AssertionError("first attempt accepted while retry marked used")
+        if call.get("first_attempt_parse_valid") is not True:
+            raise AssertionError("accepted first attempt is not exact-parser-valid")
     if accepted == 2 and not used:
         raise AssertionError("second attempt accepted without retry")
     if call.get("first_attempt_parse_valid") is True and used:
