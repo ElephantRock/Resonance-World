@@ -2,16 +2,21 @@ from __future__ import annotations
 
 import hashlib
 import json
+import sys
 from pathlib import Path
 
-import pytest
+ROOT = Path(__file__).resolve().parents[1]
+SCRIPTS = ROOT / "scripts"
+if str(SCRIPTS) not in sys.path:
+    sys.path.insert(0, str(SCRIPTS))
 
+import aggregate_d2_vnext_s2_source_acquisition as aggregator
 import d2_vnext_s2_acquisition_core as core
 import d2_vnext_s2_hermes_client as client
 import materialize_d2_vnext_s2_source_acquisition as materializer
-from resonance_world import d2_terminal_adapter
+import pytest
 
-ROOT = Path(__file__).resolve().parents[1]
+from resonance_world import d2_terminal_adapter
 
 
 def _git_blob_sha(path: Path) -> str:
@@ -34,6 +39,10 @@ def test_fresh_namespace_and_seed_bases_are_frozen() -> None:
 
 def test_fresh_cohort_has_no_predecessor_overlap() -> None:
     lock = materializer.build_cohort_lock()
+    assert lock["cohort_pairs_sha256"] == materializer.EXPECTED_COHORT_SHA256
+    assert materializer.EXPECTED_COHORT_SHA256 == (
+        "a61a2667b088301bfedc9158662511179a4e806d4aaf679fb865e1c42ded6c94"
+    )
     assert lock["pair_count"] == 384
     assert lock["pairs_per_schema"] == 96
     assert lock["fresh_namespace"] == core.NAMESPACE
@@ -55,6 +64,20 @@ def test_materialization_is_deterministic() -> None:
     assert shard_map["maximum_physical_provider_sends_campaign"] == 48_000
     assert shard_map["minimum_analyzable_pairs_per_schema"] == 88
     assert shard_map["favorable_result_possible_with_missing_whole_shard"] is False
+
+
+def test_committed_materialization_matches_builder() -> None:
+    lock = json.loads(
+        (
+            ROOT
+            / "research/d2_vnext_s2/d2-vnext-s2-source-acquisition-cohort-lock.json"
+        ).read_text()
+    )
+    shards = json.loads(
+        (ROOT / "research/d2_vnext_s2/D2_VNEXT_S2_SHARD_MAP.json").read_text()
+    )
+    assert lock == materializer.build_cohort_lock()
+    assert shards == materializer.build_shard_map()
 
 
 def test_exact_qualified_transport_primitives_are_restored() -> None:
@@ -147,6 +170,41 @@ def test_retry_eligibility_is_fail_closed() -> None:
         ("json_mode_compatibility_failure", True),
     ):
         assert not client.retry_eligible(_first(**{key: value}), _Budget(), _Ledger())
+
+
+def _accepted_call(**overrides: object) -> dict[str, object]:
+    row: dict[str, object] = {
+        "retry_raw_first_response_content_included": False,
+        "retry_used": False,
+        "accepted_attempt_index": 1,
+        "agent_invocation_count": 1,
+        "first_attempt_parse_valid": True,
+        "retry_eligible_after_first": False,
+        "second_attempt_parse_valid": None,
+        "json_mode_compatibility_failure": False,
+    }
+    row.update(overrides)
+    return row
+
+
+def test_aggregator_rejects_parser_invalid_accepted_attempts() -> None:
+    aggregator._validate_retry_call(_accepted_call())
+    with pytest.raises(AssertionError, match="accepted first attempt"):
+        aggregator._validate_retry_call(_accepted_call(first_attempt_parse_valid=False))
+    with pytest.raises(AssertionError, match="retry marked used"):
+        aggregator._validate_retry_call(
+            _accepted_call(retry_used=True, agent_invocation_count=2)
+        )
+    aggregator._validate_retry_call(
+        _accepted_call(
+            retry_used=True,
+            accepted_attempt_index=2,
+            agent_invocation_count=2,
+            first_attempt_parse_valid=False,
+            retry_eligible_after_first=True,
+            second_attempt_parse_valid=True,
+        )
+    )
 
 
 def test_json_mode_compatibility_statuses_are_exact() -> None:
