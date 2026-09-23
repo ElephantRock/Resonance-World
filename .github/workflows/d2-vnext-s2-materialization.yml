@@ -17,8 +17,8 @@ jobs:
     runs-on: ubuntu-24.04
     timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
         with:
           python-version: "3.12"
           cache: pip
@@ -30,7 +30,7 @@ jobs:
           test -z "${ZAI_API_KEY:-}"
           test -z "${D2_VNEXT_S2_SCIENTIFIC_EXECUTION_AUTHORIZED:-}"
           test ! -f research/d2_vnext_s2/RUN_D2_VNEXT_S2_SOURCE_ACQUISITION
-      - name: Materialize twice and verify determinism
+      - name: Materialize twice and verify frozen determinism
         shell: bash
         run: |
           set -euo pipefail
@@ -43,18 +43,23 @@ jobs:
               output/d2-vnext-s2-material-b/d2-vnext-s2-source-acquisition-cohort-lock.json
           cmp output/d2-vnext-s2-material-a/D2_VNEXT_S2_SHARD_MAP.json \
               output/d2-vnext-s2-material-b/D2_VNEXT_S2_SHARD_MAP.json
+          cmp output/d2-vnext-s2-material-a/d2-vnext-s2-source-acquisition-cohort-lock.json \
+              research/d2_vnext_s2/d2-vnext-s2-source-acquisition-cohort-lock.json
+          cmp output/d2-vnext-s2-material-a/D2_VNEXT_S2_SHARD_MAP.json \
+              research/d2_vnext_s2/D2_VNEXT_S2_SHARD_MAP.json
           python - <<'PY'
           import json
           from pathlib import Path
           p=json.loads(Path('output/d2-vnext-s2-material-a/d2-vnext-s2-source-acquisition-cohort-lock.json').read_text())
           print('D2_VNEXT_S2_COHORT_PAIRS_SHA256=' + p['cohort_pairs_sha256'])
+          assert p['cohort_pairs_sha256']=='a61a2667b088301bfedc9158662511179a4e806d4aaf679fb865e1c42ded6c94'
           assert p['pair_count']==384
           assert p['pairs_per_schema']==96
           assert p['cross_schema_seed_overlap']==0
           assert all(value == 0 for value in p['predecessor_seed_namespace_overlap'].values())
           assert p['all_development_evaluation_overlaps_zero'] is True
           PY
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
         with:
           name: d2-vnext-s2-materialization
           path: output/d2-vnext-s2-material-a/
