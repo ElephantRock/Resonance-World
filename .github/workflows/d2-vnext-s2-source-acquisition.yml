@@ -69,6 +69,7 @@ jobs:
           assert p['acceptance_action_authorized'] is False
           assert p['historical_substrate_enabled'] is False
           lock=json.loads(show('research/d2_vnext_s2/d2-vnext-s2-source-acquisition-cohort-lock.json'))
+          assert lock['cohort_pairs_sha256']=='a61a2667b088301bfedc9158662511179a4e806d4aaf679fb865e1c42ded6c94'
           assert lock['pair_count']==384
           assert lock['cross_schema_seed_overlap']==0
           assert all(value == 0 for value in lock['predecessor_seed_namespace_overlap'].values())
@@ -193,7 +194,7 @@ jobs:
       - run: python -m pip install -e '.[dev]'
       - run: mkdir -p output/provider-shards
       - name: Download available provider shard artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         continue-on-error: true
         with:
           pattern: d2-vnext-s2-provider-shard-*
@@ -221,7 +222,7 @@ jobs:
           python-version: "3.12"
           cache: pip
       - run: python -m pip install -e '.[dev]'
-      - uses: actions/download-artifact@v4
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
         with:
           name: d2-vnext-s2-canonical-provider-output
           path: output/canonical-provider
