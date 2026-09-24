@@ -1,0 +1,43 @@
+{
+  "canonical_provider_output": {
+    "artifact_id": 10783810505,
+    "digest": "sha256:a0bd3ee00d83e2a016f90d8efed43e4915d5085bb2e6c2efefaeca6ec5a91a57",
+    "name": "d2-vnext-s2-canonical-provider-output",
+    "provider_output_sha256": "1419144f035ad1eafb3604f0a1859b134a2f9ddb280e1a04e4959d75e31042b2"
+  },
+  "evaluation": {
+    "artifact_id": 10783039997,
+    "digest": "sha256:1f9ccfb6ee3c3a8d00ce7cb3a66a2d8ae62475a45decd19c9a19bc504d051dc6",
+    "name": "d2-vnext-s2-source-acquisition-evaluation",
+    "result_sha256": "f187defd4b27ca8f32858332c7e3448355d077a539574c2b97ffba1b919f4487"
+  },
+  "head_sha": "a5d99f9302166b3abb468bd84971c6abecd3dd16",
+  "provider_shards": [
+    {"artifact_digest":"sha256:bda30e189551dbdef6770caefd62346a28c47ee8df70444c96c721cac6078409","artifact_id":10775315117,"name":"d2-vnext-s2-provider-shard-0","provider_shard_output_sha256":"d3ae75ae800bafdf49c2edc6e578250d60a6c0dfced477aad7fa4cc98cf90c62","shard_id":0},
+    {"artifact_digest":"sha256:8f71a560c96086b733ac79691235812be3a7c6bae484dea9f7421115889db519","artifact_id":10774781528,"name":"d2-vnext-s2-provider-shard-1","provider_shard_output_sha256":"f94b192f607644b158070bf5b9851f1d7f8da11aa54183dc82a435494a9a2d33","shard_id":1},
+    {"artifact_digest":"sha256:87bbadc4aac4a0d5f2c153974ddb567028e1b9515b779dd4f552fa2467926e93","artifact_id":10775120300,"name":"d2-vnext-s2-provider-shard-2","provider_shard_output_sha256":"3c5db5f631a76b2d97c45cc26c0d6102885dadffc192a9adaec56af457907f09","shard_id":2},
+    {"artifact_digest":"sha256:f3b9cb857553c779b2ff0d0aafd368a1db5d911fd3ae3b8cf4f1ff72f84798b5","artifact_id":10774236805,"name":"d2-vnext-s2-provider-shard-3","provider_shard_output_sha256":"5a801e84b9bd28dd34857f1f2386efb97b49d77f9df6c80cfb3a409a73638aea","shard_id":3},
+    {"artifact_digest":"sha256:95ce782a59703f70f3cc1a123ac3d4c99fab82638b6b925f04b049c515279bf4","artifact_id":10776244526,"name":"d2-vnext-s2-provider-shard-4","provider_shard_output_sha256":"17b2c8c68a562959d2ce6a949b248846d290a5a8650b79e235dc2fec0af8f571","shard_id":4},
+    {"artifact_digest":"sha256:03113ca041da79d820ea447ea7ff02016deefe74d2a0d8fc4ac69a3e80a3c51e","artifact_id":10775819568,"name":"d2-vnext-s2-provider-shard-5","provider_shard_output_sha256":"03542ae5a34bddf1039649d98a4d7fc87d29feab623126bcaf5fd5b56a0746c3","shard_id":5},
+    {"artifact_digest":"sha256:be225dd160aec86d87dd21de669b1b25facd57a32bbf34e29f650bc5cdaf1093","artifact_id":10777041934,"name":"d2-vnext-s2-provider-shard-6","provider_shard_output_sha256":"3c0e5aa3b17d4ff125a00cd7162e9fed84450f0a5a731126b59288bb481c3045","shard_id":6},
+    {"artifact_digest":"sha256:d82486abbf2a0db1df4a4e1b6e954b0394f79efb74201b77c394aac9fec7f6d3","artifact_id":10777620097,"name":"d2-vnext-s2-provider-shard-7","provider_shard_output_sha256":"bf697342118e9d8b3c63aea63be84b9ba8a96ef57be8ab19a67ad982275d90fb","shard_id":7},
+    {"artifact_digest":"sha256:4def28a769dd38cde9ff9eddbbe4bf8d05eb6374be178868ec4eac2e819f7d03","artifact_id":10778935696,"name":"d2-vnext-s2-provider-shard-8","provider_shard_output_sha256":"3cae11772879dce68ba246e5b83d0445d67c34d9ab13725254ebb8223d61e571","shard_id":8},
+    {"artifact_digest":"sha256:d0cf49377a66a13f84c1aa4fe287ca01492598f79c73cad641f7bead3d23ff6c","artifact_id":10778673917,"name":"d2-vnext-s2-provider-shard-9","provider_shard_output_sha256":"40d074ba0eb57b51c4292b2f465bd90a2e70f875aea9907c21616d2d45952ac0","shard_id":9},
+    {"artifact_digest":"sha256:df752f69077cff28b59315aa56261d0cfd1a7d6f136b1c828569e59286ce45fa","artifact_id":10779480457,"name":"d2-vnext-s2-provider-shard-10","provider_shard_output_sha256":"ab700dffefe28308ed7467770ba08c5ee2d6ef471bcc65f2fd8b5eab6cdea86e","shard_id":10},
+    {"artifact_digest":"sha256:f0a6ac58187df296cda87eb2d85e2b9817814488b23caddb40637a69fa271565","artifact_id":10779370952,"name":"d2-vnext-s2-provider-shard-11","provider_shard_output_sha256":"1b655afdb37deb9c5114dd6bc08056cc529df978da76d3da022037be1d00426c","shard_id":11},
+    {"artifact_digest":"sha256:8973794054845b1855e228b25ecacfcf278eb3caf5fd717192ba4f50356b0703","artifact_id":10780143531,"name":"d2-vnext-s2-provider-shard-12","provider_shard_output_sha256":"fdc0c6532a1e72276d9a28f520299b5062afec0d9ec02ab926722d0e0c9553c5","shard_id":12},
+    {"artifact_digest":"sha256:700306843210a4d30c6a88e4f3205e3f94dc4750bd3ae13e1934c0d08d7872c6","artifact_id":10781092153,"name":"d2-vnext-s2-provider-shard-13","provider_shard_output_sha256":"8cbab0e5758c4358d569a1721bda14fff4a631635b0f4d108a066bb9ac75f460","shard_id":13},
+    {"artifact_digest":"sha256:71e69d9a600e07a1477b700cc269e8104c944303bee314a98c34af38df997440","artifact_id":10780503320,"name":"d2-vnext-s2-provider-shard-14","provider_shard_output_sha256":"cd57d8ecaad80eb66b86bd6b485d4e0915d3ad4dae8b2841360bb0aec919cb7e","shard_id":14},
+    {"artifact_digest":"sha256:25a327b2a4c0d082ca136515b6bd3e54712bd75d4877df7be3c7d7938f1069f1","artifact_id":10780269830,"name":"d2-vnext-s2-provider-shard-15","provider_shard_output_sha256":"22d9f7145c9580325797608cfaacfda6035797a863d51df4052bac2afbb64e62","shard_id":15},
+    {"artifact_digest":"sha256:fe853a1e0bf3679c22b3919ed1e643c02c75ebb29969b71aaa419ef60567dd6a","artifact_id":10782240267,"name":"d2-vnext-s2-provider-shard-16","provider_shard_output_sha256":"b552919361bcfe0d7e89dcc13986f58294a1c39f389c5d00b328d66c504fb06c","shard_id":16},
+    {"artifact_digest":"sha256:245ebab296d57db25ff8f6326bad2b03904eea8d1c330240bfb17421c964eb57","artifact_id":10782371901,"name":"d2-vnext-s2-provider-shard-17","provider_shard_output_sha256":"79063c1d2c9f836cf358f74e500f96f8b1d166ed78ecc35857991d1ccafd37e0","shard_id":17},
+    {"artifact_digest":"sha256:c80e2121cde6361bfcd1e641d4578c788ff3e59cc7224c82b532a1d01665ab8c","artifact_id":10781980940,"name":"d2-vnext-s2-provider-shard-18","provider_shard_output_sha256":"88c01e5bd9e7af8c5eb092cb9f5d18128530c4ef2516ab2161d2b531cd9c31cd","shard_id":18},
+    {"artifact_digest":"sha256:05790cac01417fc00a9e5696c50f77153cf85cc89833e5bbd7ca1f6327912350","artifact_id":10782515595,"name":"d2-vnext-s2-provider-shard-19","provider_shard_output_sha256":"a1477f05e58556019dddc27e165046e6690dba06d90c14f31b02eb1d4ebf0446","shard_id":19},
+    {"artifact_digest":"sha256:ab8da148cbd164b4abe052a1518aec46f11a1a9d111486dbaf0b0e0e29ec119c","artifact_id":10782498847,"name":"d2-vnext-s2-provider-shard-20","provider_shard_output_sha256":"bce7241a65e4885db07913d0c4eb514e57665617588efd092eeefb11bf83d1fb","shard_id":20},
+    {"artifact_digest":"sha256:727a98f369f0a95c376969cfed9523145c4cca54249e2db34571798cd94ac815","artifact_id":10782399308,"name":"d2-vnext-s2-provider-shard-21","provider_shard_output_sha256":"c326dfc2b2b3177dab2e7b91cf8b8423b437a2f783361453343a4223ecf844ce","shard_id":21},
+    {"artifact_digest":"sha256:20ece6f7ef797054fc12b3e0ce999a2ea27d48b8c1c2de1b94fae24fae4c19fa","artifact_id":10782283922,"name":"d2-vnext-s2-provider-shard-22","provider_shard_output_sha256":"aa96feb92ed42ff399899460281bf873c5dbf89e10075b048dba30d397da3850","shard_id":22},
+    {"artifact_digest":"sha256:3b8fefc81a8ba155f8031ed7cb2e5fd120c1e3fd7cb931d62b4d3ccf713019ca","artifact_id":10783846095,"name":"d2-vnext-s2-provider-shard-23","provider_shard_output_sha256":"4f10f356c891b474a2e9c391d716e376013766a6967b46bac950291799945a21","shard_id":23}
+  ],
+  "schema": "d2-vnext-s2-workflow-artifact-index-v0.1",
+  "workflow_run_id": 35909017872
+}
