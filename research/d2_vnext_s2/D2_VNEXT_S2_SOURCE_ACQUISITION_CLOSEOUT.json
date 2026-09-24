@@ -1,0 +1,57 @@
+{
+  "schema": "d2-vnext-s2-source-acquisition-closeout-v0.1",
+  "issue": 279,
+  "construction_pull_request": 286,
+  "scientific_candidate_sha": "d65f5bb803af966b79622d6104f00756b7e9e8c7",
+  "activation_commit_sha": "a5d99f9302166b3abb468bd84971c6abecd3dd16",
+  "workflow_run_id": 35909017872,
+  "workflow_run_number": 1,
+  "workflow_run_attempt": 1,
+  "workflow_conclusion": "success",
+  "classification": "D2-vNext-S2-A0",
+  "classification_label": "minimum_analyzable_n_failure",
+  "attempted_pairs": 384,
+  "complete_pairs": 205,
+  "failed_pairs": 179,
+  "minimum_analyzable_pairs_per_schema": 88,
+  "analyzable_pairs_by_schema": {
+    "threshold_at_4": 60,
+    "parity_pair": 71,
+    "interval_pair": 58,
+    "pairwise_order": 16
+  },
+  "transport_integrity": {
+    "passed": true,
+    "observed_physical_provider_sends": 14509,
+    "maximum_physical_provider_sends_campaign": 48000,
+    "defects": []
+  },
+  "provider_shards": {
+    "count": 24,
+    "all_jobs_succeeded": true
+  },
+  "positive_control_continuity_pass": false,
+  "confirmatory_gates_entered": false,
+  "common_confirmed_acquisition_budget": null,
+  "workflow_artifacts": {
+    "canonical_provider_output": {
+      "artifact_id": 10783810505,
+      "digest": "sha256:a0bd3ee00d83e2a016f90d8efed43e4915d5085bb2e6c2efefaeca6ec5a91a57",
+      "provider_output_sha256": "1419144f035ad1eafb3604f0a1859b134a2f9ddb280e1a04e4959d75e31042b2"
+    },
+    "evaluation": {
+      "artifact_id": 10783039997,
+      "digest": "sha256:1f9ccfb6ee3c3a8d00ce7cb3a66a2d8ae62475a45decd19c9a19bc504d051dc6",
+      "result_sha256": "f187defd4b27ca8f32858332c7e3448355d077a539574c2b97ffba1b919f4487"
+    }
+  },
+  "frozen_cohort_pairs_sha256": "a61a2667b088301bfedc9158662511179a4e806d4aaf679fb865e1c42ded6c94",
+  "descriptive_effects_inferential": false,
+  "posthoc_attrition_forensics_status": "not_yet_performed",
+  "same_request_stream_rerun_authorized": false,
+  "replacement_or_adaptive_n_authorized": false,
+  "registry_promotion_authorized": false,
+  "acceptance_action_authorized": false,
+  "historical_substrate_enabled": false,
+  "next_programmatic_question": "pair-level and schema-specific attrition forensics followed by prospective acquisition qualification before any fresh successor confirmatory stream"
+}
