@@ -1,0 +1,80 @@
+{
+  "schema": "d2-vnext-q1-terminal-failure-observability-v0.1",
+  "study_stream": "D2-vNext-Q1",
+  "status": "construction_only",
+  "raw_response_content_allowed": false,
+  "required_fields": {
+    "pair_public_id": "string",
+    "pair_index": "integer",
+    "schema_id": "one_of_registered_q1_schemas",
+    "arm": "string",
+    "phase": "string",
+    "logical_call_index": "integer",
+    "first_attempt": {
+      "runtime_exception": "boolean",
+      "error_type": "string_or_null",
+      "error_sha256": "sha256_or_null",
+      "hermes_completed_flag_valid": "boolean",
+      "hermes_completed": "boolean",
+      "hermes_failed": "boolean",
+      "hermes_partial": "boolean",
+      "hermes_interrupted": "boolean",
+      "hermes_error_present": "boolean",
+      "exact_structured_parse_valid": "boolean",
+      "parse_diagnostic": "bounded_diagnostic_enum",
+      "physical_provider_sends_observed": "integer",
+      "exact_attributed_clean_transport": "boolean",
+      "logical_attribution_integrity": "boolean",
+      "effective_completed": "boolean",
+      "terminal_iteration_override_used": "boolean",
+      "adapter_reason": "bounded_string"
+    },
+    "retry_eligible": "boolean",
+    "retry_used": "boolean",
+    "second_attempt": "same_shape_as_first_attempt_or_null",
+    "accepted_exact_completion": "boolean",
+    "terminal_error_type": "string",
+    "terminal_error_sha256": "sha256"
+  },
+  "parse_diagnostic_enum": [
+    "exact_valid",
+    "json_decode_failure",
+    "top_level_not_object",
+    "extra_keys",
+    "actions_missing",
+    "actions_not_list",
+    "wrong_action_count",
+    "invalid_action",
+    "strategy_not_string",
+    "strategy_too_long",
+    "strategy_non_ascii"
+  ],
+  "forbidden_fields_or_payloads": [
+    "raw_response_text",
+    "raw_first_response_text",
+    "raw_second_response_text",
+    "raw_provider_body",
+    "prompt_text",
+    "retry_prompt_text"
+  ],
+  "instrumentation_invariants": {
+    "may_change_retry_count": false,
+    "may_change_retry_eligibility": false,
+    "may_change_prompt_content": false,
+    "may_change_terminal_acceptance": false,
+    "may_change_scientific_output": false,
+    "must_preserve_failure_stage": true,
+    "must_preserve_bounded_attempt_diagnostics": true,
+    "must_preserve_transport_and_attribution_flags": true
+  },
+  "required_zero_provider_fixtures": [
+    "clean_first_attempt_exact_completion",
+    "first_attempt_retry_eligible_parse_failure_then_retry_success",
+    "first_attempt_retry_eligible_parse_failure_then_retry_failure",
+    "terminal_adapter_rejection",
+    "runtime_exception_without_raw_content",
+    "physical_send_budget_block",
+    "logical_attribution_mismatch",
+    "raw_content_non_retention"
+  ]
+}

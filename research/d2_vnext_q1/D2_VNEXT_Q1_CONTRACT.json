@@ -1,0 +1,174 @@
+{
+  "schema": "d2-vnext-q1-acquisition-qualification-contract-v0.1",
+  "issue": 290,
+  "study_stream": "D2-vNext-Q1",
+  "status": "construction_only_provider_execution_not_authorized",
+  "purpose": "qualify acquisition completeness, bounded terminal-failure observability, and future confirmatory resource feasibility without testing scientific effect gates",
+  "predecessor": {
+    "stream": "D2-vNext-S2",
+    "workflow_run_id": 35909017872,
+    "classification": "D2-vNext-S2-A0",
+    "classification_label": "acquisition_envelope_integrity_or_minimum_n_failure",
+    "provider_output_sha256": "1419144f035ad1eafb3604f0a1859b134a2f9ddb280e1a04e4959d75e31042b2",
+    "evaluation_result_sha256": "f187defd4b27ca8f32858332c7e3448355d077a539574c2b97ffba1b919f4487",
+    "minimum_analyzable_pairs_per_schema": 88,
+    "reuse_in_q1_primary_estimator": false
+  },
+  "supported_product": {
+    "product": "Z.AI GLM Coding Plan",
+    "environment": "Hermes Agent Python library",
+    "hermes_package_version": "0.8.0",
+    "hermes_revision": "036cbdfa0a3158454a0a2a7a7388cf70353326b4",
+    "provider_id": "zai",
+    "api_mode": "chat_completions",
+    "endpoint_base_url": "https://api.z.ai/api/coding/paas/v4",
+    "requested_model": "glm-5.3",
+    "effective_upstream_model_identity_observed": false,
+    "temperature": 0.8,
+    "thinking": "disabled",
+    "response_format": {"type": "json_object"},
+    "openai_sdk_version": "2.21.0",
+    "httpx_version": "0.28.1",
+    "openai_sdk_default_max_retries": 2,
+    "format_regeneration_retries_max": 1,
+    "raw_first_response_content_in_retry_prompt": false,
+    "raw_response_content_persisted_in_failure_record": false,
+    "tools_enabled": false,
+    "memory_enabled": false,
+    "persistent_session": false,
+    "fallback_model": null
+  },
+  "schemas": [
+    "threshold_at_4",
+    "parity_pair",
+    "interval_pair",
+    "pairwise_order"
+  ],
+  "fresh_cohorts": {
+    "namespace": "rw.d2-vnext-q1-acquisition-qualification.v1",
+    "q1_a_cohort_sha256": "21ae386da6fdba2883a331864fcaffc51f9fa8adb58aa43ee9d68519cadc3686",
+    "q1_b_cohort_sha256": "41124075eeda43439b392997b090ed7fe11275271b4bae86bc619371f86a750e",
+    "cross_stage_seed_overlap_allowed": false,
+    "predecessor_seed_overlap_allowed": false
+  },
+  "sharding": {
+    "mixed_schema_shards": true,
+    "pairs_per_shard": 16,
+    "pairs_per_schema_per_shard": 4,
+    "deterministic_interleaving": true,
+    "max_parallel_provider_shards": 4,
+    "fresh_namespace_required": true,
+    "predecessor_seed_overlap_allowed": false
+  },
+  "transport_topology": {
+    "maximum_registered_logical_calls_per_shard": 880,
+    "maximum_physical_sends_per_logical_call": 36,
+    "maximum_physical_sends_per_shard": 1152,
+    "cross_shard_budget_borrowing_allowed": false,
+    "transport_integrity_fail_closed": true
+  },
+  "q1_a": {
+    "purpose": "bounded observability and acquisition-reliability screen",
+    "attempted_pairs_per_schema": 16,
+    "attempted_pairs_total": 64,
+    "shard_count": 4,
+    "maximum_physical_sends_campaign": 4608,
+    "primary_q1_b_estimator_includes_q1_a": false,
+    "continuation_gate": {
+      "all_provider_shards_complete": true,
+      "transport_and_accounting_integrity_pass": true,
+      "terminal_failure_observability_complete": true,
+      "minimum_complete_analyzable_pairs_per_schema": 12,
+      "unclassified_terminal_failure_due_to_missing_observability_allowed": false
+    },
+    "classifications": {
+      "D2-vNext-Q1-A0": "integrity_or_terminal_failure_observability_failure",
+      "D2-vNext-Q1-A1": "minimum_screen_completion_failure",
+      "D2-vNext-Q1-A-PASS": "bounded_screen_pass_for_independent_q1_b_authorization_review"
+    },
+    "pass_authorizes_q1_b_provider_execution": false,
+    "provider_execution_authorized": false,
+    "requires_explicit_exact_candidate_authorization": true
+  },
+  "q1_b": {
+    "purpose": "independent acquisition-envelope validation",
+    "attempted_pairs_per_schema": 96,
+    "attempted_pairs_total": 384,
+    "shard_count": 24,
+    "maximum_physical_sends_campaign": 27648,
+    "independent_from_q1_a": true,
+    "requires_q1_a_pass": true,
+    "execution_waves": {
+      "wave_count": 6,
+      "shards_per_wave": 4,
+      "waves_sequential": true,
+      "within_wave_max_parallel": 4,
+      "execution_wave_attribution_preserved": true
+    },
+    "machine_classifications": {
+      "D2-vNext-Q1-B0": "integrity_or_terminal_failure_observability_failure",
+      "D2-vNext-Q1-B1": "future_confirmatory_resource_feasibility_failure",
+      "D2-vNext-Q1-B2": "resource_feasible_pending_independent_exchangeability_review"
+    },
+    "b2_is_final_pass": false,
+    "provider_execution_authorized": false,
+    "requires_separate_explicit_exact_candidate_authorization": true
+  },
+  "qualification_statistics": {
+    "future_minimum_analyzable_pairs_per_schema": 88,
+    "future_joint_all_schema_clearance_target": 0.95,
+    "per_schema_clearance_target": 0.9875,
+    "failure_budget_allocation": "bonferroni_union_bound_equal_four_schema_allocation",
+    "completion_probability_lower_bound": "one_sided_exact_clopper_pearson",
+    "per_schema_lower_bound_alpha": 0.0125,
+    "per_schema_lower_bound_confidence": 0.9875,
+    "future_attempt_count_rule": "smallest_N_s_with_P_Binomial_N_s_pL_s_ge_88_at_least_0.9875",
+    "s2_data_pooled": false,
+    "scientific_effect_gates_computed": false
+  },
+  "future_resource_feasibility": {
+    "maximum_sum_attempted_pairs_across_schemas": 640,
+    "maximum_future_mixed_schema_shards": 40,
+    "maximum_physical_sends_per_future_shard": 1152,
+    "maximum_future_topology_physical_sends": 46080,
+    "existing_campaign_boundary_physical_sends": 48000,
+    "reserved_headroom_physical_sends": 1920,
+    "failure_if_required_sum_N_s_exceeds_640": true
+  },
+  "independent_exchangeability_review": {
+    "required_for": "D2-vNext-Q1-B2",
+    "schema_file": "D2_VNEXT_Q1_B_EXCHANGEABILITY_REVIEW_SCHEMA.json",
+    "provider_output_hash_binding_required": true,
+    "evaluation_result_hash_binding_required": true,
+    "review_completion_by_schema": true,
+    "review_completion_by_shard": true,
+    "review_completion_by_execution_wave": true,
+    "review_transport_and_runtime_metadata": true,
+    "scientific_effect_inputs_allowed": false,
+    "allowed_verdicts": [
+      "PASS",
+      "INCONCLUSIVE_NONEXCHANGEABLE"
+    ],
+    "posthoc_favorable_model_substitution_allowed": false
+  },
+  "finalization": {
+    "PASS": "D2-vNext-Q1-B-PASS",
+    "INCONCLUSIVE_NONEXCHANGEABLE": "D2-vNext-Q1-B-INCONCLUSIVE_NONEXCHANGEABLE",
+    "final_pass_authorizes_future_confirmatory_provider_execution": false,
+    "final_pass_authorizes_scientific_effect_claim": false,
+    "final_pass_authorizes_acceptance_or_registry": false
+  },
+  "governance": {
+    "construction_authorized": true,
+    "provider_execution_authorized": false,
+    "same_stream_s2_rerun_authorized": false,
+    "adaptive_rescue_authorized": false,
+    "replacement_or_imputation_authorized": false,
+    "schema_dropping_authorized": false,
+    "acceptance_action_authorized": false,
+    "registry_promotion_authorized": false,
+    "d2e_execution_authorized": false,
+    "historical_substrate_enabled": false,
+    "deployment_or_publication_authorized": false
+  }
+}

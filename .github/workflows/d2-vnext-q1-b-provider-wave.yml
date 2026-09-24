@@ -1,0 +1,132 @@
+name: D2-vNext-Q1-B Provider Wave
+
+on:
+  workflow_call:
+    inputs:
+      shards:
+        required: true
+        type: string
+      execution_wave:
+        required: true
+        type: number
+      candidate_sha:
+        required: true
+        type: string
+    secrets:
+      ZAI_API_KEY:
+        required: true
+
+permissions:
+  contents: read
+
+jobs:
+  provider-shards:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard: ${{ fromJSON(inputs.shards) }}
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      GLM_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      D2_VNEXT_Q1_B_EXECUTION_AUTHORIZED: "1"
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 2
+      - name: Checkout pinned Hermes Agent
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: hermes-agent-org/hermes
+          ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4
+          path: .hermes-src
+          fetch-depth: 1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Reverify exact authorized parent and pinned supported product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = '1'
+          test -n "${ZAI_API_KEY:-}"
+          test "${GLM_BASE_URL}" = 'https://api.z.ai/api/coding/paas/v4'
+          test "$(git rev-parse HEAD^)" = '${{ inputs.candidate_sha }}'
+          test "$(git -C .hermes-src rev-parse HEAD)" = '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          test "$(git -C .hermes-src rev-parse HEAD:pyproject.toml)" = '95a1dfddd74bc399dd7f23f8d0143852b5689463'
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
+      - name: Install frozen supported-product environment
+        run: |
+          python -m pip install -e '.[dev]'
+          python -m pip install ./.hermes-src 'openai==2.21.0' 'httpx==0.28.1'
+          python - <<'PY'
+          import importlib.metadata, httpx
+          from openai._constants import DEFAULT_MAX_RETRIES
+          assert importlib.metadata.version('hermes-agent') == '0.8.0'
+          assert importlib.metadata.version('openai') == '2.21.0'
+          assert importlib.metadata.version('httpx') == '0.28.1'
+          assert httpx.__version__ == '0.28.1'
+          assert DEFAULT_MAX_RETRIES == 2
+          PY
+      - name: Execute one bounded Q1-B provider shard
+        shell: bash
+        run: |
+          set -euo pipefail
+          env \
+            -u OPENROUTER_API_KEY -u OPENAI_API_KEY -u OPENAI_BASE_URL \
+            -u ANTHROPIC_API_KEY -u ANTHROPIC_TOKEN -u NOUS_API_KEY \
+            -u GLM_API_KEY -u Z_AI_API_KEY -u KIMI_API_KEY -u MINIMAX_API_KEY \
+            -u DEEPSEEK_API_KEY -u DASHSCOPE_API_KEY -u XAI_API_KEY \
+            python scripts/run_d2_vnext_q1_acquisition.py \
+              --stage Q1-B \
+              --shard-id '${{ matrix.shard }}' \
+              --output-dir 'output/provider-${{ matrix.shard }}'
+      - name: Preserve frozen execution-wave attribution
+        shell: bash
+        run: |
+          python - '${{ matrix.shard }}' '${{ inputs.execution_wave }}' <<'PY'
+          import json, pathlib, sys
+          shard=int(sys.argv[1]); wave=int(sys.argv[2])
+          path=pathlib.Path(f'output/provider-{shard}/execution-wave.json')
+          path.write_text(json.dumps({
+              'schema':'d2-vnext-q1-b-execution-wave-attribution-v0.1',
+              'stage':'Q1-B',
+              'shard_id':shard,
+              'execution_wave':wave,
+          }, sort_keys=True, separators=(',',':'))+'\n')
+          PY
+      - name: Verify Q1-B shard remains unclassified and bounded
+        shell: bash
+        run: |
+          python - '${{ matrix.shard }}' <<'PY'
+          import json, pathlib, sys
+          shard=int(sys.argv[1])
+          p=json.loads(pathlib.Path(f'output/provider-{shard}/d2-vnext-q1b-provider-shard-{shard:02d}.json').read_text())
+          assert p['stage']=='Q1-B'
+          assert p['classification'] is None
+          assert p['attempted_pairs']==16
+          assert p['schema_counts']=={'threshold_at_4':4,'parity_pair':4,'interval_pair':4,'pairwise_order':4}
+          a=p['transport_accounting']
+          assert 0 <= a['physical_provider_sends_observed'] <= 1152
+          assert a['maximum_physical_provider_sends_per_logical_call']==36
+          assert a['maximum_physical_provider_sends_per_shard']==1152
+          assert a['provider_sends_blocked_by_budget']==0
+          assert a['unexpected_outbound_http_requests_blocked']==0
+          assert a['logical_attribution_mismatch_blocks']==0
+          assert a['provider_workers_alive_after_drain']==0
+          assert a['transport_hooks_restored_after_drain'] is True
+          assert p['scientific_effect_gates_authorized'] is False
+          assert p['acceptance_action_authorized'] is False
+          assert p['production_historical_substrate_enabled'] is False
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: d2-vnext-q1b-provider-wave-${{ inputs.execution_wave }}-shard-${{ matrix.shard }}
+          path: output/provider-${{ matrix.shard }}/
+          if-no-files-found: error
+          retention-days: 90
