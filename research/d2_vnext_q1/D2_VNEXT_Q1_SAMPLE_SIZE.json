@@ -1,0 +1,36 @@
+{
+  "schema": "d2-vnext-q1-sample-size-v0.1",
+  "issue": 290,
+  "study_stream": "D2-vNext-Q1",
+  "stage_a": {
+    "attempted_pairs_per_schema": 16,
+    "attempted_pairs_total": 64,
+    "mixed_schema_shards": 4,
+    "pairs_per_shard": 16,
+    "pairs_per_schema_per_shard": 4,
+    "minimum_complete_pairs_per_schema_for_continuation": 12,
+    "maximum_physical_sends_campaign": 4608,
+    "included_in_stage_b_primary_completion_estimator": false
+  },
+  "stage_b": {
+    "attempted_pairs_per_schema": 96,
+    "attempted_pairs_total": 384,
+    "mixed_schema_shards": 24,
+    "pairs_per_shard": 16,
+    "pairs_per_schema_per_shard": 4,
+    "maximum_physical_sends_campaign": 27648,
+    "independent_fresh_cohort": true
+  },
+  "future_confirmatory_floor": {
+    "minimum_analyzable_pairs_per_schema": 88,
+    "joint_all_schema_clearance_target": 0.95,
+    "per_schema_clearance_target": 0.9875,
+    "per_schema_lower_confidence_bound_alpha": 0.0125,
+    "maximum_sum_future_attempted_pairs": 640,
+    "maximum_future_mixed_schema_shards": 40,
+    "maximum_future_topology_physical_sends": 46080,
+    "campaign_boundary_physical_sends": 48000
+  },
+  "provider_execution_authorized": false,
+  "historical_substrate_enabled": false
+}

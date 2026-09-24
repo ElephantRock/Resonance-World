@@ -1,0 +1,81 @@
+name: D2-vNext-Q1 Preexecution
+
+on:
+  pull_request:
+    paths:
+      - "research/d2_vnext_q1/**"
+      - "scripts/d2_vnext_q1_*.py"
+      - "scripts/materialize_d2_vnext_q1_acquisition.py"
+      - "scripts/run_d2_vnext_q1_acquisition.py"
+      - "scripts/aggregate_d2_vnext_q1_acquisition.py"
+      - "scripts/evaluate_d2_vnext_q1_acquisition.py"
+      - "scripts/finalize_d2_vnext_q1_b_qualification.py"
+      - "tests/test_d2_vnext_q1_*.py"
+      - ".github/workflows/d2-vnext-q1-preexecution.yml"
+  push:
+    branches:
+      - qualification/d2-vnext-q1-acquisition
+    paths:
+      - "research/d2_vnext_q1/**"
+      - "scripts/d2_vnext_q1_*.py"
+      - "scripts/materialize_d2_vnext_q1_acquisition.py"
+      - "scripts/run_d2_vnext_q1_acquisition.py"
+      - "scripts/aggregate_d2_vnext_q1_acquisition.py"
+      - "scripts/evaluate_d2_vnext_q1_acquisition.py"
+      - "scripts/finalize_d2_vnext_q1_b_qualification.py"
+      - "tests/test_d2_vnext_q1_*.py"
+      - ".github/workflows/d2-vnext-q1-preexecution.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  credential-free-preexecution:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Assert provider credentials and execution authority absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${GLM_API_KEY:-}"
+          test -z "${OPENAI_API_KEY:-}"
+          test -z "${D2_VNEXT_Q1_A_EXECUTION_AUTHORIZED:-}"
+          test -z "${D2_VNEXT_Q1_B_EXECUTION_AUTHORIZED:-}"
+          test ! -e research/d2_vnext_q1/RUN_D2_VNEXT_Q1_A
+          test ! -e research/d2_vnext_q1/RUN_D2_VNEXT_Q1_B
+      - run: python -m pip install -e '.[dev]'
+      - name: Validate qualification contract
+        run: python scripts/validate_d2_vnext_q1_contract.py
+      - name: Regenerate and verify frozen cohort/shard commitments
+        shell: bash
+        run: |
+          set -euo pipefail
+          rm -rf output/q1-preexecution
+          python scripts/materialize_d2_vnext_q1_acquisition.py --output-dir output/q1-preexecution
+          for f in D2_VNEXT_Q1_A_COHORT_LOCK.json D2_VNEXT_Q1_A_SHARD_MAP.json D2_VNEXT_Q1_B_COHORT_LOCK.json D2_VNEXT_Q1_B_SHARD_MAP.json; do
+            cmp "output/q1-preexecution/$f" "research/d2_vnext_q1/$f"
+          done
+      - name: Targeted zero-provider tests
+        env:
+          PYTHONPATH: scripts
+        run: pytest -q tests/test_d2_vnext_q1_*.py
+      - name: Ruff Q1 construction surfaces
+        run: |
+          ruff check \
+            --per-file-ignores 'scripts/evaluate_d2_vnext_q1_acquisition.py:F401' \
+            scripts/d2_vnext_q1_acquisition_core.py \
+            scripts/d2_vnext_q1_hermes_client.py \
+            scripts/materialize_d2_vnext_q1_acquisition.py \
+            scripts/run_d2_vnext_q1_acquisition.py \
+            scripts/aggregate_d2_vnext_q1_acquisition.py \
+            scripts/evaluate_d2_vnext_q1_acquisition.py \
+            scripts/finalize_d2_vnext_q1_b_qualification.py \
+            scripts/validate_d2_vnext_q1_contract.py \
+            tests/test_d2_vnext_q1_*.py

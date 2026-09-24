@@ -1,0 +1,262 @@
+name: D2-vNext-Q1-A Acquisition Qualification
+
+on:
+  push:
+    branches: ["qualification/d2-vnext-q1-acquisition"]
+    paths:
+      - "research/d2_vnext_q1/RUN_D2_VNEXT_Q1_A"
+
+permissions:
+  contents: read
+
+jobs:
+  authorization-integrity:
+    if: ${{ github.run_attempt == 1 }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    outputs:
+      candidate_sha: ${{ steps.auth.outputs.candidate_sha }}
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 2
+      - id: auth
+        name: Verify sole-child Q1-A authorization and frozen qualification contract
+        shell: bash
+        run: |
+          set -euo pipefail
+          marker='research/d2_vnext_q1/RUN_D2_VNEXT_Q1_A'
+          test -f "$marker"
+          candidate="$(sed -n 's/^candidate_sha=//p' "$marker")"
+          issue="$(sed -n 's/^issue=//p' "$marker")"
+          authorization="$(sed -n 's/^authorization=//p' "$marker")"
+          cap="$(sed -n 's/^maximum_physical_sends_campaign=//p' "$marker")"
+          test -n "$candidate"
+          test "$issue" = '290'
+          test "$authorization" = 'D2_vNext_Q1_A_exact_candidate_acquisition_qualification_and_4608_send_cap_explicitly_authorized'
+          test "$cap" = '4608'
+          test "$(git rev-parse HEAD^)" = "$candidate"
+          test "$(git diff --name-only "$candidate" HEAD)" = "$marker"
+          test "$(git diff --name-only "$candidate" HEAD | wc -l)" = '1'
+          if git cat-file -e "${candidate}:${marker}" 2>/dev/null; then
+            echo 'Frozen Q1-A candidate already contains execution marker.' >&2
+            exit 1
+          fi
+          python - "$candidate" <<'PY'
+          import json, subprocess, sys
+          candidate=sys.argv[1]
+          def show(path):
+              return subprocess.check_output(['git','show',f'{candidate}:{path}'], text=True)
+          p=json.loads(show('research/d2_vnext_q1/D2_VNEXT_Q1_REQUEST_PLAN.json'))
+          assert p['schema']=='d2-vnext-q1-acquisition-qualification-request-plan-v0.1'
+          assert p['issue']==290
+          assert p['fresh_namespace']=='rw.d2-vnext-q1-acquisition-qualification.v1'
+          assert p['requested_model']=='glm-5.3'
+          assert p['hermes_revision']=='036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          assert p['hermes_run_agent_blob_sha']=='4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          assert p['hermes_pyproject_blob_sha']=='95a1dfddd74bc399dd7f23f8d0143852b5689463'
+          assert p['qualified_terminal_adapter_blob_sha']=='ba16d2eb4b7255437c8ab224e91d5ed093897990'
+          assert p['qualified_provider_send_guard_blob_sha']=='4b8896235d8048523d007400d0acfe85470f628c'
+          assert p['max_physical_provider_sends_per_logical_call']==36
+          assert p['max_physical_provider_sends_per_shard']==1152
+          assert p['stages']['Q1-A']['maximum_physical_provider_sends_campaign']==4608
+          assert p['stages']['Q1-A']['attempted_pairs_total']==64
+          assert p['qualification_campaign_authorized'] is False
+          assert p['provider_execution_authorized'] is False
+          assert p['same_request_stream_rerun_allowed'] is False
+          assert p['scientific_effect_gates_authorized'] is False
+          lock=json.loads(show('research/d2_vnext_q1/D2_VNEXT_Q1_A_COHORT_LOCK.json'))
+          assert lock['cohort_pairs_sha256']=='21ae386da6fdba2883a331864fcaffc51f9fa8adb58aa43ee9d68519cadc3686'
+          assert lock['pair_count']==64 and lock['pairs_per_schema']==16
+          shards=json.loads(show('research/d2_vnext_q1/D2_VNEXT_Q1_A_SHARD_MAP.json'))
+          assert shards['shard_count']==4
+          assert shards['workflow_max_parallel']==4
+          assert shards['maximum_registered_logical_calls_per_shard']==880
+          assert shards['maximum_physical_provider_sends_per_shard']==1152
+          assert shards['maximum_physical_provider_sends_campaign']==4608
+          assert all(row['schema_counts']=={'threshold_at_4':4,'parity_pair':4,'interval_pair':4,'pairwise_order':4} for row in shards['shards'])
+          PY
+          echo "candidate_sha=$candidate" >> "$GITHUB_OUTPUT"
+
+  provider-shards:
+    needs: authorization-integrity
+    runs-on: ubuntu-24.04
+    timeout-minutes: 360
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        shard: [0, 1, 2, 3]
+    env:
+      ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      GLM_BASE_URL: https://api.z.ai/api/coding/paas/v4
+      D2_VNEXT_Q1_A_EXECUTION_AUTHORIZED: "1"
+    steps:
+      - name: Checkout Resonance World
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          fetch-depth: 2
+      - name: Checkout pinned Hermes Agent
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+        with:
+          repository: hermes-agent-org/hermes
+          ref: 036cbdfa0a3158454a0a2a7a7388cf70353326b4
+          path: .hermes-src
+          fetch-depth: 1
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+          cache: pip
+      - name: Reverify exact authorized parent and pinned supported product
+        shell: bash
+        run: |
+          set -euo pipefail
+          test "${GITHUB_RUN_ATTEMPT}" = '1'
+          test -n "${ZAI_API_KEY:-}"
+          test "${GLM_BASE_URL}" = 'https://api.z.ai/api/coding/paas/v4'
+          test "$(git rev-parse HEAD^)" = '${{ needs.authorization-integrity.outputs.candidate_sha }}'
+          test "$(git -C .hermes-src rev-parse HEAD)" = '036cbdfa0a3158454a0a2a7a7388cf70353326b4'
+          test "$(git -C .hermes-src rev-parse HEAD:run_agent.py)" = '4c0d3be4b0c2d364c550fa663d34f6545c9e6d20'
+          test "$(git -C .hermes-src rev-parse HEAD:pyproject.toml)" = '95a1dfddd74bc399dd7f23f8d0143852b5689463'
+          grep -Fq 'version = "0.8.0"' .hermes-src/pyproject.toml
+      - name: Install frozen supported-product environment
+        run: |
+          python -m pip install -e '.[dev]'
+          python -m pip install ./.hermes-src 'openai==2.21.0' 'httpx==0.28.1'
+          python - <<'PY'
+          import importlib.metadata, httpx
+          from openai._constants import DEFAULT_MAX_RETRIES
+          assert importlib.metadata.version('hermes-agent') == '0.8.0'
+          assert importlib.metadata.version('openai') == '2.21.0'
+          assert importlib.metadata.version('httpx') == '0.28.1'
+          assert httpx.__version__ == '0.28.1'
+          assert DEFAULT_MAX_RETRIES == 2
+          assert hasattr(httpx.Client, '_send_single_request')
+          assert hasattr(httpx.AsyncClient, '_send_single_request')
+          PY
+      - name: Execute one bounded Q1-A provider shard
+        shell: bash
+        run: |
+          set -euo pipefail
+          env \
+            -u OPENROUTER_API_KEY -u OPENAI_API_KEY -u OPENAI_BASE_URL \
+            -u ANTHROPIC_API_KEY -u ANTHROPIC_TOKEN -u NOUS_API_KEY \
+            -u GLM_API_KEY -u Z_AI_API_KEY -u KIMI_API_KEY -u MINIMAX_API_KEY \
+            -u DEEPSEEK_API_KEY -u DASHSCOPE_API_KEY -u XAI_API_KEY \
+            python scripts/run_d2_vnext_q1_acquisition.py \
+              --stage Q1-A \
+              --shard-id '${{ matrix.shard }}' \
+              --output-dir 'output/provider-${{ matrix.shard }}'
+      - name: Verify Q1-A shard remains unclassified and bounded
+        shell: bash
+        run: |
+          python - '${{ matrix.shard }}' <<'PY'
+          import json, pathlib, sys
+          shard=int(sys.argv[1])
+          p=json.loads(pathlib.Path(f'output/provider-{shard}/d2-vnext-q1a-provider-shard-{shard:02d}.json').read_text())
+          assert p['stage']=='Q1-A'
+          assert p['classification'] is None
+          assert p['attempted_pairs']==16
+          assert p['schema_counts']=={'threshold_at_4':4,'parity_pair':4,'interval_pair':4,'pairwise_order':4}
+          a=p['transport_accounting']
+          assert 0 <= a['physical_provider_sends_observed'] <= 1152
+          assert a['maximum_physical_provider_sends_per_logical_call']==36
+          assert a['maximum_physical_provider_sends_per_shard']==1152
+          assert a['provider_sends_blocked_by_budget']==0
+          assert a['unexpected_outbound_http_requests_blocked']==0
+          assert a['logical_attribution_mismatch_blocks']==0
+          assert a['provider_workers_alive_after_drain']==0
+          assert a['transport_hooks_restored_after_drain'] is True
+          assert p['scientific_effect_gates_authorized'] is False
+          assert p['acceptance_action_authorized'] is False
+          assert p['production_historical_substrate_enabled'] is False
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: d2-vnext-q1a-provider-shard-${{ matrix.shard }}
+          path: output/provider-${{ matrix.shard }}/
+          if-no-files-found: error
+          retention-days: 90
+
+  aggregate-provider:
+    needs: [authorization-integrity, provider-shards]
+    if: ${{ always() && needs.authorization-integrity.result == 'success' && needs.provider-shards.result != 'skipped' }}
+    runs-on: ubuntu-24.04
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - run: mkdir -p output/provider-shards
+      - name: Download available Q1-A provider shard artifacts
+        uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        continue-on-error: true
+        with:
+          pattern: d2-vnext-q1a-provider-shard-*
+          path: output/provider-shards
+          merge-multiple: true
+      - name: Aggregate Q1-A without classification
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          PYTHONPATH=scripts python scripts/aggregate_d2_vnext_q1_acquisition.py \
+            output/provider-shards \
+            --stage Q1-A \
+            --output-dir output/canonical-provider
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: d2-vnext-q1a-canonical-provider-output
+          path: output/canonical-provider/
+          if-no-files-found: error
+          retention-days: 90
+
+  evaluate-frozen:
+    needs: aggregate-provider
+    runs-on: ubuntu-24.04
+    timeout-minutes: 30
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
+        with:
+          python-version: "3.12"
+          cache: pip
+      - run: python -m pip install -e '.[dev]'
+      - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+        with:
+          name: d2-vnext-q1a-canonical-provider-output
+          path: output/canonical-provider
+      - name: Evaluate frozen Q1-A acquisition gate
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          PYTHONPATH=scripts python scripts/evaluate_d2_vnext_q1_acquisition.py \
+            output/canonical-provider/d2-vnext-q1a-provider-output.json \
+            --output-dir output/evaluation
+      - name: Verify Q1-A authority ceiling
+        run: |
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          p=json.loads(Path('output/evaluation/d2-vnext-q1a-qualification-result.json').read_text())
+          assert p['classification'] in {'D2-vNext-Q1-A0','D2-vNext-Q1-A1','D2-vNext-Q1-A-PASS'}
+          assert p['scientific_effect_gates_computed'] is False
+          assert p['q1_b_provider_execution_authorized'] is False
+          assert p['registry_promotion_authorized'] is False
+          assert p['acceptance_action_authorized'] is False
+          assert p['production_historical_substrate_enabled'] is False
+          PY
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+        with:
+          name: d2-vnext-q1a-acquisition-qualification-evaluation
+          path: output/evaluation/
+          if-no-files-found: error
+          retention-days: 90
+
+  rerun-prohibited:
+    if: ${{ github.run_attempt != 1 }}
+    runs-on: ubuntu-24.04
+    steps:
+      - run: |
+          echo 'D2-vNext-Q1-A provider workflow reruns are prohibited.' >&2
+          exit 1

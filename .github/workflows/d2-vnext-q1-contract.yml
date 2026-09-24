@@ -1,0 +1,45 @@
+name: D2-vNext-Q1 Contract
+
+on:
+  pull_request:
+    paths:
+      - "research/d2_vnext_q1/**"
+      - "scripts/validate_d2_vnext_q1_contract.py"
+      - ".github/workflows/d2-vnext-q1-contract.yml"
+  push:
+    branches:
+      - qualification/d2-vnext-q1-acquisition
+    paths:
+      - "research/d2_vnext_q1/**"
+      - "scripts/validate_d2_vnext_q1_contract.py"
+      - ".github/workflows/d2-vnext-q1-contract.yml"
+
+permissions:
+  contents: read
+
+jobs:
+  credential-free-contract:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Assert provider credentials and execution authorization absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${GLM_API_KEY:-}"
+          test -z "${OPENAI_API_KEY:-}"
+          test -z "${D2_VNEXT_Q1_A_EXECUTION_AUTHORIZED:-}"
+          test -z "${D2_VNEXT_Q1_B_EXECUTION_AUTHORIZED:-}"
+      - name: Validate frozen Q1 contract
+        run: python scripts/validate_d2_vnext_q1_contract.py
+      - name: Assert execution markers absent
+        shell: bash
+        run: |
+          set -euo pipefail
+          test ! -e research/d2_vnext_q1/RUN_D2_VNEXT_Q1_A
+          test ! -e research/d2_vnext_q1/RUN_D2_VNEXT_Q1_B
