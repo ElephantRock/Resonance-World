@@ -13,3 +13,13 @@ def test_freshness_and_markers():
     m.validate_cross_stage_seed_separation()
     for stage in core.STAGES:assert all(v==0 for v in m.build_cohort_lock(stage)["predecessor_seed_namespace_overlap"].values())
     root=Path(__file__).resolve().parents[1]/"research/d2_vnext_q2";assert not (root/"RUN_D2_VNEXT_Q2_A").exists() and not (root/"RUN_D2_VNEXT_Q2_B").exists()
+def test_workflow_failure_classification_and_authorization_integrity():
+    root=Path(__file__).resolve().parents[1]/".github/workflows"
+    a=(root/"d2-vnext-q2-a-acquisition.yml").read_text();b=(root/"d2-vnext-q2-b-acquisition.yml").read_text()
+    always="if: ${{ always() && needs.authorization-integrity.result == 'success' }}"
+    assert always in a and "continue-on-error: true" in a and "git cat-file -e \"$candidate:$marker\"" in a
+    assert always in b and "continue-on-error: true" in b and "git cat-file -e \"$candidate:$marker\"" in b
+    assert 'test "$(git diff --name-only "$candidate" HEAD)" = "$marker"' in b
+    assert "aggregate_d2_vnext_q2_acquisition.py output/provider-shards --stage Q2-B" in b
+    assert "evaluate_d2_vnext_q2_acquisition.py output/canonical-provider/d2-vnext-q2b-provider-output.json" in b
+    assert "execution-wave-index.json" in b
