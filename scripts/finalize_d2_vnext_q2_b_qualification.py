@@ -2,14 +2,24 @@
 # ruff: noqa: E501
 from __future__ import annotations
 import argparse,hashlib,json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 def canonical_bytes(v:Any)->bytes:return (json.dumps(v,sort_keys=True,separators=(",",":"))+"\n").encode()
 def file_sha256(p:Path)->str:return hashlib.sha256(p.read_bytes()).hexdigest()
+def _nonempty_string(value:Any)->bool:return isinstance(value,str) and bool(value.strip())
+def _valid_review_timestamp(value:Any)->bool:
+    if not _nonempty_string(value):return False
+    try:parsed=datetime.fromisoformat(value.replace("Z","+00:00"))
+    except ValueError:return False
+    return parsed.tzinfo is not None
 def finalize(result,review):
     if result.get("schema")!="d2-vnext-q2-acquisition-qualification-result-v0.1" or result.get("stage")!="Q2-B" or result.get("classification")!="D2-vNext-Q2-B2":raise ValueError("Q2-B finalization requires B2")
     required={"schema","study_stream","provider_output_sha256","q2_b_evaluation_result_sha256","reviewer","review_timestamp_utc","reviewed_completion_by_schema","reviewed_completion_by_shard","reviewed_completion_by_execution_wave","reviewed_transport_and_runtime_metadata","scientific_effect_inputs_consulted","verdict","rationale"}
     if set(review)!=required or review.get("schema")!="d2-vnext-q2-b-exchangeability-review-v0.1":raise ValueError("Q2-B review schema mismatch")
+    if review.get("study_stream")!="D2-vNext-Q2":raise ValueError("Q2-B review stream mismatch")
+    if not _nonempty_string(review.get("reviewer")) or not _nonempty_string(review.get("rationale")):raise ValueError("Q2-B reviewer and rationale must be nonempty")
+    if not _valid_review_timestamp(review.get("review_timestamp_utc")):raise ValueError("Q2-B review timestamp must be timezone-aware ISO-8601")
     if review.get("provider_output_sha256")!=result.get("provider_output_sha256"):raise ValueError("Q2-B review provider hash mismatch")
     if review.get("scientific_effect_inputs_consulted") is not False:raise ValueError("scientific-effect inputs prohibited")
     for k in ("reviewed_completion_by_schema","reviewed_completion_by_shard","reviewed_completion_by_execution_wave","reviewed_transport_and_runtime_metadata"):
