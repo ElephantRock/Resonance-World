@@ -18,7 +18,7 @@ MAX_PHYSICAL_SENDS_PER_LOGICAL_CALL = 36
 MAX_PHYSICAL_SENDS_PER_SHARD = 1152
 MAX_PHYSICAL_SENDS_CAMPAIGN = SHARD_COUNT * MAX_PHYSICAL_SENDS_PER_SHARD
 WORKFLOW_MAX_PARALLEL = 4
-EXPECTED_COHORT_SHA256: str | None = None
+EXPECTED_COHORT_SHA256 = "e01208b5ae2e1665ff7990d235d3485e055cb71fb53ea31da8455f41f24b4cc0"
 
 PREDECESSOR_NAMESPACES = {
     "D2-C1": [(1_200_000, 1_299_999)],
@@ -49,166 +49,48 @@ def case_bundle(pair_index: int) -> dict[str, Any]:
     policy = core.policy_for(schema_id, pair_seed)
     development_seed = pair_seed + core.DEVELOPMENT_OFFSET
     evaluation_seed = pair_seed + core.EVALUATION_OFFSET
-    development_cases = core.generate_balanced_cases(
-        rng_seed=development_seed,
-        count=core.DEVELOPMENT_MAX_COUNT,
-        prefix=f"d2-vnext-q3d-{schema_id}-p{local_index:03d}-dev",
-        policy=policy,
-    )
+    development_cases = core.generate_balanced_cases(rng_seed=development_seed,count=core.DEVELOPMENT_MAX_COUNT,prefix=f"d2-vnext-q3d-{schema_id}-p{local_index:03d}-dev",policy=policy)
     development_features = core.features_set(development_cases)
-    evaluation_cases = core.generate_balanced_cases(
-        rng_seed=evaluation_seed,
-        count=core.EVALUATION_COUNT,
-        prefix=f"d2-vnext-q3d-{schema_id}-p{local_index:03d}-eval",
-        policy=policy,
-        exclude_features=development_features,
-    )
-    if development_features & core.features_set(evaluation_cases):
-        raise AssertionError("D2-vNext-Q3-D development/evaluation feature overlap")
-    return {
-        "stage": core.STAGE,
-        "pair_index": pair_index,
-        "schema_id": schema_id,
-        "local_pair_index": local_index,
-        "pair_seed": pair_seed,
-        "development_seed": development_seed,
-        "evaluation_seed": evaluation_seed,
-        "policy": policy,
-        "development_cases": development_cases,
-        "evaluation_cases": evaluation_cases,
-    }
+    evaluation_cases = core.generate_balanced_cases(rng_seed=evaluation_seed,count=core.EVALUATION_COUNT,prefix=f"d2-vnext-q3d-{schema_id}-p{local_index:03d}-eval",policy=policy,exclude_features=development_features)
+    if development_features & core.features_set(evaluation_cases):raise AssertionError("D2-vNext-Q3-D development/evaluation feature overlap")
+    return {"stage":core.STAGE,"pair_index":pair_index,"schema_id":schema_id,"local_pair_index":local_index,"pair_seed":pair_seed,"development_seed":development_seed,"evaluation_seed":evaluation_seed,"policy":policy,"development_cases":development_cases,"evaluation_cases":evaluation_cases}
 
 
 def pair_lock_record(pair_index: int) -> dict[str, Any]:
-    bundle = case_bundle(pair_index)
-    policy: core.SchemaPolicy = bundle["policy"]
-    return {
-        "stage": core.STAGE,
-        "pair_index": pair_index,
-        "schema_id": bundle["schema_id"],
-        "schema_pair_index": bundle["local_pair_index"],
-        "pair_seed": bundle["pair_seed"],
-        "development_seed": bundle["development_seed"],
-        "evaluation_seed": bundle["evaluation_seed"],
-        "private_policy_commitment": core.sha256(policy.private_record()),
-        "development_160_case_ids": [c["case_id"] for c in bundle["development_cases"]],
-        "development_160_cases_sha256": core.sha256(bundle["development_cases"]),
-        "evaluation_case_ids": [c["case_id"] for c in bundle["evaluation_cases"]],
-        "evaluation_cases_sha256": core.sha256(bundle["evaluation_cases"]),
-        "development_evaluation_feature_overlap": 0,
-    }
+    bundle=case_bundle(pair_index);policy:core.SchemaPolicy=bundle["policy"]
+    return {"stage":core.STAGE,"pair_index":pair_index,"schema_id":bundle["schema_id"],"schema_pair_index":bundle["local_pair_index"],"pair_seed":bundle["pair_seed"],"development_seed":bundle["development_seed"],"evaluation_seed":bundle["evaluation_seed"],"private_policy_commitment":core.sha256(policy.private_record()),"development_160_case_ids":[c["case_id"] for c in bundle["development_cases"]],"development_160_cases_sha256":core.sha256(bundle["development_cases"]),"evaluation_case_ids":[c["case_id"] for c in bundle["evaluation_cases"]],"evaluation_cases_sha256":core.sha256(bundle["evaluation_cases"]),"development_evaluation_feature_overlap":0}
 
 
-def _predecessor_overlap(seeds: set[int]) -> dict[str, int]:
-    return {
-        name: sum(1 for seed in seeds if any(low <= seed <= high for low, high in ranges))
-        for name, ranges in PREDECESSOR_NAMESPACES.items()
-    }
+def _predecessor_overlap(seeds:set[int])->dict[str,int]:
+    return {name:sum(1 for seed in seeds if any(low<=seed<=high for low,high in ranges)) for name,ranges in PREDECESSOR_NAMESPACES.items()}
 
 
-def build_cohort_lock() -> dict[str, Any]:
-    records = [pair_lock_record(i) for i in range(core.PAIR_COUNT)]
-    seeds = {
-        int(row[key])
-        for row in records
-        for key in ("pair_seed", "development_seed", "evaluation_seed")
-    }
-    if len(seeds) != core.PAIR_COUNT * 3:
-        raise AssertionError("D2-vNext-Q3-D seed collision")
-    predecessor = _predecessor_overlap(seeds)
-    if any(predecessor.values()):
-        raise AssertionError(f"D2-vNext-Q3-D predecessor seed overlap: {predecessor}")
-    cohort_hash = core.sha256(records)
-    if EXPECTED_COHORT_SHA256 is not None and cohort_hash != EXPECTED_COHORT_SHA256:
-        raise AssertionError(f"D2-vNext-Q3-D cohort drift: {cohort_hash}")
-    return {
-        "schema": "d2-vnext-q3d-diagnostic-cohort-lock-v0.1",
-        "study_stream": "D2-vNext-Q3-D",
-        "stage": core.STAGE,
-        "fresh_namespace": core.NAMESPACE,
-        "pair_count": core.PAIR_COUNT,
-        "pairs_per_schema": core.PAIR_COUNT,
-        "schema_order": list(core.SCHEMA_ORDER),
-        "cohort_pairs_sha256": cohort_hash,
-        "predecessor_seed_namespace_overlap": predecessor,
-        "all_development_evaluation_overlaps_zero": all(r["development_evaluation_feature_overlap"] == 0 for r in records),
-        "pair_records": records,
-        "diagnostic_only": True,
-        "scientific_effect_sample": False,
-        "production_historical_substrate_enabled": False,
-    }
+def build_cohort_lock()->dict[str,Any]:
+    records=[pair_lock_record(i) for i in range(core.PAIR_COUNT)]
+    seeds={int(row[key]) for row in records for key in ("pair_seed","development_seed","evaluation_seed")}
+    if len(seeds)!=core.PAIR_COUNT*3:raise AssertionError("D2-vNext-Q3-D seed collision")
+    predecessor=_predecessor_overlap(seeds)
+    if any(predecessor.values()):raise AssertionError(f"D2-vNext-Q3-D predecessor seed overlap: {predecessor}")
+    cohort_hash=core.sha256(records)
+    if cohort_hash!=EXPECTED_COHORT_SHA256:raise AssertionError(f"D2-vNext-Q3-D cohort drift: {cohort_hash}")
+    return {"schema":"d2-vnext-q3d-diagnostic-cohort-lock-v0.1","study_stream":"D2-vNext-Q3-D","stage":core.STAGE,"fresh_namespace":core.NAMESPACE,"pair_count":core.PAIR_COUNT,"pairs_per_schema":core.PAIR_COUNT,"schema_order":list(core.SCHEMA_ORDER),"cohort_pairs_sha256":cohort_hash,"predecessor_seed_namespace_overlap":predecessor,"all_development_evaluation_overlaps_zero":all(r["development_evaluation_feature_overlap"]==0 for r in records),"diagnostic_only":True,"scientific_effect_sample":False,"production_historical_substrate_enabled":False}
 
 
-def build_shard_map() -> dict[str, Any]:
-    shards = []
-    coverage: list[int] = []
+def build_shard_map()->dict[str,Any]:
+    shards=[];coverage=[]
     for shard_id in range(SHARD_COUNT):
-        start = shard_id * PAIRS_PER_SHARD
-        indices = list(range(start, start + PAIRS_PER_SHARD))
-        coverage.extend(indices)
-        shards.append({
-            "shard": shard_id,
-            "pair_indices": indices,
-            "schema_counts": {core.SCHEMA_ID: PAIRS_PER_SHARD},
-            "attempted_pairs": PAIRS_PER_SHARD,
-            "maximum_physical_provider_sends": MAX_PHYSICAL_SENDS_PER_SHARD,
-        })
-    if coverage != list(range(core.PAIR_COUNT)):
-        raise AssertionError("D2-vNext-Q3-D shard coverage mismatch")
-    return {
-        "schema": "d2-vnext-q3d-diagnostic-shard-map-v0.1",
-        "study_stream": "D2-vNext-Q3-D",
-        "stage": core.STAGE,
-        "fresh_namespace": core.NAMESPACE,
-        "pair_count_attempted": core.PAIR_COUNT,
-        "pairs_per_schema": core.PAIR_COUNT,
-        "schema_id": core.SCHEMA_ID,
-        "shard_count": SHARD_COUNT,
-        "pairs_per_provider_shard": PAIRS_PER_SHARD,
-        "provider_local_concurrency_per_shard": 1,
-        "workflow_max_parallel": WORKFLOW_MAX_PARALLEL,
-        "logical_calls_per_complete_pair": LOGICAL_CALLS_PER_COMPLETE_PAIR,
-        "maximum_registered_logical_calls_per_shard": PAIRS_PER_SHARD * LOGICAL_CALLS_PER_COMPLETE_PAIR,
-        "maximum_physical_provider_sends_per_logical_call": MAX_PHYSICAL_SENDS_PER_LOGICAL_CALL,
-        "maximum_physical_provider_sends_per_shard": MAX_PHYSICAL_SENDS_PER_SHARD,
-        "maximum_physical_provider_sends_campaign": MAX_PHYSICAL_SENDS_CAMPAIGN,
-        "budget_borrowing_allowed": False,
-        "shards": shards,
-        "diagnostic_only": True,
-        "scientific_effect_sample": False,
-        "production_historical_substrate_enabled": False,
-    }
+        start=shard_id*PAIRS_PER_SHARD;indices=list(range(start,start+PAIRS_PER_SHARD));coverage.extend(indices)
+        shards.append({"shard":shard_id,"pair_indices":indices,"schema_counts":{core.SCHEMA_ID:PAIRS_PER_SHARD},"attempted_pairs":PAIRS_PER_SHARD,"maximum_physical_provider_sends":MAX_PHYSICAL_SENDS_PER_SHARD})
+    if coverage!=list(range(core.PAIR_COUNT)):raise AssertionError("D2-vNext-Q3-D shard coverage mismatch")
+    return {"schema":"d2-vnext-q3d-diagnostic-shard-map-v0.1","study_stream":"D2-vNext-Q3-D","stage":core.STAGE,"fresh_namespace":core.NAMESPACE,"pair_count_attempted":core.PAIR_COUNT,"pairs_per_schema":core.PAIR_COUNT,"schema_id":core.SCHEMA_ID,"shard_count":SHARD_COUNT,"pairs_per_provider_shard":PAIRS_PER_SHARD,"provider_local_concurrency_per_shard":1,"workflow_max_parallel":WORKFLOW_MAX_PARALLEL,"logical_calls_per_complete_pair":LOGICAL_CALLS_PER_COMPLETE_PAIR,"maximum_registered_logical_calls_per_shard":PAIRS_PER_SHARD*LOGICAL_CALLS_PER_COMPLETE_PAIR,"maximum_physical_provider_sends_per_logical_call":MAX_PHYSICAL_SENDS_PER_LOGICAL_CALL,"maximum_physical_provider_sends_per_shard":MAX_PHYSICAL_SENDS_PER_SHARD,"maximum_physical_provider_sends_campaign":MAX_PHYSICAL_SENDS_CAMPAIGN,"budget_borrowing_allowed":False,"shards":shards,"diagnostic_only":True,"scientific_effect_sample":False,"production_historical_substrate_enabled":False}
 
 
-def main() -> None:
-    parser = argparse.ArgumentParser()
-    parser.add_argument("--output-dir", default="output/d2-vnext-q3d-materialization")
-    args = parser.parse_args()
-    out = Path(args.output_dir)
-    out.mkdir(parents=True, exist_ok=True)
-    cohort = build_cohort_lock()
-    shard_map = build_shard_map()
-    files = {
-        "D2_VNEXT_Q3D_COHORT_LOCK.json": cohort,
-        "D2_VNEXT_Q3D_SHARD_MAP.json": shard_map,
-    }
-    for name, payload in files.items():
-        (out / name).write_bytes(canonical_bytes(payload))
-    manifest = {
-        "schema": "d2-vnext-q3d-materialization-manifest-v0.1",
-        "study_stream": "D2-vNext-Q3-D",
-        "fresh_namespace": core.NAMESPACE,
-        "cohort_pairs_sha256": cohort["cohort_pairs_sha256"],
-        "maximum_physical_provider_sends_campaign": MAX_PHYSICAL_SENDS_CAMPAIGN,
-        "files": {name: file_sha256(out / name) for name in sorted(files)},
-        "provider_calls": 0,
-        "provider_execution_authorized": False,
-        "scientific_effect_gates_authorized": False,
-        "production_historical_substrate_enabled": False,
-    }
-    (out / "materialization-manifest.json").write_bytes(canonical_bytes(manifest))
-    print(json.dumps(manifest, indent=2, sort_keys=True))
+def main()->None:
+    parser=argparse.ArgumentParser();parser.add_argument("--output-dir",default="output/d2-vnext-q3d-materialization");args=parser.parse_args();out=Path(args.output_dir);out.mkdir(parents=True,exist_ok=True)
+    cohort=build_cohort_lock();shard_map=build_shard_map();files={"D2_VNEXT_Q3D_COHORT_LOCK.json":cohort,"D2_VNEXT_Q3D_SHARD_MAP.json":shard_map}
+    for name,payload in files.items():(out/name).write_bytes(canonical_bytes(payload))
+    manifest={"schema":"d2-vnext-q3d-materialization-manifest-v0.1","study_stream":"D2-vNext-Q3-D","fresh_namespace":core.NAMESPACE,"cohort_pairs_sha256":cohort["cohort_pairs_sha256"],"maximum_physical_provider_sends_campaign":MAX_PHYSICAL_SENDS_CAMPAIGN,"files":{name:file_sha256(out/name) for name in sorted(files)},"provider_calls":0,"provider_execution_authorized":False,"scientific_effect_gates_authorized":False,"production_historical_substrate_enabled":False}
+    (out/"materialization-manifest.json").write_bytes(canonical_bytes(manifest));print(json.dumps(manifest,indent=2,sort_keys=True))
 
 
-if __name__ == "__main__":
-    main()
+if __name__=="__main__":main()
