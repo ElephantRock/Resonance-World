@@ -1,0 +1,7 @@
+{
+  "schema":"d2-vnext-q2-b-exchangeability-review-schema-v0.1",
+  "study_stream":"D2-vNext-Q2",
+  "required_fields":["schema","study_stream","provider_output_sha256","q2_b_evaluation_result_sha256","reviewer","review_timestamp_utc","reviewed_completion_by_schema","reviewed_completion_by_shard","reviewed_completion_by_execution_wave","reviewed_transport_and_runtime_metadata","scientific_effect_inputs_consulted","verdict","rationale"],
+  "allowed_verdicts":["PASS","INCONCLUSIVE_NONEXCHANGEABLE"],
+  "scientific_effect_inputs_allowed":false
+}

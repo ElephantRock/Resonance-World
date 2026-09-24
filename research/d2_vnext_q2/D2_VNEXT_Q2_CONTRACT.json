@@ -1,0 +1,127 @@
+{
+  "schema": "d2-vnext-q2-acquisition-qualification-contract-v0.1",
+  "issue": 293,
+  "study_stream": "D2-vNext-Q2",
+  "status": "construction_only_provider_execution_not_authorized",
+  "purpose": "qualify whether one bounded regeneration after a strictly clean terminal empty result makes the frozen acquisition mechanism sufficiently reliable; no scientific-effect tests",
+  "predecessor": {
+    "stream": "D2-vNext-Q1",
+    "stage": "Q1-A",
+    "workflow_run_id": 35998227643,
+    "classification": "D2-vNext-Q1-A1",
+    "classification_label": "minimum_screen_completion_failure",
+    "provider_output_sha256": "12d25e5c158ccc7e9c76a4f35e44cc2a9ccc8c4930854ab65172b0b3788b0075",
+    "evaluation_result_sha256": "cba92dd2a8e75ca5a98cfe90a3eb8180a7eea44ff34ead29dc69020a5a229b4a",
+    "reuse_in_q2_primary_estimator": false
+  },
+  "supported_product": {
+    "product": "Z.AI GLM Coding Plan",
+    "environment": "Hermes Agent Python library",
+    "hermes_package_version": "0.8.0",
+    "hermes_revision": "036cbdfa0a3158454a0a2a7a7388cf70353326b4",
+    "provider_id": "zai",
+    "api_mode": "chat_completions",
+    "endpoint_base_url": "https://api.z.ai/api/coding/paas/v4",
+    "requested_model": "glm-5.3",
+    "temperature": 0.8,
+    "thinking": "disabled",
+    "response_format": {
+      "type": "json_object"
+    },
+    "openai_sdk_version": "2.21.0",
+    "httpx_version": "0.28.1",
+    "openai_sdk_default_max_retries": 2,
+    "max_agent_iterations_per_invocation": 2,
+    "max_agent_invocations_per_logical_call": 2,
+    "format_regeneration_retries_max": 1,
+    "raw_first_response_content_in_retry_prompt": false,
+    "raw_response_content_persisted_in_failure_record": false,
+    "tools_enabled": false,
+    "memory_enabled": false,
+    "persistent_session": false,
+    "fallback_model": null
+  },
+  "sole_mechanism_change": {
+    "retry_eligibility_added": "strict_clean_terminal_empty_only",
+    "nonempty_parse_invalid_retry_preserved": true,
+    "primary_request_changed": false,
+    "exact_parser_changed": false,
+    "max_agent_invocations_changed": false,
+    "max_iterations_changed": false,
+    "raw_response_retention_changed": false
+  },
+  "fresh_cohorts": {
+    "namespace": "rw.d2-vnext-q2-empty-regeneration-qualification.v1",
+    "q2_a_cohort_sha256": "74ac69fc045c88e93ea08e86d031dcae23fa179bcba03d2b170526085e00b61b",
+    "q2_b_cohort_sha256": "7ccace45abe7df9eb510c72649d99650b7a5b26d66829a65c638d762ce765e53",
+    "cross_stage_seed_overlap_allowed": false,
+    "predecessor_seed_overlap_allowed": false
+  },
+  "sharding": {
+    "mixed_schema_shards": true,
+    "pairs_per_shard": 16,
+    "pairs_per_schema_per_shard": 4,
+    "max_parallel_provider_shards": 4
+  },
+  "transport_topology": {
+    "maximum_registered_logical_calls_per_shard": 880,
+    "maximum_physical_sends_per_logical_call": 36,
+    "maximum_physical_sends_per_shard": 1152,
+    "topology_cap_reused_because_max_invocation_count_unchanged": true,
+    "cross_shard_budget_borrowing_allowed": false,
+    "transport_integrity_fail_closed": true
+  },
+  "q2_a": {
+    "attempted_pairs_per_schema": 16,
+    "attempted_pairs_total": 64,
+    "shard_count": 4,
+    "maximum_physical_sends_campaign": 4608,
+    "continuation_gate": {
+      "minimum_complete_analyzable_pairs_per_schema": 12,
+      "transport_and_accounting_integrity_pass": true,
+      "terminal_failure_observability_complete": true
+    },
+    "provider_execution_authorized": false,
+    "requires_explicit_exact_candidate_authorization": true
+  },
+  "q2_b": {
+    "attempted_pairs_per_schema": 96,
+    "attempted_pairs_total": 384,
+    "shard_count": 24,
+    "maximum_physical_sends_campaign": 27648,
+    "independent_from_q2_a": true,
+    "requires_q2_a_pass": true,
+    "provider_execution_authorized": false,
+    "requires_separate_explicit_exact_candidate_authorization": true
+  },
+  "qualification_statistics": {
+    "future_minimum_analyzable_pairs_per_schema": 88,
+    "future_joint_all_schema_clearance_target": 0.95,
+    "per_schema_clearance_target": 0.9875,
+    "per_schema_lower_bound_alpha": 0.0125,
+    "completion_probability_lower_bound": "one_sided_exact_clopper_pearson",
+    "q1_or_s2_data_pooled": false,
+    "scientific_effect_gates_computed": false
+  },
+  "future_resource_feasibility": {
+    "maximum_sum_attempted_pairs_across_schemas": 640,
+    "maximum_future_mixed_schema_shards": 40,
+    "maximum_physical_sends_per_future_shard": 1152,
+    "maximum_future_topology_physical_sends": 46080,
+    "existing_campaign_boundary_physical_sends": 48000,
+    "reserved_headroom_physical_sends": 1920
+  },
+  "governance": {
+    "construction_authorized": true,
+    "provider_execution_authorized": false,
+    "q1_b_execution_authorized": false,
+    "same_stream_rerun_authorized": false,
+    "adaptive_rescue_authorized": false,
+    "scientific_effect_gates_authorized": false,
+    "acceptance_action_authorized": false,
+    "registry_promotion_authorized": false,
+    "d2e_execution_authorized": false,
+    "deployment_or_publication_authorized": false,
+    "historical_substrate_enabled": false
+  }
+}

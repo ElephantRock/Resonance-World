@@ -1,0 +1,24 @@
+name: D2-vNext-Q2 Materialization
+
+on:
+  pull_request:
+    paths: ["research/d2_vnext_q2/**", "scripts/d2_vnext_q2_acquisition_core.py", "scripts/materialize_d2_vnext_q2_acquisition.py", "tests/test_d2_vnext_q2_materialization.py", ".github/workflows/d2-vnext-q2-materialization.yml"]
+  push:
+    branches: ["qualification/d2-vnext-q2-empty-regeneration"]
+permissions:
+  contents: read
+jobs:
+  credential-free-materialization:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - run: python -m pip install -e '.[dev]'
+      - name: Materialize twice and compare
+        run: |
+          PYTHONPATH=scripts python scripts/materialize_d2_vnext_q2_acquisition.py --output-dir output/q2-a
+          PYTHONPATH=scripts python scripts/materialize_d2_vnext_q2_acquisition.py --output-dir output/q2-b
+          diff -qr output/q2-a output/q2-b
+          for f in D2_VNEXT_Q2_A_COHORT_LOCK.json D2_VNEXT_Q2_A_SHARD_MAP.json D2_VNEXT_Q2_B_COHORT_LOCK.json D2_VNEXT_Q2_B_SHARD_MAP.json; do cmp "output/q2-a/$f" "research/d2_vnext_q2/$f"; done
+      - run: PYTHONPATH=scripts pytest -q tests/test_d2_vnext_q2_materialization.py

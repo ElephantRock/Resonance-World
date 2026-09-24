@@ -1,0 +1,13 @@
+{
+  "schema":"d2-vnext-q2-terminal-failure-observability-v0.1",
+  "study_stream":"D2-vNext-Q2",
+  "status":"construction_only",
+  "raw_response_content_allowed":false,
+  "required_attempt_fields":["runtime_exception","error_type","error_sha256","hermes_completed_flag_valid","hermes_completed","hermes_failed","hermes_partial","hermes_interrupted","hermes_error_present","api_calls","exact_structured_parse_valid","parse_diagnostic","physical_provider_sends_observed","exact_attributed_clean_transport","logical_attribution_integrity","effective_completed","terminal_iteration_override_used","adapter_reason"],
+  "required_terminal_fields":["pair_public_id","pair_index","schema_id","arm","phase","logical_call_index","first_attempt","retry_eligible","retry_trigger_class","retry_used","second_attempt","accepted_exact_completion","terminal_error_type","terminal_error_sha256"],
+  "retry_trigger_classes":["clean_nonempty_exact_parser_invalid","clean_terminal_empty"],
+  "clean_terminal_empty_requirements":{"runtime_exception":false,"final_response_length":0,"adapter_reason":"final_response_empty","hermes_completed_flag_valid":true,"hermes_completed":false,"hermes_failed":false,"hermes_partial":false,"hermes_interrupted":false,"hermes_error_present":false,"api_calls_equals_max_iterations":true,"exact_attributed_clean_transport":true,"logical_attribution_integrity":true,"json_mode_compatibility_failure":false,"transport_budget_or_attribution_blocks":0},
+  "instrumentation_invariants":{"maximum_retry_count_changed":false,"retry_eligibility_change":"clean_terminal_empty_only","primary_prompt_content_change_allowed":false,"retry_prompt_change_allowed_only_for_bounded_trigger_class":true,"terminal_acceptance_change_allowed":false,"exact_parser_change_allowed":false,"scientific_output_change_allowed":false},
+  "forbidden_fields_or_payloads":["raw_response_text","raw_first_response_text","raw_second_response_text","raw_provider_body","prompt_text","retry_prompt_text","final_response"],
+  "required_zero_provider_fixtures":["clean_first_attempt_exact_completion","clean_terminal_empty_retry_success","clean_terminal_empty_retry_failure","empty_but_unclean_not_retry_eligible","parse_invalid_retry_preserved","no_third_invocation","raw_content_non_retention","budget_or_attribution_defect_prevents_retry"]
+}

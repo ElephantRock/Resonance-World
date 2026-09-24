@@ -1,0 +1,14 @@
+{
+  "schema": "d2-vnext-q2-acquisition-qualification-schema-suite-v0.1",
+  "study_stream": "D2-vNext-Q2",
+  "fresh_namespace": "rw.d2-vnext-q2-empty-regeneration-qualification.v1",
+  "schemas": [
+    {"id":"threshold_at_4","role":"qualification_positive_control_schema","stage_seed_bases":{"Q2-A":13000000,"Q2-B":14000000}},
+    {"id":"parity_pair","role":"qualification_schema","stage_seed_bases":{"Q2-A":13200000,"Q2-B":14200000}},
+    {"id":"interval_pair","role":"qualification_schema","stage_seed_bases":{"Q2-A":13400000,"Q2-B":14400000}},
+    {"id":"pairwise_order","role":"qualification_schema","stage_seed_bases":{"Q2-A":13600000,"Q2-B":14600000}}
+  ],
+  "stages":{"Q2-A":{"pairs_per_schema":16},"Q2-B":{"pairs_per_schema":96}},
+  "future_use":{"eligible_as_scientific_effect_evidence":false,"eligible_as_d2e_heldout_confirmatory_schema":false},
+  "historical_substrate_enabled":false
+}
