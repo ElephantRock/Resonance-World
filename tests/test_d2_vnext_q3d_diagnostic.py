@@ -1,7 +1,7 @@
 from __future__ import annotations
 
 import json
-import os
+import sys
 from pathlib import Path
 from types import SimpleNamespace
 
@@ -9,6 +9,7 @@ import pytest
 
 import d2_vnext_q3d_diagnostic_core as core
 import d2_vnext_q3d_hermes_client as client
+import evaluate_d2_vnext_q3d_diagnostic as evaluator
 import materialize_d2_vnext_q3d_diagnostic as materializer
 import run_d2_vnext_q3d_diagnostic as runner
 
@@ -99,3 +100,57 @@ def test_contract_remains_behaviorally_identical_to_q2() -> None:
     assert invariance["max_physical_provider_sends_per_logical_call"] == client.MAX_PHYSICAL_SENDS_PER_LOGICAL_CALL == 36
     assert invariance["parser_relaxation_allowed"] is False
     assert invariance["third_invocation_allowed"] is False
+
+
+def _diagnostic_attempt(boundary: str, *, clean_empty: bool) -> dict:
+    return {
+        "agent_invocation_index": 1,
+        "api_calls": 2,
+        "loop_termination_reason": "iteration_budget_exhausted",
+        "provider_semantic_completions": [{"assistant_content_present": boundary != "provider_content_absent"}],
+        "terminal_adapter": {"candidate_present": not clean_empty},
+        "boundary_classification": boundary,
+        "exact_attributed_clean_transport": True,
+        "logical_attribution_integrity": True,
+        "adapter_reason": "final_response_empty" if clean_empty else "structured_parse_invalid",
+        "exact_structured_parse_valid": False,
+        "parse_diagnostic": "json_decode_failure",
+        "runtime_exception": False,
+        "final_response_length": 0 if clean_empty else 8,
+    }
+
+
+def _evaluate_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, payload: dict) -> dict:
+    source = tmp_path / "provider.json"
+    output_dir = tmp_path / "evaluation"
+    source.write_text(json.dumps(payload))
+    monkeypatch.setattr(sys, "argv", ["evaluate", str(source), "--output-dir", str(output_dir)])
+    evaluator.main()
+    return json.loads((output_dir / "d2-vnext-q3d-diagnostic-evaluation.json").read_text())
+
+
+def _provider_payload(attempt: dict, *, integrity_defects: list[str] | None = None) -> dict:
+    return {
+        "attempted_pairs": 16,
+        "complete_pairs": 0,
+        "failed_pairs": 16,
+        "physical_provider_sends_observed": 32,
+        "integrity_defects": integrity_defects or [],
+        "pair_records": [{"q3d_observability": {"first_attempt": attempt, "second_attempt": None}}],
+    }
+
+
+def test_evaluator_fails_closed_on_integrity_defect(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(_diagnostic_attempt("provider_content_absent", clean_empty=True), integrity_defects=["synthetic_defect"]))
+    assert result["classification"] == "Q3-D-INTEGRITY-FAIL"
+
+
+def test_evaluator_localizes_clean_terminal_empty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(_diagnostic_attempt("provider_content_absent", clean_empty=True)))
+    assert result["classification"] == "Q3-D-BOUNDARY-LOCALIZED"
+    assert result["clean_terminal_empty_target_events"] == 1
+
+
+def test_evaluator_reports_no_target_event(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(_diagnostic_attempt("adapter_candidate_nonempty_parse_invalid", clean_empty=False)))
+    assert result["classification"] == "Q3-D-NO-TARGET-EVENT"
