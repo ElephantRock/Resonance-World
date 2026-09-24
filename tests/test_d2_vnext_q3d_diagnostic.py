@@ -73,11 +73,15 @@ def test_semantic_wrapper_returns_identical_response_and_calls_once() -> None:
     assert len(recorder.rows()) == 1
 
 
-def test_boundary_classification_is_structural() -> None:
-    assert client.classify_boundary(runtime_exception=False, provider_semantic=[{"assistant_content_present": False}], candidate_present=False, parse_valid=False, effective_completed=False) == "provider_content_absent"
-    assert client.classify_boundary(runtime_exception=False, provider_semantic=[{"assistant_content_present": True}], candidate_present=False, parse_valid=False, effective_completed=False) == "provider_content_present_hermes_terminal_absent"
-    assert client.classify_boundary(runtime_exception=False, provider_semantic=[{"assistant_content_present": True}], candidate_present=True, parse_valid=False, effective_completed=False) == "adapter_candidate_nonempty_parse_invalid"
-    assert client.classify_boundary(runtime_exception=False, provider_semantic=[{"assistant_content_present": True}], candidate_present=True, parse_valid=True, effective_completed=True) == "accepted_exact_completion"
+def test_boundary_classification_separates_hermes_and_adapter() -> None:
+    provider_present = [{"semantic_response_observed": True, "assistant_content_present": True}]
+    provider_absent = [{"semantic_response_observed": True, "assistant_content_present": False}]
+    empty = {"present": False}
+    present = {"present": True}
+    assert client.classify_boundary(runtime_exception=False, provider_semantic=provider_absent, hermes_terminal=empty, adapter_candidate=empty, parse_valid=False, effective_completed=False) == "provider_content_absent"
+    assert client.classify_boundary(runtime_exception=False, provider_semantic=provider_present, hermes_terminal=empty, adapter_candidate=empty, parse_valid=False, effective_completed=False) == "provider_content_present_hermes_terminal_absent"
+    assert client.classify_boundary(runtime_exception=False, provider_semantic=provider_present, hermes_terminal=present, adapter_candidate=empty, parse_valid=False, effective_completed=False) == "hermes_terminal_present_adapter_candidate_absent"
+    assert client.classify_boundary(runtime_exception=False, provider_semantic=provider_present, hermes_terminal=present, adapter_candidate=present, parse_valid=False, effective_completed=False) == "adapter_candidate_nonempty_parse_invalid"
 
 
 def test_authority_gate_fails_without_env_or_marker(monkeypatch: pytest.MonkeyPatch) -> None:
@@ -102,53 +106,44 @@ def test_contract_remains_behaviorally_identical_to_q2() -> None:
     assert invariance["third_invocation_allowed"] is False
 
 
-def _diagnostic_attempt(boundary: str, *, clean_empty: bool) -> dict:
-    assistant_present = boundary != "provider_content_absent"
-    semantic = {
-        "agent_invocation_index": 1,
-        "semantic_response_index": 1,
-        "effective_model_if_returned": "glm-5.3",
-        "choice_count": 1,
-        "finish_reason_present": True,
-        "finish_reason": "stop",
-        "assistant_message_present": True,
-        "assistant_content_present": assistant_present,
-        "assistant_content_type": "string",
-        "assistant_content_length": 4 if assistant_present else 0,
-        "assistant_content_sha256": "a" * 64 if assistant_present else None,
-        "tool_calls_present": False,
-        "tool_calls_count": 0,
-        "usage_prompt_tokens": 7,
-        "usage_completion_tokens": 3,
-        "usage_total_tokens": 10,
-    }
-    adapter = {
-        "candidate_source": "hermes_final_response",
-        "candidate_present": not clean_empty,
-        "candidate_type": "string",
-        "candidate_length": 0 if clean_empty else 8,
-        "candidate_sha256": None if clean_empty else "b" * 64,
-        "adapter_reason": "final_response_empty" if clean_empty else "structured_parse_invalid",
-        "parse_diagnostic": "json_decode_failure",
-        "exact_structured_parse_valid": False,
-        "accepted_exact_completion": False,
-    }
-    return {
-        "agent_invocation_index": 1,
-        "api_calls": 1,
-        "loop_termination_reason": "iteration_budget_exhausted",
-        "provider_semantic_completions": [semantic],
-        "terminal_adapter": adapter,
-        "boundary_classification": boundary,
-        "exact_attributed_clean_transport": True,
-        "logical_attribution_integrity": True,
-        "adapter_reason": adapter["adapter_reason"],
-        "exact_structured_parse_valid": False,
-        "parse_diagnostic": "json_decode_failure",
-        "runtime_exception": False,
-        "physical_provider_sends_observed": 1,
-        "final_response_length": adapter["candidate_length"],
-    }
+def test_observability_schema_matches_v02_record_shape() -> None:
+    schema = json.loads((ROOT / "research/d2_vnext_q3d/D2_VNEXT_Q3D_OBSERVABILITY_SCHEMA.json").read_text())
+    assert schema["properties"]["schema"]["const"] == "d2-vnext-q3d-structural-observability-record-v0.2"
+    assert "pair_public_id" in schema["required"]
+    assert "agent_invocations" in schema["required"]
+    invocation = schema["$defs"]["agent_invocation"]
+    assert "semantic_completions" in invocation["required"]
+    semantic = schema["$defs"]["semantic_completion"]
+    assert "provider_sends" in semantic["required"]
+    adapter = schema["$defs"]["adapter_snapshot"]
+    assert "candidate_matches_hermes_terminal" in adapter["required"]
+
+
+def _semantic(invocation_index: int, response_index: int, *, assistant_present: bool) -> dict:
+    return {"agent_invocation_index": invocation_index, "semantic_response_index": response_index, "semantic_response_observed": True, "semantic_response_error_type": None, "effective_model_if_returned": "glm-5.3", "choice_count": 1, "finish_reason_present": True, "finish_reason": "stop", "assistant_message_present": True, "assistant_content_present": assistant_present, "assistant_content_type": "string", "assistant_content_length": 4 if assistant_present else 0, "assistant_content_sha256": "a" * 64 if assistant_present else None, "tool_calls_present": False, "tool_calls_count": 0, "usage_prompt_tokens": 7, "usage_completion_tokens": 3, "usage_total_tokens": 10, "provider_sends": [{"logical_send_index": response_index, "total_send_index": response_index, "http_status": 200, "transport_error_type": None}]}
+
+
+def _invocation(invocation_index: int, *, clean_empty: bool, boundary: str) -> dict:
+    semantic = [_semantic(invocation_index, 1, assistant_present=boundary != "provider_content_absent"), _semantic(invocation_index, 2, assistant_present=boundary != "provider_content_absent")]
+    hermes_terminal = {"present": not clean_empty, "type": "string", "length": 8 if not clean_empty else 0, "sha256": "b" * 64 if not clean_empty else None}
+    adapter = {"candidate_source": "hermes_final_response_after_q2_string_normalization", "candidate_present": not clean_empty, "candidate_type": "string", "candidate_length": 8 if not clean_empty else 0, "candidate_sha256": "b" * 64 if not clean_empty else None, "candidate_matches_hermes_terminal": True, "adapter_reason": "final_response_empty" if clean_empty else "structured_parse_invalid", "parse_diagnostic": "json_decode_failure", "exact_structured_parse_valid": False, "accepted_exact_completion": False}
+    return {"agent_invocation_index": invocation_index, "api_calls": 2, "hermes_completed_flag_valid": True, "hermes_completed": False, "hermes_failed": False, "hermes_partial": False, "hermes_interrupted": False, "hermes_error_present": False, "loop_termination_reason": "iteration_budget_exhausted", "terminal_iteration_override_used": False, "physical_provider_sends_observed": 2, "exact_attributed_clean_transport": True, "logical_attribution_integrity": True, "json_mode_compatibility_failure": False, "semantic_completions": semantic, "hermes_terminal": hermes_terminal, "adapter_snapshot": adapter, "boundary_classification": boundary}
+
+
+def _record(*, clean_empty_target: bool, boundary: str) -> dict:
+    first = _invocation(1, clean_empty=clean_empty_target, boundary=boundary)
+    invocations = [first]
+    trigger = None
+    retry_used = False
+    if clean_empty_target:
+        trigger = "clean_terminal_empty"
+        retry_used = True
+        invocations.append(_invocation(2, clean_empty=True, boundary="provider_content_absent"))
+    return {"schema": "d2-vnext-q3d-structural-observability-record-v0.2", "study_stream": "D2-vNext-Q3-D", "stage": "Q3-D", "pair_public_id": "d2-vnext-q3d-pairwise_order-pair-000", "schema_id": "pairwise_order", "arm": "fresh", "phase": "fresh/evaluation1", "logical_call_index": 0, "physical_provider_sends_observed": 4 if retry_used else 2, "agent_invocations": invocations, "retry_eligible_after_first": trigger is not None, "retry_trigger_class": trigger, "retry_used": retry_used, "accepted_attempt_index": None, "accepted_exact_completion": False, "boundary_classification": invocations[-1]["boundary_classification"], "observability_defects": []}
+
+
+def _provider_payload(record: dict, *, integrity_defects: list[str] | None = None) -> dict:
+    return {"attempted_pairs": 16, "complete_pairs": 0, "failed_pairs": 16, "physical_provider_sends_observed": 32, "integrity_defects": integrity_defects or [], "pair_records": [{"pair_public_id": record["pair_public_id"], "schema_id": record["schema_id"], "q3d_observability_records": [record]}]}
 
 
 def _evaluate_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, payload: dict) -> dict:
@@ -160,35 +155,35 @@ def _evaluate_payload(tmp_path: Path, monkeypatch: pytest.MonkeyPatch, payload: 
     return json.loads((output_dir / "d2-vnext-q3d-diagnostic-evaluation.json").read_text())
 
 
-def _provider_payload(attempt: dict, *, integrity_defects: list[str] | None = None) -> dict:
-    return {
-        "attempted_pairs": 16,
-        "complete_pairs": 0,
-        "failed_pairs": 16,
-        "physical_provider_sends_observed": 32,
-        "integrity_defects": integrity_defects or [],
-        "pair_records": [{"q3d_observability": {"first_attempt": attempt, "second_attempt": None}}],
-    }
-
-
 def test_evaluator_fails_closed_on_integrity_defect(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(_diagnostic_attempt("provider_content_absent", clean_empty=True), integrity_defects=["synthetic_defect"]))
+    record = _record(clean_empty_target=True, boundary="provider_content_absent")
+    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(record, integrity_defects=["synthetic_defect"]))
     assert result["classification"] == "Q3-D-INTEGRITY-FAIL"
 
 
-def test_evaluator_localizes_clean_terminal_empty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(_diagnostic_attempt("provider_content_absent", clean_empty=True)))
+def test_evaluator_localizes_only_frozen_clean_terminal_empty(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    record = _record(clean_empty_target=True, boundary="provider_content_absent")
+    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(record))
     assert result["classification"] == "Q3-D-BOUNDARY-LOCALIZED"
     assert result["clean_terminal_empty_target_events"] == 1
+    assert result["target_event_boundary_counts"] == {"provider_content_absent": 1}
 
 
 def test_evaluator_reports_no_target_event(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(_diagnostic_attempt("adapter_candidate_nonempty_parse_invalid", clean_empty=False)))
+    record = _record(clean_empty_target=False, boundary="adapter_candidate_nonempty_parse_invalid")
+    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(record))
     assert result["classification"] == "Q3-D-NO-TARGET-EVENT"
 
 
+def test_evaluator_fails_closed_when_trigger_predicate_does_not_match(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    record = _record(clean_empty_target=True, boundary="provider_content_absent")
+    record["agent_invocations"][0]["hermes_failed"] = True
+    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(record))
+    assert result["classification"] == "Q3-D-OBSERVABILITY-FAIL"
+
+
 def test_evaluator_fails_closed_on_missing_semantic_completion(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
-    attempt = _diagnostic_attempt("provider_content_absent", clean_empty=True)
-    attempt["provider_semantic_completions"] = []
-    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(attempt))
+    record = _record(clean_empty_target=True, boundary="provider_content_absent")
+    record["agent_invocations"][0]["semantic_completions"] = []
+    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(record))
     assert result["classification"] == "Q3-D-OBSERVABILITY-FAIL"
