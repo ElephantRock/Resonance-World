@@ -103,20 +103,51 @@ def test_contract_remains_behaviorally_identical_to_q2() -> None:
 
 
 def _diagnostic_attempt(boundary: str, *, clean_empty: bool) -> dict:
+    assistant_present = boundary != "provider_content_absent"
+    semantic = {
+        "agent_invocation_index": 1,
+        "semantic_response_index": 1,
+        "effective_model_if_returned": "glm-5.3",
+        "choice_count": 1,
+        "finish_reason_present": True,
+        "finish_reason": "stop",
+        "assistant_message_present": True,
+        "assistant_content_present": assistant_present,
+        "assistant_content_type": "string",
+        "assistant_content_length": 4 if assistant_present else 0,
+        "assistant_content_sha256": "a" * 64 if assistant_present else None,
+        "tool_calls_present": False,
+        "tool_calls_count": 0,
+        "usage_prompt_tokens": 7,
+        "usage_completion_tokens": 3,
+        "usage_total_tokens": 10,
+    }
+    adapter = {
+        "candidate_source": "hermes_final_response",
+        "candidate_present": not clean_empty,
+        "candidate_type": "string",
+        "candidate_length": 0 if clean_empty else 8,
+        "candidate_sha256": None if clean_empty else "b" * 64,
+        "adapter_reason": "final_response_empty" if clean_empty else "structured_parse_invalid",
+        "parse_diagnostic": "json_decode_failure",
+        "exact_structured_parse_valid": False,
+        "accepted_exact_completion": False,
+    }
     return {
         "agent_invocation_index": 1,
-        "api_calls": 2,
+        "api_calls": 1,
         "loop_termination_reason": "iteration_budget_exhausted",
-        "provider_semantic_completions": [{"assistant_content_present": boundary != "provider_content_absent"}],
-        "terminal_adapter": {"candidate_present": not clean_empty},
+        "provider_semantic_completions": [semantic],
+        "terminal_adapter": adapter,
         "boundary_classification": boundary,
         "exact_attributed_clean_transport": True,
         "logical_attribution_integrity": True,
-        "adapter_reason": "final_response_empty" if clean_empty else "structured_parse_invalid",
+        "adapter_reason": adapter["adapter_reason"],
         "exact_structured_parse_valid": False,
         "parse_diagnostic": "json_decode_failure",
         "runtime_exception": False,
-        "final_response_length": 0 if clean_empty else 8,
+        "physical_provider_sends_observed": 1,
+        "final_response_length": adapter["candidate_length"],
     }
 
 
@@ -154,3 +185,10 @@ def test_evaluator_localizes_clean_terminal_empty(tmp_path: Path, monkeypatch: p
 def test_evaluator_reports_no_target_event(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
     result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(_diagnostic_attempt("adapter_candidate_nonempty_parse_invalid", clean_empty=False)))
     assert result["classification"] == "Q3-D-NO-TARGET-EVENT"
+
+
+def test_evaluator_fails_closed_on_missing_semantic_completion(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
+    attempt = _diagnostic_attempt("provider_content_absent", clean_empty=True)
+    attempt["provider_semantic_completions"] = []
+    result = _evaluate_payload(tmp_path, monkeypatch, _provider_payload(attempt))
+    assert result["classification"] == "Q3-D-OBSERVABILITY-FAIL"
