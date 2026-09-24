@@ -233,5 +233,15 @@ def test_provider_caps_and_agent_profile_are_frozen() -> None:
     assert plan["historical_substrate_enabled"] is False
 
 
-def test_execution_marker_is_absent_from_construction_candidate() -> None:
-    assert not (ROOT / "research/d2_vnext_s2/RUN_D2_VNEXT_S2_SOURCE_ACQUISITION").exists()
+def test_execution_marker_preserves_consumed_authorization_record() -> None:
+    marker = ROOT / "research/d2_vnext_s2/RUN_D2_VNEXT_S2_SOURCE_ACQUISITION"
+    fields = dict(line.split("=", 1) for line in marker.read_text().splitlines() if line)
+    assert fields == {
+        "candidate_sha": "d65f5bb803af966b79622d6104f00756b7e9e8c7",
+        "issue": "279",
+        "authorization": (
+            "D2_vNext_S2_exact_candidate_scientific_campaign_and_48000_send_cap_"
+            "explicitly_authorized"
+        ),
+        "maximum_physical_sends_campaign": "48000",
+    }
