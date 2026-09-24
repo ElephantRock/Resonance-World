@@ -1,0 +1,61 @@
+{
+  "schema": "d2-vnext-q2-acquisition-qualification-request-plan-v0.1",
+  "issue": 293,
+  "study_stream": "D2-vNext-Q2",
+  "fresh_namespace": "rw.d2-vnext-q2-empty-regeneration-qualification.v1",
+  "provider": "Z.AI",
+  "provider_id": "zai",
+  "subscription_product": "GLM Coding Plan",
+  "supported_product_environment": "Hermes Agent Python library",
+  "hermes_package_version": "0.8.0",
+  "hermes_repository": "hermes-agent-org/hermes",
+  "hermes_revision": "036cbdfa0a3158454a0a2a7a7388cf70353326b4",
+  "hermes_run_agent_blob_sha": "4c0d3be4b0c2d364c550fa663d34f6545c9e6d20",
+  "hermes_pyproject_blob_sha": "95a1dfddd74bc399dd7f23f8d0143852b5689463",
+  "qualified_terminal_adapter_blob_sha": "ba16d2eb4b7255437c8ab224e91d5ed093897990",
+  "qualified_provider_send_guard_blob_sha": "4b8896235d8048523d007400d0acfe85470f628c",
+  "api_mode": "chat_completions",
+  "endpoint_base_url": "https://api.z.ai/api/coding/paas/v4",
+  "requested_model": "glm-5.3",
+  "sampling_temperature": 0.8,
+  "thinking": {
+    "type": "disabled"
+  },
+  "json_mode": {
+    "type": "json_object"
+  },
+  "max_tokens_per_invocation": 768,
+  "max_agent_iterations_per_invocation": 2,
+  "max_agent_invocations_per_logical_call": 2,
+  "max_physical_provider_sends_per_logical_call": 36,
+  "max_physical_provider_sends_per_shard": 1152,
+  "retry_intervention": "one_bounded_fresh_format_regeneration_after_clean_nonempty_parser_invalid_or_strict_clean_terminal_empty_first_result",
+  "retry_raw_first_response_content_allowed": false,
+  "response_parser": "exact_top_level_actions_array_8_vocab_optional_ascii_strategy_512",
+  "provider_execution_authorized": false,
+  "qualification_campaign_authorized": false,
+  "scientific_effect_gates_authorized": false,
+  "same_request_stream_rerun_allowed": false,
+  "adaptive_n_allowed": false,
+  "failed_pair_replacement_allowed": false,
+  "stages": {
+    "Q2-A": {
+      "attempted_pairs_per_schema": 16,
+      "attempted_pairs_total": 64,
+      "mixed_schema_shards": 4,
+      "maximum_physical_provider_sends_campaign": 4608,
+      "provider_execution_authorized": false,
+      "requires_explicit_exact_candidate_authorization": true
+    },
+    "Q2-B": {
+      "attempted_pairs_per_schema": 96,
+      "attempted_pairs_total": 384,
+      "mixed_schema_shards": 24,
+      "maximum_physical_provider_sends_campaign": 27648,
+      "provider_execution_authorized": false,
+      "requires_q2_a_pass": true,
+      "requires_separate_explicit_exact_candidate_authorization": true
+    }
+  },
+  "historical_substrate_enabled": false
+}

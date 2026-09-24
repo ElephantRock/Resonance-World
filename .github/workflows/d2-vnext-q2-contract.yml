@@ -1,0 +1,23 @@
+name: D2-vNext-Q2 Contract
+
+on:
+  pull_request:
+    paths: ["research/d2_vnext_q2/**", "scripts/validate_d2_vnext_q2_contract.py", ".github/workflows/d2-vnext-q2-contract.yml"]
+  push:
+    branches: ["qualification/d2-vnext-q2-empty-regeneration"]
+    paths: ["research/d2_vnext_q2/**", "scripts/validate_d2_vnext_q2_contract.py", ".github/workflows/d2-vnext-q2-contract.yml"]
+permissions:
+  contents: read
+jobs:
+  credential-free-contract:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Assert provider authority absent
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_VNEXT_Q2_A_EXECUTION_AUTHORIZED:-}"
+          test -z "${D2_VNEXT_Q2_B_EXECUTION_AUTHORIZED:-}"
+      - run: python scripts/validate_d2_vnext_q2_contract.py

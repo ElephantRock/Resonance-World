@@ -1,0 +1,27 @@
+name: D2-vNext-Q2 Preexecution
+
+on:
+  pull_request:
+    paths: ["research/d2_vnext_q2/**", "scripts/d2_vnext_q2_*.py", "scripts/*d2_vnext_q2*.py", "tests/test_d2_vnext_q2_*.py", ".github/workflows/d2-vnext-q2-*.yml"]
+  push:
+    branches: ["qualification/d2-vnext-q2-empty-regeneration"]
+permissions:
+  contents: read
+jobs:
+  credential-free-preexecution:
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with: {python-version: "3.12"}
+      - name: Assert no provider authority or markers
+        run: |
+          test -z "${ZAI_API_KEY:-}"
+          test -z "${D2_VNEXT_Q2_A_EXECUTION_AUTHORIZED:-}"
+          test -z "${D2_VNEXT_Q2_B_EXECUTION_AUTHORIZED:-}"
+          test ! -e research/d2_vnext_q2/RUN_D2_VNEXT_Q2_A
+          test ! -e research/d2_vnext_q2/RUN_D2_VNEXT_Q2_B
+      - run: python -m pip install -e '.[dev]'
+      - run: PYTHONPATH=scripts python scripts/validate_d2_vnext_q2_contract.py
+      - run: PYTHONPATH=scripts pytest -q tests/test_d2_vnext_q2_*.py
+      - run: ruff check scripts/d2_vnext_q2_*.py scripts/*d2_vnext_q2*.py tests/test_d2_vnext_q2_*.py

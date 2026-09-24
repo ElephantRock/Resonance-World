@@ -1,0 +1,23 @@
+{
+  "schema": "d2-vnext-q2-sample-size-v0.1",
+  "study_stream": "D2-vNext-Q2",
+  "stage_a": {
+    "attempted_pairs_per_schema": 16,
+    "attempted_pairs_total": 64,
+    "minimum_complete_analyzable_pairs_per_schema": 12,
+    "maximum_physical_sends_campaign": 4608
+  },
+  "stage_b": {
+    "attempted_pairs_per_schema": 96,
+    "attempted_pairs_total": 384,
+    "maximum_physical_sends_campaign": 27648
+  },
+  "future_confirmatory": {
+    "minimum_analyzable_pairs_per_schema": 88,
+    "joint_all_schema_clearance_target": 0.95,
+    "per_schema_clearance_target": 0.9875,
+    "one_sided_lower_bound_alpha": 0.0125,
+    "maximum_sum_attempted_pairs_across_schemas": 640
+  },
+  "q1_or_s2_data_pooled": false
+}
