@@ -21,13 +21,17 @@ Q3-D is a diagnostic successor to the consumed Q2-A stream. Its purpose is to lo
 
 This is a localization cohort, not a scientific-effect sample.
 
-## Behavioral and content invariants
+## Behavioral, observability, and content invariants
 
 - no Q2-A rerun, rescue, replenishment, or marker cycling;
 - no Q2-B execution;
 - no new rescue mechanism, parser relaxation, prompt/task change, fallback, third invocation, tools, memory, session, or unregistered HTTP path;
 - the Q2 provider/model/product/Hermes/parser/retry settings remain frozen;
 - provider semantic-completion instrumentation returns the exact original provider response object and adds no provider call;
+- each semantic-completion record is associated with the exact physical-send ledger slice observed during that semantic call;
+- the structural Hermes terminal snapshot is recorded separately from the Q2-normalized terminal-adapter candidate, so a present Hermes value normalized to an empty adapter candidate is distinguishable;
+- the evaluator recognizes a clean-terminal-empty target only when the complete frozen Q2 eligibility predicate is reconstructed: two API calls, valid false completion flag, no Hermes failure/partial/interrupted/error state, clean attributed transport, no JSON-compatibility failure, nonzero bounded sends, exact attribution, empty adapter candidate, and the frozen `clean_terminal_empty` retry trigger/use;
+- authoritative records use `d2-vnext-q3d-structural-observability-record-v0.2` and include pair attribution, per-invocation semantic completions, their physical-send associations, Hermes terminal snapshot, adapter snapshot, boundary classification, and fail-closed observability defects;
 - no raw prompt, provider response, assistant content, or retry content may be retained;
 - structural enums, counts, lengths, token accounting when returned, and SHA-256 content commitments only.
 
