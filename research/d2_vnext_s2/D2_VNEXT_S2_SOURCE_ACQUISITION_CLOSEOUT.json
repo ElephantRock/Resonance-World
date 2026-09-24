@@ -1,5 +1,5 @@
 {
-  "schema": "d2-vnext-s2-source-acquisition-closeout-v0.1",
+  "schema": "d2-vnext-s2-source-acquisition-closeout-v0.2",
   "issue": 279,
   "construction_pull_request": 286,
   "scientific_candidate_sha": "d65f5bb803af966b79622d6104f00756b7e9e8c7",
@@ -9,16 +9,22 @@
   "workflow_run_attempt": 1,
   "workflow_conclusion": "success",
   "classification": "D2-vNext-S2-A0",
-  "classification_label": "minimum_analyzable_n_failure",
+  "classification_label": "acquisition_envelope_integrity_or_minimum_n_failure",
   "attempted_pairs": 384,
   "complete_pairs": 205,
   "failed_pairs": 179,
   "minimum_analyzable_pairs_per_schema": 88,
-  "analyzable_pairs_by_schema": {
-    "threshold_at_4": 60,
-    "parity_pair": 71,
-    "interval_pair": 58,
-    "pairwise_order": 16
+  "schema_outcomes": {
+    "threshold_at_4": {"attempted_pairs": 96, "complete_pairs": 60, "failed_pairs": 36, "analyzable_pairs": 60, "minimum_n_pass": false},
+    "parity_pair": {"attempted_pairs": 96, "complete_pairs": 71, "failed_pairs": 25, "analyzable_pairs": 71, "minimum_n_pass": false},
+    "interval_pair": {"attempted_pairs": 96, "complete_pairs": 58, "failed_pairs": 38, "analyzable_pairs": 58, "minimum_n_pass": false},
+    "pairwise_order": {"attempted_pairs": 96, "complete_pairs": 16, "failed_pairs": 80, "analyzable_pairs": 16, "minimum_n_pass": false}
+  },
+  "evaluator_integrity": {
+    "passed": true,
+    "global_defects": [],
+    "pair_defects": [],
+    "diagnostic_defects": []
   },
   "transport_integrity": {
     "passed": true,
@@ -29,6 +35,17 @@
   "provider_shards": {
     "count": 24,
     "all_jobs_succeeded": true
+  },
+  "pair_failure_summary": {
+    "failure_class": "provider_pair_failure",
+    "error_type": "RuntimeError",
+    "records": 179,
+    "unique_error_sha256_values": 1,
+    "error_sha256": "6c4a6ce59b69ad55cfd186ea90d43a07eb2f694cc17f54e284879eaa5304a6f9",
+    "frozen_runner_fingerprint_preimage": "RuntimeError:D2-vNext-S2 logical call has no accepted exact completion",
+    "complete_pairs_equal_analyzable_pairs_within_each_registered_schema": true,
+    "specific_intra_pair_failure_phase_preserved": false,
+    "interpretation": "All 179 failed pair records share the same frozen-runner application-level failure fingerprint. The canonical failed-pair record does not preserve the exact arm, phase, logical-call index, first-attempt diagnostic, or optional-retry diagnostic that terminated the pair, so those causes are not assigned post hoc."
   },
   "positive_control_continuity_pass": false,
   "confirmatory_gates_entered": false,
@@ -47,11 +64,11 @@
   },
   "frozen_cohort_pairs_sha256": "a61a2667b088301bfedc9158662511179a4e806d4aaf679fb865e1c42ded6c94",
   "descriptive_effects_inferential": false,
-  "posthoc_attrition_forensics_status": "not_yet_performed",
+  "posthoc_attrition_forensics_status": "bounded_pair_level_facts_established_in_closeout; shard_level_diagnostics_pending",
   "same_request_stream_rerun_authorized": false,
   "replacement_or_adaptive_n_authorized": false,
   "registry_promotion_authorized": false,
   "acceptance_action_authorized": false,
   "historical_substrate_enabled": false,
-  "next_programmatic_question": "pair-level and schema-specific attrition forensics followed by prospective acquisition qualification before any fresh successor confirmatory stream"
+  "next_programmatic_question": "quantify schema/shard completion attrition using preserved artifacts, preserve the unidentifiable intra-pair termination boundary, and prospectively qualify acquisition yield before any fresh successor confirmatory stream"
 }
