@@ -8,7 +8,9 @@ from pathlib import Path
 from typing import Any,Iterator
 
 ALLOWED_BOUNDARIES={"provider_content_absent","provider_content_present_hermes_terminal_absent","hermes_terminal_present_adapter_candidate_absent","adapter_candidate_nonempty_parse_invalid","accepted_exact_completion","runtime_or_transport_failure","unclassified_observability_defect"}
-REQUIRED_ATTEMPT_FIELDS={"agent_invocation_index","api_calls","loop_termination_reason","provider_semantic_completions","terminal_adapter","boundary_classification","exact_attributed_clean_transport","logical_attribution_integrity","adapter_reason","exact_structured_parse_valid","parse_diagnostic"}
+REQUIRED_ATTEMPT_FIELDS={"agent_invocation_index","api_calls","loop_termination_reason","provider_semantic_completions","terminal_adapter","boundary_classification","exact_attributed_clean_transport","logical_attribution_integrity","adapter_reason","exact_structured_parse_valid","parse_diagnostic","physical_provider_sends_observed","final_response_length"}
+REQUIRED_SEMANTIC_FIELDS={"agent_invocation_index","semantic_response_index","effective_model_if_returned","choice_count","finish_reason_present","finish_reason","assistant_message_present","assistant_content_present","assistant_content_type","assistant_content_length","assistant_content_sha256","tool_calls_present","tool_calls_count","usage_prompt_tokens","usage_completion_tokens","usage_total_tokens"}
+REQUIRED_ADAPTER_FIELDS={"candidate_source","candidate_present","candidate_type","candidate_length","candidate_sha256","adapter_reason","parse_diagnostic","exact_structured_parse_valid","accepted_exact_completion"}
 
 def canonical_bytes(v:Any)->bytes:return (json.dumps(v,sort_keys=True,separators=(",",":"))+"\n").encode()
 def file_sha256(p:Path)->str:return hashlib.sha256(p.read_bytes()).hexdigest()
@@ -49,8 +51,24 @@ def main()->None:
         if missing:obs_defects.append(f"attempt_{i}_missing:{','.join(missing)}");continue
         boundary=str(attempt.get("boundary_classification"))
         if boundary not in ALLOWED_BOUNDARIES:obs_defects.append(f"attempt_{i}_invalid_boundary")
-        if not isinstance(attempt.get("provider_semantic_completions"),list):obs_defects.append(f"attempt_{i}_provider_semantic_not_list")
-        if not isinstance(attempt.get("terminal_adapter"),dict):obs_defects.append(f"attempt_{i}_terminal_adapter_not_object")
+        semantic=attempt.get("provider_semantic_completions")
+        if not isinstance(semantic,list):
+            obs_defects.append(f"attempt_{i}_provider_semantic_not_list");semantic=[]
+        api_calls=int(attempt.get("api_calls",0))
+        if len(semantic)!=api_calls:obs_defects.append(f"attempt_{i}_semantic_count_{len(semantic)}_api_calls_{api_calls}")
+        for j,row in enumerate(semantic):
+            if not isinstance(row,dict):obs_defects.append(f"attempt_{i}_semantic_{j}_not_object");continue
+            semantic_missing=sorted(REQUIRED_SEMANTIC_FIELDS-set(row))
+            if semantic_missing:obs_defects.append(f"attempt_{i}_semantic_{j}_missing:{','.join(semantic_missing)}")
+            if row.get("agent_invocation_index")!=attempt.get("agent_invocation_index"):obs_defects.append(f"attempt_{i}_semantic_{j}_invocation_mismatch")
+        terminal_adapter=attempt.get("terminal_adapter")
+        if not isinstance(terminal_adapter,dict):
+            obs_defects.append(f"attempt_{i}_terminal_adapter_not_object")
+        else:
+            adapter_missing=sorted(REQUIRED_ADAPTER_FIELDS-set(terminal_adapter))
+            if adapter_missing:obs_defects.append(f"attempt_{i}_terminal_adapter_missing:{','.join(adapter_missing)}")
+            if terminal_adapter.get("adapter_reason")!=attempt.get("adapter_reason"):obs_defects.append(f"attempt_{i}_adapter_reason_mismatch")
+            if terminal_adapter.get("exact_structured_parse_valid")!=attempt.get("exact_structured_parse_valid"):obs_defects.append(f"attempt_{i}_parse_validity_mismatch")
         boundary_counts[boundary]+=1
         clean_empty=bool(not attempt.get("runtime_exception") and attempt.get("adapter_reason")=="final_response_empty" and int(attempt.get("final_response_length",-1))==0 and attempt.get("exact_attributed_clean_transport") is True and attempt.get("logical_attribution_integrity") is True)
         if clean_empty:target.append(attempt)
