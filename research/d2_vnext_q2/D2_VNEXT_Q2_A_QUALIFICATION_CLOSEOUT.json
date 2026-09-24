@@ -1,0 +1,115 @@
+{
+  "artifacts": {
+    "canonical_provider_output": {
+      "artifact_digest": "sha256:14269d002a76b82778d7c83fde6b984bb0af98736a4503df455bb9c11d4ddb1d",
+      "artifact_id": 10828214001,
+      "provider_output_sha256": "0cb7b6260926a55d852819a651d07b7e1e1efc4e0d894d8796700c09705ef2ae"
+    },
+    "evaluation": {
+      "artifact_digest": "sha256:1f4ef01a14b92d528b74812635a03a9ee7cc84ec6e87a12521ff7b5f19c0d531",
+      "artifact_id": 10829080786,
+      "evaluation_result_sha256": "444606dbe402cc3e729accd1c0e00435cf4da758b86ba706340c6adad9cf91b9"
+    },
+    "provider_shards": {
+      "0": {
+        "artifact_digest": "sha256:9ba2ab5dbe3c5f16e6b5c1a695c49b5e66c8ca8493e823ee244da21ecc6c3c79",
+        "artifact_id": 10828417096,
+        "provider_shard_output_sha256": "ec1811c9b1e2af749e937d995eec459657aa54da14bf81b492faa287053ef2ac"
+      },
+      "1": {
+        "artifact_digest": "sha256:e2942f8c63ef6b15ab750332147cb5c5c417fb5bf018e980f7decfbc98f4ad9b",
+        "artifact_id": 10827664287,
+        "provider_shard_output_sha256": "edd92c4afdee2eccb6e9b521eacd6d93035a5dac1df0706d450e85e7258c37c5"
+      },
+      "2": {
+        "artifact_digest": "sha256:c031098d13663fb733cc0b4d7ca3ceba1d521c858ce6bae822c59d9301964b16",
+        "artifact_id": 10828920548,
+        "provider_shard_output_sha256": "53a3731da3a7eee1328c1c6a7e57e909b90bad0bf2ce6e6757985518ec38c50e"
+      },
+      "3": {
+        "artifact_digest": "sha256:1eb212ac741d42c1de51bae770b6230de6714c408054a62680ccaead3e1e64d5",
+        "artifact_id": 10828273513,
+        "provider_shard_output_sha256": "03ff6629ec3995d6e2ce0696d86ea600088968e12f685ba95906ddf5cebae766"
+      }
+    }
+  },
+  "attempted_pairs": 64,
+  "authority_boundary": {
+    "acceptance_action_authorized": false,
+    "d2e_execution_authorized": false,
+    "deployment_or_publication_authorized": false,
+    "historical_substrate_enabled": false,
+    "q2_a_consumed": true,
+    "q2_b_provider_execution_authorized": false,
+    "registry_promotion_authorized": false,
+    "same_stream_rerun_authorized": false,
+    "scientific_effect_gates_computed": false
+  },
+  "classification": "D2-vNext-Q2-A1",
+  "classification_label": "minimum_screen_completion_failure",
+  "closeout_statement": "Q2-A is consumed. Its A1 result blocks Q2-B under the frozen Q2 contract. Future diagnostic or mechanism work must use a fresh revision and separate provider-execution authorization.",
+  "cohort_pairs_sha256": "74ac69fc045c88e93ea08e86d031dcae23fa179bcba03d2b170526085e00b61b",
+  "complete_evaluator_analyzable_pairs": 39,
+  "failed_pairs": 25,
+  "frozen_marker_absent_candidate_sha": "0a47c7b3e4ec2aedd6af62927fcf1949861d2ae5",
+  "integrity": {
+    "global_defects": [],
+    "pair_defects": [],
+    "passed": true,
+    "terminal_failure_observability_defects": []
+  },
+  "issue": 293,
+  "maximum_physical_provider_sends_authorized": 4608,
+  "minimum_complete_analyzable_pairs_per_schema": 12,
+  "physical_provider_sends_observed": 2766,
+  "q2_a_continuation_gate": {
+    "minimum_complete_analyzable_pairs_per_schema": 12,
+    "minimum_screen_pass": false,
+    "pass": false,
+    "terminal_failure_observability_complete": true,
+    "transport_integrity_pass": true
+  },
+  "schema": "d2-vnext-q2-a-qualification-closeout-v0.1",
+  "schema_results": {
+    "interval_pair": {
+      "attempted_pairs": 16,
+      "complete_evaluator_analyzable_pairs": 11,
+      "completion_rate": 0.6875,
+      "failed_pairs": 5,
+      "invalid_complete_pairs": 0
+    },
+    "pairwise_order": {
+      "attempted_pairs": 16,
+      "complete_evaluator_analyzable_pairs": 1,
+      "completion_rate": 0.0625,
+      "failed_pairs": 15,
+      "invalid_complete_pairs": 0
+    },
+    "parity_pair": {
+      "attempted_pairs": 16,
+      "complete_evaluator_analyzable_pairs": 14,
+      "completion_rate": 0.875,
+      "failed_pairs": 2,
+      "invalid_complete_pairs": 0
+    },
+    "threshold_at_4": {
+      "attempted_pairs": 16,
+      "complete_evaluator_analyzable_pairs": 13,
+      "completion_rate": 0.8125,
+      "failed_pairs": 3,
+      "invalid_complete_pairs": 0
+    }
+  },
+  "sole_child_authorization_commit_sha": "cd12daabbc4826ea9f684687e4ab6a361786e412",
+  "stage": "Q2-A",
+  "study_stream": "D2-vNext-Q2",
+  "successor_construction_issue": 296,
+  "terminal_failure_fingerprint": {
+    "error_sha256": "943129b4f6ef7018fbc6bb6dd3faec6a9ae644b0e6cda1763b4de7816bc127a0",
+    "error_type": "RuntimeError",
+    "failure_class": "q2_logical_call_no_accepted_exact_completion",
+    "registered_preimage": "RuntimeError:D2-vNext-Q2 logical call has no accepted exact completion"
+  },
+  "workflow_run_attempt": 1,
+  "workflow_run_id": 36039847576
+}
