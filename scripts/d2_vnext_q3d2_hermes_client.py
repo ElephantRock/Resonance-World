@@ -5,7 +5,8 @@ not authorize any provider/model execution.
 """
 from __future__ import annotations
 
-from typing import Any, Callable
+from collections.abc import Callable
+from typing import Any
 
 import d2_vnext_q3d_hermes_client as q3d
 
