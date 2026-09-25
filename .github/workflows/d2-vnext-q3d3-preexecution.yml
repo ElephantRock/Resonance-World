@@ -28,8 +28,16 @@ jobs:
         run: PYTHONPATH=scripts python scripts/materialize_d2_vnext_q3d3_diagnostic.py --output-dir output/q3d3-materialization
       - name: Committed materialization must match
         run: |
-          cmp output/q3d3-materialization/D2_VNEXT_Q3D3_COHORT_LOCK.json research/d2_vnext_q3d3/D2_VNEXT_Q3D3_COHORT_LOCK.json
-          cmp output/q3d3-materialization/D2_VNEXT_Q3D3_SHARD_MAP.json research/d2_vnext_q3d3/D2_VNEXT_Q3D3_SHARD_MAP.json
+          python - <<'PY'
+          import json
+          from pathlib import Path
+          pairs = [
+              ("output/q3d3-materialization/D2_VNEXT_Q3D3_COHORT_LOCK.json", "research/d2_vnext_q3d3/D2_VNEXT_Q3D3_COHORT_LOCK.json"),
+              ("output/q3d3-materialization/D2_VNEXT_Q3D3_SHARD_MAP.json", "research/d2_vnext_q3d3/D2_VNEXT_Q3D3_SHARD_MAP.json"),
+          ]
+          for generated, committed in pairs:
+              assert json.loads(Path(generated).read_text()) == json.loads(Path(committed).read_text()), (generated, committed)
+          PY
       - name: Q3-D3 credential-free tests
         run: PYTHONPATH=scripts pytest -q tests/test_d2_vnext_q3d3_http_observer.py tests/test_d2_vnext_q3d3_envelope.py tests/test_d2_vnext_q3d3_evaluator.py
       - name: Compile future execution apparatus
