@@ -16,8 +16,12 @@ def test_q3d2_frozen_envelope_remains_unauthorized() -> None:
 
     assert future["provider_execution_authorized"] is False
     assert future["execution_marker_path"] == "research/d2_vnext_q3d2/RUN_D2_VNEXT_Q3D2"
-    assert future["provider_triggering_workflow_path"] == ".github/workflows/d2-vnext-q3d2-diagnostic.yml"
-    assert future["qualification_branch"] == "qualification/d2-vnext-q3d2-request-scoped-boundary"
+    assert future["provider_triggering_workflow_path"] == (
+        ".github/workflows/d2-vnext-q3d2-diagnostic.yml"
+    )
+    assert future["qualification_branch"] == (
+        "qualification/d2-vnext-q3d2-request-scoped-boundary"
+    )
     assert future["sample_plan_frozen"] is True
     assert future["campaign_send_ceiling"] == 2304
     assert future["marker_absent_candidate_required"] is True
@@ -33,7 +37,10 @@ def test_q3d2_frozen_envelope_remains_unauthorized() -> None:
 def test_future_workflow_is_exact_marker_gated() -> None:
     workflow = (ROOT / ".github/workflows/d2-vnext-q3d2-diagnostic.yml").read_text()
     assert 'paths: ["research/d2_vnext_q3d2/RUN_D2_VNEXT_Q3D2"]' in workflow
-    assert 'branches: ["qualification/d2-vnext-q3d2-request-scoped-boundary"]' in workflow
+    assert (
+        'branches: ["qualification/d2-vnext-q3d2-request-scoped-boundary"]'
+        in workflow
+    )
     assert "github.run_attempt == 1" in workflow
     assert "github.run_attempt != 1" in workflow
     assert 'test "$(git rev-parse HEAD^)" = "$candidate"' in workflow
