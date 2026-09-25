@@ -1,0 +1,29 @@
+{
+  "schema": "d2-vnext-q3d3-diagnostic-cohort-lock-v0.1",
+  "study_stream": "D2-vNext-Q3-D3",
+  "stage": "Q3-D3",
+  "fresh_namespace": "rw.d2-vnext-q3d3-http-sdk-boundary-diagnostic.v1",
+  "pair_count": 8,
+  "pairs_per_schema": 8,
+  "schema_order": ["pairwise_order"],
+  "cohort_pairs_sha256": "648884eaaf39dda5f37ee03a75ba030308e631ba8b51e536255418efa48af661",
+  "predecessor_seed_namespace_overlap": {
+    "D2-C1": 0,
+    "D2-C2": 0,
+    "D2b": 0,
+    "D2c": 0,
+    "D2-engineering": 0,
+    "D2d": 0,
+    "D2d-S2": 0,
+    "D2-vNext-S1": 0,
+    "D2-vNext-S2": 0,
+    "D2-vNext-Q1": 0,
+    "D2-vNext-Q2": 0,
+    "D2-vNext-Q3-D": 0,
+    "D2-vNext-Q3-D2": 0
+  },
+  "all_development_evaluation_overlaps_zero": true,
+  "diagnostic_only": true,
+  "scientific_effect_sample": false,
+  "production_historical_substrate_enabled": false
+}
