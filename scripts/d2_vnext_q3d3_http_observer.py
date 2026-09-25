@@ -128,7 +128,7 @@ def http_body_structural_view(
     logical_send_index: int,
 ) -> dict[str, Any]:
     """Return a bounded structural view without retaining response bytes/text."""
-    status = int(getattr(response, "status_code"))
+    status = int(response.status_code)
     headers = getattr(response, "headers", {})
     raw_content_type = headers.get("content-type") if headers is not None else None
     media_type = (
