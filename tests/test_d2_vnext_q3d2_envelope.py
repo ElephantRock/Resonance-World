@@ -51,7 +51,9 @@ def test_committed_materialization_locks_are_exact() -> None:
 def test_request_scoped_observer_activation_is_scoped() -> None:
     original = q3d.instrument_chat_completions
     with observer.activate_request_scoped_observer():
-        assert q3d.instrument_chat_completions is observer.instrument_request_scoped_chat_completions
+        assert q3d.instrument_chat_completions is (
+            observer.instrument_request_scoped_chat_completions
+        )
     assert q3d.instrument_chat_completions is original
 
 
