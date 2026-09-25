@@ -1,0 +1,106 @@
+{
+  "schema": "d2-vnext-q3d2-request-scoped-observability-contract-v0.1",
+  "study_stream": "D2-vNext-Q3-D2",
+  "stage": "Q3-D2",
+  "construction_phase": "request_scoped_observability_repair_only",
+  "issue": 300,
+  "predecessor": {
+    "study_stream": "D2-vNext-Q3-D",
+    "frozen_candidate_sha": "ebd10f4ad195b60c166325d8a39ca2c309803edf",
+    "authorization_commit_sha": "f5a9c815b747e888a7a7e9025dde3dfd0444ada1",
+    "workflow_run_id": 36068734507,
+    "run_attempt": 1,
+    "classification": "Q3-D-OBSERVABILITY-FAIL",
+    "consumed": true,
+    "rerun_allowed": false
+  },
+  "apparatus_failure": {
+    "q3d_observer_attachment": "agent.client.chat.completions.create",
+    "pinned_hermes_revision": "036cbdfa0a3158454a0a2a7a7388cf70353326b4",
+    "actual_hermes_request_path": "_create_request_openai_client_then_request_client_chat_completions_create",
+    "agent_invocations": 515,
+    "semantic_completion_records": 0,
+    "observability_defects": 2060,
+    "physical_provider_sends_observed": 568,
+    "boundary_labels_authoritative": false
+  },
+  "single_intervention": {
+    "name": "request_scoped_semantic_observer",
+    "factory_target": "agent._create_request_openai_client",
+    "request_target": "returned_request_client.chat.completions.create",
+    "factory_call_count_change_allowed": false,
+    "request_call_count_change_allowed": false,
+    "request_argument_change_allowed": false,
+    "response_transformation_allowed": false,
+    "exception_transformation_allowed": false,
+    "additional_provider_request_allowed": false
+  },
+  "behavioral_invariance": {
+    "provider_change_allowed": false,
+    "model_change_allowed": false,
+    "task_prompt_change_allowed": false,
+    "response_schema_change_allowed": false,
+    "parser_relaxation_allowed": false,
+    "retry_rule_change_allowed": false,
+    "third_agent_invocation_allowed": false,
+    "iteration_limit_change_allowed": false,
+    "token_limit_change_allowed": false,
+    "tool_enablement_allowed": false,
+    "memory_or_session_enablement_allowed": false,
+    "fallback_model_allowed": false,
+    "transport_guard_change_allowed": false
+  },
+  "content_minimization": {
+    "raw_prompt_retained": false,
+    "raw_provider_response_retained": false,
+    "raw_assistant_content_retained": false,
+    "raw_retry_content_retained": false,
+    "raw_terminal_content_retained": false,
+    "allowed": [
+      "bounded_enums",
+      "counts",
+      "lengths",
+      "token_counts_when_returned",
+      "sha256_commitments",
+      "transport_status_and_error_type"
+    ]
+  },
+  "credential_free_qualification": {
+    "provider_calls_allowed": 0,
+    "must_exercise_request_client_factory_path": true,
+    "must_preserve_factory_arguments": true,
+    "must_preserve_request_arguments": true,
+    "must_preserve_response_identity": true,
+    "must_preserve_exception_identity": true,
+    "must_instrument_each_request_scoped_client": true,
+    "semantic_records_must_equal_hermes_api_calls": true,
+    "positive_api_calls_with_zero_semantic_records": "fail_closed",
+    "raw_content_leak": "fail_closed"
+  },
+  "future_execution": {
+    "provider_execution_authorized": false,
+    "execution_marker_path": null,
+    "provider_triggering_workflow_path": null,
+    "fresh_namespace_required": true,
+    "fresh_cohort_required": true,
+    "sample_plan_frozen": false,
+    "campaign_send_ceiling": null,
+    "exact_candidate_authorization_required": true,
+    "explicit_send_ceiling_required": true,
+    "same_stream_rerun_allowed": false,
+    "adaptive_n_allowed": false,
+    "failed_pair_replacement_allowed": false
+  },
+  "authority": {
+    "q3d2_provider_execution": false,
+    "q3d_rerun": false,
+    "q2_a_or_q2_b": false,
+    "scientific_effect": false,
+    "acceptance": false,
+    "registry_promotion": false,
+    "d2e": false,
+    "deployment_or_publication": false,
+    "credential_or_permission_change": false,
+    "historical_substrate": false
+  }
+}
