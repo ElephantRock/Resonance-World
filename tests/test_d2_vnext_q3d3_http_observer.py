@@ -2,10 +2,9 @@ from __future__ import annotations
 
 import json
 
-import httpx
-
 import d2_vnext_q3d3_http_observer as observer
 import d2_vnext_s2_hermes_client as s2
+import httpx
 
 
 def test_http_observer_preserves_body_and_records_structure() -> None:
