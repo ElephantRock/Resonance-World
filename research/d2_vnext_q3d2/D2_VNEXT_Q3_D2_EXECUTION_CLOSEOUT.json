@@ -1,0 +1,46 @@
+{
+  "schema": "d2-vnext-q3d2-execution-closeout-v0.1",
+  "study_stream": "D2-vNext-Q3-D2",
+  "stage": "Q3-D2",
+  "status": "consumed_no_rerun",
+  "frozen_candidate_sha": "86c49d1e676b7c8e2c2de6d8ad4a128afc0c0189",
+  "authorization_commit_sha": "78258e2fd12991e7b7543a8a1dba2a60d8003fda",
+  "workflow_run_id": 36158198034,
+  "run_attempt": 1,
+  "campaign_send_ceiling": 2304,
+  "physical_provider_sends_observed": 306,
+  "cohort_pairs_sha256": "fb907354a76cbe843a7f1a59cacffdde2fb7a5d64afe1f7be2585e66ce4b0321",
+  "classification": "Q3-D2-BOUNDARY-LOCALIZED",
+  "classification_label": "request_scoped_terminal_empty_structural_boundary_localized",
+  "attempted_pairs": 8,
+  "complete_pairs": 4,
+  "failed_pairs": 4,
+  "observed_logical_call_records": 262,
+  "clean_terminal_empty_target_events": 7,
+  "integrity_defects": 0,
+  "observability_defects": 0,
+  "boundary_counts": {
+    "accepted_exact_completion": 258,
+    "provider_content_absent": 4
+  },
+  "target_event_boundary_counts": {
+    "provider_content_absent": 7
+  },
+  "artifacts": {
+    "provider_shard_0": {"id": 10874089334, "digest": "sha256:73c84c6dd498ec78bd3a561240fe553d00621dd7196b7dd39cfb062a8836caf6"},
+    "provider_shard_1": {"id": 10875091807, "digest": "sha256:1024bf3b778223cbb23645a330398afa0eb69dc536e8c46d173a244470f3000c"},
+    "canonical_provider": {"id": 10874903585, "digest": "sha256:65d3476bedafd479d7d08bb9e911887c2e17121ae2679e29e7d28dc2195e003b"},
+    "evaluation": {"id": 10875207976, "digest": "sha256:6de97a4022fb6a08338de37966df795138c229f777fc95c9bb2267c60450c074"}
+  },
+  "provider_output_sha256": "5c808e630cc132520c146da1565d8107d60824d58caaafc553bfcb5e1e3fd689",
+  "evaluation_result_sha256": "b90caf5f6a06b5d03db05ee9e7108716d1d77733bfdde7f0bab87e6b0c6d866b",
+  "causal_ceiling": "Structural localization identifies the first observed content boundary only; it does not establish provider, model, SDK, Hermes, or adapter root cause.",
+  "scientific_effect_gates_computed": false,
+  "acceptance_action_authorized": false,
+  "registry_promotion_authorized": false,
+  "d2e_authorized": false,
+  "deployment_or_publication_authorized": false,
+  "credential_or_permission_change_authorized": false,
+  "production_historical_substrate_enabled": false,
+  "same_stream_rerun_allowed": false
+}
