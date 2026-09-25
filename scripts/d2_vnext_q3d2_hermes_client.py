@@ -1,11 +1,13 @@
 """Q3-D2 request-scoped semantic observability instrumentation.
 
-This module is construction-only. It does not create provider requests and does
-not authorize any provider/model execution.
+This module does not create provider requests and does not authorize provider/model
+execution. It only supplies the single request-scoped observer intervention used
+by a separately authorized future Q3-D2 diagnostic.
 """
 from __future__ import annotations
 
-from collections.abc import Callable
+from collections.abc import Callable, Iterator
+from contextlib import contextmanager
 from typing import Any
 
 import d2_vnext_q3d_hermes_client as q3d
@@ -104,6 +106,17 @@ def instrument_request_scoped_chat_completions(
 
     agent._create_request_openai_client = observed_factory
     return original_factory
+
+
+@contextmanager
+def activate_request_scoped_observer() -> Iterator[None]:
+    """Temporarily route Q3-D's observer hook to the Q3-D2 request-scoped observer."""
+    original = q3d.instrument_chat_completions
+    q3d.instrument_chat_completions = instrument_request_scoped_chat_completions
+    try:
+        yield
+    finally:
+        q3d.instrument_chat_completions = original
 
 
 def semantic_coverage_defects(

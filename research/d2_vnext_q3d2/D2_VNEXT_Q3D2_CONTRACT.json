@@ -1,9 +1,9 @@
 {
-  "schema": "d2-vnext-q3d2-request-scoped-observability-contract-v0.1",
+  "schema": "d2-vnext-q3d2-request-scoped-observability-contract-v0.2",
   "study_stream": "D2-vNext-Q3-D2",
   "stage": "Q3-D2",
-  "construction_phase": "request_scoped_observability_repair_only",
-  "issue": 300,
+  "construction_phase": "frozen_marker_absent_execution_envelope",
+  "issue": 302,
   "predecessor": {
     "study_stream": "D2-vNext-Q3-D",
     "frozen_candidate_sha": "ebd10f4ad195b60c166325d8a39ca2c309803edf",
@@ -13,16 +13,6 @@
     "classification": "Q3-D-OBSERVABILITY-FAIL",
     "consumed": true,
     "rerun_allowed": false
-  },
-  "apparatus_failure": {
-    "q3d_observer_attachment": "agent.client.chat.completions.create",
-    "pinned_hermes_revision": "036cbdfa0a3158454a0a2a7a7388cf70353326b4",
-    "actual_hermes_request_path": "_create_request_openai_client_then_request_client_chat_completions_create",
-    "agent_invocations": 515,
-    "semantic_completion_records": 0,
-    "observability_defects": 2060,
-    "physical_provider_sends_observed": 568,
-    "boundary_labels_authoritative": false
   },
   "single_intervention": {
     "name": "request_scoped_semantic_observer",
@@ -36,6 +26,16 @@
     "additional_provider_request_allowed": false
   },
   "behavioral_invariance": {
+    "provider": "Z.AI Coding Plan",
+    "api_mode": "chat_completions",
+    "requested_model": "glm-5.3",
+    "sampling_temperature": 0.8,
+    "thinking": "disabled",
+    "response_format": {"type": "json_object"},
+    "max_tokens_per_invocation": 768,
+    "max_agent_iterations_per_invocation": 2,
+    "max_agent_invocations_per_logical_call": 2,
+    "max_physical_provider_sends_per_logical_call": 36,
     "provider_change_allowed": false,
     "model_change_allowed": false,
     "task_prompt_change_allowed": false,
@@ -65,28 +65,47 @@
       "transport_status_and_error_type"
     ]
   },
-  "credential_free_qualification": {
-    "provider_calls_allowed": 0,
-    "must_exercise_request_client_factory_path": true,
-    "must_preserve_factory_arguments": true,
-    "must_preserve_request_arguments": true,
-    "must_preserve_response_identity": true,
-    "must_preserve_exception_identity": true,
-    "must_instrument_each_request_scoped_client": true,
-    "semantic_records_must_equal_hermes_api_calls": true,
-    "positive_api_calls_with_zero_semantic_records": "fail_closed",
-    "raw_content_leak": "fail_closed"
+  "diagnostic_sample_plan": {
+    "purpose": "request_scoped_semantic_coverage_and_terminal_boundary_localization_only",
+    "scientific_effect_sample": false,
+    "fresh_namespace": "rw.d2-vnext-q3d2-request-scoped-terminal-boundary-diagnostic.v1",
+    "schema_order": ["pairwise_order"],
+    "pair_count": 8,
+    "pair_seed_base": 16000000,
+    "pair_seed_step": 100,
+    "cohort_pairs_sha256": "fb907354a76cbe843a7f1a59cacffdde2fb7a5d64afe1f7be2585e66ce4b0321",
+    "shard_count": 2,
+    "pairs_per_shard": 4,
+    "provider_local_concurrency_per_shard": 1,
+    "workflow_max_parallel": 2,
+    "maximum_registered_logical_calls_per_shard": 220,
+    "maximum_physical_provider_sends_per_shard": 1152,
+    "campaign_send_ceiling": 2304,
+    "budget_borrowing_allowed": false,
+    "adaptive_n_allowed": false,
+    "failed_pair_replacement_allowed": false,
+    "same_stream_rerun_allowed": false
+  },
+  "evaluation": {
+    "integrity_defect": "Q3-D2-INTEGRITY-FAIL",
+    "observability_defect": "Q3-D2-OBSERVABILITY-FAIL",
+    "no_strict_clean_terminal_empty_target": "Q3-D2-NO-TARGET-EVENT",
+    "at_least_one_fully_observed_target": "Q3-D2-BOUNDARY-LOCALIZED",
+    "scientific_effect_gate": "not_computed",
+    "causal_ceiling": "Structural localization identifies the first observed content boundary only and does not establish provider, model, Hermes, or adapter root cause."
   },
   "future_execution": {
     "provider_execution_authorized": false,
-    "execution_marker_path": null,
-    "provider_triggering_workflow_path": null,
+    "execution_marker_path": "research/d2_vnext_q3d2/RUN_D2_VNEXT_Q3D2",
+    "provider_triggering_workflow_path": ".github/workflows/d2-vnext-q3d2-diagnostic.yml",
+    "qualification_branch": "qualification/d2-vnext-q3d2-request-scoped-boundary",
     "fresh_namespace_required": true,
     "fresh_cohort_required": true,
-    "sample_plan_frozen": false,
-    "campaign_send_ceiling": null,
+    "sample_plan_frozen": true,
+    "campaign_send_ceiling": 2304,
     "exact_candidate_authorization_required": true,
     "explicit_send_ceiling_required": true,
+    "marker_absent_candidate_required": true,
     "same_stream_rerun_allowed": false,
     "adaptive_n_allowed": false,
     "failed_pair_replacement_allowed": false
