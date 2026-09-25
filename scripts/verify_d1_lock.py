@@ -1,38 +1,4 @@
-#!/usr/bin/env python3
-"""Build and verify the prospective D1 confirmatory lock from D1-0 calibration."""
-from __future__ import annotations
-
-import argparse
-import hashlib
-import json
-import math
-from pathlib import Path
-from statistics import NormalDist
-from typing import Any
-
-from d1_capability_core import canonical_bytes
-
-CONFIRMATORY_SEEDS = tuple(range(30_000, 30_036))
-CALIBRATION_SEEDS = set(range(10_000, 10_064))
-BOOTSTRAP_REPS = 100_000
-NORMAL_ALPHA = 0.05
-TARGET_POWER = 0.90
-
-
-def file_sha256(path: Path) -> str:
-    return hashlib.sha256(path.read_bytes()).hexdigest()
-
-
-def planning_power(effect: float, sd: float, n: int) -> float:
-    if sd <= 0:
-        return 1.0 if effect > 0 else 0.0
-    z_alpha = NormalDist().inv_cdf(1.0 - NORMAL_ALPHA)
-    signal = math.sqrt(n) * effect / sd
-    return NormalDist().cdf(signal - z_alpha)
-
-
-def load(path: Path) -> dict[str, Any]:
-    value = json.loads(path.read_text())
+()
     if not isinstance(value, dict):
         raise ValueError(f"{path} must contain a JSON object")
     return value
@@ -114,10 +80,16 @@ def main() -> int:
         "outcome": "heldout_specialist_success_rate_over_256_trials",
         "statistical_contract": {
             "alpha_one_sided": NORMAL_ALPHA,
-            "fixed_sequence": ["P0_source_development", "P1_destination_acquisition", "P2_reproduction_fidelity"],
+            "fixed_sequence": [
+                "P0_source_development",
+                "P1_destination_acquisition",
+                "P2_reproduction_fidelity",
+            ],
             "multiplicity": "fixed_sequence_gatekeeping_at_alpha_0.05",
             "primary_ci": "normal_approximation_on_paired_field_difference",
-            "primary_gate": "one_sided_95pct_lower_confidence_bound_above_registered_null",
+            "primary_gate": (
+                "one_sided_95pct_lower_confidence_bound_above_registered_null"
+            ),
             "sensitivity_ci": "fixed_seed_percentile_bootstrap_on_paired_field_difference",
             "bootstrap_replicates": BOOTSTRAP_REPS,
             "bootstrap_gate": "one_sided_95pct_lower_percentile_bound_above_registered_null",
@@ -141,9 +113,14 @@ def main() -> int:
             },
         },
         "sample_size": {
-            "calibration_recommended_minimum": int(planning["recommended_confirmatory_n"]),
+            "calibration_recommended_minimum": int(
+                planning["recommended_confirmatory_n"]
+            ),
             "confirmatory_n": n,
-            "n_rationale": "exceeds calibrated n=32 floor and balances three skill aliases at 12 Field pairs each",
+            "n_rationale": (
+                "exceeds calibrated n=32 floor and balances "
+                "three skill aliases at 12 Field pairs each"
+            ),
             "calibration_planning_power_P1_at_n": p1_power,
             "calibration_planning_power_P2_at_n": p2_power,
             "target_power": TARGET_POWER,
@@ -174,7 +151,11 @@ def main() -> int:
             "D1-S3": "capability_reproduction_supported",
             "D1-S4": "integrity_failure_unclassifiable",
         },
-        "replication_requirement": "D1-S3 is initial discovery support only; a separately preregistered fresh D1b cohort is required before internally_replicated registry status",
+        "replication_requirement": (
+            "D1-S3 is initial discovery support only; "
+            "a separately preregistered fresh D1b cohort is required "
+            "before internally_replicated registry status"
+        ),
         "claim_ceiling": "controlled_deterministic_individual_specialist_substrate_only",
         "production_historical_substrate_enabled": False,
     }
