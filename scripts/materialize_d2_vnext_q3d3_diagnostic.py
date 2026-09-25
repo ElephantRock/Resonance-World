@@ -18,7 +18,7 @@ MAX_PHYSICAL_SENDS_PER_LOGICAL_CALL = 36
 MAX_PHYSICAL_SENDS_PER_SHARD = 1152
 MAX_PHYSICAL_SENDS_CAMPAIGN = SHARD_COUNT * MAX_PHYSICAL_SENDS_PER_SHARD
 WORKFLOW_MAX_PARALLEL = 2
-EXPECTED_COHORT_SHA256: str | None = None
+EXPECTED_COHORT_SHA256 = "648884eaaf39dda5f37ee03a75ba030308e631ba8b51e536255418efa48af661"
 
 PREDECESSOR_NAMESPACES = {
     "D2-C1": [(1_200_000, 1_299_999)],
@@ -121,7 +121,7 @@ def build_cohort_lock() -> dict[str, Any]:
     if any(predecessor.values()):
         raise AssertionError(f"D2-vNext-Q3-D3 predecessor seed overlap: {predecessor}")
     cohort_hash = core.sha256(records)
-    if EXPECTED_COHORT_SHA256 is not None and cohort_hash != EXPECTED_COHORT_SHA256:
+    if cohort_hash != EXPECTED_COHORT_SHA256:
         raise AssertionError(f"D2-vNext-Q3-D3 cohort drift: {cohort_hash}")
     return {
         "schema": "d2-vnext-q3d3-diagnostic-cohort-lock-v0.1",
@@ -132,7 +132,6 @@ def build_cohort_lock() -> dict[str, Any]:
         "pairs_per_schema": core.PAIR_COUNT,
         "schema_order": list(core.SCHEMA_ORDER),
         "cohort_pairs_sha256": cohort_hash,
-        "pairs": records,
         "predecessor_seed_namespace_overlap": predecessor,
         "all_development_evaluation_overlaps_zero": all(
             r["development_evaluation_feature_overlap"] == 0 for r in records
