@@ -1,0 +1,42 @@
+{
+  "schema": "d2-vnext-q3d3-http-body-structural-record-v0.1",
+  "study_stream": "D2-vNext-Q3-D3",
+  "stage": "Q3-D3",
+  "record_fields": {
+    "logical_index": "integer",
+    "logical_send_index": "integer",
+    "http_status": "integer",
+    "response_byte_length": "integer",
+    "response_sha256": "sha256-or-null",
+    "content_type_media_type": "string-or-null",
+    "json_decode_success": "boolean",
+    "json_top_level_type": "object|array|string|number|boolean|null|decode_failure",
+    "top_level_has_choices": "boolean",
+    "choice_count": "integer-or-null",
+    "first_choice_present": "boolean",
+    "finish_reason_present": "boolean",
+    "finish_reason": "string-or-null",
+    "assistant_message_present": "boolean",
+    "assistant_content_present": "boolean",
+    "assistant_content_type": "null|string|list|object|other",
+    "assistant_content_length": "integer",
+    "assistant_content_sha256": "sha256-or-null",
+    "tool_calls_present": "boolean",
+    "tool_calls_count": "integer",
+    "effective_model_if_returned": "string-or-null",
+    "usage_prompt_tokens": "integer-or-null",
+    "usage_completion_tokens": "integer-or-null",
+    "usage_total_tokens": "integer-or-null"
+  },
+  "raw_content_fields_forbidden": [
+    "raw_response_text",
+    "raw_provider_body",
+    "response_body",
+    "raw_content",
+    "assistant_content",
+    "prompt_text",
+    "retry_prompt_text",
+    "final_response"
+  ],
+  "retention_rule": "Only bounded structure, lengths, counts, selected enums/identifiers, token counts, and SHA-256 commitments may be retained. The bytes supplied to the SDK are observed in memory and never persisted."
+}
