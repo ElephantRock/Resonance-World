@@ -1,0 +1,41 @@
+{
+  "schema": "d2-vnext-q3d3-diagnostic-shard-map-v0.1",
+  "study_stream": "D2-vNext-Q3-D3",
+  "stage": "Q3-D3",
+  "fresh_namespace": "rw.d2-vnext-q3d3-http-sdk-boundary-diagnostic.v1",
+  "pair_count_attempted": 8,
+  "pairs_per_schema": 8,
+  "schema_id": "pairwise_order",
+  "shard_count": 2,
+  "pairs_per_provider_shard": 4,
+  "provider_local_concurrency_per_shard": 1,
+  "workflow_max_parallel": 2,
+  "logical_calls_per_complete_pair": 55,
+  "maximum_registered_logical_calls_per_shard": 220,
+  "maximum_physical_provider_sends_per_logical_call": 36,
+  "maximum_physical_provider_sends_per_shard": 1152,
+  "maximum_physical_provider_sends_campaign": 2304,
+  "budget_borrowing_allowed": false,
+  "adaptive_n_allowed": false,
+  "failed_pair_replacement_allowed": false,
+  "same_stream_rerun_allowed": false,
+  "shards": [
+    {
+      "shard": 0,
+      "pair_indices": [0, 1, 2, 3],
+      "schema_counts": {"pairwise_order": 4},
+      "attempted_pairs": 4,
+      "maximum_physical_provider_sends": 1152
+    },
+    {
+      "shard": 1,
+      "pair_indices": [4, 5, 6, 7],
+      "schema_counts": {"pairwise_order": 4},
+      "attempted_pairs": 4,
+      "maximum_physical_provider_sends": 1152
+    }
+  ],
+  "diagnostic_only": true,
+  "scientific_effect_sample": false,
+  "production_historical_substrate_enabled": false
+}
