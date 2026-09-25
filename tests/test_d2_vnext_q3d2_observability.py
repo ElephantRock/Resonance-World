@@ -3,9 +3,8 @@ from __future__ import annotations
 import json
 from types import SimpleNamespace
 
-import pytest
-
 import d2_vnext_q3d2_hermes_client as client
+import pytest
 
 
 def _response(content: str = "structured"):
