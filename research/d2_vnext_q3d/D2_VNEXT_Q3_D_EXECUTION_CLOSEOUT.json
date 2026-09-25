@@ -1,0 +1,48 @@
+{
+  "schema": "d2-vnext-q3d-execution-closeout-v1",
+  "study_stream": "D2-vNext-Q3-D",
+  "status": "consumed_no_rerun",
+  "frozen_candidate_sha": "ebd10f4ad195b60c166325d8a39ca2c309803edf",
+  "authorization_marker_commit_sha": "f5a9c815b747e888a7a7e9025dde3dfd0444ada1",
+  "workflow_run_id": 36068734507,
+  "run_attempt": 1,
+  "classification": "Q3-D-OBSERVABILITY-FAIL",
+  "classification_label": "observability_failure",
+  "attempted_pairs": 16,
+  "complete_pairs": 8,
+  "failed_pairs": 8,
+  "physical_provider_sends_observed": 568,
+  "maximum_physical_provider_sends_authorized": 4608,
+  "transport_integrity_passed": true,
+  "logical_attribution_integrity_passed": true,
+  "integrity_defects": 0,
+  "strict_clean_terminal_empty_target_events": 13,
+  "logical_call_records": 500,
+  "agent_invocations": 515,
+  "semantic_completion_records": 0,
+  "observability_defects": 2060,
+  "boundary_labels_authoritative": false,
+  "artifacts": {
+    "canonical_provider_output": {
+      "artifact_id": 10837712459,
+      "artifact_digest": "sha256:ffecc2eb2643b1af8e1648e3fcb6644f5478348559ad54372b0d1ff3544527a9",
+      "payload_sha256": "d92de9c93231906470c845e7616e5f909605336ba1c273a33e31c560531e2b3a"
+    },
+    "evaluation": {
+      "artifact_id": 10837459407,
+      "artifact_digest": "sha256:7b731f74ce323d58dff6b68282d9893c2df970028a24dfd7950752c67aff6e95",
+      "result_sha256": "2ae07897fc393a9fc11d8730052120510eca0f6cd3f7b99c955dc8fbd9f8359b"
+    }
+  },
+  "authority": {
+    "q3d_rerun_authorized": false,
+    "q2_a_or_q2_b_authorized": false,
+    "scientific_effect_authorized": false,
+    "acceptance_authorized": false,
+    "registry_promotion_authorized": false,
+    "d2e_authorized": false,
+    "deployment_or_publication_authorized": false,
+    "credential_or_permission_change_authorized": false,
+    "historical_substrate_authorized": false
+  }
+}
