@@ -1,9 +1,10 @@
 {
-  "schema": "d2-vnext-q3d3-upstream-http-sdk-boundary-contract-v0.1",
+  "schema": "d2-vnext-q3d3-upstream-http-sdk-boundary-contract-v0.2",
   "study_stream": "D2-vNext-Q3-D3",
   "stage": "Q3-D3",
-  "issue": 304,
-  "construction_phase": "upstream_observer_implemented_sample_not_frozen",
+  "construction_issue": 304,
+  "freeze_issue": 306,
+  "construction_phase": "frozen_marker_absent_execution_envelope",
   "predecessor": {
     "study_stream": "D2-vNext-Q3-D2",
     "frozen_candidate_sha": "86c49d1e676b7c8e2c2de6d8ad4a128afc0c0189",
@@ -15,7 +16,7 @@
     "consumed": true,
     "rerun_allowed": false
   },
-  "diagnostic_question": "For a future strict clean-terminal-empty event, distinguish absence in the HTTP response bytes supplied to the SDK from absence introduced or exposed at SDK decoding, then preserve the already-qualified Q3-D2 downstream boundary chain.",
+  "diagnostic_question": "For a future strict clean-terminal-empty event, distinguish absence in the post-HTTPX-read response body supplied to the SDK from absence in the exact SDK-object structural view represented by the qualified Q3-D2 observer, then preserve the downstream Hermes/adapter boundary chain.",
   "single_intervention": {
     "name": "post_httpx_read_pre_sdk_decode_structural_observer",
     "sync_target": "httpx.Response.read",
@@ -50,7 +51,8 @@
     "tool_enablement_allowed": false,
     "memory_or_session_enablement_allowed": false,
     "fallback_model_allowed": false,
-    "transport_guard_change_allowed": false
+    "transport_guard_change_allowed": false,
+    "concurrency_change_allowed": false
   },
   "content_minimization": {
     "raw_prompt_retained": false,
@@ -73,7 +75,6 @@
   "boundary_enum": [
     "http_body_content_absent",
     "http_body_content_present_sdk_content_absent",
-    "sdk_content_present_q3d2_semantic_absent",
     "q3d2_semantic_present_hermes_terminal_absent",
     "hermes_terminal_present_adapter_candidate_absent",
     "adapter_candidate_nonempty_parse_invalid",
@@ -87,18 +88,53 @@
     "semantic_provider_send_slice_must_reference_known_transport_rows": true,
     "response_bearing_semantic_send_must_have_http_body_record": true,
     "duplicate_http_body_record_allowed": false,
-    "missing_http_body_record_allowed": false
+    "missing_http_body_record_allowed": false,
+    "sdk_object_vs_q3d2_semantic_disagreement": "observability_defect"
+  },
+  "diagnostic_sample_plan": {
+    "purpose": "post_httpx_read_to_sdk_terminal_boundary_localization_only",
+    "scientific_effect_sample": false,
+    "fresh_namespace": "rw.d2-vnext-q3d3-http-sdk-boundary-diagnostic.v1",
+    "schema_order": ["pairwise_order"],
+    "pair_count": 8,
+    "pair_seed_base": 17000000,
+    "pair_seed_step": 100,
+    "cohort_pairs_sha256": "648884eaaf39dda5f37ee03a75ba030308e631ba8b51e536255418efa48af661",
+    "shard_count": 2,
+    "pairs_per_shard": 4,
+    "provider_local_concurrency_per_shard": 1,
+    "workflow_max_parallel": 2,
+    "maximum_registered_logical_calls_per_shard": 220,
+    "maximum_physical_provider_sends_per_shard": 1152,
+    "campaign_send_ceiling": 2304,
+    "budget_borrowing_allowed": false,
+    "adaptive_n_allowed": false,
+    "failed_pair_replacement_allowed": false,
+    "same_stream_rerun_allowed": false
+  },
+  "evaluation": {
+    "integrity_defect": "Q3-D3-INTEGRITY-FAIL",
+    "observability_defect": "Q3-D3-OBSERVABILITY-FAIL",
+    "no_strict_clean_terminal_empty_target": "Q3-D3-NO-TARGET-EVENT",
+    "at_least_one_fully_observed_target": "Q3-D3-BOUNDARY-LOCALIZED",
+    "scientific_effect_gate": "not_computed",
+    "causal_ceiling": "Structural localization begins at post-HTTPX-read response bytes and does not establish raw-wire, model, or provider root cause."
   },
   "future_execution": {
     "provider_execution_authorized": false,
-    "sample_plan_frozen": false,
-    "execution_marker_defined": false,
-    "provider_triggering_workflow_defined": false,
+    "execution_marker_path": "research/d2_vnext_q3d3/RUN_D2_VNEXT_Q3D3",
+    "provider_triggering_workflow_path": ".github/workflows/d2-vnext-q3d3-diagnostic.yml",
+    "qualification_branch": "qualification/d2-vnext-q3d3-http-sdk-boundary",
     "fresh_namespace_required": true,
     "fresh_cohort_required": true,
+    "sample_plan_frozen": true,
+    "campaign_send_ceiling": 2304,
     "exact_candidate_authorization_required": true,
     "explicit_send_ceiling_required": true,
-    "same_stream_rerun_allowed": false
+    "marker_absent_candidate_required": true,
+    "same_stream_rerun_allowed": false,
+    "adaptive_n_allowed": false,
+    "failed_pair_replacement_allowed": false
   },
   "authority": {
     "q3d3_provider_execution": false,
