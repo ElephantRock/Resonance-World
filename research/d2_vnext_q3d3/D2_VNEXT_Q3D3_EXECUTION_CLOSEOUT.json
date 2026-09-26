@@ -1,0 +1,72 @@
+{
+  "schema": "d2-vnext-q3d3-execution-closeout-v0.1",
+  "study_stream": "D2-vNext-Q3-D3",
+  "stage": "Q3-D3",
+  "frozen_candidate_sha": "8e77c65bcec65144e962826edc34c5945a12bc91",
+  "authorization_commit_sha": "e7c146f9c5480bf62e548dff194096bcc0550442",
+  "workflow_run_id": 36226997038,
+  "run_attempt": 1,
+  "workflow_conclusion": "success",
+  "classification": "Q3-D3-OBSERVABILITY-FAIL",
+  "classification_label": "observability_failure",
+  "attempted_pairs": 8,
+  "complete_pairs": 2,
+  "failed_pairs": 6,
+  "observed_logical_call_records": 154,
+  "physical_provider_sends_observed": 194,
+  "maximum_physical_provider_sends_campaign": 2304,
+  "clean_terminal_empty_target_events": 8,
+  "target_event_boundary_counts": {
+    "unclassified_observability_defect": 8
+  },
+  "boundary_counts": {
+    "accepted_exact_completion": 148,
+    "unclassified_observability_defect": 6
+  },
+  "integrity_defects": [],
+  "observability_defect_count": 542,
+  "observability_defect_summary": {
+    "http_transport_sequence_mismatch": 154,
+    "semantic_http_body_association_missing": 388
+  },
+  "http_body_records_observed": 0,
+  "shards": [
+    {
+      "shard_id": 0,
+      "attempted_pairs": 4,
+      "complete_pairs": 1,
+      "failed_pairs": 3,
+      "physical_provider_sends_observed": 92,
+      "http_body_records_observed": 0
+    },
+    {
+      "shard_id": 1,
+      "attempted_pairs": 4,
+      "complete_pairs": 1,
+      "failed_pairs": 3,
+      "physical_provider_sends_observed": 102,
+      "http_body_records_observed": 0
+    }
+  ],
+  "provider_output_sha256": "d41a21f2350a422cbd7b57b644b319183f28b40cd61672f06183cbd68e05be4c",
+  "evaluation_result_sha256": "daaff28b664e99b086d7dcb668916415205399dd107c0e57e444ac52353e1681",
+  "artifact_ids": {
+    "provider_shard_0": 10901460023,
+    "provider_shard_1": 10901410656,
+    "canonical_provider_output": 10901018849,
+    "evaluation": 10901113537
+  },
+  "artifact_zip_digests": {
+    "provider_shard_0": "sha256:b856640b446dcefb94d88d74fa7adadd6c2f2292bfc349b44baa2631786a725a",
+    "provider_shard_1": "sha256:49673256b82b406b4916f15e35a8475a45fe8f9ac0c83e5230e61832ca3ce1e0",
+    "canonical_provider_output": "sha256:b9ea2cdf218d0b4820f5428a41de6b73028e412248e0dda5ca53180c9daa4cc3",
+    "evaluation": "sha256:be2972b9f407008fcdafe9fc517645b350fe3476c31ff525175c058fce3014bd"
+  },
+  "consumed": true,
+  "rerun_allowed": false,
+  "scientific_effect_gates_computed": false,
+  "acceptance_action_authorized": false,
+  "registry_promotion_authorized": false,
+  "production_historical_substrate_enabled": false,
+  "causal_ceiling": "Q3-D3 did not localize the HTTP-body to SDK boundary because its HTTP-body observer captured no records. The result establishes an apparatus observability failure only and does not establish provider, model, HTTP-body, SDK-decoding, Hermes, or adapter root cause."
+}

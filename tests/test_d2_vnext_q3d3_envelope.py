@@ -65,18 +65,19 @@ def test_contract_is_marker_absent_and_unauthorized() -> None:
     assert not (ROOT / "research/d2_vnext_q3d3/RUN_D2_VNEXT_Q3D3").exists()
 
 
-def test_future_workflow_is_exact_marker_gated() -> None:
+def test_consumed_q3d3_workflow_is_retired_fail_closed() -> None:
     workflow = (ROOT / ".github/workflows/d2-vnext-q3d3-diagnostic.yml").read_text()
+    assert "HTTP-SDK Boundary Diagnostic (retired)" in workflow
     assert 'branches: ["qualification/d2-vnext-q3d3-http-sdk-boundary"]' in workflow
     assert 'paths: ["research/d2_vnext_q3d3/RUN_D2_VNEXT_Q3D3"]' in workflow
-    assert "github.run_attempt == 1" in workflow
-    assert "github.run_attempt != 1" in workflow
-    assert 'test "$(git rev-parse HEAD^)" = "$candidate"' in workflow
-    assert 'test "$(git diff --name-only "$candidate" HEAD)" = "$marker"' in workflow
-    assert "authorization marker must be absent from candidate" in workflow
-    assert "matrix: {shard: [0, 1]}" in workflow
-    assert "max-parallel: 2" in workflow
-    assert "D2_VNEXT_Q3D3_EXECUTION_AUTHORIZED" in workflow
+    assert "consumed after workflow run 36226997038 attempt 1" in workflow
+    assert (
+        "Provider/model execution and reruns for this stream are permanently disabled"
+        in workflow
+    )
+    assert "ZAI_API_KEY" not in workflow
+    assert "provider-shards" not in workflow
+    assert "D2_VNEXT_Q3D3_EXECUTION_AUTHORIZED" not in workflow
 
 
 def test_authority_gate_fails_without_env_or_marker(monkeypatch: pytest.MonkeyPatch) -> None:

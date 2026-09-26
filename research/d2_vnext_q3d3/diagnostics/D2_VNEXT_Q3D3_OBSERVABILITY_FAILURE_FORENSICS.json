@@ -1,0 +1,25 @@
+{
+  "schema": "d2-vnext-q3d3-observability-failure-forensics-v0.1",
+  "study_stream": "D2-vNext-Q3-D3",
+  "stage": "Q3-D3",
+  "workflow_run_id": 36226997038,
+  "apparatus_failure": "httpx_response_read_observer_produced_zero_records",
+  "observed": {
+    "physical_provider_sends": 194,
+    "logical_call_records": 154,
+    "http_body_records": 0,
+    "http_transport_sequence_mismatches": 154,
+    "semantic_http_body_association_missing": 388
+  },
+  "source_verified_runtime_path": {
+    "openai_version": "2.21.0",
+    "httpx_version": "0.28.1",
+    "hermes_revision": "036cbdfa0a3158454a0a2a7a7388cf70353326b4",
+    "openai_request_path": "SyncAPIClient.request -> httpx.Client.send -> SyncAPIClient._process_response -> APIResponse.parse",
+    "openai_parse_read_path": "APIResponse.parse -> APIResponse.read -> http_response.read",
+    "hermes_path": "AIAgent._interruptible_api_call worker thread -> request-scoped OpenAI client -> chat.completions.create"
+  },
+  "forensic_conclusion": "The Q3-D3 live run demonstrates that monkeypatching httpx.Response.read/aread was not an authoritative attachment point for this qualification apparatus. Source inspection alone cannot determine whether the live miss was caused by response-class identity, method replacement, or another runtime attachment divergence. Q3-D4 therefore moves observation to the request-scoped OpenAI client's _process_response boundary and qualifies that boundary with zero-network exact-runtime tests.",
+  "scientific_root_cause_established": false,
+  "provider_or_model_root_cause_established": false
+}
