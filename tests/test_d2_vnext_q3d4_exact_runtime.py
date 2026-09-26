@@ -14,13 +14,12 @@ try:
 except importlib.metadata.PackageNotFoundError:
     pytest.skip("Q3-D4 exact-runtime dependencies are not installed", allow_module_level=True)
 
-import httpx
-from openai import OpenAI
-
 import d2_vnext_q3d2_hermes_client as q3d2
 import d2_vnext_q3d3_http_observer as q3d3
 import d2_vnext_q3d4_openai_response_observer as q3d4
 import d2_vnext_q3d_hermes_client as q3d
+import httpx
+from openai import OpenAI
 
 
 def _payload(secret: str) -> dict[str, Any]:
