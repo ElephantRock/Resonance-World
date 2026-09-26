@@ -1,44 +1,21 @@
-name: D2-vNext-Q3-D3 Preexecution
+name: D2-vNext-Q3-D3 Preexecution (retired)
 
 on:
   push:
     branches: ["qualification/d2-vnext-q3d3-http-sdk-boundary"]
-  pull_request:
-    paths:
-      - "scripts/*q3d3*"
-      - "research/d2_vnext_q3d3/**"
-      - "tests/test_d2_vnext_q3d3_*.py"
-      - ".github/workflows/d2-vnext-q3d3-*.yml"
+    paths: ["research/d2_vnext_q3d3/RUN_D2_VNEXT_Q3D3"]
 
 permissions:
   contents: read
 
 jobs:
-  validate:
+  consumed-stream:
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262
-      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065
-        with:
-          python-version: "3.12"
-      - run: python -m pip install -e '.[dev]'
-      - name: Marker must remain absent
-        run: test ! -e research/d2_vnext_q3d3/RUN_D2_VNEXT_Q3D3
-      - name: Deterministic materialization
-        run: PYTHONPATH=scripts python scripts/materialize_d2_vnext_q3d3_diagnostic.py --output-dir output/q3d3-materialization
-      - name: Committed materialization must match
+      - name: Reject any Q3-D3 qualification attempt
+        shell: bash
         run: |
-          python - <<'PY'
-          import json
-          from pathlib import Path
-          pairs = [
-              ("output/q3d3-materialization/D2_VNEXT_Q3D3_COHORT_LOCK.json", "research/d2_vnext_q3d3/D2_VNEXT_Q3D3_COHORT_LOCK.json"),
-              ("output/q3d3-materialization/D2_VNEXT_Q3D3_SHARD_MAP.json", "research/d2_vnext_q3d3/D2_VNEXT_Q3D3_SHARD_MAP.json"),
-          ]
-          for generated, committed in pairs:
-              assert json.loads(Path(generated).read_text()) == json.loads(Path(committed).read_text()), (generated, committed)
-          PY
-      - name: Q3-D3 credential-free tests
-        run: PYTHONPATH=scripts pytest -q tests/test_d2_vnext_q3d3_http_observer.py tests/test_d2_vnext_q3d3_envelope.py tests/test_d2_vnext_q3d3_evaluator.py
-      - name: Compile future execution apparatus
-        run: python -m py_compile scripts/d2_vnext_q3d3_diagnostic_core.py scripts/d2_vnext_q3d3_http_observer.py scripts/materialize_d2_vnext_q3d3_diagnostic.py scripts/run_d2_vnext_q3d3_diagnostic.py scripts/aggregate_d2_vnext_q3d3_diagnostic.py scripts/evaluate_d2_vnext_q3d3_diagnostic.py
+          echo "D2-vNext-Q3-D3 is consumed after workflow run 36226997038 attempt 1." >&2
+          echo "Qualification reruns and new execution attempts for this stream are disabled." >&2
+          exit 1
