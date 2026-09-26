@@ -71,7 +71,10 @@ def test_consumed_q3d3_workflow_is_retired_fail_closed() -> None:
     assert 'branches: ["qualification/d2-vnext-q3d3-http-sdk-boundary"]' in workflow
     assert 'paths: ["research/d2_vnext_q3d3/RUN_D2_VNEXT_Q3D3"]' in workflow
     assert "consumed after workflow run 36226997038 attempt 1" in workflow
-    assert "Provider/model execution and reruns for this stream are permanently disabled" in workflow
+    assert (
+        "Provider/model execution and reruns for this stream are permanently disabled"
+        in workflow
+    )
     assert "ZAI_API_KEY" not in workflow
     assert "provider-shards" not in workflow
     assert "D2_VNEXT_Q3D3_EXECUTION_AUTHORIZED" not in workflow
