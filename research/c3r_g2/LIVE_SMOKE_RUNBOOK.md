@@ -5,7 +5,7 @@
 
 ## Technical distinction
 
-- `src/resonance_world/c3r_g1_zai_transport.py` implements an **explicitly enabled**, single-send-per-call Z.AI **standard API** connector against the single hardcoded URL `https://api.z.ai/api/paas/v4/chat/completions` (not the separate Coding Plan endpoint).
+- `src/resonance_world/c3r_g1_zai_transport.py` implements an **explicitly enabled**, single-send-per-call Z.AI **standard API** connector against an explicit allowlist of two routes. The **coding task** uses `https://api.z.ai/api/coding/paas/v4/chat/completions`; the default-off **standard** route remains `https://api.z.ai/api/paas/v4/chat/completions`. The CLI does not accept arbitrary URLs.
 - It does **not** import Hermes, reuse D2 Q2/Q3 credentials/authority, or start network traffic on import.
 - It reserves one physical-send slot in the shared in-process ledger **before** each request; exceptions, timeouts, HTTP non-200s, format errors and unknown outcomes still consume the slot. There is no retry, failover, redirect or tool access.
 - At most **8** physical POSTs may be attempted in a single smoke process. This is a technical expenditure cap, not a promise of fixed monetary costs; model/provider prices and billable token accounting are outside its control.
@@ -24,12 +24,12 @@ Outputs `offline_preflight_no_sends`, prospective cohort digest and an exact eig
 
 ## Opt-in technical qualification
 
-Only in an explicitly controlled execution environment, after verifying that the **existing `ZAI_API_KEY`** is valid for the **standard API** endpoint (not only a Coding Plan endpoint), selecting an explicit model, and reviewing costs:
+Only in an explicitly controlled execution environment, using the existing `ZAI_API_KEY` and the previously used **Coding Plan** endpoint for a narrowly scoped *software implementation selection* task, with an explicit model and observed quota/cost review:
 
 ```bash
 # For local execution, map the existing ZAI_API_KEY privately to C3R_ZAI_API_KEY.
 # GitHub Actions performs this aliasing automatically.
-python scripts/run_c3r_g1_live_smoke.py --live --model YOUR_APPROVED_MODEL --max-sends 8
+python scripts/run_c3r_g1_live_smoke.py --live --model glm-5.3 --route coding --max-sends 8
 ```
 
 The operator should verify service access and intended billing plan before executing. The exact eight logical requests are: **4 source development, 2 learned qualification, 2 fresh qualification** under a single shared ledger. Once a physical request is attempted, its budget remains spent regardless of transport or parse outcome.
@@ -41,7 +41,7 @@ The report always carries `technical_smoke_not_scientific_evidence`, the cohort 
 ## Failure handling and stop rules
 
 - Missing `--live`, model identifier or CLI environment variable `C3R_ZAI_API_KEY`: no network. The manual GitHub workflow injects it from the existing `secrets.ZAI_API_KEY`.
-- Unexpected credential/endpoint/model availability: stop and report; do not silently substitute a D2 endpoint or a model.
+- Unexpected credential/endpoint/model availability: stop and report; do not silently switch provider routes or model identities. The coding task uses an explicitly selected Coding Plan endpoint already present in prior D2 code, not the general-balance endpoint.
 - Eight reservations exhausted: fail closed; no ninth request, even if previous calls failed.
 - HTTP 3xx/4xx/5xx, timeout, malformed response: no raw error body, no retries; attempt remains accounted.
 - Invalid model action: no answer repair or hidden grader hint; it remains in the prescribed denominator.
@@ -56,4 +56,8 @@ References: Z.AI's official API documentation for standard `chat/completions` at
 
 ## Reusing the existing repository secret
 
-The repository already has a secret named `ZAI_API_KEY`. **Do not create or rename it.** The workflow maps `secrets.ZAI_API_KEY` to the existing CLI variable `C3R_ZAI_API_KEY`. A repository-secret name appearing in GitHub Settings proves only that a value was stored; it does **not** prove the value is a valid standard-API credential, that the account is funded for the selected model, or that a technical run took place. Existing D2 experiments and their secret handling are unchanged. For governance, configure required reviewers on the `c3r-provider-qualification` environment before the first manual run; workflow names and environment labels alone do not ensure approvals.
+The repository already has a secret named `ZAI_API_KEY`. **Do not create or rename it.** The workflow maps `secrets.ZAI_API_KEY` to the existing CLI variable `C3R_ZAI_API_KEY`. Existing D2 code pins the Coding Plan route and model `glm-5.3`; C3R uses that specific route only for this limited programming-task smoke, not to draw a conclusion about prepaid general API balances. The credential's successful past use is evidence of past provider access, not evidence that this particular technical run has completed. Existing D2 experiments and their secret handling are unchanged. For governance, configure required reviewers on the `c3r-provider-qualification` environment before the first manual run; workflow names and environment labels alone do not ensure approvals.
+
+## Authorized one-shot CI execution
+
+The user explicitly authorized the limited live attempt. Because the connected GitHub tool does not expose manual workflow dispatch, an isolated one-shot push-only workflow may be placed on a dedicated branch with an exact branch filter and unique head-commit-message predicate. Its only execution path performs offline checks first, then the same **8-send** smoke using existing `ZAI_API_KEY` and the pinned coding route. It must be removed from that branch once the outcome is read; it must never be added to `main` or used as a default CI workflow. The ordinary dispatch-only workflow in this PR remains unchanged in trigger type. No result will be claimed until actual run logs/artifacts are inspected.
