@@ -162,3 +162,31 @@ def test_cli_emits_canonical_report_without_running_a_provider(
     captured = capsys.readouterr().out.strip()
     assert captured == run_feedback_acquisition_probe().canonical_bytes().decode()
     assert json.loads(captured)["status"] == "construction_only_not_scientific_evidence"
+
+
+
+def test_novice_counterbalancing_does_not_depend_on_oracle_rule() -> None:
+    for hidden_plans in ((PLANS[0], PLANS[1]), (PLANS[1], PLANS[0])):
+        probe = run_feedback_acquisition_probe(hidden_plans=hidden_plans)
+        for context in ("opaque-context-1", "opaque-context-2"):
+            owner_ids = tuple(
+                owner for owner in probe.source_ids if owner.startswith(f"source-{context}-")
+            )
+            assert len(owner_ids) == 2
+            learned = [probe.qualification_learned[owner] for owner in owner_ids]
+            novice = [probe.qualification_fresh[owner] for owner in owner_ids]
+            assert all(all(outcomes) for outcomes in learned)
+            # Exactly one of the two prospectively counterbalanced novices
+            # has the matching hidden plan; no cherry-picked weak baseline.
+            assert sorted(sum(outcomes) for outcomes in novice) == [0, 8]
+
+
+def test_odd_source_rosters_do_not_silently_break_counterbalancing() -> None:
+    oracle = FixtureOracle({"c": PLANS[0]})
+    with pytest.raises(ValueError, match="even number of sources"):
+        acquire_source(oracle, contexts=("c",), agents_per_context=3)
+
+
+def test_feedback_learner_rejects_invalid_initial_plan() -> None:
+    with pytest.raises(ValueError, match="initial plan"):
+        FeedbackLearner("source", initial_plan=("add", "add"))  # type: ignore[arg-type]
