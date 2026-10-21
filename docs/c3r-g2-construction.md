@@ -91,3 +91,24 @@ not validate acquisition by an actual model/agent, nor change the source's schem
 nor establish independent organization-level G2 uplift. The construction has one
 organization-level unit and no powered confirmatory inferential claim. No provider
 invocation or authority/registry promotion is authorized.
+
+## Default-off model port preflight
+
+An additional isolated `src/resonance_world/c3r_g1_model_boundary.py`
+declares `ModelChoicePort`, `ModelChoiceRequest`, `ModelChoiceCompletion`,
+`ModelCohortLock`, and a G1 runner that receives an externally injected
+model port. There is **no bundled provider client or default live execution**.
+
+The runner provides development-only feedback to the trained port and compares
+it against a fresh port on separated qualification inputs. Invalid output,
+adapter exceptions, invalid return types, and overruns of adapter-reported
+send caps are counted explicitly rather than silently discarded. Qualification
+grades are not fed back to either port. It stores no raw prompts or outputs
+in canonical reports, only status and bounded hashes/usage. This is a fixture
+**API boundary**, not independent evaluator security or source-scientific
+acquisition; an injected adapter can still be untrusted.
+
+See `research/c3r_g2/MODEL_PREFLIGHT.md` for a provider readiness checklist,
+external evaluator-attestation requirements, transport-enforced send caps,
+fair fresh baseline requirements, analyzable yield, and prohibited scientific
+promotions. Live model invocations remain a separate authorization gate.
