@@ -9,6 +9,7 @@ import pytest
 
 from resonance_world.c3r_g1_model_boundary import ModelChoiceRequest
 from resonance_world.c3r_g1_zai_transport import (
+    CODING_ENDPOINT,
     MAX_TOTAL_SENDS,
     STANDARD_ENDPOINT,
     PhysicalSendLedger,
@@ -241,3 +242,46 @@ def test_manual_workflow_uses_existing_repo_secret_without_new_secret() -> None:
     assert "--max-sends 8" in workflow
     assert "\n  push:" not in workflow
     assert "\n  pull_request:" not in workflow
+
+
+
+def test_pinned_coding_route_uses_existing_qualified_endpoint() -> None:
+    seen = []
+
+    def fake_transport(url, headers, body, timeout):
+        seen.append((url, headers, json.loads(body)))
+        return _response("A")
+
+    ledger = PhysicalSendLedger(1)
+    port = ZaiStandardModelPort(
+        "fixture-key", "glm-5.3", ledger, enabled=True,
+        route="coding", transport=fake_transport,
+    )
+    result = port.complete(_request())
+    assert result.output == "A"
+    assert result.physical_sends_reported == 1
+    assert ledger.consumed == 1
+    assert len(seen) == 1
+    assert seen[0][0] == CODING_ENDPOINT
+    assert seen[0][1]["Authorization"] == "Bearer fixture-key"
+    assert "Software engineering task" in seen[0][2]["messages"][0]["content"]
+    assert "fixture-key" not in json.dumps(ledger.to_dict())
+
+
+def test_nonpinned_routes_are_rejected_before_any_attempt() -> None:
+    with pytest.raises(ValueError, match="provider route"):
+        ZaiStandardModelPort(
+            "fixture-key", "model", PhysicalSendLedger(1),
+            route="https://another.example",  # type: ignore[arg-type]
+        )
+
+
+def test_offline_smoke_declares_selected_coding_route(
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    cli = _load_cli()
+    assert cli.main(["--model", "glm-5.3", "--route", "coding"]) == 0
+    summary = json.loads(capsys.readouterr().out)
+    assert summary["status"] == "offline_preflight_no_sends"
+    assert summary["route"] == "coding"
+    assert summary["model"] == "glm-5.3"
