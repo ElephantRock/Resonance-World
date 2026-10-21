@@ -10,7 +10,7 @@
 - It reserves one physical-send slot in the shared in-process ledger **before** each request; exceptions, timeouts, HTTP non-200s, format errors and unknown outcomes still consume the slot. There is no retry, failover, redirect or tool access.
 - At most **8** physical POSTs may be attempted in a single smoke process. This is a technical expenditure cap, not a promise of fixed monetary costs; model/provider prices and billable token accounting are outside its control.
 - One 15-second timeout and up to 16 generated tokens are allowed per request by default. Max configured response tokens is 64.
-- The standard-API credential is supplied via `C3R_ZAI_API_KEY`, never through CLI arguments or repository files. Neither raw provider text nor the API key is preserved in reports. The adapter's dataclass representation also redacts the key.
+- The existing GitHub repository secret is **`ZAI_API_KEY`**. The manually dispatched workflow passes its value into the CLI process as `C3R_ZAI_API_KEY` (an **environment variable alias, not a second GitHub secret**). Neither raw provider text nor the API key is preserved in reports; the adapter also redacts the key from its representation.
 - The implementation uses Python's standard-library HTTP client with a pinned HTTPS endpoint and redirects disabled; it does not depend on, or modify, frozen Hermes SDK runtime behavior.
 - A test double implementing the port is **not** a live model result, and the port's in-process ledger is **not** an external provider billing reconciliation.
 
@@ -24,10 +24,11 @@ Outputs `offline_preflight_no_sends`, prospective cohort digest and an exact eig
 
 ## Opt-in technical qualification
 
-Only in an explicitly controlled execution environment, with a **standard API** credential scoped for this technical test, an explicit model identifier, and reviewed costs:
+Only in an explicitly controlled execution environment, after verifying that the **existing `ZAI_API_KEY`** is valid for the **standard API** endpoint (not only a Coding Plan endpoint), selecting an explicit model, and reviewing costs:
 
 ```bash
-# Supply C3R_ZAI_API_KEY privately through an appropriate secrets manager
+# For local execution, map the existing ZAI_API_KEY privately to C3R_ZAI_API_KEY.
+# GitHub Actions performs this aliasing automatically.
 python scripts/run_c3r_g1_live_smoke.py --live --model YOUR_APPROVED_MODEL --max-sends 8
 ```
 
@@ -39,7 +40,7 @@ The report always carries `technical_smoke_not_scientific_evidence`, the cohort 
 
 ## Failure handling and stop rules
 
-- Missing `--live`, model identifier or `C3R_ZAI_API_KEY`: no network.
+- Missing `--live`, model identifier or CLI environment variable `C3R_ZAI_API_KEY`: no network. The manual GitHub workflow injects it from the existing `secrets.ZAI_API_KEY`.
 - Unexpected credential/endpoint/model availability: stop and report; do not silently substitute a D2 endpoint or a model.
 - Eight reservations exhausted: fail closed; no ninth request, even if previous calls failed.
 - HTTP 3xx/4xx/5xx, timeout, malformed response: no raw error body, no retries; attempt remains accounted.
@@ -49,6 +50,10 @@ The report always carries `technical_smoke_not_scientific_evidence`, the cohort 
 
 ## Where this runbook stops
 
-The linked GitHub tool surface can write code and read CI results, but has no exposed workflow-dispatch action to start an authenticated experiment. The repository's CI intentionally runs only offline tests. A separate authorized operator environment with a private standard-API credential is required to execute this CLI. No provider response should be claimed until an actual bounded run log and accepted report exist.
+The linked GitHub tool surface can write code and read CI results, but has no exposed workflow-dispatch action to start an authenticated experiment. The workflow must be made available from the default branch before GitHub Actions can list it for manual dispatch; this draft PR remains unmerged. The repository's CI intentionally runs only offline tests. A separate authorized operator environment with a private standard-API credential is required to execute this CLI. No provider response should be claimed until an actual bounded run log and accepted report exist.
 
 References: Z.AI's official API documentation for standard `chat/completions` at `https://docs.z.ai/`, plus existing C3R `MODEL_PREFLIGHT.md` and `DESIGN_WORKSHEET.md`.
+
+## Reusing the existing repository secret
+
+The repository already has a secret named `ZAI_API_KEY`. **Do not create or rename it.** The workflow maps `secrets.ZAI_API_KEY` to the existing CLI variable `C3R_ZAI_API_KEY`. A repository-secret name appearing in GitHub Settings proves only that a value was stored; it does **not** prove the value is a valid standard-API credential, that the account is funded for the selected model, or that a technical run took place. Existing D2 experiments and their secret handling are unchanged. For governance, configure required reviewers on the `c3r-provider-qualification` environment before the first manual run; workflow names and environment labels alone do not ensure approvals.
