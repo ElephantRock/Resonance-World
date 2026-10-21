@@ -12,6 +12,7 @@ from resonance_world.c3r_g2_probe import (
     apply_public_plan,
     make_development_index,
     make_holdout,
+    main,
     make_task,
     propose,
     run_fixture_probe,
@@ -147,3 +148,16 @@ def test_context_switch_reverses_compiled_preference_without_retuning() -> None:
     assert first.candidate_digests != swapped.candidate_digests
     assert sum(swapped.outcomes["C"]) == len(swapped.holdout_task_ids)
     assert swapped.outcomes["C"] == swapped.outcomes["D"]
+
+
+def test_cli_emits_canonical_noninferential_report(capsys: pytest.CaptureFixture[str]) -> None:
+    assert main() == 0
+    captured = capsys.readouterr().out
+    assert json.loads(captured)["status"] == "construction_only_no_inference"
+    assert captured.strip() == run_fixture_probe().canonical_bytes().decode("utf-8")
+
+
+def test_payload_disjointness_catches_repeated_tasks_with_fresh_ids() -> None:
+    # The fixture input generator cycles after 133 indices, regardless of ID.
+    with pytest.raises(ValueError, match="task input overlap"):
+        run_fixture_probe(tasks_per_context=34)
