@@ -339,6 +339,21 @@ def run_fixture_probe(
         raise ValueError("development/holdout task IDs must be disjoint")
     if len({task.task_id for task in holdout}) != len(holdout):
         raise ValueError("duplicate holdout task IDs")
+    # A fresh ID is not sufficient: audit the public task payload for semantic
+    # duplication against the complete scripted source probe.
+    development_inputs = {
+        (task.context, task.value, task.offset, task.factor)
+        for context in contexts
+        for number in range(2 * 4)
+        for task in (make_task(split="dev", context=context, number=number),)
+    }
+    holdout_inputs = {
+        (task.context, task.value, task.offset, task.factor) for task in holdout
+    }
+    if development_inputs & holdout_inputs:
+        raise ValueError("development/holdout task input overlap")
+    if len(holdout_inputs) != len(holdout):
+        raise ValueError("duplicate holdout task inputs")
 
     compiler = ProcedureCompiler()
     candidates = {context: compiler.compile(source, context=context) for context in contexts}
@@ -385,3 +400,13 @@ def run_fixture_probe(
         history_reads=history_reads,
         compilation_rows_inspected=len(source.episodes),
     )
+
+
+def main() -> int:
+    """Print a deterministic fixture report; never claim confirmatory evidence."""
+    print(run_fixture_probe().canonical_bytes().decode("utf-8"))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
