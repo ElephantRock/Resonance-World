@@ -97,7 +97,7 @@ or network client is created automatically.
 Local CI must run `ruff check .` and `pytest -q`. No CLI that
 contacts a provider is included, and no environment credential is read.
 The opt-in provider adapter now exists with a **maximum eight-send technical ceiling**,
-pre-dispatch reservation and a separate standard-API credential. It can be
+pre-dispatch reservation and the existing GitHub repository secret `ZAI_API_KEY`, mapped to the internal CLI variable `C3R_ZAI_API_KEY`. It can be
 used only through the explicit technical smoke CLI/manual workflow described
 in `LIVE_SMOKE_RUNBOOK.md`; this does **not** satisfy the evaluator,
 randomization, analyzable-N or inferential preflight for scientific acceptance.
