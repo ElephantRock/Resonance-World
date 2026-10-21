@@ -1,6 +1,6 @@
 # C3R G1 — default-off model interface and evaluator boundary
 
-**State:** exploratory construction, unfrozen, offline, **not provider authorization**.
+**State:** exploratory construction, unfrozen; opt-in technical qualification is now authorized by the user, but no live run has been evidenced. No scientific authorization or acceptance is implied.
 This extension does not change G1/G2 scientific standing and does not unlock G3/G4.
 
 ## Scope and why a new boundary is needed
@@ -9,7 +9,7 @@ The existing D2-vNext Hermes clients have fixed provider behavior, retry rules a
 diagnostic/qualification authorization boundaries. C3R must not borrow those
 clients' frozen study semantics or execute provider sends under an unrelated
 campaign. Instead, `src/resonance_world/c3r_g1_model_boundary.py` declares
-a small `ModelChoicePort` protocol. It contains **no network implementation**.
+a small `ModelChoicePort` protocol. It contains **no network implementation by itself**. A separate, explicitly enabled, narrowly pinned Z.AI standard-API transport now exists in `c3r_g1_zai_transport.py`; see `LIVE_SMOKE_RUNBOOK.md`.
 
 The injected port receives a `ModelChoiceRequest` with a strict A/B prompt,
 the public task operands, and only **prior graded source-development feedback
@@ -96,10 +96,11 @@ or network client is created automatically.
 
 Local CI must run `ruff check .` and `pytest -q`. No CLI that
 contacts a provider is included, and no environment credential is read.
-Adding a provider adapter or initiating real requests requires a **new, separately
-reviewed and prospectively authorized execution contract** with explicit
-physical-send ceilings, source qualification criteria, evaluator separation,
-inference plan and fail-closed stop rules.
+The opt-in provider adapter now exists with a **maximum eight-send technical ceiling**,
+pre-dispatch reservation and a separate standard-API credential. It can be
+used only through the explicit technical smoke CLI/manual workflow described
+in `LIVE_SMOKE_RUNBOOK.md`; this does **not** satisfy the evaluator,
+randomization, analyzable-N or inferential preflight for scientific acceptance.
 
 C3R remains posthoc-motivated exploratory apparatus until a preregistered
 study establishes independently replicated causal effects.
