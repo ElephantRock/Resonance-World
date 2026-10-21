@@ -226,3 +226,18 @@ def test_default_real_network_transport_is_never_invoked_in_tests() -> None:
         with pytest.raises(PermissionError):
             port.complete(_request())
         mock_send.assert_not_called()
+
+
+def test_manual_workflow_uses_existing_repo_secret_without_new_secret() -> None:
+    workflow = (
+        Path(__file__).resolve().parents[1]
+        / ".github" / "workflows" / "c3r-g1-manual-smoke.yml"
+    ).read_text(encoding="utf-8")
+    assert "on:\n  workflow_dispatch:" in workflow
+    assert "C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}" in workflow
+    assert "secrets.C3R_ZAI_API_KEY" not in workflow
+    assert "c3r-provider-qualification" in workflow
+    assert "--live --model" in workflow
+    assert "--max-sends 8" in workflow
+    assert "\n  push:" not in workflow
+    assert "\n  pull_request:" not in workflow
