@@ -347,7 +347,7 @@ def run_fixture_probe(
     history_reads = {arm: 0 for arm in ARMS}
     for arm in ARMS:
         # New downstream member IDs; source agents do not join the target roster.
-        members = (f"new-{arm}-member-1", f"new-{arm}-member-2")
+        members = ("new-member-1", "new-member-2")
         for task in holdout:
             trace = propose(
                 task,
