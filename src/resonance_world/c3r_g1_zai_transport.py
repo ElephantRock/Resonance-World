@@ -39,7 +39,7 @@ class ProviderTransportRejected(RuntimeError):
 @dataclass(frozen=True, slots=True)
 class TransportResponse:
     status: int
-    body: bytes
+    body: bytes = field(repr=False)
 
     def __post_init__(self) -> None:
         if type(self.status) is not int or type(self.body) is not bytes:
@@ -143,7 +143,7 @@ def _usage(value: object) -> int | None:
 class ZaiStandardModelPort:
     """Bounded adapter. Never reuse subscription Coding Plan credentials by default."""
 
-    api_key: str
+    api_key: str = field(repr=False)
     model_id: str
     ledger: PhysicalSendLedger
     enabled: bool = False
