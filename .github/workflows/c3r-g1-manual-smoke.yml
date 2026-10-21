@@ -23,7 +23,8 @@ jobs:
     timeout-minutes: 8
     environment: c3r-provider-qualification
     env:
-      C3R_ZAI_API_KEY: ${{ secrets.C3R_ZAI_API_KEY }}
+      # Existing repository secret, mapped to the isolated C3R CLI variable.
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
       MODEL_ID: ${{ inputs.model_id }}
     steps:
       - uses: actions/checkout@v4
@@ -32,11 +33,11 @@ jobs:
           python-version: "3.12"
       - name: Install World package (without optional provider SDK)
         run: python -m pip install -e .
-      - name: Fail closed on missing dedicated standard-API credential
+      - name: Fail closed on missing repository ZAI_API_KEY
         shell: bash
         run: |
           if [[ -z "${C3R_ZAI_API_KEY}" ]]; then
-            echo "Missing dedicated C3R_ZAI_API_KEY; no physical sends authorized."
+            echo "Missing repository ZAI_API_KEY; no physical sends authorized."
             exit 1
           fi
       - name: Eight-send hard-capped technical qualification only
