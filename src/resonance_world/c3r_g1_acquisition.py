@@ -48,6 +48,7 @@ class FeedbackLearner:
     """
 
     owner_id: str
+    initial_plan: Plan = PLANS[0]
     attempts: dict[str, dict[Plan, int]] = field(default_factory=dict)
     successes: dict[str, dict[Plan, int]] = field(default_factory=dict)
     pending: tuple[str, Plan] | None = None
@@ -56,6 +57,8 @@ class FeedbackLearner:
     def __post_init__(self) -> None:
         if not self.owner_id.strip():
             raise ValueError("learner requires an identity")
+        if self.initial_plan not in PLANS:
+            raise ValueError("initial plan must be executable")
 
     def choose(self, *, context: str) -> Plan:
         if not context.strip():
@@ -64,8 +67,9 @@ class FeedbackLearner:
             raise ValueError("ungraded decision is still pending")
         counts = self.attempts.get(context, {plan: 0 for plan in PLANS})
         observed = self.successes.get(context, {plan: 0 for plan in PLANS})
-        tie_start = int(_digest([self.owner_id, context, "fresh-policy"])[:8], 16) % 2
-        preference = (PLANS[tie_start], PLANS[1 - tie_start])
+        # Prospective counterbalancing happens at cohort construction, never
+        # by scoring novice identities against the hidden evaluation rule.
+        preference = (self.initial_plan, next(p for p in PLANS if p != self.initial_plan))
         if min(counts.values()) < 2:
             plan = min(preference, key=lambda item: counts[item])
         else:
@@ -95,14 +99,13 @@ class FeedbackLearner:
         if min(counts.values()) < 2 or self.pending is not None:
             raise ValueError("source has not completed balanced acquisition")
         rates = {plan: outcomes[plan] / counts[plan] for plan in PLANS}
-        fallback = int(_digest([self.owner_id, context, "fresh-policy"])[:8], 16) % 2
-        preference = (PLANS[fallback], PLANS[1 - fallback])
+        preference = (self.initial_plan, next(p for p in PLANS if p != self.initial_plan))
         return max(preference, key=lambda item: rates[item])
 
 
-def fresh_plan(*, owner_id: str, context: str) -> Plan:
+def fresh_plan(*, owner_id: str, context: str, initial_plan: Plan = PLANS[0]) -> Plan:
     """Same learner before any feedback; avoids an intentionally weak baseline."""
-    learner = FeedbackLearner(owner_id)
+    learner = FeedbackLearner(owner_id, initial_plan=initial_plan)
     return learner.choose(context=context)
 
 
@@ -131,8 +134,8 @@ def acquire_source(
     The oracle is owned by this fixture runner and never given to the learner.
     Experiments with model-mediated agents need an independently owned runner.
     """
-    if agents_per_context < 2 or training_steps_per_agent < 4:
-        raise ValueError("at least two sources and four feedback episodes required")
+    if agents_per_context < 2 or agents_per_context % 2 or training_steps_per_agent < 4:
+        raise ValueError("require an even number of sources and four feedback episodes")
     if len(contexts) != len(set(contexts)):
         raise ValueError("context identities must be unique")
 
@@ -141,7 +144,9 @@ def acquire_source(
     owners: list[tuple[str, str]] = []
     for context in contexts:
         for owner_index in range(agents_per_context):
-            learner = FeedbackLearner(f"source-{context}-{owner_index}")
+            learner = FeedbackLearner(
+                f"source-{context}-{owner_index}", initial_plan=PLANS[owner_index % 2]
+            )
             learners.append(learner)
             owners.append((learner.owner_id, context))
             for step in range(training_steps_per_agent):
@@ -294,7 +299,9 @@ def run_feedback_acquisition_probe(
     for learner, (_, context) in zip(source.learners, source.context_by_agent, strict=True):
         tasks = tuple(task for task in qualifier if task.context == context)
         trained = learner.learned_plan(context=context)
-        novice = fresh_plan(owner_id=learner.owner_id, context=context)
+        novice = fresh_plan(
+            owner_id=learner.owner_id, context=context, initial_plan=learner.initial_plan
+        )
         qualification_learned[learner.owner_id] = tuple(
             oracle.grade(task, apply_public_plan(task, trained)) for task in tasks
         )
