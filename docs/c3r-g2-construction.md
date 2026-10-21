@@ -112,3 +112,26 @@ See `research/c3r_g2/MODEL_PREFLIGHT.md` for a provider readiness checklist,
 external evaluator-attestation requirements, transport-enforced send caps,
 fair fresh baseline requirements, analyzable yield, and prohibited scientific
 promotions. Live model invocations remain a separate authorization gate.
+
+## Opt-in technical live qualification (not G1 science)
+
+The user authorized continued provider qualification. A narrowly pinned
+Z.AI **standard-API** adapter now exists in
+`src/resonance_world/c3r_g1_zai_transport.py`. It is off by default,
+consumes a pre-send reservation for every attempted HTTP POST, forbids
+redirects/retries, and caps each CLI run at eight sends. A dedicated
+`C3R_ZAI_API_KEY` is required; no D2/Hermes secret or Coding Plan
+endpoint is reused. The executable manual-only entry point is
+`scripts/run_c3r_g1_live_smoke.py`, and
+`.github/workflows/c3r-g1-manual-smoke.yml` is **workflow_dispatch-only**,
+not triggered by pull requests or code pushes.
+
+The workflow cannot be dispatched through the current connected tool
+actions; it requires the operator to select the model ID and a protected
+repository environment/secret after the workflow is available on main.
+No provider success, send count or model effect can be claimed before a
+real successful diagnostic artifact is available. CI remains exclusively
+offline. See `research/c3r_g2/LIVE_SMOKE_RUNBOOK.md`.
+
+Technical authorization does not freeze the research design or establish
+an independently attested evaluator; G1/G2 inferential gates remain closed.
