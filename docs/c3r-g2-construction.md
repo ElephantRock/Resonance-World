@@ -21,6 +21,9 @@ This is not a continuation or reinterpretation of W5A/H8/D2 results. Historical 
 
 - src/resonance_world/c3r_g2.py: exploratory EvaluatedExperience, ExperienceEvidenceIndex, ProcedureCompiler, executable OrganizationalProcedure, provenance-only ProcedureValidationGate, and descriptive paired contrast.
 - tests/test_c3r_g2.py: credential-free tests for source binding, deterministic candidate fingerprints, abstention, holdout disjointness, and inability of a candidate to self-promote.
+- src/resonance_world/c3r_g2_probe.py: credential-free deterministic fixture oracle, source and holdout input generator, blind two-proposal per-arm controller, A/B/C/D/D_MINUS outcomes, canonical noninferential probe report, and read-only CLI.
+- tests/test_c3r_g2_probe.py: construction checks for honest C/D parity, matched members and work slots, data non-overlap, removal control, fixture determinism, and explicit noninferential labeling.
+- research/c3r_g2/PROBE_PROTOCOL.md: executable fixture protocol, programmed expected results, and fair comparison limitations.
 
 The numerical defaults in the compiler (2 episodes and 2 sources per plan) are **construction smoke-test floors**, neither a power calculation nor a materiality threshold. They cannot be used as confirmatory sample-size criteria.
 
@@ -45,7 +48,7 @@ A held-out **procedure removal** condition (D without the compiled procedure, wi
 
 1. Choose an independently graded task environment in which a workflow choice can be learned, but where a general model's existing knowledge does not trivially reveal the answer.
 2. Freeze evaluator code, treatment-integrity invariants, schema locks and data split. The compiler can observe only development outcomes, never a held-out label.
-3. Implement genuine A/B/C/D and removal controllers; the current module **does not yet implement a four-arm inference engine**.
+3. Replace the existing local A/B/C/D/removal **fixture wiring** with genuinely independent organizational development units, a demonstrated source-learning prerequisite, matched history opportunities and resource accounting. Current construction has no four-arm inferential design or sample power.
 4. Inspect selection biases, context leakage, repeated-episode dependence, and organization-level experimental units.
 5. Pre-register the estimand, unit of randomization, paired/disjoint structure, multiplicity, power, minimum analyzable N, CI method, independent replication, stopping/missing-data rules, and prospectively justified materiality classification.
 6. Run only local deterministic construction/probe tests first. Later stochastic/provider execution needs separately frozen samples, strict send caps and explicit human authorization.
@@ -57,7 +60,7 @@ A held-out **procedure removal** condition (D without the compiled procedure, wi
 - Do not count correlated tasks from one organization as independent experimental organizations.
 - Digest validity is not evaluator authority or evidence-of-effect validity.
 - A descriptive paired success difference is **not** a statistically accepted result.
-- Fixed two-step arithmetic examples are a test apparatus, not evidence of autonomous organizational learning or persistent institutions.
+- Fixed two-step arithmetic examples are a test apparatus, not evidence of autonomous organizational learning or persistent institutions. In the fixture, C and D intentionally produce identical task outcomes, and synthetic source feedback was scripted rather than learned.
 - Neither this branch nor its CI permits modifying W*/H*/D* historical artifacts, enabling Historical Substrate, spending provider tokens, or altering scientific registry states.
 
 ## Entry/exit conditions
