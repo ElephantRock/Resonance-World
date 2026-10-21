@@ -40,6 +40,7 @@ def _parser() -> argparse.ArgumentParser:
     )
     parser.add_argument("--live", action="store_true")
     parser.add_argument("--model", default=None)
+    parser.add_argument("--route", choices=("standard", "coding"), default="standard")
     parser.add_argument("--max-sends", type=int, default=EXPECTED_SENDS)
     return parser
 
@@ -59,6 +60,7 @@ def main(argv: list[str] | None = None) -> int:
                     "physical_send_limit": EXPECTED_SENDS,
                     "provider_endpoint": "pinned_standard_api_only",
                     "model": args.model,
+                    "route": args.route,
                     "requires_live_opt_in": True,
                     "requires_env_key": "C3R_ZAI_API_KEY",
                     "scientific_acceptance": False,
@@ -81,6 +83,7 @@ def main(argv: list[str] | None = None) -> int:
         model_id=args.model,
         ledger=ledger,
         enabled=True,
+        route=args.route,
     )
     outcome = ModelG1Runner(
         oracle=FixtureOracle({CONTEXT: ("multiply", "add")}),
@@ -93,6 +96,7 @@ def main(argv: list[str] | None = None) -> int:
                 "status": "technical_smoke_not_scientific_evidence",
                 "cohort_digest": cohort.digest,
                 "model": args.model,
+                "route": args.route,
                 "report": outcome.to_dict(),
                 "send_ledger": ledger.to_dict(),
                 "scientific_acceptance": False,
