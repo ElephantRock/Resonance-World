@@ -6,7 +6,7 @@ on:
   workflow_dispatch:
     inputs:
       model_id:
-        description: "Explicit standard-API model identifier"
+        description: "Model ID for the approved coding task (e.g. glm-5.3)"
         required: true
         type: string
 
@@ -45,7 +45,7 @@ jobs:
         run: |
           mkdir -p output/c3r_g1
           python scripts/run_c3r_g1_live_smoke.py \
-            --live --model "$MODEL_ID" --max-sends 8 \
+            --live --model "$MODEL_ID" --route coding --max-sends 8 \
             > output/c3r_g1/technical-qualification.json
       - name: Persist bounded diagnostic (no raw prompt/response)
         if: always()
