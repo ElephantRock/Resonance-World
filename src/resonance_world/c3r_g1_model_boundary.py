@@ -72,9 +72,10 @@ class ModelChoiceRequest:
             for item in self.feedback
         )
         return (
-            "You choose the order of two operations. Reply with exactly A or B.\n"
-            "A means add the offset, then multiply by the factor.\n"
-            "B means multiply by the factor, then add the offset.\n"
+            "Software engineering task: select a Python implementation for a\n"
+            "two-operation function. Reply with exactly A or B.\n"
+            "A implements: return (value + offset) * factor\n"
+            "B implements: return value * factor + offset\n"
             "Some contexts use one ordering and others use the other; learn from "
             "development feedback, not from task labels.\n"
             f"Context: {self.task.context}\n"
