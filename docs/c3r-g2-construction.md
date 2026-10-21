@@ -70,3 +70,24 @@ A held-out **procedure removal** condition (D without the compiled procedure, wi
 **Exit for construction:** Ruff/pytest on relevant files, an independent code review, and a clear prospective four-arm study design. It does **not** grant G2.
 
 **Exit for G2 science:** frozen powered confirmatory contrast on a new cohort + independent replication and mechanism ablation; no claims beyond supported scope.
+
+## Additional G1-to-G2 construction probe
+
+The initial scripted source fixture and its honest C/D tie remain intact. The newer
+`src/resonance_world/c3r_g1_acquisition.py` now performs a distinct, feedback-driven
+source-acquisition construction test: two learners per context propose actual plans
+before the evaluator grades them, each learner receives only its own post-action
+Boolean feedback, and G1 qualification happens on separate public operands.
+
+Run `python -m resonance_world.c3r_g1_acquisition` for an explicitly noninferential
+canonical JSON report. Its controls include prebalanced fresh-source starting plans,
+wrong/duplicated feedback rejection, split/payload-disjoint holdouts, and a separately
+evaluated A/B/C/D/D_MINUS destination comparison. The competent raw-history C and
+compiled D still intentionally tie under the simple sufficient statistic. The new
+tests and `research/c3r_g2/FEEDBACK_ACQUISITION_PROTOCOL.md` describe all boundaries.
+
+**Crucially:** feedback-policy adaptation is a hand-coded local algorithm; this does
+not validate acquisition by an actual model/agent, nor change the source's schema,
+nor establish independent organization-level G2 uplift. The construction has one
+organization-level unit and no powered confirmatory inferential claim. No provider
+invocation or authority/registry promotion is authorized.
