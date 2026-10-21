@@ -11,6 +11,7 @@ import hashlib
 import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
+from typing import Literal
 from urllib.error import HTTPError
 from urllib.request import (
     HTTPRedirectHandler,
@@ -24,6 +25,7 @@ from .c3r_g1_model_boundary import (
 )
 
 STANDARD_ENDPOINT = "https://api.z.ai/api/paas/v4/chat/completions"
+CODING_ENDPOINT = "https://api.z.ai/api/coding/paas/v4/chat/completions"
 MAX_RESPONSE_BYTES = 64 * 1024
 MAX_TOTAL_SENDS = 8
 
@@ -59,7 +61,7 @@ def _single_https_post(
     url: str, headers: dict[str, str], body: bytes, timeout_seconds: float
 ) -> TransportResponse:
     """Exactly one HTTPS POST, no redirects, no SDK or retry machinery."""
-    if url != STANDARD_ENDPOINT:
+    if url not in (STANDARD_ENDPOINT, CODING_ENDPOINT):
         raise ProviderTransportRejected("endpoint outside pinned allowlist")
     request = Request(url, data=body, headers=headers, method="POST")
     opener = build_opener(_DenyRedirects())
@@ -153,8 +155,11 @@ class ZaiStandardModelPort:
     transport: Transport = _single_https_post
     timeout_seconds: float = 15.0
     max_tokens: int = 16
+    route: Literal["standard", "coding"] = "standard"
 
     def __post_init__(self) -> None:
+        if self.route not in ("standard", "coding"):
+            raise ValueError("provider route must be standard or coding")
         if not self.api_key.strip() or not self.model_id.strip():
             raise ValueError("API key and model must be explicitly supplied")
         if any(ch in self.model_id for ch in "\r\n"):
@@ -184,7 +189,8 @@ class ZaiStandardModelPort:
             "Content-Type": "application/json",
         }
         try:
-            response = self.transport(STANDARD_ENDPOINT, headers, body, self.timeout_seconds)
+            endpoint = CODING_ENDPOINT if self.route == "coding" else STANDARD_ENDPOINT
+            response = self.transport(endpoint, headers, body, self.timeout_seconds)
             if not isinstance(response, TransportResponse):
                 raise ProviderTransportRejected("transport returned an invalid response type")
             if response.status != 200:
