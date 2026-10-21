@@ -9,8 +9,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Callable
 from urllib.error import HTTPError
 from urllib.request import (
     HTTPRedirectHandler,
@@ -90,7 +90,10 @@ class PhysicalSendLedger:
     records: list[PhysicalSendRecord] = field(default_factory=list)
 
     def __post_init__(self) -> None:
-        if type(self.max_total_sends) is not int or not 1 <= self.max_total_sends <= MAX_TOTAL_SENDS:
+        if (
+            type(self.max_total_sends) is not int
+            or not 1 <= self.max_total_sends <= MAX_TOTAL_SENDS
+        ):
             raise ValueError("send budget must be a positive count within the fixed cap")
 
     @property
