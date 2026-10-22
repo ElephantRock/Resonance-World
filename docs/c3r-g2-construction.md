@@ -225,3 +225,32 @@ scientific ownership, prevent same-user access, or prove time-stamped
 prospective commitment. This new interface does not contact Z.AI,
 sign independent results, authorize a paid live campaign, or establish
 Models → Agents (G1). No G2/G3/G4 promotion or registry modification.
+
+
+## G1 signed evaluator receipts v0.2 (offline process boundary)
+
+The previously separated G1 evaluator now optionally signs the ready record,
+each development feedback, each qualification acknowledgement and the
+complete final outcome ledger with **Ed25519**, binding a pinned run ID,
+a monotonically increasing ordinal and the hash of the preceding receipt.
+The model runner can use VerifiedEvaluatorSession so no unauthenticated
+feedback enters the learned arm.
+
+A distinct offline checker, c3r_g1_evaluator_transcript.py, validates the
+signed chain, frozen public cohort, 4+2+... stage denominators, full
+three-arm qualification coverage and final record continuity using only
+an out-of-band trusted **public key**, never the hidden answer-key seed.
+The transcript remains signed structurally consistent, not scientific
+attestation or proof that a private grader returned correct answers.
+
+For separately operated Linux deployment, c3r_g1_evaluator_unix.py offers
+a one-run Unix socket listener using kernel SO_PEERCRED UID pinning,
+nonwritable socket directory checks, 0600 server-held private key files,
+and a client that never receives either private key. CI exercises these
+protocols using separate processes under the **same** OS user, so it does
+not prove production isolation across independently controlled users.
+
+See research/c3r_g2/G1_SIGNED_EVALUATOR_TRANSPORT_V0.2.md for operating
+controls, the public-key-pinned verification CLI, and remaining scientific
+gates. No new model calls, independent third-party signatures, write-once
+attestation, frozen registry changes, or G1/G2 promotions are implied.
