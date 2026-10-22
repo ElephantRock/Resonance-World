@@ -36,8 +36,8 @@ fabricated JSON returns exit code `2`, with only bounded issue classes.
 Missing/oversized input exits nonzero without interpreting it as a model result.
 
 The audit checks the locked cohort, model and route, eight prescribed task
-attempts (4 development + 2 learned + 2 fresh qualification), the eight
-pre-send reservations, transport HTTP outcomes, accepted-action accounting,
+attempts (4 development + 2 learned + 2 fresh qualification), the a maximum of eight
+pre-send reservations (with fewer permitted only after a terminal circuit-open failure), transport HTTP outcomes, accepted-action accounting,
 source evidence count, paired-analyzable bound, observation digests, and the
 absence of raw prompt/secret fields. It reconstructs the interleaved physical
 send order separately from the grouping used in the report.
