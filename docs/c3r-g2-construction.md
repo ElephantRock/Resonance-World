@@ -467,3 +467,34 @@ additional live-model send authorization or new Pattern Register
 promotion. Full observations, output-hash reconstruction and
 science limitations are documented in
 `research/c3r_g2/G1_SECOND_REAL_GLM53_A_SHAM_20261022.md`.
+
+## G1 THIRD real GLM-5.3 multischema/neutral-control outcome (2026-10-22)
+
+The third **live** eight-send pilot, GitHub run `39800889211`,
+tested two separate task families in one run: arithmetic (B true)
+and text transformation (A true), each with one actual graded
+development answer and learned/fresh/grade-free-neutral qualification
+triplet. **All 8/8** reported provider requests returned HTTP 200 and
+exact A/B responses, with **2/2 complete triplets**. The observed
+qualification correctness was arithmetic: **learned 1/1, fresh 0/1,
+neutral 0/1**; text: **learned 1/1, fresh 1/1, neutral 1/1**.
+
+The arithmetic learner chose A (incorrect) during development,
+received its local grade, then chose B (correct) on a new operand
+set. Both grade-free controls continued choosing A. The text
+learner's development A was already correct; all arms subsequently
+chose A. One arithmetic development reply used **6,307 output tokens
+(6,304 reasoning)**, independently reinforcing that 512 tokens was
+an inappropriate generation cap. All eight provider-reported calls
+sum to 9,498 completion and 9,474 reasoning tokens.
+
+This supports **in-context feedback sensitivity** and highlights a
+consistent fresh-A baseline, **not persistent autonomous agent
+learning**. The two targets are confounded with family, and there
+are only two holdout triplets; the neutral control has matched
+character count but not provider-token parity. No science
+acceptance, independent custody claim or Pattern Register promotion.
+
+The one-shot workflow was removed immediately after use. Full
+sanitized run evidence and original archive digest are recorded in
+`research/c3r_g2/G1_THIRD_REAL_MULTISCHEMA_NEUTRAL_20261022.md`.
