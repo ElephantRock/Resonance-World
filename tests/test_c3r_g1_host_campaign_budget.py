@@ -239,7 +239,7 @@ def test_port_integration_refuses_third_request_after_durable_cap(
     port = ZaiStandardModelPort(
         api_key="synthetic-not-sent", model_id=MODEL, ledger=local,
         route="coding", campaign_budget=guard, transport=fake_transport,
-        enabled=True,
+        enabled=True, max_tokens=512,
     )
     report = CalibrationRunner(MODEL).run(port).to_dict()
     assert len(sends) == 2
