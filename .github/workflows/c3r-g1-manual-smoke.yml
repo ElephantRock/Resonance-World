@@ -9,6 +9,11 @@ on:
         description: "Model ID for the approved coding task (e.g. glm-5.3)"
         required: true
         type: string
+      output_token_budget:
+        description: "Generation budget including mandatory reasoning tokens (default 16384)"
+        required: true
+        default: "16384"
+        type: string
 
 permissions:
   contents: read
@@ -20,12 +25,13 @@ concurrency:
 jobs:
   bounded-qualification:
     runs-on: ubuntu-latest
-    timeout-minutes: 8
+    timeout-minutes: 45
     environment: c3r-provider-qualification
     env:
       # Existing repository secret, mapped to the isolated C3R CLI variable.
       C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
       MODEL_ID: ${{ inputs.model_id }}
+      OUTPUT_TOKEN_BUDGET: ${{ inputs.output_token_budget }}
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-python@v5
@@ -46,6 +52,7 @@ jobs:
           mkdir -p output/c3r_g1
           python scripts/run_c3r_g1_live_smoke.py \
             --live --model "$MODEL_ID" --route coding --max-sends 8 \
+            --max-tokens "$OUTPUT_TOKEN_BUDGET" --timeout-seconds 180 \
             > output/c3r_g1/technical-qualification.json
       - name: Persist bounded diagnostic (no raw prompt/response)
         if: always()
