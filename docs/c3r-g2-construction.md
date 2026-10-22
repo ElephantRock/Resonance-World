@@ -254,3 +254,28 @@ See research/c3r_g2/G1_SIGNED_EVALUATOR_TRANSPORT_V0.2.md for operating
 controls, the public-key-pinned verification CLI, and remaining scientific
 gates. No new model calls, independent third-party signatures, write-once
 attestation, frozen registry changes, or G1/G2 promotions are implied.
+
+
+## G1 cross-UID deployment and witnessed admission v0.3 (offline only)
+
+A dedicated Linux CI job named c3r-g1-cross-uid now provisions two
+different, unprivileged Linux accounts in a disposable test environment,
+stores evaluator-only signing/target keys in a 0700 evaluator directory,
+verifies the model-side account cannot read them, and exercises a full
+three-arm fixture over a UID-pinned Unix socket. Its public-key-verified
+signed receipts pass structural audit. This is **cross-UID operating-system
+isolation demonstrated in CI**, not independently managed or attested
+scientific evaluation in the production environment.
+
+A further witnessed pretrial enrollment module binds the public task
+cohort digest, run identifier, evaluator public signing key and private
+target commitment under a separate Ed25519 witness signature. The
+agent-side admission wrapper refuses changed commitments or identities
+before the first training attempt. The witness public key must be
+independently pinned before the trial, and a real third-party custody and
+timestamp source is NOT supplied by local testing.
+
+See research/c3r_g2/G1_DEPLOYMENT_WITNESSED_GATE_V0.3.md for the
+remaining external authority, append-only storage, scientific power,
+provider reconciliation and live-operation acceptance gates. Nothing
+in this construction authorizes paid calls or promotes G1/G2 results.
