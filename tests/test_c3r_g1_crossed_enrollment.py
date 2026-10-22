@@ -76,9 +76,10 @@ def test_tamper_and_signed_wrong_plan_denominator_rejected() -> None:
     changed["payload"]["plan_digest"] = "0" * 64
     with pytest.raises(ValueError):
         _check(w, e, c, changed)
-    signed_wrong = w.seal({**receipt["payload"], "qualification_attempts": 23})
-    with pytest.raises(ValueError):
-        _check(w, e, c, signed_wrong)
+    signer = ReceiptSigner(os.urandom(32), run_id=RUN)
+    signed_wrong = signer.seal({**receipt["payload"], "qualification_attempts": 23})
+    with pytest.raises(ValueError, match="wrong frozen run"):
+        _check(signer, e, c, signed_wrong)
     with pytest.raises(ValueError):
         _check(w, e, c, receipt, custodian=w.public_key_hex)
 
@@ -97,20 +98,22 @@ def test_claimed_enrollment_clock_not_equivalent_to_trusted_time() -> None:
 
 def test_signed_private_target_leak_field_rejected() -> None:
     w, e, c, receipt = _fixture()
-    forbidden = w.seal({**receipt["payload"], "private_target_map": "AABB"})
-    with pytest.raises(ValueError):
-        _check(w, e, c, forbidden)
+    signer = ReceiptSigner(os.urandom(32), run_id=RUN)
+    forbidden = signer.seal({**receipt["payload"], "private_target_map": "AABB"})
+    with pytest.raises(ValueError, match="payload schema mismatch"):
+        _check(signer, e, c, forbidden)
 
 
 def test_pinned_enrollment_custody_handoff_and_terminal(tmp_path) -> None:
-    witness, evaluator, _unused, old = _fixture()
+    _witness, evaluator, _unused, old = _fixture()
     custody_seed = os.urandom(32)
     custody = ReceiptSigner(custody_seed, run_id=RUN)
-    enrol = witness.seal({
+    other_witness = ReceiptSigner(os.urandom(32), run_id=RUN)
+    enrol = other_witness.seal({
         **old["payload"], "custodian_public_key_hex": custody.public_key_hex,
     })
     # WitnessSigner is a local fixture, not third-party enrollment.
-    pin = _check(witness, evaluator, custody, enrol)
+    pin = _check(other_witness, evaluator, custody, enrol)
     plan = make_plan()
     receipts = []
     for index, slot in enumerate(plan.schedule):
