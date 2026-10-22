@@ -16,6 +16,7 @@ import sys
 from pathlib import Path
 
 from .c3r_g1_multischema import V2Design
+from .c3r_g1_evaluator_receipts import ReceiptSigner
 from .c3r_g1_sealed_evaluator import SealedEvaluator
 
 MAX_LINE_BYTES = 4096
@@ -50,6 +51,8 @@ def _emit(record: dict[str, object]) -> None:
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Sealed local G1 evaluator worker")
     parser.add_argument("--key-file", type=Path, required=True)
+    parser.add_argument("--signing-key-file", type=Path)
+    parser.add_argument("--run-id")
     parser.add_argument("--units", type=int, default=8)
     parser.add_argument("--development", type=int, default=6)
     parser.add_argument("--qualification", type=int, default=8)
@@ -67,6 +70,14 @@ def main(argv: list[str] | None = None) -> int:
         )
         key = _load_private_key(args.key_file)
         grader = SealedEvaluator(design.freeze(), private_key=key)
+        if (args.signing_key_file is None) != (args.run_id is None):
+            raise ValueError("signing key and public run ID must be supplied together")
+        signer = (
+            ReceiptSigner(
+                _load_private_key(args.signing_key_file), run_id=args.run_id
+            )
+            if args.signing_key_file is not None else None
+        )
     except (OSError, ValueError, TypeError):
         _emit({
             "schema": "c3r-g1-evaluator-error-v0.1",
@@ -74,14 +85,17 @@ def main(argv: list[str] | None = None) -> int:
         })
         return 2
 
-    _emit(grader.ready().payload)
+    def emit(payload: dict[str, object]) -> None:
+        _emit(signer.seal(payload) if signer is not None else payload)
+
+    emit(grader.ready().payload)
     for _ in range(MAX_MESSAGES):
         line = sys.stdin.buffer.readline(MAX_LINE_BYTES + 1)
         if not line:
             # EOF before finalize is always unsuccessful.
             return 2
         if len(line) > MAX_LINE_BYTES:
-            _emit({"schema": "c3r-g1-evaluator-error-v0.1",
+            emit({"schema": "c3r-g1-evaluator-error-v0.1",
                    "status": "invalid_or_oversized_message"})
             return 2
         try:
@@ -95,15 +109,15 @@ def main(argv: list[str] | None = None) -> int:
             else:
                 raise ValueError("unsupported message type")
         except (ValueError, TypeError, KeyError):
-            _emit({
+            emit({
                 "schema": "c3r-g1-evaluator-error-v0.1",
                 "status": "invalid_request",
             })
             return 2
-        _emit(reply.payload)
+        emit(reply.payload)
         if message["op"] == "finalize":
             return 0
-    _emit({"schema": "c3r-g1-evaluator-error-v0.1",
+    emit({"schema": "c3r-g1-evaluator-error-v0.1",
            "status": "message_limit_exceeded"})
     return 2
 
