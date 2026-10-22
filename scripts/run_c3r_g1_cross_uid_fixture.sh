@@ -53,8 +53,13 @@ for name in ("target.hex", "signing.hex"):
     p.chmod(0o600)
 ' "$TMP/private"
 
+# Workspace parents may be private to the GitHub runner UID. Expose ONLY
+# the committed runtime source, not repo metadata, Actions credentials or keys.
+mkdir -p "$TMP/app"
+cp -a "$ROOT/src/resonance_world" "$TMP/app/"
+chmod -R a+rX "$TMP/app"
 PYTHON_BIN="$(python -c 'import sys; print(sys.executable)')"
-export PYTHONPATH="$ROOT/src"
+export PYTHONPATH="$TMP/app"
 PUBLIC_KEY="$TMP/socket/signing-public.hex"
 sudo -u "$EVAL_USER" env PYTHONPATH="$PYTHONPATH" \
   "$PYTHON_BIN" -c '
