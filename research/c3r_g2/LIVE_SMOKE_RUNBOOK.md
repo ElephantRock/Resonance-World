@@ -64,10 +64,10 @@ The user explicitly authorized the limited live attempt. Because the connected G
 
 ## Evidence reconciliation before any retry
 
-The one-shot launch attempt on 2026-10-21 remains **unresolved**: the
-GitHub connector can see PR-triggered workflows but not the earlier
-push-triggered Actions event, so there is no verified provider-send count or
-model report. **Do not initiate another smoke to resolve this ambiguity.**
+The original one-shot report has now been supplied by the operator, but the
+GitHub connector still cannot independently attest the push-triggered Actions
+run. A bounded diagnostic exists and reports **eight HTTP 200 responses** and
+**zero parseable model actions**. Do not automatically rerun it.
 
 See `SMOKE_RECONCILIATION.md` for the exact launch/retirement commits,
 Actions lookup link, recovery procedure and epistemic acceptance rules.
@@ -82,3 +82,20 @@ This is a no-secret, no-network check for report structure and internally
 consistent attempts/send accounting. Passing means
 `structurally_consistent_unattested`, **not** validated provider execution,
 scientific G1 learning or organizational G2 effect.
+
+## 2026-10-22: uploaded one-shot report received
+
+The previously missing technical report was provided as an uploaded ZIP.
+See `ONE_SHOT_ARTIFACT_ANALYSIS_20261022.md` for the archived checksums,
+verified cohort lock, **8/8 HTTP 200 reported**, 8/8 **empty**
+`message.content` hashes, 16/16 output tokens spent in each request,
+**0 accepted actions**, and **0 paired-analyzable qualification cases**.
+This resolves artifact availability, not remote run or billing attestation.
+No scientific G1/G2 result can be derived from zero accepted actions.
+
+The construction fix for any *separately authorized future run* is:
+GLM-5.3 forced thinking explicitly enabled, `reasoning_effort: low`,
+`max_tokens: 512` (up to 4096 output tokens if all eight calls complete),
+plus bounded `finish_reason`, optional reasoning-token-count and empty-output
+metadata. There is **no automatic retry**. The historic eight-send report
+remains unchanged.
