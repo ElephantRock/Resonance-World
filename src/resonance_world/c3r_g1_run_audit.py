@@ -222,6 +222,24 @@ def audit_technical_smoke(
                     row.get("status") == "accepted" for row in stage_rows[stage]
                 ) != stage_accepted[stage]:
                     issues.append(f"{stage}_observation_count_mismatch")
+    # The summary groups qualifications by arm; physical sends were actually
+    # interleaved learned/fresh within each heldout task. Reconstruct order.
+    if isinstance(entries, list) and len(entries) == 8 and isinstance(
+        observations, list
+    ) and len(observations) == 8:
+        ledger_order = (0, 1, 2, 3, 4, 6, 5, 7)
+        for ordinal, source_index in enumerate(ledger_order):
+            entry = entries[ordinal]
+            observation = observations[source_index]
+            if not isinstance(entry, dict) or not isinstance(observation, dict):
+                continue
+            if observation.get("status") in ("accepted", "invalid_format"):
+                if (entry.get("http_status") != 200
+                        or entry.get("failure_class") is not None):
+                    issues.append("accepted_or_parsed_without_http_success")
+                if not _digest(observation.get("output_sha256")):
+                    issues.append("parsed_output_digest_missing")
+
     paired = report.get("paired_analyzable")
     if not _integer(paired, high=2):
         issues.append("paired_analyzable_invalid")
