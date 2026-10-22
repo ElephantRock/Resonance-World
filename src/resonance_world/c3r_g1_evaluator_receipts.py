@@ -7,6 +7,7 @@ independent key ownership, external timestamps, or experimental validity.
 
 from __future__ import annotations
 
+import copy
 import hashlib
 import json
 import re
@@ -146,20 +147,31 @@ class VerifiedEvaluatorSession:
         self._verifier = verifier
         self._started = False
         self._ended = False
+        self._receipts: list[dict[str, object]] = []
+
+    @property
+    def signed_receipts(self) -> tuple[dict[str, object], ...]:
+        """Capture only already verified envelopes; not an immutable evidence store."""
+        return tuple(copy.deepcopy(self._receipts))
+
+    def _consume(self, envelope: dict[str, Any]) -> dict[str, Any]:
+        payload = self._verifier.verify_next(envelope)
+        self._receipts.append(copy.deepcopy(envelope))
+        return payload
 
     def ready(self) -> dict[str, Any]:
         if self._started:
             raise ValueError("signed evaluator can only start once")
         self._started = True
-        return self._verifier.verify_next(self._transport.ready())
+        return self._consume(self._transport.ready())
 
     def submit(self, request: dict[str, object]) -> dict[str, Any]:
         if not self._started or self._ended:
             raise ValueError("signed evaluator is not accepting submissions")
-        return self._verifier.verify_next(self._transport.submit(request))
+        return self._consume(self._transport.submit(request))
 
     def finalize(self) -> dict[str, Any]:
         if not self._started or self._ended:
             raise ValueError("signed evaluator cannot finalize now")
         self._ended = True
-        return self._verifier.verify_next(self._transport.finalize())
+        return self._consume(self._transport.finalize())
