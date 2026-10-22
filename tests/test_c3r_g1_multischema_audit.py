@@ -124,7 +124,7 @@ def test_report_never_qualifies_as_independent_evaluator_attestation() -> None:
     verdict = audit_multischema(source, cohort)
     assert "raw_or_private_field_present" in verdict.errors
     assert "invalid_record_schema" in verdict.errors
-    assert 1701 not in json.dumps(verdict.to_dict())
+    assert "1701" not in json.dumps(verdict.to_dict())
 
 
 def test_all_exception_attempts_remain_covered_by_full_denominator() -> None:
