@@ -231,3 +231,45 @@ def test_report_is_deterministic_and_noninferential() -> None:
     assert record["development"]["physical_sends_reported"] == 0
     assert record["qualification_learned"]["prompt_tokens_reported"] == 72
     assert "one source, no independent organizational units or G2 claim" in record["warnings"]
+
+
+
+def test_empty_answer_records_finish_reason_and_reasoning_usage_without_raw_text() -> None:
+    class ExhaustedReasoningPort:
+        def complete(self, request: ModelChoiceRequest) -> ModelChoiceCompletion:
+            return ModelChoiceCompletion(
+                output="",
+                model_id="glm-5.3",
+                physical_sends_reported=1,
+                prompt_tokens_reported=117,
+                completion_tokens_reported=16,
+                finish_reason="length",
+                reasoning_present=True,
+                reasoning_tokens_reported=16,
+            )
+
+    report = ModelG1Runner(oracle=_oracle(), cohort=_cohort()).execute(
+        owner_id="source", learned_port=ExhaustedReasoningPort(),
+        fresh_port=ExhaustedReasoningPort(),
+    )
+    summary = report.to_dict()
+    assert summary["development"]["empty_output_count"] == 8
+    assert summary["development"]["accepted"] == 0
+    assert summary["development"]["failures_by_status"]["invalid_format"] == 8
+    assert summary["development"]["reasoning_tokens_reported"] == 8 * 16
+    assert all(
+        item["finish_reason"] == "length"
+        and item["reasoning_present"] is True
+        and item["reasoning_tokens_reported"] == 16
+        for item in summary["bounded_observations"]
+    )
+    assert "reasoning_content" not in report.canonical_bytes().decode()
+
+
+def test_completion_rejects_invalid_reasoning_diagnostics() -> None:
+    with pytest.raises(ValueError, match="finish reason"):
+        ModelChoiceCompletion("A", "glm-5.3", finish_reason="x" * 49)
+    with pytest.raises(ValueError, match="reasoning presence"):
+        ModelChoiceCompletion("A", "glm-5.3", reasoning_present="true")  # type: ignore[arg-type]
+    with pytest.raises(ValueError, match="nonnegative"):
+        ModelChoiceCompletion("A", "glm-5.3", reasoning_tokens_reported=-1)
