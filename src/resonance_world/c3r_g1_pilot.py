@@ -236,6 +236,36 @@ class PilotReport:
                     complete_triplets += 1
         denominator = self.design.qualification_triplets
         observed = sum(row.status == "accepted" for row in trials)
+        development = [row for row in self.rows if row.stage == "development"]
+        per_arm = {
+            arm: {
+                "prescribed": sum(row.arm == arm for row in trials),
+                "accepted": sum(
+                    row.status == "accepted" for row in trials if row.arm == arm
+                ),
+                "itt_successes": sum(
+                    row.success for row in trials if row.arm == arm
+                ),
+                "failures_by_status": {
+                    status: sum(
+                        row.status == status for row in trials if row.arm == arm
+                    )
+                    for status in (
+                        "invalid_format", "adapter_exception",
+                        "invalid_adapter_result", "wrong_model",
+                    )
+                },
+            }
+            for arm in PILOT_ARMS
+        }
+        action_yield = observed / (3 * denominator)
+        triplet_yield = complete_triplets / denominator
+        # These are proposed *engineering* gates, not scientific G1 gates.
+        engineering_ready = (
+            action_yield >= 0.95
+            and triplet_yield >= 0.90
+            and all(row.status == "accepted" for row in development)
+        )
         result: dict[str, object] = {
             "schema": "c3r-g1-three-arm-pilot-v1",
             "status": "offline_fixture_only_no_scientific_inference",
@@ -244,10 +274,22 @@ class PilotReport:
             "independent_learner_units": self.design.units,
             "heldout_triplets_prescribed": denominator,
             "heldout_triplets_accepted_all_arms": complete_triplets,
-            "heldout_triplet_yield": complete_triplets / denominator,
+            "heldout_triplet_yield": triplet_yield,
             "qual_attempts_prescribed": 3 * denominator,
             "qual_actions_accepted": observed,
-            "qual_action_yield": observed / (3 * denominator),
+            "qual_action_yield": action_yield,
+            "qualification_by_arm": per_arm,
+            "development_prescribed": len(development),
+            "development_accepted": sum(
+                row.status == "accepted" for row in development
+            ),
+            "technical_yield_gate": {
+                "min_qualification_action_yield": 0.95,
+                "min_complete_triplet_yield": 0.90,
+                "requires_all_development_actions_parseable": True,
+                "passed_in_fixture": engineering_ready,
+                "authority_to_start_live_campaign": False,
+            },
             "per_unit": per_unit,
             "mean_unit_itt_learned_minus_fresh": sum(
                 row["itt_learned_minus_fresh"] for row in per_unit
@@ -267,6 +309,8 @@ class PilotReport:
             "scientific_acceptance": False,
             "warnings": [
                 "synthetic fixture; not a real model-mediated acquisition result",
+                "two opaque contexts within ONE arithmetic task schema, not two "
+                "independent task families or out-of-schema generalization",
                 "placebo has same observed plan/task history but synthetic "
                 "non-outcome labels; not a token-equal or perfectly blind control",
                 "fresh is a distinct port with no development/feedback; "
