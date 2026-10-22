@@ -43,3 +43,18 @@ The physical reservation digest authenticates only the **request body relative t
 Before any actual provider send: review Z.AI plan/endpoint entitlement; freeze generation settings and calibration inputs before exposure; enforce a global provider-side request/monetary ceiling independent of Python process restarts; record request IDs and reconcile backend sends/invoice; obtain prior external witness/custodian authorization; and keep calibration outputs distinct from powered G1 evidence.
 
 A synthetic 8/8 response formatting success does **not** authorize 480 paid sends or demonstrate acquired experience. No main merge, G1/G2/G3/G4 claim, historical evidence edit, or Pattern Register change occurs in v0.7.
+
+## Standalone offline audit CLI
+
+The forensic command accepts only two existing local JSON files and the
+expected frozen transport settings. It does **not** read API keys or send
+requests:
+
+    python -m resonance_world.c3r_g1_calibration_audit --report /audit/calibration.json --ledger /audit/reservations.json --model glm-5.3 --route coding --max-tokens 512
+
+It requires an exact eight-attempt report and an unmodified reservation
+ledger. The CLI bounds input sizes, rejects symlinks or invalid JSON,
+returns exit code 2 on an inconsistent artifact, and emits sanitized
+verdict metadata. Exit code 0 is **structurally consistent, unattested**,
+never provider dispatch authentication or scientific G1 acceptance.
+
