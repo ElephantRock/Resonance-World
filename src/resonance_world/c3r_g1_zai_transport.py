@@ -175,13 +175,26 @@ class ZaiStandardModelPort:
             raise ValueError("response token limit must be between 1 and 512")
 
     def complete(self, request: ModelChoiceRequest) -> ModelChoiceCompletion:
+        return self.complete_prompt(request.prompt())
+
+    def complete_prompt(self, prompt: str) -> ModelChoiceCompletion:
+        """One bounded raw-public-task prompt, with the SAME physical ledger.
+
+        Enables technical schema calibration without fabricating an
+        arithmetic ModelChoiceRequest for text-transform tasks.
+        No provider send occurs unless the port was explicitly enabled.
+        """
+        if (not isinstance(prompt, str) or not prompt.strip()
+                or len(prompt.encode("utf-8")) > 8192
+                or any(ch in prompt for ch in ("\\x00",))):
+            raise ValueError("public calibration prompt must be bounded text")
         if not self.enabled:
             raise PermissionError("C3R provider dispatch is disabled by default")
         if self.halted:
             raise ProviderCircuitOpen("C3R provider circuit remains closed to new sends")
         params: dict[str, object] = {
             "model": self.model_id,
-            "messages": [{"role": "user", "content": request.prompt()}],
+            "messages": [{"role": "user", "content": prompt}],
             "temperature": 0,
             "max_tokens": self.max_tokens,
             "stream": False,
