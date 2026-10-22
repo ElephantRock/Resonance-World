@@ -9,7 +9,6 @@ must originate entirely outside the model/evaluator process.
 
 from __future__ import annotations
 
-import hashlib
 import json
 import re
 from dataclasses import dataclass
