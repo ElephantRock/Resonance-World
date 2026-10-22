@@ -131,7 +131,8 @@ def test_tamper_or_missing_event_is_rejected(tmp_path: Path, change: str) -> Non
     elif change == "swap":
         events[2], events[3] = events[3], events[2]
     elif change == "change_grade":
-        events[-1]["payload"]["payload"]["records"][0]["success"] = True
+        item = events[-1]["payload"]["payload"]["records"][0]
+        item["success"] = not item["success"]
     elif change == "append_duplicate":
         events.append(copy.deepcopy(events[-1]))
     elif change == "change_target":
