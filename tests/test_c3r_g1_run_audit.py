@@ -43,6 +43,7 @@ def _artifact() -> tuple[dict[str, object], str]:
     port = ZaiStandardModelPort(
         api_key="fixture", model_id="glm-5.3", ledger=ledger,
         enabled=True, route="coding", transport=one_response,
+        max_tokens=512, timeout_seconds=30,
     )
     output = ModelG1Runner(
         oracle=FixtureOracle({context: ("multiply", "add")}),
