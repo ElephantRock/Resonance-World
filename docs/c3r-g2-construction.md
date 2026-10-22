@@ -439,3 +439,31 @@ The one-time workflow was manually re-run **only once** and removed
 after successful completion; no further live provider calls are
 approved by that run. Detailed primary report:
 `research/c3r_g2/G1_FIRST_REAL_GLM53_PILOT_20261022.md`.
+
+## G1 SECOND real GLM-5.3 A-law + sham exploratory outcome (2026-10-22)
+
+A second real-model, capped eight-request pilot, GitHub Actions
+`39790290483`, deliberately **flipped the correct target to A**
+and tested learned/fresh/sham on two holdout tasks. All 8 model
+outputs were accepted and all 2/2 qualification triplets completed:
+**learned 2/2 correct, fresh 2/2 correct, sham 0/2 correct**. The
+local ledger reported eight HTTP 200 responses, each with
+`finish_reason=stop`. The sham was a purposefully misleading,
+independently fabricated two-record B-positive history; it was
+**not** a neutral or token-matched placebo.
+
+This **does not replicate a learned-vs-fresh advantage** when A is
+correct. Compared to the first real run (B correct; learned 2/2,
+fresh 0/2), the fresh arm answered A on all four holdout tasks
+across both runs. Learned choices followed the two different
+locally correct rules after source feedback, consistent with
+**in-context feedback sensitivity**, not persistent autonomous
+agent experience acquisition. Neither result was powered,
+counterbalanced within a single study, evaluator-independent
+or provider-billing-attested.
+
+The one-shot workflow was retired after use; there is no
+additional live-model send authorization or new Pattern Register
+promotion. Full observations, output-hash reconstruction and
+science limitations are documented in
+`research/c3r_g2/G1_SECOND_REAL_GLM53_A_SHAM_20261022.md`.
