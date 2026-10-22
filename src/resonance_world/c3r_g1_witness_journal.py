@@ -14,7 +14,7 @@ import json
 import os
 import stat
 from dataclasses import dataclass
-from datetime import UTC, datetime
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Protocol
 
@@ -28,7 +28,7 @@ from cryptography.hazmat.primitives.asymmetric.ed25519 import (
 from .c3r_g1_evaluator_receipts import ReceiptVerifier
 from .c3r_g1_evaluator_transcript import audit_signed_transcript
 from .c3r_g1_multischema import PublicCohort, V2Design
-from .c3r_g1_witnessed_lock import WitnessVerifier, WitnessedLock
+from .c3r_g1_witnessed_lock import WitnessVerifier, _parse_clock
 
 EVENT_FIELDS = frozenset({
     "schema", "run_id", "index", "prior_sha256", "kind",
@@ -317,6 +317,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--witness-public", type=Path, required=True)
     parser.add_argument("--evaluator-public", type=Path, required=True)
     parser.add_argument("--run-id", required=True)
+    parser.add_argument("--admission-utc", required=True)
     parser.add_argument("--units", type=int, default=8)
     parser.add_argument("--development", type=int, default=6)
     parser.add_argument("--qualification", type=int, default=8)
@@ -345,7 +346,7 @@ def main(argv: list[str] | None = None) -> int:
         audit = audit_witness_journal(
             events, cohort, witness_public_hex=witness_public,
             evaluator_public_hex=evaluator_public, run_id=args.run_id,
-            now_utc=datetime.now(UTC),
+            now_utc=_parse_clock(args.admission_utc),
         )
     except (OSError, ValueError, TypeError, KeyError, UnicodeError):
         audit = JournalAudit("rejected", ("invalid_input",), 0)
