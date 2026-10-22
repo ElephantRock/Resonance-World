@@ -26,6 +26,7 @@ jobs:
         env:
           GH_TOKEN: ${{ github.token }}
         run: |
+          python - <<'PY'
           import json
           import os
           import subprocess
@@ -114,4 +115,4 @@ jobs:
           except (ValueError, TypeError):
               print('C3R_STRUCTURAL_AUDIT=unavailable')
           print('C3R_SCIENTIFIC_ACCEPTANCE=false')
-          
+          PY
