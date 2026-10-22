@@ -157,7 +157,7 @@ class ZaiStandardModelPort:
     ledger: PhysicalSendLedger
     enabled: bool = False
     transport: Transport = _single_https_post
-    timeout_seconds: float = 15.0
+    timeout_seconds: float = 30.0
     max_tokens: int = 512
     route: Literal["standard", "coding"] = "standard"
     halted: bool = field(default=False, init=False)
@@ -227,20 +227,37 @@ class ZaiStandardModelPort:
             usage = usage if isinstance(usage, dict) else {}
             details = usage.get("completion_tokens_details")
             details = details if isinstance(details, dict) else {}
-            finish_reason = choices[0].get("finish_reason")
-            finish_reason = finish_reason if isinstance(finish_reason, str) else None
+            raw_finish_reason = choices[0].get("finish_reason")
+            if raw_finish_reason in ("stop", "length", "tool_calls", "content_filter"):
+                finish_reason = raw_finish_reason
+            else:
+                # Never preserve arbitrary provider text from metadata.
+                finish_reason = "other" if isinstance(raw_finish_reason, str) else None
             reasoning = message.get("reasoning_content")
-            self.ledger.finish(ordinal, http_status=200)
-            return ModelChoiceCompletion(
+            completion_tokens = _usage(usage.get("completion_tokens"))
+            completion = ModelChoiceCompletion(
                 output=content,
                 model_id=self.model_id,
                 physical_sends_reported=1,
                 prompt_tokens_reported=_usage(usage.get("prompt_tokens")),
-                completion_tokens_reported=_usage(usage.get("completion_tokens")),
+                completion_tokens_reported=completion_tokens,
                 finish_reason=finish_reason,
                 reasoning_present=bool(reasoning) if reasoning is not None else None,
                 reasoning_tokens_reported=_usage(details.get("reasoning_tokens")),
             )
+            # A truncated *empty* final answer cannot produce a graded action.
+            # Fail closed now, before seven more identical reasoning-only calls.
+            budget_exhausted_without_answer = not content and (
+                finish_reason == "length" or completion_tokens == self.max_tokens
+            )
+            if budget_exhausted_without_answer:
+                self.halted = True
+                self.ledger.finish(
+                    ordinal, http_status=200, failure_class="EmptyFinalOutputLengthCap"
+                )
+            else:
+                self.ledger.finish(ordinal, http_status=200)
+            return completion
         except Exception as exc:
             # A failed send/response is terminal for this short technical run.
             # The G1 runner still counts remaining logical tasks as failed,
