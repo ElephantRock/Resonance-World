@@ -12,7 +12,11 @@ import json
 from dataclasses import dataclass
 
 from .c3r_g1_multischema import (
-    ARMS, FAMILIES, STATUSES, LocalFixtureEvaluator, PublicCohort,
+    ARMS,
+    FAMILIES,
+    STATUSES,
+    LocalFixtureEvaluator,
+    PublicCohort,
 )
 
 RECORD_FIELDS = frozenset({
