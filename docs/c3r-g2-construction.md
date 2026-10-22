@@ -387,3 +387,31 @@ provider billing truth and independently enforced global spending limits
 remain separate external gates. See
 `research/c3r_g2/G1_CALIBRATION_TRANSPORT_AUDIT_V0.7.md`.
 No paid provider requests, G1/G2 promotions or Pattern Register edits.
+
+## G1 host-persistent calibration call budget v0.8 (offline construction)
+
+`src/resonance_world/c3r_g1_host_campaign_budget.py` adds an
+**optional host-local Linux reservation guard** for the opt-in
+`ZaiStandardModelPort`: a private 0600, exclusive-created file binds
+campaign identity, one pinned Z.AI endpoint, exact ordered SHA256
+request-body commitments, and a maximum of eight nonrefundable
+requests. `fcntl.flock` serializes multiple processes; each
+reservation is fsynced **before** the provider transport and persists
+across process restart. Corrupted state, duplicate initialization,
+wrong endpoint/request order and exhausted slots all fail closed.
+The module exposes offline-only `initialize` and `inspect` CLI
+operations, with no provider dispatch command or credentials.
+
+Three-arm calibration requests may be intentionally identical in
+content to preserve input parity; the durable guard consequently
+counts **ordered slots** rather than requiring unique SHA256 bodies.
+That does not prove response-to-arm assignment. The guard protects
+one trusted Linux filesystem/account only; it is neither a
+provider-enforced global spend cap, independently authenticated
+billing evidence, WORM storage nor multi-host lock. The historical
+in-process transport remains backward compatible when this optional
+guard is not installed.
+
+See `research/c3r_g2/G1_HOST_PERSISTENT_CALIBRATION_BUDGET_V0.8.md`.
+No live Z.AI sends, G1 promotion, historical-null changes, or
+Pattern Register changes are associated with this construction.
