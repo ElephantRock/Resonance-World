@@ -54,11 +54,16 @@ evaluator must own hidden targets and sign/attest its prospective lock.
 
 ## Three arms and information isolation
 
-**Learned:** independently created port chooses each development action
-before seeing the true grade. Only accepted graded development actions
+**Learned:** a separately created development port chooses each development
+action before seeing the true grade. Only accepted graded development actions
 receive post-action Boolean feedback. The accumulated history is passed
-back on later development tasks and on qualifications for the same
-context. No qualification grade is ever fed back.
+back on later development tasks. **After source training, the development
+port is discarded and a second, separately constructed trained-arm port
+handles qualification**, receiving only the explicitly persisted accepted
+feedback for its context. This checks that the observable treatment can be
+reconstructed across an interface-level session reset; it does **not**
+prove actual provider backend-session independence. No qualification grade
+is ever fed back.
 
 **Fresh:** a distinct freshly created port receives each identical heldout
 public task but no development records or qualification grades.
@@ -79,7 +84,9 @@ others. Qualifying this control requires a separate bias/leakage study.
 All arms see exactly the same public operands at qualification, in a
 rotated within-task order. The `model_id` must match the design lock
 whenever a completion is accepted. The same port object cannot be
-reused across arms or learner units. This is a **structural** safeguard:
+reused between source development and trained qualification, across arms,
+or across learner units. The default 8-unit fixture thus creates 32
+separate logical port objects, but still makes only 480 local calls. This is a **structural** safeguard:
 distinct Python objects cannot prove independent remote model sessions,
 absence of provider caching, or matching temperatures and tool budgets.
 
