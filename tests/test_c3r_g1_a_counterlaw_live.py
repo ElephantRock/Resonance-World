@@ -83,7 +83,7 @@ def test_mock_provider_uses_real_feedback_only_for_learned_arm() -> None:
         0, 1, 2, 0, 2, 2, 0, 2,
     ]
     assert all(
-        all(f.choice == "B" and f.success is True for f in req.feedback)
+        all(f.plan == x.PLANS["B"] and f.success is True for f in req.feedback)
         for req in (port.calls[4], port.calls[7])
     )
     assert all(not req.feedback for req in (port.calls[3], port.calls[6]))
