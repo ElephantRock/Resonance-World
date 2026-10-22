@@ -8,8 +8,10 @@ correct. Never use a private key or provider credential in this module.
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
+from pathlib import Path
 from dataclasses import dataclass
 
 from .c3r_g1_evaluator_receipts import ReceiptVerifier
@@ -209,3 +211,53 @@ def audit_signed_transcript(
         "rejected_incomplete_or_invalid" if errors else "signed_structurally_consistent",
         tuple(dict.fromkeys(errors)), len(signed_payloads), len(observed),
     )
+
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Offline verifier requiring a separately supplied trusted public key."""
+    from .c3r_g1_multischema import V2Design
+
+    parser = argparse.ArgumentParser(description="Audit signed G1 evaluator transcript")
+    parser.add_argument("transcript", type=Path)
+    parser.add_argument("--public-key-file", type=Path, required=True)
+    parser.add_argument("--run-id", required=True)
+    parser.add_argument("--units", type=int, default=8)
+    parser.add_argument("--development", type=int, default=6)
+    parser.add_argument("--qualification", type=int, default=8)
+    parser.add_argument("--public-seed", type=int, default=20261022)
+    parser.add_argument("--model-id", default="offline-schema-fixture")
+    args = parser.parse_args(argv)
+
+    # Transcript may include grades; never echo file content or parse errors.
+    try:
+        if args.transcript.stat().st_size > 4 * 1024 * 1024:
+            raise ValueError("oversized receipt transcript")
+        if args.public_key_file.stat().st_size > 128:
+            raise ValueError("oversized public key file")
+        public_hex = args.public_key_file.read_text(encoding="ascii").strip()
+        design = V2Design(
+            units=args.units, development_per_family=args.development,
+            qualification_per_family=args.qualification,
+            public_seed=args.public_seed, model_id=args.model_id,
+        )
+        with args.transcript.open(encoding="utf-8") as stream:
+            # Bounded count and pre-checked file size. Never require model access.
+            lines = stream.readlines()
+        if len(lines) > design.logical_calls + 2:
+            raise ValueError("too many signed receipt lines")
+        receipts = [json.loads(line) for line in lines]
+        audit = audit_signed_transcript(
+            receipts, design.freeze(), public_key_hex=public_hex,
+            expected_run_id=args.run_id,
+        )
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError):
+        audit = TranscriptAudit(
+            "rejected_incomplete_or_invalid", ("unavailable_or_invalid_input",), 0, 0
+        )
+    print(json.dumps(audit.to_dict(), sort_keys=True, separators=(",", ":")))
+    return 0 if audit.status == "signed_structurally_consistent" else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
