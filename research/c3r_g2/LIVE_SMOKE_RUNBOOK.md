@@ -1,6 +1,6 @@
 # C3R G1 — opt-in eight-send technical qualification runbook
 
-**Status:** provider adapter constructed / offline verified (subject to CI) / no live run recorded.
+**Status:** provider adapter constructed; one initial and one corrected technical smoke now archived. Corrected run: 6/6 HTTP 200 (self-reported), 5 accepted actions, zero paired analyzable. No G1/G2 inference. See `OUTPUT_BUDGET_REQUALIFICATION_20261022.md`.
 **Authority:** user authorized continued implementation and provider qualification on 2026-10-21. This does not grant scientific mechanism acceptance, D2 campaign reruns, unlimited spending, or unrestricted access to credentials.
 
 ## Technical distinction
@@ -50,7 +50,7 @@ The report always carries `technical_smoke_not_scientific_evidence`, the cohort 
 
 ## Where this runbook stops
 
-The linked GitHub tool surface can write code and read CI results, but has no exposed workflow-dispatch action to start an authenticated experiment. The workflow must be made available from the default branch before GitHub Actions can list it for manual dispatch; this draft PR remains unmerged. The repository's CI intentionally runs only offline tests. A separate authorized operator environment with a private standard-API credential is required to execute this CLI. No provider response should be claimed until an actual bounded run log and accepted report exist.
+The linked GitHub tool surface can write code and read CI results, but has no exposed workflow-dispatch action to start an authenticated experiment. The workflow must be made available from the default branch before GitHub Actions can list it for manual dispatch; this draft PR remains unmerged. The repository's CI intentionally runs only offline tests. A separate authorized operator environment with a private standard-API credential is required to execute this CLI. Two bounded reports now exist. The corrected one is independently recovered from GitHub Actions run `39731691610`, and passes structural audit, though provider-side billing and scientific evaluator attestation remain absent.
 
 References: Z.AI's official API documentation for standard `chat/completions` at `https://docs.z.ai/`, plus existing C3R `MODEL_PREFLIGHT.md` and `DESIGN_WORKSHEET.md`.
 
