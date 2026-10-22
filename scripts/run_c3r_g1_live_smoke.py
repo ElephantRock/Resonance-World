@@ -12,6 +12,8 @@ import os
 
 from resonance_world.c3r_g1_model_boundary import ModelCohortLock, ModelG1Runner
 from resonance_world.c3r_g1_zai_transport import (
+    DEFAULT_GENERATION_TOKENS,
+    MAX_GENERATION_TOKENS,
     MAX_TOTAL_SENDS,
     PhysicalSendLedger,
     ZaiStandardModelPort,
@@ -42,6 +44,8 @@ def _parser() -> argparse.ArgumentParser:
     parser.add_argument("--model", default=None)
     parser.add_argument("--route", choices=("standard", "coding"), default="standard")
     parser.add_argument("--max-sends", type=int, default=EXPECTED_SENDS)
+    parser.add_argument("--max-tokens", type=int, default=DEFAULT_GENERATION_TOKENS)
+    parser.add_argument("--timeout-seconds", type=float, default=180.0)
     return parser
 
 
@@ -49,6 +53,10 @@ def main(argv: list[str] | None = None) -> int:
     args = _parser().parse_args(argv)
     if args.max_sends != EXPECTED_SENDS or EXPECTED_SENDS > MAX_TOTAL_SENDS:
         raise SystemExit("C3R smoke uses exactly eight reserved physical sends")
+    if not 1 <= args.max_tokens <= MAX_GENERATION_TOKENS:
+        raise SystemExit("invalid generation budget")
+    if not 0 < args.timeout_seconds <= 300:
+        raise SystemExit("invalid per-call timeout")
     cohort = make_smoke_cohort()
     if not args.live:
         print(
@@ -58,9 +66,13 @@ def main(argv: list[str] | None = None) -> int:
                     "status": "offline_preflight_no_sends",
                     "cohort_digest": cohort.digest,
                     "physical_send_limit": EXPECTED_SENDS,
+                    "generation_max_tokens": args.max_tokens,
+                    "per_call_timeout_seconds": args.timeout_seconds,
                     "provider_endpoint": "pinned_allowlisted_route",
                     "model": args.model,
                     "route": args.route,
+                "generation_max_tokens": args.max_tokens,
+                "per_call_timeout_seconds": args.timeout_seconds,
                     "requires_live_opt_in": True,
                     "requires_env_key": "C3R_ZAI_API_KEY",
                     "scientific_acceptance": False,
@@ -84,6 +96,8 @@ def main(argv: list[str] | None = None) -> int:
         ledger=ledger,
         enabled=True,
         route=args.route,
+        max_tokens=args.max_tokens,
+        timeout_seconds=args.timeout_seconds,
     )
     outcome = ModelG1Runner(
         oracle=FixtureOracle({CONTEXT: ("multiply", "add")}),
