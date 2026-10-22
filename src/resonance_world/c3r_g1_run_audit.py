@@ -20,6 +20,7 @@ FAILURE_CLASSES = (
     "reported_send_cap_exceeded",
 )
 ALLOWED_STATUSES = (*FAILURE_CLASSES, "accepted")
+EMPTY_SHA256 = "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
 FORBIDDEN_FIELDS = frozenset(
     {
         "raw_response_text", "raw_provider_body", "raw_content",
@@ -248,16 +249,30 @@ def audit_technical_smoke(
             entry = entries[ordinal]
             if not isinstance(entry, dict):
                 continue
-            if status in ("accepted", "invalid_format"):
-                if (entry.get("http_status") != 200
-                        or entry.get("failure_class") is not None):
+            failure = entry.get("failure_class")
+            if status == "accepted":
+                if entry.get("http_status") != 200 or failure is not None:
+                    issues.append("accepted_or_parsed_without_http_success")
+                if not _digest(observation.get("output_sha256")):
+                    issues.append("parsed_output_digest_missing")
+            elif status == "invalid_format":
+                if failure == "EmptyFinalOutputLengthCap":
+                    if ordinal != len(entries) - 1:
+                        issues.append("send_continued_after_empty_output_cap")
+                    if (entry.get("http_status") != 200
+                            or observation.get("output_sha256") != EMPTY_SHA256):
+                        issues.append("exhaustion_stop_not_empty_successful_response")
+                    if (observation.get("finish_reason") != "length"
+                            and observation.get("completion_tokens_reported") != 512):
+                        issues.append("exhaustion_stop_not_supported_by_metadata")
+                elif entry.get("http_status") != 200 or failure is not None:
                     issues.append("accepted_or_parsed_without_http_success")
                 if not _digest(observation.get("output_sha256")):
                     issues.append("parsed_output_digest_missing")
             elif ordinal < len(entries) - 1:
                 issues.append("send_continued_after_transport_failure")
             elif (status != "adapter_exception"
-                  or entry.get("failure_class") is None):
+                  or failure is None):
                 issues.append("terminal_send_failure_mismatch")
         if len(entries) < 8:
             last = entries[-1]
