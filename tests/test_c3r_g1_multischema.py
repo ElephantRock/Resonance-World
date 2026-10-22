@@ -3,8 +3,7 @@
 from __future__ import annotations
 
 import json
-from dataclasses import dataclass, field
-from dataclasses import replace
+from dataclasses import dataclass, field, replace
 
 import pytest
 
@@ -208,10 +207,10 @@ def test_placebo_plan_and_label_trace_independent_of_real_development_choices() 
     for learned_dev_choice in ("A", "B"):
         created = {}
 
-        def factory(uid, arm, stage):
-            choice = learned_dev_choice if arm == "learned" and stage == "development" else "A"
+        def factory(uid, arm, stage, _choice=learned_dev_choice, _seen=created):
+            choice = _choice if arm == "learned" and stage == "development" else "A"
             port = _CapturePort(output=choice)
-            created[uid, arm, stage] = port
+            _seen[uid, arm, stage] = port
             return port
 
         cohort = _small().freeze()
