@@ -7,10 +7,6 @@ on:
 permissions:
   contents: read
 
-concurrency:
-  group: c3r-g1-second-A-sham-once-310
-  cancel-in-progress: false
-
 jobs:
   g1-A-sham-once:
     if: >-
