@@ -10,6 +10,9 @@ import pytest
 from resonance_world.c3r_g1_model_boundary import ModelChoiceRequest
 from resonance_world.c3r_g1_zai_transport import (
     CODING_ENDPOINT,
+    DEFAULT_GENERATION_TOKENS,
+    MAX_GENERATION_TOKENS,
+    MAX_RESPONSE_BYTES,
     MAX_TOTAL_SENDS,
     STANDARD_ENDPOINT,
     PhysicalSendLedger,
@@ -81,10 +84,10 @@ def test_single_send_pinned_route_and_no_key_in_ledger() -> None:
     assert headers["Authorization"] == "Bearer secret-key"
     assert body["stream"] is False
     assert body["temperature"] == 0
-    assert body["max_tokens"] <= 512
+    assert body["max_tokens"] == DEFAULT_GENERATION_TOKENS
     assert len(body["messages"]) == 1
     assert "expected" not in body["messages"][0]["content"]
-    assert timeout <= 30
+    assert timeout == 180
     assert ledger.consumed == 1
     assert "secret-key" not in json.dumps(ledger.to_dict())
     assert "Bearer" not in json.dumps(ledger.to_dict())
@@ -149,7 +152,7 @@ def test_http_error_consumes_budget_and_never_retains_response_body() -> None:
     TransportResponse(200, b"not json"),
     TransportResponse(200, b'{"choices": []}'),
     TransportResponse(200, b'{"choices":[{"message":{"content":null}}]}'),
-    TransportResponse(200, b"X" * (64 * 1024 + 1)),
+    TransportResponse(200, b"X" * (MAX_RESPONSE_BYTES + 1)),
     "not a response",
 ])
 def test_invalid_payloads_consume_attempts_without_content_leak(reply) -> None:
@@ -171,9 +174,9 @@ def test_configuration_caps_are_strict() -> None:
     with pytest.raises(ValueError, match="send budget"):
         PhysicalSendLedger(0)
     with pytest.raises(ValueError, match="token limit"):
-        ZaiStandardModelPort("secret", "model", PhysicalSendLedger(1), max_tokens=513)
+        ZaiStandardModelPort("secret", "model", PhysicalSendLedger(1), max_tokens=MAX_GENERATION_TOKENS + 1)
     with pytest.raises(ValueError, match="timeout"):
-        ZaiStandardModelPort("secret", "model", PhysicalSendLedger(1), timeout_seconds=99)
+        ZaiStandardModelPort("secret", "model", PhysicalSendLedger(1), timeout_seconds=301)
 
 
 def _load_cli():
@@ -269,7 +272,7 @@ def test_pinned_coding_route_uses_existing_qualified_endpoint() -> None:
     assert "Software engineering task" in seen[0][2]["messages"][0]["content"]
     assert seen[0][2]["thinking"] == {"type": "enabled"}
     assert seen[0][2]["reasoning_effort"] == "low"
-    assert seen[0][2]["max_tokens"] == 512
+    assert seen[0][2]["max_tokens"] == DEFAULT_GENERATION_TOKENS
     assert "fixture-key" not in json.dumps(ledger.to_dict())
 
 
