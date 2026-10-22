@@ -1,4 +1,4 @@
-name: C3R G1 Third Real Two-Family Pilot - Single Re-Run
+name: C3R G1 Third Real Two-Family Pilot - Fresh Start Gate
 
 on:
   pull_request:
@@ -8,7 +8,7 @@ permissions:
   contents: read
 
 jobs:
-  c3r-g1-third-once:
+  c3r-g1-third-fresh-gate:
     if: >-
       github.event.pull_request.number == 310 &&
       github.event.pull_request.head.repo.full_name == github.repository &&
