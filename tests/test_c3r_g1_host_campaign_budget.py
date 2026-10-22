@@ -355,3 +355,23 @@ def test_simultaneous_child_processes_compete_for_one_next_slot(
     assert values.count("reserved") == 1
     assert values.count("rejected") == 4
     assert guard.inspect()["reserved"] == 1
+
+
+
+def test_identical_blinded_arm_bodies_still_consume_distinct_ordered_slots(
+    tmp_path: Path,
+) -> None:
+    planned = _digests()
+    # All three technical-arm prompts are deliberately identical: prompt
+    # parity is necessary and body hashes cannot prove arm attribution.
+    assert planned[2] == planned[3] == planned[4]
+    assert planned[5] == planned[6] == planned[7]
+    guard = _budget(tmp_path)
+    for index, digest in enumerate(planned, start=1):
+        assert guard.reserve(
+            request_digest=digest, endpoint=CODING_ENDPOINT
+        ) == index
+    assert guard.inspect()["reserved"] == 8
+    assert guard.inspect()["remaining"] == 0
+    with pytest.raises(CampaignBudgetRejected, match="exhausted"):
+        guard.reserve(request_digest=planned[-1], endpoint=CODING_ENDPOINT)
