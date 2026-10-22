@@ -186,7 +186,7 @@ class ZaiStandardModelPort:
         """
         if (not isinstance(prompt, str) or not prompt.strip()
                 or len(prompt.encode("utf-8")) > 8192
-                or any(ch in prompt for ch in ("\\x00",))):
+                or chr(0) in prompt):
             raise ValueError("public calibration prompt must be bounded text")
         if not self.enabled:
             raise PermissionError("C3R provider dispatch is disabled by default")
