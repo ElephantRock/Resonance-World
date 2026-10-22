@@ -121,7 +121,7 @@ def prompt_for(
             f"{recorded.task_id}: choice={recorded.choice}; "
             f"success={str(recorded.success).lower()}"
         )
-        neutral = f"{recorded.task_id}: choice=hidden; success=hidden"
+        neutral = f"{recorded.task_id}: choice=?; success=?"
         # Character padding minimizes crude length difference; does NOT
         # prove equal tokenization. No actual choice or grade is used.
         prior = neutral.ljust(len(example)) if len(neutral) <= len(example) else neutral
@@ -236,7 +236,8 @@ def run_trial(port: Port, ledger: PhysicalSendLedger) -> dict[str, object]:
         "physical_ledger": ledger.to_dict(),
         "feedback_type": "actual_grades_vs_no_history_vs_grade_free_neutral_metadata",
         "matched_tokens_attested": False,
-        "independent_units": 2,
+        "distinct_contexts": 2,
+        "independent_learner_replication_attested": False,
         "independent_target_assignment_attested": False,
         "provider_billing_attested": False,
         "scientific_acceptance": False,
