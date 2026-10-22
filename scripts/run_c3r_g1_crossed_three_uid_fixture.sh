@@ -146,13 +146,51 @@ with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
         raise SystemExit("unregistered role received bytes from UID-gated service")
 PYUNTRUSTED
 done
+# Local witness simulation: register all public role keys before source actions.
+# This CI witness is not independent, and the CI clock is not trusted time.
+mkdir -p "$TMP/enrollment"
+chmod 0755 "$TMP/enrollment"
+PYTHONPATH="$PYTHONPATH" "$PYTHON_BIN" - "$TMP/enrollment" \
+  "$TMP/eval-public/evaluator.hex" "$TMP/cust-public/custodian.hex" "$RUN_ID" <<'PYENROLL'
+import json
+import secrets
+import sys
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from resonance_world.c3r_g1_crossed_plan import make_plan
+from resonance_world.c3r_g1_evaluator_receipts import ReceiptSigner
+out = Path(sys.argv[1])
+eval_pub = Path(sys.argv[2]).read_text().strip()
+cust_pub = Path(sys.argv[3]).read_text().strip()
+signer = ReceiptSigner(secrets.token_bytes(32), run_id=sys.argv[4])
+now = datetime.now(UTC)
+record = signer.seal({
+    "schema": "c3r-g1-crossed-enrollment-v0.1",
+    "plan_digest": make_plan().public_digest,
+    "evaluator_public_key_hex": eval_pub,
+    "custodian_public_key_hex": cust_pub,
+    "development_attempts": 16,
+    "qualification_attempts": 24,
+    "claimed_issued_at_utc": (now - timedelta(seconds=30)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "claimed_expires_at_utc": (now + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ"),
+    "provider_sends_authorized": False,
+    "external_witness_attested": False,
+    "trusted_timestamp_attested": False,
+    "scientific_acceptance": False,
+})
+(out / "witness-public.hex").write_text(signer.public_key_hex + "\n")
+(out / "enrollment.json").write_text(json.dumps(record, sort_keys=True) + "\n")
+PYENROLL
+chmod 0644 "$TMP/enrollment/witness-public.hex" "$TMP/enrollment/enrollment.json"
 sudo -u "$AGENT_USER" env -i PYTHONPATH="$PYTHONPATH" "$PYTHON_BIN" -m \
   resonance_world.c3r_g1_crossed_uid_client \
   --evaluator-socket "$EVAL_SOCKET" --custodian-socket "$CUST_SOCKET" \
   --evaluator-uid "$EVAL_UID" --custodian-uid "$CUST_UID" \
   --evaluator-public-key-file "$TMP/eval-public/evaluator.hex" \
   --custodian-public-key-file "$TMP/cust-public/custodian.hex" \
-  --run-id "$RUN_ID"
+  --run-id "$RUN_ID" \
+  --witness-public-key-file "$TMP/enrollment/witness-public.hex" \
+  --enrollment-file "$TMP/enrollment/enrollment.json"
 wait "$EVAL_PID"
 EVAL_PID=''
 wait "$CUST_PID"
