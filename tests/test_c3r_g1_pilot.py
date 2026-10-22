@@ -154,7 +154,7 @@ def test_never_feedback_qualification_grades_to_any_subsequent_task() -> None:
         return port
 
     PilotRunner(_small().freeze()).run(port_factory=factory)
-    for (unit, arm), port in created.items():
+    for port in created.values():
         for request in port.seen:
             assert all("qualification" not in item.task_id for item in request.feedback)
             assert all(item.task_id != request.task.task_id for item in request.feedback)
