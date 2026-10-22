@@ -95,6 +95,9 @@ class ModelChoiceCompletion:
     physical_sends_reported: int = 0
     prompt_tokens_reported: int | None = None
     completion_tokens_reported: int | None = None
+    finish_reason: str | None = None
+    reasoning_present: bool | None = None
+    reasoning_tokens_reported: int | None = None
 
     def __post_init__(self) -> None:
         if not isinstance(self.output, str) or not self.model_id.strip():
@@ -103,9 +106,16 @@ class ModelChoiceCompletion:
             self.physical_sends_reported,
             self.prompt_tokens_reported,
             self.completion_tokens_reported,
+            self.reasoning_tokens_reported,
         )
         if any(value is not None and (type(value) is not int or value < 0) for value in numbers):
             raise ValueError("reported usage must be nonnegative integers")
+        if self.finish_reason is not None and (
+            not isinstance(self.finish_reason, str) or len(self.finish_reason) > 48
+        ):
+            raise ValueError("finish reason metadata is invalid")
+        if self.reasoning_present is not None and type(self.reasoning_present) is not bool:
+            raise ValueError("reasoning presence must be boolean")
 
 
 class ModelChoicePort(Protocol):
@@ -161,6 +171,9 @@ class GradedAttempt:
     prompt_tokens_reported: int | None
     completion_tokens_reported: int | None
     error_class: str | None = None
+    finish_reason: str | None = None
+    reasoning_present: bool | None = None
+    reasoning_tokens_reported: int | None = None
 
     def __post_init__(self) -> None:
         if (self.status == "accepted") != (self.plan is not None and self.success is not None):
@@ -220,6 +233,9 @@ class ModelG1Runner:
             "physical_sends_reported": completion.physical_sends_reported,
             "prompt_tokens_reported": completion.prompt_tokens_reported,
             "completion_tokens_reported": completion.completion_tokens_reported,
+            "finish_reason": completion.finish_reason,
+            "reasoning_present": completion.reasoning_present,
+            "reasoning_tokens_reported": completion.reasoning_tokens_reported,
         }
         if completion.physical_sends_reported > self._max_sends:
             return GradedAttempt(
@@ -347,6 +363,13 @@ class ModelG1Report:
                 "completion_tokens_reported": sum(
                     row.completion_tokens_reported or 0 for row in rows
                 ),
+                "reasoning_tokens_reported": sum(
+                    row.reasoning_tokens_reported or 0 for row in rows
+                ),
+                "empty_output_count": sum(
+                    row.output_sha256
+                    == hashlib.sha256(b"").hexdigest() for row in rows
+                ),
             }
 
         return {
@@ -372,6 +395,9 @@ class ModelG1Report:
                     "output_sha256": row.output_sha256,
                     "error_class": row.error_class,
                     "physical_sends_reported": row.physical_sends_reported,
+                    "finish_reason": row.finish_reason,
+                    "reasoning_present": row.reasoning_present,
+                    "reasoning_tokens_reported": row.reasoning_tokens_reported,
                 }
                 for row in (*self.development, *self.learned, *self.fresh)
             ],
