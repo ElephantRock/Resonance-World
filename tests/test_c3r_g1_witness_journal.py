@@ -147,7 +147,7 @@ def test_tamper_or_missing_event_is_rejected(tmp_path: Path, change: str) -> Non
 
 
 def test_exclusive_creation_and_owner_only_private_directory(tmp_path: Path) -> None:
-    cohort, signer, _witness, admitted = _components()
+    cohort, _evaluator, signer, _witness, admitted = _components()
     path = tmp_path / "once.jsonl"
     tmp_path.chmod(0o700)
     with WitnessJournal(
@@ -180,7 +180,7 @@ def test_exclusive_creation_and_owner_only_private_directory(tmp_path: Path) -> 
 def test_invalid_enrollment_refused_before_any_journal_created(
     tmp_path: Path,
 ) -> None:
-    cohort, signer, _, admitted = _components()
+    cohort, _evaluator, signer, _, admitted = _components()
     changed = dict(admitted, target_commitment="f" * 64)
     file = tmp_path / "no.jsonl"
     with pytest.raises(ValueError):
