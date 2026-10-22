@@ -11,8 +11,8 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-from pathlib import Path
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
 from .c3r_g1_multischema import ARMS, FAMILIES
