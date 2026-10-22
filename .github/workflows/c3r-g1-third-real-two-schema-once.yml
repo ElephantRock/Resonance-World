@@ -1,0 +1,67 @@
+name: C3R G1 Third Real Two-Family Pilot - Single Re-Run
+
+on:
+  pull_request:
+    types: [synchronize]
+
+permissions:
+  contents: read
+
+jobs:
+  c3r-g1-third-once:
+    if: >-
+      github.event.pull_request.number == 310 &&
+      github.event.pull_request.head.repo.full_name == github.repository &&
+      github.event.pull_request.head.ref == 'research/c3r-g2-causal-foundation'
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    environment: c3r-provider-qualification
+    steps:
+      - name: Require exactly one explicit manual re-run
+        shell: bash
+        env:
+          ATTEMPT: ${{ github.run_attempt }}
+        run: |
+          if [[ "$ATTEMPT" != "2" ]]; then
+            echo 'NO PROVIDER CALLS on initial or later attempt; manual rerun attempt 2 only.'
+            exit 78
+          fi
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install existing project
+        run: python -m pip install -e .
+      - name: Exactly eight two-family GLM-5.3 actions
+        env:
+          C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+        shell: bash
+        run: |
+          set -euo pipefail
+          test -n "${C3R_ZAI_API_KEY:-}" || { echo 'No key, no sends'; exit 2; }
+          mkdir -p output/c3r_g1_third
+          python scripts/run_c3r_g1_third_two_schema_live.py \
+            --live --max-tokens 16384 \
+            > output/c3r_g1_third/real-two-schema-neutral.json
+          python - <<'PY'
+          import json
+          with open('output/c3r_g1_third/real-two-schema-neutral.json') as f:
+              d = json.load(f)
+          print(json.dumps({
+              'planned_calls':d['prescribed_calls'],
+              'reserved':d['physical_ledger']['reserved'],
+              'dev_accepted':d['development_accepted'],
+              'dev_correct':d['development_correct'],
+              'complete_triplets':d['complete_triplets'],
+              'qualifications':d['qualifications'],
+              'scientific_acceptance':False
+          }, sort_keys=True))
+          PY
+      - name: Retain sanitized evidence regardless of runner outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c3r-g1-third-real-multischema-neutral-20261022
+          path: output/c3r_g1_third/real-two-schema-neutral.json
+          retention-days: 14
+          if-no-files-found: ignore
