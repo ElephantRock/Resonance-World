@@ -131,8 +131,7 @@ not triggered by pull requests or code pushes.
 The workflow cannot be dispatched through the current connected tool
 actions; it requires the operator to select the model ID and a protected
 repository environment/secret after the workflow is available on main.
-No provider success, send count or model effect can be claimed before a
-real successful diagnostic artifact is available. CI remains exclusively
+Two limited technical diagnostics are now available, but neither establishes a model-learning effect: first smoke 8 HTTP-200-reported/0 accepted, corrected smoke 6 HTTP-200-reported/5 accepted and 0 paired analyzable. Read `research/c3r_g2/OUTPUT_BUDGET_REQUALIFICATION_20261022.md`; any future provider send remains separately gated. CI remains exclusively
 offline. See `research/c3r_g2/LIVE_SMOKE_RUNBOOK.md`.
 
 Technical authorization does not freeze the research design or establish
