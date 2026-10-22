@@ -415,3 +415,27 @@ guard is not installed.
 See `research/c3r_g2/G1_HOST_PERSISTENT_CALIBRATION_BUDGET_V0.8.md`.
 No live Z.AI sends, G1 promotion, historical-null changes, or
 Pattern Register changes are associated with this construction.
+
+## G1 FIRST real GLM-5.3 learner/fresh exploratory result (2026-10-22)
+
+The **first complete real-provider G1 exploratory smoke** was run on
+GitHub Actions `39780461001`, with **eight actual local
+HTTP-200-reported provider requests**, accepted outputs 8/8, four
+development attempts (three correct), and **two complete learned/fresh
+pairs**. On held-out operand sets with one fixed B/multiply-then-add
+answer rule, learned **2/2 correct** vs fresh **0/2 correct**.
+An independent read of the uploaded sanitized artifact verified the
+A/B output hashes, task operands and reported stage totals.
+
+One fresh response used **519 output tokens including 516 reasoning
+tokens**, showing the retired 512 cap would have truncated this
+request. This is evidence of an **in-context graded-feedback effect
+on a tiny single-context arithmetic fixture**, NOT proof of
+persistent autonomous agent experience acquisition. Scientific
+acceptance remains false; no placebo, independent units, balanced
+target truth, external grading or invoice attestation was present.
+
+The one-time workflow was manually re-run **only once** and removed
+after successful completion; no further live provider calls are
+approved by that run. Detailed primary report:
+`research/c3r_g2/G1_FIRST_REAL_GLM53_PILOT_20261022.md`.
