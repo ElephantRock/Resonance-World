@@ -368,3 +368,32 @@ def test_forced_reasoning_diagnostics_detect_blank_at_token_cap() -> None:
     assert completion.reasoning_present is True
     assert completion.reasoning_tokens_reported == 512
     assert completion.physical_sends_reported == 1
+    assert port.halted is True
+    assert port.ledger.consumed == 1
+    assert port.ledger.records[0].http_status == 200
+    assert port.ledger.records[0].failure_class == "EmptyFinalOutputLengthCap"
+    with pytest.raises(ProviderCircuitOpen):
+        port.complete(_request(1))
+
+
+
+def test_unknown_provider_finish_reason_is_normalized_not_leaked() -> None:
+    raw_metadata = "UNTRUSTED_FINISH_TEXT_DO_NOT_STORE"
+    response = TransportResponse(
+        200,
+        json.dumps({
+            "choices": [
+                {"message": {"content": "B"}, "finish_reason": raw_metadata},
+            ],
+            "usage": {"completion_tokens": 3},
+        }).encode(),
+    )
+    port = ZaiStandardModelPort(
+        "fixture", "glm-5.3", PhysicalSendLedger(1), enabled=True,
+        route="coding", transport=lambda *_args: response,
+    )
+    completion = port.complete(_request())
+    assert completion.finish_reason == "other"
+    assert completion.output == "B"
+    assert raw_metadata not in repr(completion)
+    assert raw_metadata not in json.dumps(port.ledger.to_dict())
