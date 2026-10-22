@@ -87,6 +87,13 @@ def test_null_policy_yields_zero_delta_with_full_triplet_denominator() -> None:
     assert payload["qual_actions_accepted"] == 384
     assert payload["mean_unit_itt_learned_minus_fresh"] == 0
     assert payload["mean_unit_itt_learned_minus_placebo"] == 0
+    assert payload["technical_yield_gate"]["passed_in_fixture"] is True
+    assert payload["technical_yield_gate"]["authority_to_start_live_campaign"] is False
+    assert payload["development_accepted"] == 96
+    assert {arm: payload["qualification_by_arm"][arm]["prescribed"]
+            for arm in PILOT_ARMS} == {arm: 128 for arm in PILOT_ARMS}
+    assert all(payload["qualification_by_arm"][arm]["itt_successes"] == 64
+               for arm in PILOT_ARMS)
     assert payload["scientific_acceptance"] is False
     assert payload["statistical_test_performed"] is False
     assert payload["independent_evaluator_attested"] is False
@@ -186,6 +193,9 @@ def test_wrong_model_or_unparseable_answers_count_as_itt_failures() -> None:
     assert data["qual_actions_accepted"] == 8
     assert data["heldout_triplets_accepted_all_arms"] == 0
     assert data["heldout_triplet_yield"] == 0
+    assert data["technical_yield_gate"]["passed_in_fixture"] is False
+    assert data["qualification_by_arm"]["fresh"]["failures_by_status"]["wrong_model"] == 8
+    assert data["qualification_by_arm"]["placebo"]["failures_by_status"]["invalid_format"] == 8
     assert all(row["accepted_by_arm"]["fresh"] == 0 for row in data["per_unit"])
     assert all(row["accepted_by_arm"]["placebo"] == 0 for row in data["per_unit"])
     assert data["scientific_acceptance"] is False
