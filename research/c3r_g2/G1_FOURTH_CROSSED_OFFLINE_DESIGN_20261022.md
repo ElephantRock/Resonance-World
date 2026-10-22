@@ -38,6 +38,18 @@ Before any independently authorized live run: (1) independent evaluator ownershi
 
 No live workflow, credential access, model call, registry promotion, main merge or G2/G3/G4 claim is part of this documentation update. This proposal complements the existing offline v2 multi-schema construction but does **not** claim that its current runner implements this full crossed neutral-control protocol.
 
-## Offline implementation artifact
+## Offline construction files and verification
 
-A standalone local construction patch accompanies this design in the working conversation, with a proposed deterministic public task/schedule builder, private HMAC-keyed **local test** balancing, explicit structural audit, and five passing offline tests. **That patch is not in GitHub unless separately committed and CI-verified.** Its local private assignment is not a substitute for a separately operated evaluator. This document is the research-branch record, not an attestable execution lock or license to run a provider.
+- `src/resonance_world/c3r_g1_crossed_plan.py`: credential-free public task/schedule lock and structural audit, plus **local-test-only** HMAC-keyed private target-balancing utility (2 A + 2 B within each family).
+- `tests/test_c3r_g1_crossed_plan.py`: five construction and negative tests checking count/split integrity, strict exact A/B actions, private balance without public target disclosure, unauthorized schedule mutations, and no credential/provider dependence.
+
+Local standalone run on 2026-10-22: **5 tests passed**. This is a local construction result, not repository CI attestation; CI must be checked separately.
+
+To inspect with no credentials or network:
+
+```bash
+python -m resonance_world.c3r_g1_crossed_plan
+pytest -q tests/test_c3r_g1_crossed_plan.py
+```
+
+The CLI emits a public structural digest and `physical_sends=0` with `scientific_acceptance=false`. The current planner **does not implement a live model runner, session isolation, neutral prompt token parity, an independently operated evaluator, result estimator or provider dispatch**. The public digest is self-generated, not a signed evidence receipt. This document and code belong only to Draft PR #310, without acceptance or authorization for live work.
