@@ -4,6 +4,9 @@ from __future__ import annotations
 
 import copy
 import json
+import subprocess
+import sys
+from pathlib import Path
 
 import pytest
 
@@ -191,3 +194,56 @@ def test_bad_input_is_rejected_without_raise_or_provider_activity() -> None:
     assert _audit({}, ledger).verdict == "rejected"
     with pytest.raises(ValueError):
         _audit({}, ledger, max_tokens=1024)
+
+
+
+def test_standalone_cli_verifies_only_bounded_local_artifacts(tmp_path: Path) -> None:
+    report, ledger, _ = _fixture()
+    report_path = tmp_path / "calibration.json"
+    ledger_path = tmp_path / "reservations.json"
+    report_path.write_text(json.dumps(report), encoding="utf-8")
+    ledger_path.write_text(json.dumps(ledger), encoding="utf-8")
+    cmd = [
+        sys.executable, "-m", "resonance_world.c3r_g1_calibration_audit",
+        "--report", str(report_path), "--ledger", str(ledger_path),
+        "--model", "glm-5.3", "--route", "coding", "--max-tokens", "512",
+    ]
+    root = Path(__file__).resolve().parents[1]
+    result = subprocess.run(cmd, cwd=root, capture_output=True, text=True,
+                            check=False, timeout=15)
+    assert result.returncode == 0, result.stderr
+    payload = json.loads(result.stdout)
+    assert payload["verdict"] == "structurally_consistent_unattested"
+    assert payload["physical_sends_authenticated"] is False
+    assert payload["scientific_acceptance"] is False
+
+    ledger_path.write_text("{invalid", encoding="utf-8")
+    rejected = subprocess.run(cmd, cwd=root, capture_output=True, text=True,
+                              check=False, timeout=15)
+    assert rejected.returncode == 2
+    assert json.loads(rejected.stdout)["scientific_acceptance"] is False
+    ledger_path.unlink()
+    ledger_path.symlink_to(report_path)
+    rejected_symlink = subprocess.run(
+        cmd, cwd=root, capture_output=True, text=True, check=False, timeout=15
+    )
+    assert rejected_symlink.returncode == 2
+
+
+def test_early_exception_before_transport_reservation_is_distinguished() -> None:
+    class PreSendFailure:
+        calls = 0
+
+        def complete_prompt(self, _prompt):
+            self.calls += 1
+            raise RuntimeError("synthetic failure before transport reserve")
+
+    port = PreSendFailure()
+    report = CalibrationRunner("glm-5.3").run(port).to_dict()
+    ledger = PhysicalSendLedger(8).to_dict()
+    assert port.calls == 1
+    audit = _audit(report, ledger)
+    assert audit.verdict == "structurally_consistent_unattested"
+    assert audit.reserved == 0
+    assert audit.to_dict()["physical_sends_authenticated"] is False
+    assert report["attempt_records"][0]["status"] == "adapter_exception"
