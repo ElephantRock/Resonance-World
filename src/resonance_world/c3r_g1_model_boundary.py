@@ -398,6 +398,7 @@ class ModelG1Report:
                     "finish_reason": row.finish_reason,
                     "reasoning_present": row.reasoning_present,
                     "reasoning_tokens_reported": row.reasoning_tokens_reported,
+                    "completion_tokens_reported": row.completion_tokens_reported,
                 }
                 for row in (*self.development, *self.learned, *self.fresh)
             ],
