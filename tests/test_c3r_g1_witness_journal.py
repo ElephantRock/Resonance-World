@@ -4,6 +4,8 @@ from __future__ import annotations
 
 import copy
 import json
+import subprocess
+import sys
 from datetime import UTC, datetime
 from pathlib import Path
 
@@ -235,3 +237,49 @@ def test_offline_auditor_rejects_wrong_pinned_witness_key(
         run_id=RUN, now_utc=NOW,
     ).verdict == "rejected"
     assert _audit(events, cohort, signer, witness).verdict == "signed_structural_chain"
+
+
+
+def test_read_only_cli_checks_full_journal_with_only_pinned_public_keys(
+    tmp_path: Path,
+) -> None:
+    cohort, signer, witness, _, events = _execute(tmp_path / "journal.jsonl")
+    witness_public = tmp_path / "witness-public.hex"
+    evaluator_public = tmp_path / "evaluator-public.hex"
+    witness_public.write_text(witness.public_key_hex + "\n", encoding="ascii")
+    evaluator_public.write_text(signer.public_key_hex + "\n", encoding="ascii")
+    args = [
+        sys.executable, "-m", "resonance_world.c3r_g1_witness_journal",
+        str(tmp_path / "journal.jsonl"),
+        "--witness-public", str(witness_public),
+        "--evaluator-public", str(evaluator_public),
+        "--run-id", RUN,
+        "--admission-utc", "2026-10-22T12:00:00Z",
+        "--units", "1", "--development", "1", "--qualification", "1",
+    ]
+    success = subprocess.run(
+        args, text=True, capture_output=True, timeout=15,
+        cwd=Path(__file__).resolve().parents[1], check=False,
+    )
+    assert success.returncode == 0
+    assert json.loads(success.stdout)["verdict"] == "signed_structural_chain"
+    assert json.loads(success.stdout)["scientific_acceptance"] is False
+    assert json.loads(success.stdout)["trusted_timestamp_attested"] is False
+    assert len(events) == cohort.design.logical_calls + 3
+
+    expired = subprocess.run(
+        [*args[:9], "--admission-utc", "2026-11-15T12:00:00Z",
+         *args[11:]],
+        text=True, capture_output=True, timeout=15,
+        cwd=Path(__file__).resolve().parents[1], check=False,
+    )
+    assert expired.returncode == 2
+    assert json.loads(expired.stdout)["scientific_acceptance"] is False
+
+    witness_public.write_text("11" * 32, encoding="ascii")
+    forged = subprocess.run(
+        args, text=True, capture_output=True, timeout=15,
+        cwd=Path(__file__).resolve().parents[1], check=False,
+    )
+    assert forged.returncode == 2
+    assert json.loads(forged.stdout)["verdict"] == "rejected"
