@@ -125,7 +125,7 @@ def test_timeout_consumes_slot_and_is_never_retried() -> None:
     assert ledger.records[0].failure_class == "TimeoutError"
     assert port.halted is True
     assert "secret-like" not in json.dumps(ledger.to_dict())
-    with pytest.raises(ProviderBudgetExhausted):
+    with pytest.raises(ProviderCircuitOpen):
         port.complete(_request(1))
     assert len(seen) == 1
 
