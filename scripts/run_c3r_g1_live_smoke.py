@@ -71,8 +71,6 @@ def main(argv: list[str] | None = None) -> int:
                     "provider_endpoint": "pinned_allowlisted_route",
                     "model": args.model,
                     "route": args.route,
-                "generation_max_tokens": args.max_tokens,
-                "per_call_timeout_seconds": args.timeout_seconds,
                     "requires_live_opt_in": True,
                     "requires_env_key": "C3R_ZAI_API_KEY",
                     "scientific_acceptance": False,
