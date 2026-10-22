@@ -1,6 +1,6 @@
 # C3R G1 — default-off model interface and evaluator boundary
 
-**State:** exploratory construction, unfrozen; opt-in technical qualification is now authorized by the user, but no live run has been evidenced. No scientific authorization or acceptance is implied.
+**State:** exploratory construction, unfrozen. Two bounded technical model runs are now evidenced by operator-supplied and GitHub-recovered artifacts: the initial 16-token run yielded 0/8 accepted actions; the corrected 512-token run yielded 5 accepted actions from 6 HTTP-200-reported sends, with 0/2 paired qualification tasks. Neither constitutes G1/G2 scientific acceptance. See `ONE_SHOT_ARTIFACT_ANALYSIS_20261022.md` and `OUTPUT_BUDGET_REQUALIFICATION_20261022.md`.
 This extension does not change G1/G2 scientific standing and does not unlock G3/G4.
 
 ## Scope and why a new boundary is needed
