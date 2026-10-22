@@ -1,6 +1,25 @@
 # C3R G1 — one-shot live attempt reconciliation
 
-**Evidence classification: UNRESOLVED / DO NOT RETRY.**
+**Evidence classification: UPLOADED_ARTIFACT_OBSERVED / RUN_ATTESTATION_UNRESOLVED / NO_AUTOMATIC_RETRY.**
+
+## Operator-uploaded artifact received 2026-10-22 — important update
+
+**Report availability: RESOLVED. Independent provider/run attestation: NOT RESOLVED.**
+
+The operator uploaded `c3r-g1-authorized-smoke-20261021.zip`. The embedded
+`technical-qualification.json` passed independent cohort-digest consistency
+checks and reports 8/8 HTTP 200, **8/8 empty final-answer strings**,
+8/8 `invalid_format`, 0/8 accepted, 0/2 paired-analyzable,
+and 16/16 completion tokens used per call. This is an engineering
+format/yield failure, **not** evidence of unsuccessful agent learning.
+
+For archived SHA256 hashes, complete counts, interpretation and the bounded
+reasoning-budget construction correction, read
+`ONE_SHOT_ARTIFACT_ANALYSIS_20261022.md`. Do not discard the historical
+report or rewrite the old run's results. Independent GitHub Actions execution
+metadata and provider billing are still unavailable.
+
+
 
 ## What the repository proves
 
@@ -12,9 +31,9 @@
 
 ## What remains unknown
 
-The connected GitHub workflow lookup lists only pull-request-triggered runs, not this prior push-triggered run. The direct public web/API fetch and unauthenticated shell fetch were unavailable. Consequently the following cannot be asserted: whether GitHub scheduled the one-shot job, whether environment approval/secret resolution succeeded, how many API POSTs were attempted, what Z.AI returned, whether qualification was analyzable, or whether a diagnostic artifact was uploaded.
+The connected GitHub workflow lookup lists only pull-request-triggered runs, not this prior push-triggered run. Public web/API access was unavailable. The **operator-provided artifact now reports eight provider HTTP 200 responses but zero analyzable actions**. The artifact itself is not cryptographically authenticated to an Actions run or provider-side receipt, so actual remote execution, environment approval, provider billing and independent provenance remain **unverified**.
 
-**Rule:** no new live provider requests until the one-shot branch's Actions event has been inspected and the previous physical-send count is reconciled.
+**Rule:** no automatic live retry. The previous report has been recovered, but the proposed revised GLM-5.3 reasoning-budget settings require separate prospective review and authorization; the past zero-analyzable run cannot count as G1 evidence.
 
 ## Actions and artifact recovery
 
