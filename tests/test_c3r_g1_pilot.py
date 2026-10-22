@@ -129,7 +129,7 @@ def test_fresh_never_sees_feedback_and_placebo_receives_sham_of_same_length() ->
 
     def factory(unit_id, arm):
         port = _CapturePort("offline-fixture-model")
-        created.setdefault((unit_id, arm), []).append(port
+        created.setdefault((unit_id, arm), []).append(port)
         return port
 
     report = PilotRunner(_small().freeze()).run(port_factory=factory)
