@@ -16,8 +16,8 @@ from resonance_world.c3r_g1_evaluator_receipts import (
     VerifiedEvaluatorSession,
 )
 from resonance_world.c3r_g1_evidence_handoff import (
-    MANIFEST_NAME,
     JOURNAL_NAME,
+    MANIFEST_NAME,
     prepare_handoff,
     verify_handoff,
 )
