@@ -366,3 +366,24 @@ claimed receive time is *not* trusted time; filesystem ownership and
 signatures alone cannot certify immutable storage. See
 `research/c3r_g2/G1_CUSTODIAN_RECEIPT_CONTRACT_V0.6.md`.
 No GLM-5.3 calls, G1/G2 promotions or main merge are implied.
+
+## G1 technical calibration reservation audit v0.7
+
+The new `src/resonance_world/c3r_g1_calibration_audit.py` module
+independently reconstructs the exact eight public calibration prompts
+and canonical Z.AI request bodies, then checks their SHA256 digests
+against the separately captured bounded physical-send reservation
+ledger. It also recomputes development/qualification-format counts,
+all three-arm triplet yields, token/finish classifications and the
+first-failure no-retry denominator. Accepted responses require
+`finish_reason=stop`; an A/B answer with an unknown finish reason
+is not accepted. A synthetic report with no reservations cannot be
+used as real transport evidence.
+
+An offline CLI audits an existing report/ledger without credentials or
+network activity. The route is an operator-pinned setting but **is not
+cryptographically bound by the v0.1 physical ledger**; request IDs,
+provider billing truth and independently enforced global spending limits
+remain separate external gates. See
+`research/c3r_g2/G1_CALIBRATION_TRANSPORT_AUDIT_V0.7.md`.
+No paid provider requests, G1/G2 promotions or Pattern Register edits.
