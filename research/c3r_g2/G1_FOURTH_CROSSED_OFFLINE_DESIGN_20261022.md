@@ -256,3 +256,69 @@ independent scientific acceptance. The fixture computes outputs
 from supplied A/B labels; these are **not** provider completions.
 No client API keys, provider/network requests, paid budget or
 scientific/registry promotion are introduced. PR #310 remains Draft.
+
+
+## Fourth pilot: three-UID Linux transport fixture (2026-10-22)
+
+A **disposable, strictly offline Linux three-UID end-to-end test**
+now extends the prior same-UID subprocess construction. Its entrypoint
+is **scripts/run_c3r_g1_crossed_three_uid_fixture.sh**, added as a separate
+step in the preexisting PR #310-only c3r-g1-cross-uid CI job. It creates
+three different unprivileged local system users: *agent, evaluator and
+custodian*, plus one shared socket-connect group. It copies only the
+committed importable Python source into a disposable public code directory;
+it does not expose the Git checkout, repository credentials, or live
+provider secrets to these principals.
+
+- **Evaluator UID:** owns separate mode-0600 target and signing seeds,
+  a non-world-writable socket directory, and one-shot evaluator server.
+- **Custodian UID:** independently generates its own signing seed,
+  owns a private candidate deposit directory and one-shot custodian
+  server. It verifies the same **16 signed source receipts** before
+  writing the original O_EXCL/fsync local deposit and returning a
+  signed acknowledgment.
+- **Agent UID:** has neither signing seed nor target mapping. It
+  connects over two Unix sockets; both servers check the actual
+  peer UID using Linux SO_PEERCRED, while the client independently
+  verifies each server's peer UID. The shell harness checks private
+  key read *denial* across all distinct role pairs, and additionally
+  attempts unauthorized cross-role socket connections that **must
+  return no signed response**.
+- The synthetic agent checks source receipts against the precreated
+  evaluator public key, requires a signed custody acknowledgement
+  from the precreated custodian public key, sends 24 holdout labels,
+  rejects any intermediate holdout grade or outcome leak, then
+  verifies the full **40-attempt** terminal chain against the
+  source-chain SHA256 locked before holdout. One holdout slot is
+  intentionally recorded as *not_sent* to ensure missingness remains
+  in the denominator. **Provider requests: zero.**
+
+The new modules are
+src/resonance_world/c3r_g1_crossed_uid_service.py,
+src/resonance_world/c3r_g1_crossed_uid_custodian.py and
+src/resonance_world/c3r_g1_crossed_uid_client.py. Five separate
+unit-level negative cases in
+tests/test_c3r_g1_crossed_uid.py guard path, UID, socket identity,
+reply schema and root/alias misuse.
+
+**CI scope:** no push-to-live run, secrets, model transport or new
+cost envelope. The three-UID gate executes only for pull request
+#310, under a disposable GitHub-hosted runner, alongside the prior
+two-UID fixture and normal Ruff/pytest. The successful workflow
+**39836850795** on the first wired version passed Ruff,
+**803 tests** (four skipped), the older two-UID test, and the
+new three-UID test. A subsequent small hardening update added explicit
+cross-role *negative* socket connection attempts, which requires
+verification on its own final PR head.
+
+**Bounded assertion:** this establishes test-time OS-level UID
+separation, Unix peer-credential enforcement and file read exclusion
+under Linux discretionary access control. It is *not* externally
+governed evaluator/custodian independence: a privileged host
+administrator can override these controls, and CI generated the
+public keys immediately before its own run. No independent witness
+pinned those keys and the source chain head outside the host; no
+trusted timestamp, off-host/WORM storage, authentic provider send,
+private-grade audit, token/compute equivalence, powered G1 analysis
+or replication is established. All scientific/promotional gates
+stay **false** and PR #310 remains Draft.
