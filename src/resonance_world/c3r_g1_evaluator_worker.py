@@ -15,8 +15,8 @@ import stat
 import sys
 from pathlib import Path
 
-from .c3r_g1_multischema import V2Design
 from .c3r_g1_evaluator_receipts import ReceiptSigner
+from .c3r_g1_multischema import V2Design
 from .c3r_g1_sealed_evaluator import SealedEvaluator
 
 MAX_LINE_BYTES = 4096
