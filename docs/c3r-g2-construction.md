@@ -306,3 +306,34 @@ separately operated witness keys/API, a witnessed pretrial timestamp,
 periodic external checkpoints, immutable third-party retention,
 provider reconciliation and powered blinded study. See
 `research/c3r_g2/G1_WITNESSED_EVIDENCE_JOURNAL_V0.4.md`.
+
+## G1 two-schema technical calibration + evidence handoff v0.5 (offline)
+
+A new no-provider default entry point,
+`python -m resonance_world.c3r_g1_multischema_calibration`,
+prescribes **8 calibration-only prompt-formatting requests**:
+one development-format probe for each of the arithmetic/text schemas,
+plus one identical public qualification task under each of the
+learned/fresh/placebo labels per schema. No grader truth, learned
+feedback or real scientific holdout enters these tasks. Calibration
+uses the existing opt-in Z.AI port's new bounded
+`complete_prompt(prompt)` API, sharing the same physical send ledger
+and fail-closed circuit; all failing and unsent logical requests
+remain in the ITT-formatting denominator. A synthetic fixture pass is
+**not** a measured GLM-5.3 outcome, provider authorization, statistical
+evidence or G1 success.
+
+For a separately operated witness, the new
+`c3r_g1_evidence_handoff.py` CLI can verify a **completed** signed
+evaluator/witness journal and produce a two-file portable local
+evidence bundle: a byte-identical signed journal plus its public
+SHA256 manifest, cohort lock, run identity and public signing-key
+fingerprints. The companion verifier rejects changed contents,
+invalid signatures, or an invented custodian receipt. This handoff
+is **not** an external custody event or immutable remote deposit.
+
+See `research/c3r_g2/G1_TECHNICAL_CALIBRATION_AND_HANDOFF_V0.5.md`.
+The historical 512-token diagnostic still shows **zero usable
+learned/fresh qualification pairs**. No new paid provider sends,
+production witness deployment, scientific promotion, Pattern Register
+entry or main-branch merge is associated with v0.5.
