@@ -96,3 +96,50 @@ and compute parity; audited qualification ordering independent of target;
 one-shot operator approval and capped provider send/cost contract. The
 currently frozen schedule is deterministic rather than randomized. This
 offline view construction does not resolve those blockers.
+
+
+## Descriptive outcome audit with missingness bounds (2026-10-22)
+
+The additional **src/resonance_world/c3r_g1_crossed_outcomes.py** is
+credential-free and accepts only a frozen public plan and an explicitly
+completed table of **40 prescribed logical attempt records**. Each record
+must identify a scheduled unit/task/stage/arm, status, and—if and only if
+accepted—an exact A/B action and a boolean *reported* correctness. Missing,
+duplicate, alien, contradictory or malformed rows fail closed. Non-accepted
+attempts are recorded as invalid_format, provider_error or not_sent
+with neither accepted action nor claimed score.
+
+The returned audit accounts separately for **16 development and 24
+qualification attempts**, the eight potential triplets, complete
+development histories, accepted responses by arm, and family-specific
+descriptive scores. With unresolved holdouts, each arm's accuracy is
+reported as two **missing-data extreme-case bounds**: a lower score if all
+unresolved tasks are incorrect and an upper score if all are correct.
+Learned-minus-fresh and learned-minus-neutral bounds preserve the
+context-level denominator. These are **not confidence intervals**, a
+randomization-based causal estimate, missing-at-random assertions,
+a power calculation, or evidence of G1 acquisition.
+
+The public summary exports no target assignment and no per-context
+scored actions. It explicitly declares target_cell_stratification_available=false:
+the A/B × family interactions requested for a future evaluator-controlled
+analysis are **not estimable by this public-only layer**. An authorized
+independently operated evaluator must compute its own blinded,
+preregistered target-stratified analyses without sending the target map to
+a model or worker.
+
+**All input correctness flags and accepted actions remain unattested.**
+No signature, independently verified provider send, authentic score
+receipt, actual session separation, token parity or provider billing
+reconciliation is provided. Output flags for those criteria are always
+false, as is scientific_acceptance. Even a fabricated file of 40 perfect
+attempts produces only unattested descriptive arithmetic. The audit is
+not connected to live dispatch.
+
+Companion **tests/test_c3r_g1_crossed_outcomes.py** adds five negative
+and denominator-preservation tests. The three crossed-plan test modules
+passed **16/16 local tests** on October 22; GitHub CI is reported
+separately and only when its current result is confirmed.
+
+No extra provider sends, live workflows, new registry patterns,
+claim promotion or default-branch changes were requested or performed.
