@@ -31,8 +31,8 @@ def _check_socket_directory(path: Path) -> None:
     info = parent.stat()
     if (not stat.S_ISDIR(info.st_mode)
             or info.st_uid != os.geteuid()
-            or info.st_mode & 0o002):
-        raise ValueError("socket parent must be owned by server and not world writable")
+            or info.st_mode & 0o022):
+        raise ValueError("socket parent must be owned by server and not group/world writable")
     if path.exists() or path.is_symlink():
         raise ValueError("refusing to overwrite existing Unix socket path")
 
