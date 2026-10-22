@@ -321,6 +321,7 @@ class V2Report:
     design: V2Design
     attempts: tuple[Attempt, ...]
     exposure: tuple[tuple[str, Family, int, int], ...]
+    fixture_ports_only: bool = False
 
     def to_dict(self) -> dict[str, object]:
         rows = [r.to_dict() for r in self.attempts]
@@ -381,7 +382,10 @@ class V2Report:
             raise ValueError("incomplete prescribed pilot ledger")
         output = {
             "schema": "c3r-g1-multischema-pilot-v0.1",
-            "status": "offline_fixture_no_model_learning_claim",
+            "status": (
+                "offline_fixture_no_model_learning_claim"
+                if self.fixture_ports_only else "unverified_injected_ports_no_inference"
+            ),
             "public_cohort_digest": self.cohort_digest,
             "families": list(FAMILIES),
             "independent_learner_units": self.design.units,
@@ -419,7 +423,8 @@ class V2Report:
                 ),
                 "authorizes_live_campaign": False,
             },
-            "provider_sends": 0,  # Valid only for included offline fixture runner.
+            "provider_sends_verified": False,
+            "fixture_port_execution_only": self.fixture_ports_only,
             "independent_evaluator_attested": False,
             "scientific_acceptance": False,
             "warnings": [
@@ -472,7 +477,8 @@ class V2Runner:
         return Attempt(unit_id, arm, stage, task.task_id,
                        task.family, task.context, status, choice, success)
 
-    def run(self, *, port_factory: PortFactory) -> V2Report:
+    def run(self, *, port_factory: PortFactory,
+            fixture_ports_only: bool = False) -> V2Report:
         all_attempts: list[Attempt] = []
         exposure: list[tuple[str, Family, int, int]] = []
         used_ports: list[SchemaPort] = []
@@ -535,7 +541,7 @@ class V2Runner:
         if len(all_attempts) != self.cohort.design.logical_calls:
             raise RuntimeError("prescribed tasks were silently dropped")
         return V2Report(self.cohort.digest, self.cohort.design,
-                        tuple(all_attempts), tuple(exposure))
+                        tuple(all_attempts), tuple(exposure), fixture_ports_only)
 
 
 @dataclass(slots=True)
@@ -552,7 +558,8 @@ def run_offline_multischema_fixture(design: V2Design | None = None) -> V2Report:
     cohort = spec.freeze()
     return V2Runner(
         cohort, LocalFixtureEvaluator(cohort, private_seed=1701)
-    ).run(port_factory=lambda _uid, _arm, _stage: _ConstantFixturePort(spec.model_id))
+    ).run(port_factory=lambda _uid, _arm, _stage: _ConstantFixturePort(spec.model_id),
+          fixture_ports_only=True)
 
 
 def main() -> int:
