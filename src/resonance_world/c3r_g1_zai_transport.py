@@ -11,7 +11,7 @@ import hashlib
 import json
 from collections.abc import Callable
 from dataclasses import dataclass, field
-from typing import Literal
+from typing import TYPE_CHECKING, Literal
 from urllib.error import HTTPError
 from urllib.request import (
     HTTPRedirectHandler,
@@ -23,6 +23,9 @@ from .c3r_g1_model_boundary import (
     ModelChoiceCompletion,
     ModelChoiceRequest,
 )
+
+if TYPE_CHECKING:
+    from .c3r_g1_host_campaign_budget import HostCampaignBudget
 
 STANDARD_ENDPOINT = "https://api.z.ai/api/paas/v4/chat/completions"
 CODING_ENDPOINT = "https://api.z.ai/api/coding/paas/v4/chat/completions"
@@ -160,6 +163,7 @@ class ZaiStandardModelPort:
     timeout_seconds: float = 30.0
     max_tokens: int = 512
     route: Literal["standard", "coding"] = "standard"
+    campaign_budget: HostCampaignBudget | None = None
     halted: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
@@ -209,13 +213,30 @@ class ZaiStandardModelPort:
             sort_keys=True, separators=(",", ":"),
         ).encode("utf-8")
         digest = hashlib.sha256(body).hexdigest()
+        endpoint = CODING_ENDPOINT if self.route == "coding" else STANDARD_ENDPOINT
+        # Optional host-wide shared reservation is synchronized and fsynced
+        # BEFORE dispatch and before the process-local reservation. In a
+        # restarted process it cannot silently reset the same campaign cap.
+        # Vendor-side monetary/spending safeguards are still mandatory.
+        if self.campaign_budget is not None:
+            if self.ledger.consumed >= self.ledger.max_total_sends:
+                self.halted = True
+                raise ProviderBudgetExhausted("local send budget exhausted")
+            try:
+                self.campaign_budget.reserve(
+                    request_digest=digest, endpoint=endpoint
+                )
+            except Exception:
+                self.halted = True
+                raise ProviderBudgetExhausted(
+                    "shared campaign reservation rejected before dispatch"
+                ) from None
         ordinal = self.ledger.reserve(request_digest=digest)
         headers = {
             "Authorization": f"Bearer {self.api_key}",
             "Content-Type": "application/json",
         }
         try:
-            endpoint = CODING_ENDPOINT if self.route == "coding" else STANDARD_ENDPOINT
             response = self.transport(endpoint, headers, body, self.timeout_seconds)
             if not isinstance(response, TransportResponse):
                 raise ProviderTransportRejected("transport returned an invalid response type")
