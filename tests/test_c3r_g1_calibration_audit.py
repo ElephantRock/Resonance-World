@@ -57,7 +57,7 @@ def _fixture(*, bad_index: int | None = None, failure: str = ""):
 
 
 def _audit(report, ledger, **kwargs):
-    return audit_calibration_transport(report, ledger, **kwargs)
+    return audit_calibration_transport(report, ledger, **{"max_tokens": 512, **kwargs})
 
 
 def test_recomputes_each_prescribed_body_and_all_summary_counts() -> None:
@@ -193,7 +193,7 @@ def test_bad_input_is_rejected_without_raise_or_provider_activity() -> None:
     assert _audit(None, ledger).verdict == "rejected"
     assert _audit({}, ledger).verdict == "rejected"
     with pytest.raises(ValueError):
-        _audit({}, ledger, max_tokens=1024)
+        _audit({}, ledger, max_tokens=131073)
 
 
 
