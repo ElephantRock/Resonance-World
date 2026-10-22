@@ -159,6 +159,7 @@ def test_zero_valid_actions_is_not_model_acquisition() -> None:
         data["accepted"] = 0
         data["successes"] = 0
         data["failures_by_status"] = {"adapter_exception": count}
+        data["physical_sends_reported"] = 0
     report["paired_analyzable"] = 0
     report["source_evidence_count"] = 0
     for record in report["bounded_observations"]:
@@ -182,3 +183,12 @@ def test_grader_cannot_accept_a_reply_that_the_transport_says_failed() -> None:
     verdict = audit_technical_smoke(artifact, expected_cohort_digest=lock)
     assert verdict.status == "rejected_inconsistent_artifact"
     assert "accepted_or_parsed_without_http_success" in verdict.issues
+
+
+
+def test_completed_send_summary_must_match_accepted_and_invalid_format() -> None:
+    artifact, lock = _artifact()
+    artifact["report"]["development"]["physical_sends_reported"] = 0
+    verdict = audit_technical_smoke(artifact, expected_cohort_digest=lock)
+    assert verdict.status == "rejected_inconsistent_artifact"
+    assert "development_completed_send_accounting_mismatch" in verdict.issues
