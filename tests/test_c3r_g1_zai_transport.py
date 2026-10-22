@@ -174,7 +174,10 @@ def test_configuration_caps_are_strict() -> None:
     with pytest.raises(ValueError, match="send budget"):
         PhysicalSendLedger(0)
     with pytest.raises(ValueError, match="token limit"):
-        ZaiStandardModelPort("secret", "model", PhysicalSendLedger(1), max_tokens=MAX_GENERATION_TOKENS + 1)
+        ZaiStandardModelPort(
+            "secret", "model", PhysicalSendLedger(1),
+            max_tokens=MAX_GENERATION_TOKENS + 1,
+        )
     with pytest.raises(ValueError, match="timeout"):
         ZaiStandardModelPort("secret", "model", PhysicalSendLedger(1), timeout_seconds=301)
 
