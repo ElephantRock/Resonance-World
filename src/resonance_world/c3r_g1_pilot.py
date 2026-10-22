@@ -313,6 +313,8 @@ class PilotReport:
                 "independent task families or out-of-schema generalization",
                 "placebo has same observed plan/task history but synthetic "
                 "non-outcome labels; not a token-equal or perfectly blind control",
+                "trained qualification port is newly instantiated after source "
+                "development; external graded history is its sole treatment",
                 "fresh is a distinct port with no development/feedback; "
                 "provider session equality and isolation are unverified",
                 "separate learner units, not holdout questions, are inferential units",
@@ -370,15 +372,20 @@ class PilotRunner:
         exposure: list[tuple[str, str, int, int]] = []
         used_ports: list[ModelChoicePort] = []
         for unit in self.lock.units:
+            # Explicit post-development session boundary. The trained arm
+            # must reconstruct its capability solely from graded, externally
+            # retained development history, not opaque port session state.
+            development_port = port_factory(unit.unit_id, "learned")
             ports = {arm: port_factory(unit.unit_id, arm) for arm in PILOT_ARMS}
+            unit_ports = (development_port, *ports.values())
             if any(port is None or not callable(getattr(port, "complete", None))
-                   for port in ports.values()):
-                raise ValueError("each arm must provide a callable model port")
-            if any(port is seen for port in ports.values() for seen in used_ports):
+                   for port in unit_ports):
+                raise ValueError("each arm/stage needs a callable model port")
+            if len({id(port) for port in unit_ports}) != 4:
+                raise ValueError("development and all qualification ports must be distinct")
+            if any(port is seen for port in unit_ports for seen in used_ports):
                 raise ValueError("learner units cannot reuse model-port objects")
-            if len({id(port) for port in ports.values()}) != 3:
-                raise ValueError("learned, fresh and placebo ports must be distinct")
-            used_ports.extend(ports.values())
+            used_ports.extend(unit_ports)
             oracle = FixtureOracle({
                 context.context: context.hidden_plan for context in unit.contexts
             })
@@ -392,7 +399,7 @@ class PilotRunner:
                     attempt = self._attempt(
                         unit_id=unit.unit_id, arm="learned", stage="development",
                         task=task, feedback=tuple(acquired),
-                        port=ports["learned"], oracle=oracle,
+                        port=development_port, oracle=oracle,
                     )
                     rows.append(attempt)
                     if attempt.status == "accepted":
