@@ -119,7 +119,8 @@ The user authorized continued provider qualification. A narrowly pinned
 Z.AI **standard-API** adapter now exists in
 `src/resonance_world/c3r_g1_zai_transport.py`. It is off by default,
 consumes a pre-send reservation for every attempted HTTP POST, forbids
-redirects/retries, and caps each CLI run at eight sends. The existing GitHub repository secret `ZAI_API_KEY` is mapped to the
+redirects/retries, halts further sends after the first transport/provider
+failure, and caps each CLI run at eight sends. The existing GitHub repository secret `ZAI_API_KEY` is mapped to the
 CLI variable `C3R_ZAI_API_KEY` during manual dispatch; no new secret is
 required. A stored key is not proof of standard-API eligibility, and the
 separate Coding Plan endpoint and frozen D2/Hermes client are untouched. The executable manual-only entry point is
