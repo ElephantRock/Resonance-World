@@ -108,23 +108,22 @@ def prompt_for(
     if recorded is None and arm == "learned":
         prior = "(none)"
     elif arm == "learned" and recorded is not None:
+        # "true " and "false" are five characters; the placebo's length
+        # must never reveal which grade was actually observed.
         prior = (
             f"{recorded.task_id}: choice={recorded.choice}; "
-            f"success={str(recorded.success).lower()}"
+            f"success={str(recorded.success).lower():<5}"
         )
     elif arm == "fresh":
         prior = "(none)"
     elif arm == "placebo":
         if recorded is None:
             raise ValueError("placebo needs a completed development source")
-        example = (
-            f"{recorded.task_id}: choice={recorded.choice}; "
-            f"success={str(recorded.success).lower()}"
+        # The masked value and exact character length depend ONLY on public
+        # source task identity, never the model's choice or hidden grade.
+        prior = f"{recorded.task_id}: choice=?; success=?????".ljust(
+            len(f"{recorded.task_id}: choice=A; success=false")
         )
-        neutral = f"{recorded.task_id}: choice=?; success=?"
-        # Character padding minimizes crude length difference; does NOT
-        # prove equal tokenization. No actual choice or grade is used.
-        prior = neutral.ljust(len(example)) if len(neutral) <= len(example) else neutral
     else:
         raise ValueError("unknown arm")
     return task.prompt() + "\nPrior graded development attempts:\n" + prior
