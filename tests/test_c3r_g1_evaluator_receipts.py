@@ -15,6 +15,7 @@ from resonance_world.c3r_g1_evaluator_receipts import (
     ReceiptVerifier,
     VerifiedEvaluatorSession,
 )
+from resonance_world.c3r_g1_evaluator_transcript import audit_signed_transcript
 from resonance_world.c3r_g1_model_boundary import ModelChoiceCompletion
 from resonance_world.c3r_g1_multischema import V2Design
 from resonance_world.c3r_g1_multischema_audit import audit_multischema
@@ -186,6 +187,33 @@ def test_verified_full_three_arm_pilot_over_true_signed_subprocess(
         assert audit.verdict == "structurally_consistent_unattested"
         # 1 signed ready + 12 development + 24 qualification + 1 final.
         assert verifier._sequence == 38
+        receipts = list(session.signed_receipts)
+        assert len(receipts) == 38
+        transcript = audit_signed_transcript(
+            receipts, cohort, public_key_hex=_signer().public_key_hex,
+            expected_run_id=RUN_ID,
+        )
+        assert transcript.status == "signed_structurally_consistent"
+        assert transcript.signed_attempts == 36
+        assert transcript.to_dict()["signature_chain_verified"] is True
+        assert transcript.to_dict()["evaluator_independence_attested"] is False
+        assert transcript.to_dict()["private_grade_correctness_verified"] is False
+        assert transcript.to_dict()["scientific_acceptance"] is False
+        truncated = audit_signed_transcript(
+            receipts[:-1], cohort, public_key_hex=_signer().public_key_hex,
+            expected_run_id=RUN_ID,
+        )
+        assert truncated.status == "rejected_incomplete_or_invalid"
+        forged = copy.deepcopy(receipts)
+        forged[-1]["payload"]["records"][0]["success"] = not (
+            forged[-1]["payload"]["records"][0]["success"]
+        )
+        attacked = audit_signed_transcript(
+            forged, cohort, public_key_hex=_signer().public_key_hex,
+            expected_run_id=RUN_ID,
+        )
+        assert attacked.status == "rejected_incomplete_or_invalid"
+        assert "signature_or_chain_invalid" in attacked.errors
         assert SIGNER_SEED.hex() not in json.dumps(payload)
         assert TARGET_SEED.hex() not in json.dumps(payload)
     finally:
@@ -208,3 +236,47 @@ def test_unauthenticated_replies_do_not_pass_verified_adapter() -> None:
     client = VerifiedEvaluatorSession(Unverified(), _verifier())
     with pytest.raises(ValueError, match="signed evaluator receipt"):
         client.ready()
+
+
+
+def test_validly_resigned_but_missing_final_attempt_fails_transcript_contract() -> None:
+    from resonance_world.c3r_g1_sealed_evaluator import SealedEvaluator
+
+    cohort = V2Design(
+        units=1, development_per_family=1, qualification_per_family=1,
+    ).freeze()
+    grader = SealedEvaluator(cohort, private_key=TARGET_SEED)
+    payloads = [grader.ready().payload]
+    for unit in cohort.units:
+        for family in unit.families:
+            for task in family.development:
+                payloads.append(grader.submit({
+                    "op": "submit", "unit_id": unit.unit_id, "arm": "learned",
+                    "stage": "development", "task_id": task.task_id,
+                    "status": "accepted", "choice": "A",
+                }).payload)
+    for unit in cohort.units:
+        for family in unit.families:
+            for task in family.qualification:
+                for arm in ("learned", "fresh", "placebo"):
+                    payloads.append(grader.submit({
+                        "op": "submit", "unit_id": unit.unit_id, "arm": arm,
+                        "stage": "qualification", "task_id": task.task_id,
+                        "status": "accepted", "choice": "A",
+                    }).payload)
+    final = grader.finalize({"op": "finalize"}).payload
+    final["records"].pop()
+    import hashlib
+
+    final["records_sha256"] = hashlib.sha256(json.dumps(
+        final["records"], sort_keys=True, separators=(",", ":")
+    ).encode()).hexdigest()
+    payloads.append(final)
+    signer = _signer()
+    signed = [signer.seal(p) for p in payloads]
+    audited = audit_signed_transcript(
+        signed, cohort, public_key_hex=signer.public_key_hex,
+        expected_run_id=RUN_ID,
+    )
+    assert audited.status == "rejected_incomplete_or_invalid"
+    assert "final_record_denominator_mismatch" in audited.errors
