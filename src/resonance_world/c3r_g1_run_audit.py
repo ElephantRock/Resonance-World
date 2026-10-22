@@ -178,9 +178,9 @@ def audit_technical_smoke(
         reserved = ledger.get("reserved") if _integer(ledger.get("reserved")) else None
         if ledger.get("schema") != "c3r-physical-send-ledger-v0.1":
             issues.append("ledger_schema_mismatch")
-        if ledger.get("maximum") != 8 or reserved != 8:
+        if ledger.get("maximum") != 8 or reserved is None or not 1 <= reserved <= 8:
             issues.append("send_reservation_count_mismatch")
-        if not isinstance(entries, list) or len(entries) != 8:
+        if not isinstance(entries, list) or len(entries) != reserved:
             issues.append("ledger_entries_count_mismatch")
         else:
             for index, entry in enumerate(entries, start=1):
@@ -228,23 +228,42 @@ def audit_technical_smoke(
                     row.get("status") == "accepted" for row in stage_rows[stage]
                 ) != stage_accepted[stage]:
                     issues.append(f"{stage}_observation_count_mismatch")
-    # The summary groups qualifications by arm; physical sends were actually
-    # interleaved learned/fresh within each heldout task. Reconstruct order.
-    if isinstance(entries, list) and len(entries) == 8 and isinstance(
-        observations, list
-    ) and len(observations) == 8:
-        ledger_order = (0, 1, 2, 3, 4, 6, 5, 7)
-        for ordinal, source_index in enumerate(ledger_order):
-            entry = entries[ordinal]
+    # The summary groups qualifications by arm, but physical sends are
+    # interleaved learned/fresh. A terminal transport failure closes the
+    # circuit: the ledger then contains only the actually attempted prefix.
+    if isinstance(entries, list) and isinstance(observations, list) and len(
+        observations
+    ) == 8 and 1 <= len(entries) <= 8:
+        chronological = (0, 1, 2, 3, 4, 6, 5, 7)
+        for ordinal, source_index in enumerate(chronological):
             observation = observations[source_index]
-            if not isinstance(entry, dict) or not isinstance(observation, dict):
+            if not isinstance(observation, dict):
                 continue
-            if observation.get("status") in ("accepted", "invalid_format"):
+            status = observation.get("status")
+            if ordinal >= len(entries):
+                if (status != "adapter_exception"
+                        or observation.get("error_class") != "ProviderCircuitOpen"):
+                    issues.append("missing_send_without_circuit_open")
+                continue
+            entry = entries[ordinal]
+            if not isinstance(entry, dict):
+                continue
+            if status in ("accepted", "invalid_format"):
                 if (entry.get("http_status") != 200
                         or entry.get("failure_class") is not None):
                     issues.append("accepted_or_parsed_without_http_success")
                 if not _digest(observation.get("output_sha256")):
                     issues.append("parsed_output_digest_missing")
+            elif ordinal < len(entries) - 1:
+                issues.append("send_continued_after_transport_failure")
+            elif (status != "adapter_exception"
+                  or entry.get("failure_class") is None):
+                issues.append("terminal_send_failure_mismatch")
+        if len(entries) < 8:
+            last = entries[-1]
+            if (not isinstance(last, dict)
+                    or last.get("failure_class") in (None, "reserved")):
+                issues.append("incomplete_without_transport_stop")
 
     paired = report.get("paired_analyzable")
     if not _integer(paired, high=2):
