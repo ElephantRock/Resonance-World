@@ -267,9 +267,10 @@ def test_read_only_cli_checks_full_journal_with_only_pinned_public_keys(
     assert json.loads(success.stdout)["trusted_timestamp_attested"] is False
     assert len(events) == cohort.design.logical_calls + 3
 
+    expired_args = args.copy()
+    expired_args[11] = "2026-11-15T12:00:00Z"
     expired = subprocess.run(
-        [*args[:9], "--admission-utc", "2026-11-15T12:00:00Z",
-         *args[11:]],
+        expired_args,
         text=True, capture_output=True, timeout=15,
         cwd=Path(__file__).resolve().parents[1], check=False,
     )
