@@ -249,3 +249,78 @@ def test_a_missing_seventh_send_cannot_be_explained_by_a_healthy_ledger() -> Non
     verdict = audit_technical_smoke(artifact, expected_cohort_digest=lock)
     assert verdict.status == "rejected_inconsistent_artifact"
     assert "incomplete_without_transport_stop" in verdict.issues
+
+
+
+def test_blank_reasoning_only_reply_halts_after_one_http_200_without_losing_tasks() -> None:
+    context = "c3r-source-smoke-1"
+    cohort = ModelCohortLock(
+        tuple(make_task(split="dev", context=context, number=n) for n in range(4)),
+        tuple(make_task(split="holdout", context=context, number=n) for n in range(2)),
+    )
+    sends = []
+
+    def exhausting_transport(url, headers, body, timeout):
+        sends.append(url)
+        return TransportResponse(
+            200,
+            json.dumps({
+                "choices": [{
+                    "message": {"content": "", "reasoning_content": "DO_NOT_LOG"},
+                    "finish_reason": "length",
+                }],
+                "usage": {
+                    "completion_tokens": 512,
+                    "completion_tokens_details": {"reasoning_tokens": 512},
+                },
+            }).encode(),
+        )
+
+    ledger = PhysicalSendLedger(8)
+    port = ZaiStandardModelPort(
+        "fixture", "glm-5.3", ledger, enabled=True,
+        route="coding", transport=exhausting_transport,
+    )
+    outcome = ModelG1Runner(
+        oracle=FixtureOracle({context: ("multiply", "add")}),
+        cohort=cohort,
+    ).execute(owner_id="source", learned_port=port, fresh_port=port)
+
+    assert len(sends) == ledger.consumed == 1
+    assert port.halted is True
+    assert ledger.records[0].failure_class == "EmptyFinalOutputLengthCap"
+    assert ledger.records[0].http_status == 200
+    report = outcome.to_dict()
+    assert report["development"]["attempts"] == 4
+    assert report["qualification_learned"]["attempts"] == 2
+    assert report["qualification_fresh"]["attempts"] == 2
+    assert report["development"]["empty_output_count"] == 1
+    assert report["source_evidence_count"] == 0
+    assert report["paired_analyzable"] == 0
+    obs = report["bounded_observations"]
+    assert obs[0]["status"] == "invalid_format"
+    assert obs[0]["finish_reason"] == "length"
+    assert obs[0]["completion_tokens_reported"] == 512
+    assert all(
+        item["error_class"] == "ProviderCircuitOpen" for item in obs[1:]
+    )
+    assert "DO_NOT_LOG" not in json.dumps(report)
+
+    artifact = {
+        "schema": "c3r-live-technical-qualification-v0.1",
+        "status": "technical_smoke_not_scientific_evidence",
+        "cohort_digest": cohort.digest,
+        "model": "glm-5.3",
+        "route": "coding",
+        "report": report,
+        "send_ledger": ledger.to_dict(),
+        "scientific_acceptance": False,
+    }
+    verdict = audit_technical_smoke(artifact, expected_cohort_digest=cohort.digest)
+    assert verdict.status == "structurally_consistent_unattested"
+    assert verdict.reserved_sends == 1
+    assert verdict.accepted_actions == 0
+
+    artifact["report"]["bounded_observations"][0]["output_sha256"] = "1" * 64
+    tampered = audit_technical_smoke(artifact, expected_cohort_digest=cohort.digest)
+    assert "exhaustion_stop_not_empty_successful_response" in tampered.issues
