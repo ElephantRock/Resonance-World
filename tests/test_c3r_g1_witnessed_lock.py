@@ -17,9 +17,9 @@ from resonance_world.c3r_g1_multischema import V2Design
 from resonance_world.c3r_g1_sealed_evaluator import SealedEvaluator
 from resonance_world.c3r_g1_sealed_runner import SealedPilotRunner
 from resonance_world.c3r_g1_witnessed_lock import (
+    WitnessedEvaluatorSession,
     WitnessSigner,
     WitnessVerifier,
-    WitnessedEvaluatorSession,
 )
 
 RUN = "g1-precommitted-20261022"
