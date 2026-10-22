@@ -59,24 +59,21 @@ def _lock_body(record: dict[str, object]) -> dict[str, object]:
 
 @dataclass(frozen=True, slots=True)
 class WitnessedLock:
-    """Verified immutable enrollment data, not a third-party attestation."""
+    """Immutable verified fields; no mutable nested enrollment payload."""
 
-    payload: dict[str, object]
-
-    @property
-    def run_id(self) -> str:
-        return self.payload["run_id"]  # type: ignore[return-value]
-
-    @property
-    def evaluator_public_key(self) -> str:
-        return self.payload["evaluator_public_key_hex"]  # type: ignore[return-value]
+    run_id: str
+    public_cohort_digest: str
+    evaluator_public_key: str
+    target_commitment: str
+    issued_at_utc: str
+    expires_at_utc: str
 
     def require_ready(self, ready: object) -> None:
         if not isinstance(ready, dict) or (
             ready.get("schema") != "c3r-g1-evaluator-v0.1"
             or ready.get("phase") != "accept_development"
-            or ready.get("public_cohort_digest") != self.payload["public_cohort_digest"]
-            or ready.get("target_commitment") != self.payload["target_commitment"]
+            or ready.get("public_cohort_digest") != self.public_cohort_digest
+            or ready.get("target_commitment") != self.target_commitment
         ):
             raise ValueError("evaluator ready does not match preregistered witness lock")
 
@@ -170,7 +167,14 @@ class WitnessVerifier:
             ))
         except (InvalidSignature, ValueError) as exc:
             raise ValueError("witness signature mismatch") from exc
-        return WitnessedLock(dict(candidate))
+        return WitnessedLock(
+            run_id=expected_run_id,
+            public_cohort_digest=cohort.digest,
+            evaluator_public_key=expected_evaluator_public_key_hex,
+            target_commitment=candidate["target_commitment"],
+            issued_at_utc=candidate["issued_at_utc"],
+            expires_at_utc=candidate["expires_at_utc"],
+        )
 
 
 class WitnessedEvaluatorSession:
