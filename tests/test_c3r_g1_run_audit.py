@@ -81,7 +81,7 @@ def test_consistent_offline_fixture_is_only_structurally_attested() -> None:
         (("route",), "standard", "route_mismatch"),
         (("model",), "different-model", "model_mismatch"),
         (("scientific_acceptance",), True, "scientific_acceptance_must_be_false"),
-        (("send_ledger", "reserved"), 7, "send_reservation_count_mismatch"),
+        (("send_ledger", "reserved"), 7, "ledger_entries_count_mismatch"),
         (("send_ledger", "maximum"), 999, "send_reservation_count_mismatch"),
         (("send_ledger", "entries", 0, "ordinal"), 3, "ledger_sequence_or_digest_invalid"),
         (("send_ledger", "entries", 0, "failure_class"), "reserved",
@@ -162,13 +162,17 @@ def test_zero_valid_actions_is_not_model_acquisition() -> None:
         data["physical_sends_reported"] = 0
     report["paired_analyzable"] = 0
     report["source_evidence_count"] = 0
-    for record in report["bounded_observations"]:
+    for ordinal, record in enumerate(report["bounded_observations"]):
         record["status"] = "adapter_exception"
         record["model_id"] = None
         record["output_sha256"] = None
-    for entry in entries:
-        entry["http_status"] = None
-        entry["failure_class"] = "ProviderTransportRejected"
+        record["error_class"] = (
+            "ProviderTransportRejected" if ordinal == 0 else "ProviderCircuitOpen"
+        )
+    del entries[1:]
+    entries[0]["http_status"] = 401
+    entries[0]["failure_class"] = "HttpNon200"
+    artifact["send_ledger"]["reserved"] = 1
     result = audit_technical_smoke(artifact, expected_cohort_digest=lock)
     assert result.status == "structurally_consistent_unattested"
     assert result.accepted_actions == 0
@@ -192,3 +196,56 @@ def test_completed_send_summary_must_match_accepted_and_invalid_format() -> None
     verdict = audit_technical_smoke(artifact, expected_cohort_digest=lock)
     assert verdict.status == "rejected_inconsistent_artifact"
     assert "development_completed_send_accounting_mismatch" in verdict.issues
+
+
+
+def test_provider_401_closes_circuit_without_consuming_other_seven_sends() -> None:
+    context = "c3r-source-smoke-1"
+    cohort = ModelCohortLock(
+        tuple(make_task(split="dev", context=context, number=n) for n in range(4)),
+        tuple(make_task(split="holdout", context=context, number=n) for n in range(2)),
+    )
+    attempted = []
+
+    def forbidden_after_first(url, headers, body, timeout):
+        attempted.append(1)
+        return TransportResponse(401, b"untrusted provider error body")
+
+    ledger = PhysicalSendLedger(8)
+    port = ZaiStandardModelPort(
+        api_key="fixture", model_id="glm-5.3", ledger=ledger,
+        enabled=True, route="coding", transport=forbidden_after_first,
+    )
+    result = ModelG1Runner(
+        oracle=FixtureOracle({context: ("multiply", "add")}),
+        cohort=cohort,
+    ).execute(owner_id="one-source", learned_port=port, fresh_port=port)
+    assert len(attempted) == ledger.consumed == 1
+    assert port.halted is True
+    observations = result.to_dict()["bounded_observations"]
+    assert len(observations) == 8
+    assert observations[0]["error_class"] == "ProviderTransportRejected"
+    assert all(
+        item["error_class"] == "ProviderCircuitOpen" for item in observations[1:]
+    )
+    artifact = {
+        "schema": "c3r-live-technical-qualification-v0.1",
+        "status": "technical_smoke_not_scientific_evidence",
+        "cohort_digest": cohort.digest, "model": "glm-5.3", "route": "coding",
+        "report": result.to_dict(), "send_ledger": ledger.to_dict(),
+        "scientific_acceptance": False,
+    }
+    verified = audit_technical_smoke(artifact, expected_cohort_digest=cohort.digest)
+    assert verified.status == "structurally_consistent_unattested"
+    assert verified.reserved_sends == 1
+    assert verified.accepted_actions == 0
+    assert verified.to_dict()["scientific_acceptance"] is False
+
+
+def test_a_missing_seventh_send_cannot_be_explained_by_a_healthy_ledger() -> None:
+    artifact, lock = _artifact()
+    artifact["send_ledger"]["entries"].pop()
+    artifact["send_ledger"]["reserved"] = 7
+    verdict = audit_technical_smoke(artifact, expected_cohort_digest=lock)
+    assert verdict.status == "rejected_inconsistent_artifact"
+    assert "incomplete_without_transport_stop" in verdict.issues
