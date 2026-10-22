@@ -278,3 +278,80 @@ def test_host_budget_does_not_authorize_default_disabled_port(
     with pytest.raises(PermissionError):
         port.complete_prompt(make_calibration_plan()[0].prompt())
     assert guard.inspect()["reserved"] == 0
+
+
+
+def test_initialize_and_inspect_cli_never_consume_calls_or_reinitialize(
+    tmp_path: Path,
+) -> None:
+    path = tmp_path / "offline-campaign.json"
+    common = [
+        sys.executable, "-m", "resonance_world.c3r_g1_host_campaign_budget",
+        "--path", str(path), "--campaign-id", CAMPAIGN,
+        "--route", "coding", "--model", MODEL,
+        "--max-tokens", "512", "--maximum", "8",
+    ]
+    root = Path(__file__).resolve().parents[1]
+    prepared = subprocess.run(
+        [*common[:3], "initialize", *common[3:]], cwd=root,
+        text=True, capture_output=True, timeout=15, check=False,
+    )
+    assert prepared.returncode == 0, prepared.stderr
+    data = json.loads(prepared.stdout)
+    assert data["reserved"] == 0
+    assert data["remaining"] == 8
+    assert data["scientific_acceptance"] is False
+
+    checked = subprocess.run(
+        [*common[:3], "inspect", *common[3:]], cwd=root,
+        text=True, capture_output=True, timeout=15, check=False,
+    )
+    assert checked.returncode == 0
+    assert json.loads(checked.stdout)["reserved"] == 0
+    repeated = subprocess.run(
+        [*common[:3], "initialize", *common[3:]], cwd=root,
+        text=True, capture_output=True, timeout=15, check=False,
+    )
+    assert repeated.returncode == 2
+    assert json.loads(repeated.stdout)["scientific_acceptance"] is False
+    assert path.exists()
+
+
+def test_simultaneous_child_processes_compete_for_one_next_slot(
+    tmp_path: Path,
+) -> None:
+    guard = _budget(tmp_path)
+    code = (
+        "import sys;"
+        "from pathlib import Path;"
+        "from resonance_world.c3r_g1_host_campaign_budget import "
+        "HostCampaignBudget, CampaignBudgetRejected;"
+        "from resonance_world.c3r_g1_calibration_audit import _request_digest;"
+        "from resonance_world.c3r_g1_multischema_calibration import make_calibration_plan;"
+        "from resonance_world.c3r_g1_zai_transport import CODING_ENDPOINT;"
+        "ds=tuple(_request_digest(x.prompt(),model='glm-5.3',max_tokens=512) "
+        "for x in make_calibration_plan());"
+        "budget=HostCampaignBudget(Path(sys.argv[1]),campaign_id=sys.argv[2],"
+        "endpoint=CODING_ENDPOINT,planned_digests=ds,maximum=8);"
+        "result='rejected';"
+        "\ntry:\n"
+        " budget.reserve(request_digest=ds[0],endpoint=CODING_ENDPOINT)\n"
+        " result='reserved'\n"
+        "except CampaignBudgetRejected:\n"
+        " pass\n"
+        "print(result)\n"
+    )
+    root = Path(__file__).resolve().parents[1]
+    commands = [
+        subprocess.Popen(
+            [sys.executable, "-c", code, str(guard.path), CAMPAIGN],
+            cwd=root, text=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+        )
+        for _ in range(5)
+    ]
+    outcomes = [p.communicate(timeout=15) for p in commands]
+    assert all(p.returncode == 0 for p in commands), outcomes
+    values = [output.strip() for output, _ in outcomes]
+    assert values.count("reserved") == 1
+    assert values.count("rejected") == 4
+    assert guard.inspect()["reserved"] == 1
