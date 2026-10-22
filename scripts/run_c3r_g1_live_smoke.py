@@ -58,7 +58,7 @@ def main(argv: list[str] | None = None) -> int:
                     "status": "offline_preflight_no_sends",
                     "cohort_digest": cohort.digest,
                     "physical_send_limit": EXPECTED_SENDS,
-                    "provider_endpoint": "pinned_standard_api_only",
+                    "provider_endpoint": "pinned_allowlisted_route",
                     "model": args.model,
                     "route": args.route,
                     "requires_live_opt_in": True,
