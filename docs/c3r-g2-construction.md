@@ -498,3 +498,10 @@ acceptance, independent custody claim or Pattern Register promotion.
 The one-shot workflow was removed immediately after use. Full
 sanitized run evidence and original archive digest are recorded in
 `research/c3r_g2/G1_THIRD_REAL_MULTISCHEMA_NEUTRAL_20261022.md`.
+
+
+## Fourth G1 crossed A/B × arithmetic/text offline construction
+
+Following the observed **third** real GLM-5.3 run, the next small research design crosses *both target orders within both task families*, rather than inferring across arithmetic/B and text/A. The new **provider-free** `c3r_g1_crossed_plan.py` and `test_c3r_g1_crossed_plan.py` build/audit eight distinct proposed learner contexts (two A and two B per family under a local evaluator-private balanced mapping), with 16 development and 24 three-arm qualification **logical** attempts. Its structural lock and HMAC test-double are **not** an independent evaluator, a live runner, a token-matched neutral control, or a powered experiment. Five tests passed locally; no GitHub CI result is asserted by that local check.
+
+The design and remaining gates are recorded in `research/c3r_g2/G1_FOURTH_CROSSED_OFFLINE_DESIGN_20261022.md`. **No provider/model sends, G1 scientific acceptance, G2 causal result, registry promotion or merge to main.** A separate authorization and protocol freeze are required before any live follow-up.
