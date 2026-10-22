@@ -81,7 +81,7 @@ def test_single_send_pinned_route_and_no_key_in_ledger() -> None:
     assert headers["Authorization"] == "Bearer secret-key"
     assert body["stream"] is False
     assert body["temperature"] == 0
-    assert body["max_tokens"] <= 64
+    assert body["max_tokens"] <= 512
     assert len(body["messages"]) == 1
     assert "expected" not in body["messages"][0]["content"]
     assert timeout <= 30
@@ -171,7 +171,7 @@ def test_configuration_caps_are_strict() -> None:
     with pytest.raises(ValueError, match="send budget"):
         PhysicalSendLedger(0)
     with pytest.raises(ValueError, match="token limit"):
-        ZaiStandardModelPort("secret", "model", PhysicalSendLedger(1), max_tokens=100)
+        ZaiStandardModelPort("secret", "model", PhysicalSendLedger(1), max_tokens=513)
     with pytest.raises(ValueError, match="timeout"):
         ZaiStandardModelPort("secret", "model", PhysicalSendLedger(1), timeout_seconds=99)
 
@@ -267,6 +267,9 @@ def test_pinned_coding_route_uses_existing_qualified_endpoint() -> None:
     assert seen[0][0] == CODING_ENDPOINT
     assert seen[0][1]["Authorization"] == "Bearer fixture-key"
     assert "Software engineering task" in seen[0][2]["messages"][0]["content"]
+    assert seen[0][2]["thinking"] == {"type": "enabled"}
+    assert seen[0][2]["reasoning_effort"] == "low"
+    assert seen[0][2]["max_tokens"] == 512
     assert "fixture-key" not in json.dumps(ledger.to_dict())
 
 
@@ -310,3 +313,58 @@ def test_provider_rejection_closes_circuit_before_any_second_send() -> None:
     assert len(attempted) == 1
     assert ledger.consumed == 1
     assert port.halted is True
+
+
+
+def test_forced_reasoning_metadata_is_bounded_and_not_retained_raw() -> None:
+    response = TransportResponse(
+        200,
+        json.dumps({
+            "choices": [{
+                "message": {"content": "A", "reasoning_content": "PRIVATE_REASONING_DATA"},
+                "finish_reason": "stop",
+            }],
+            "usage": {
+                "prompt_tokens": 100,
+                "completion_tokens": 87,
+                "completion_tokens_details": {"reasoning_tokens": 84},
+            },
+        }).encode(),
+    )
+    port = ZaiStandardModelPort(
+        "fixture", "glm-5.3", PhysicalSendLedger(1), enabled=True, route="coding",
+        transport=lambda *_args: response,
+    )
+    completion = port.complete(_request())
+    assert completion.finish_reason == "stop"
+    assert completion.reasoning_present is True
+    assert completion.reasoning_tokens_reported == 84
+    assert "PRIVATE_REASONING_DATA" not in repr(completion)
+    assert "PRIVATE_REASONING_DATA" not in json.dumps(port.ledger.to_dict())
+
+
+def test_forced_reasoning_diagnostics_detect_blank_at_token_cap() -> None:
+    response = TransportResponse(
+        200,
+        json.dumps({
+            "choices": [{
+                "message": {"content": "", "reasoning_content": "PRIVATE_REASONING_DATA"},
+                "finish_reason": "length",
+            }],
+            "usage": {
+                "prompt_tokens": 117,
+                "completion_tokens": 512,
+                "completion_tokens_details": {"reasoning_tokens": 512},
+            },
+        }).encode(),
+    )
+    port = ZaiStandardModelPort(
+        "fixture", "glm-5.3", PhysicalSendLedger(1), enabled=True, route="coding",
+        transport=lambda *_args: response,
+    )
+    completion = port.complete(_request())
+    assert completion.output == ""
+    assert completion.finish_reason == "length"
+    assert completion.reasoning_present is True
+    assert completion.reasoning_tokens_reported == 512
+    assert completion.physical_sends_reported == 1
