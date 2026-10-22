@@ -136,3 +136,31 @@ offline. See `research/c3r_g2/LIVE_SMOKE_RUNBOOK.md`.
 
 Technical authorization does not freeze the research design or establish
 an independently attested evaluator; G1/G2 inferential gates remain closed.
+
+## Three-arm G1 acquisition pilot v1 (offline construction only)
+
+The next prospective apparatus layer is implemented as
+`src/resonance_world/c3r_g1_pilot.py`, with negative/positive-control
+tests in `tests/test_c3r_g1_pilot.py` and the bounded protocol in
+`research/c3r_g2/G1_ACQUISITION_PILOT_V1.md`.
+
+```bash
+python -m resonance_world.c3r_g1_pilot
+```
+
+The default **offline** design prescribes 8 separate logical learner units,
+2 opaque contexts (within **one** arithmetic task schema) per unit,
+6 development tasks per context, and 8 heldout tasks per context.
+It accounts for **96 learned-source development calls + 384 shared-task
+three-arm holdout calls = 480 prescribed logical port calls**, with **zero**
+external provider sends from the default command.
+
+Compared arms: true-feedback learned, fresh no-history, and history-exposed
+sham-feedback placebo. Qualifying calls are matched on public task and
+rotated in order. Reports contain unit-level ITT contrasts, all-arm
+triplet completeness, per-arm output quality and explicit technical yield
+thresholds, while preserving unsuccessful attempts in denominators.
+Passing fixture thresholds is **not** G1 evidence, provider authorization,
+or a powered inference. Actual cross-schema task families, independent
+evaluator attestation, pre-send remote limits and prospective sample-size
+design remain unfinished.
