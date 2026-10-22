@@ -9,6 +9,7 @@ No network, credentials, provider SDK, automatic reset or refund exists here.
 
 from __future__ import annotations
 
+import argparse
 import fcntl
 import hashlib
 import json
@@ -240,3 +241,56 @@ class HostCampaignBudget:
             return index + 1
         finally:
             os.close(fd)
+
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Offline create/inspect only. Never opens a network connection or spends."""
+    from .c3r_g1_calibration_audit import _request_digest
+    from .c3r_g1_multischema_calibration import make_calibration_plan
+
+    parser = argparse.ArgumentParser(
+        description="Prepare or inspect host-local G1 provider-call reservation cap"
+    )
+    parser.add_argument("operation", choices=("initialize", "inspect"))
+    parser.add_argument("--path", required=True, type=Path)
+    parser.add_argument("--campaign-id", required=True)
+    parser.add_argument("--route", choices=("coding", "standard"), required=True)
+    parser.add_argument("--model", required=True)
+    parser.add_argument("--max-tokens", type=int, required=True)
+    parser.add_argument("--maximum", type=int, required=True)
+    args = parser.parse_args(argv)
+
+    try:
+        endpoint = CODING_ENDPOINT if args.route == "coding" else STANDARD_ENDPOINT
+        if not 1 <= args.max_tokens <= 512:
+            raise ValueError("calibration transport output budget outside fixed cap")
+        plan = make_calibration_plan()
+        digests = tuple(
+            _request_digest(x.prompt(), model=args.model, max_tokens=args.max_tokens)
+            for x in plan
+        )
+        guard = HostCampaignBudget(
+            args.path, campaign_id=args.campaign_id,
+            endpoint=endpoint, planned_digests=digests,
+            maximum=args.maximum,
+        )
+        if args.operation == "initialize":
+            guard.initialize()
+        result = guard.inspect()
+    except (OSError, ValueError, CampaignBudgetRejected):
+        result = {
+            "schema": "c3r-host-budget-check-v0.1",
+            "status": "rejected",
+            "provider_sends_authenticated": False,
+            "provider_billing_verified": False,
+            "scientific_acceptance": False,
+        }
+        print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+        return 2
+    print(json.dumps(result, sort_keys=True, separators=(",", ":")))
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
