@@ -38,6 +38,10 @@ class ProviderTransportRejected(RuntimeError):
     """A provider response/transport failed without propagating its raw content."""
 
 
+class ProviderCircuitOpen(RuntimeError):
+    """Transport failure: no more network sends permitted in this process."""
+
+
 @dataclass(frozen=True, slots=True)
 class TransportResponse:
     status: int
@@ -156,6 +160,7 @@ class ZaiStandardModelPort:
     timeout_seconds: float = 15.0
     max_tokens: int = 16
     route: Literal["standard", "coding"] = "standard"
+    halted: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         if self.route not in ("standard", "coding"):
@@ -172,6 +177,8 @@ class ZaiStandardModelPort:
     def complete(self, request: ModelChoiceRequest) -> ModelChoiceCompletion:
         if not self.enabled:
             raise PermissionError("C3R provider dispatch is disabled by default")
+        if self.halted:
+            raise ProviderCircuitOpen("C3R provider circuit remains closed to new sends")
         body = json.dumps(
             {
                 "model": self.model_id,
@@ -221,6 +228,10 @@ class ZaiStandardModelPort:
                 completion_tokens_reported=_usage(usage.get("completion_tokens")),
             )
         except Exception as exc:
+            # A failed send/response is terminal for this short technical run.
+            # The G1 runner still counts remaining logical tasks as failed,
+            # but cannot transmit additional requests using this port.
+            self.halted = True
             if self.ledger.records[ordinal - 1].failure_class == "reserved":
                 self.ledger.finish(ordinal, failure_class=type(exc).__name__)
             if isinstance(exc, ProviderTransportRejected):
