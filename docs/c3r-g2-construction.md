@@ -164,3 +164,37 @@ Passing fixture thresholds is **not** G1 evidence, provider authorization,
 or a powered inference. Actual cross-schema task families, independent
 evaluator attestation, pre-send remote limits and prospective sample-size
 design remain unfinished.
+
+## Multischema G1 pilot v2 (two different executable families)
+
+The follow-on `src/resonance_world/c3r_g1_multischema.py` adds a separate
+**text-transform ordering** task algebra alongside arithmetic operation
+ordering. The public task/heldout cohort is frozen and deduplicated across
+splits and units, while a separate **local-only** fixture evaluator owns the
+target rule and accepts only locked tasks. Unlike pilot v1, these tasks have
+different input types, transformations and output types.
+
+```bash
+python -m resonance_world.c3r_g1_multischema
+```
+
+The default run creates **8 separate learner units × 2 task families**,
+with **96 development actions + 384 three-arm qualification actions**,
+total **480 credential-free logical actions and zero external sends**.
+Each learner's source-development port is discarded before qualification;
+the learned arm receives an explicit same-context graded history. Fresh
+receives no history, and placebo receives equally many development records
+whose **choices and feedback labels are generated independently of the
+learned path and the evaluator outcome**. All arms are qualified on the
+same public tasks, with cyclic order balancing and complete ITT denominators.
+Reports provide family-specific treatment counts, unit-level effects,
+per-attempt ledger and a self-authored trace digest.
+
+This is a deterministic **construction probe**, not a credible test of
+real LLM source learning: the grader resides in the same Python process;
+private evaluator commitments, independent model sessions, token-matched
+placebo, backend-authenticated physical send caps, trial powering and
+out-of-schema unseen-family transfer are still blocked.
+See `research/c3r_g2/G1_MULTISCHEMA_PILOT_V2.md` and
+`tests/test_c3r_g1_multischema.py`. No historic W/H/D results or
+pattern/mechanism registry entries are changed.
