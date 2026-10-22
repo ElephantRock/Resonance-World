@@ -199,6 +199,36 @@ def test_verified_full_three_arm_pilot_over_true_signed_subprocess(
         assert transcript.to_dict()["evaluator_independence_attested"] is False
         assert transcript.to_dict()["private_grade_correctness_verified"] is False
         assert transcript.to_dict()["scientific_acceptance"] is False
+        transcript_file = tmp_path / "signed-receipts.jsonl"
+        public_file = tmp_path / "pinned-public-key.hex"
+        public_file.write_text(_signer().public_key_hex + "\n", encoding="ascii")
+        transcript_file.write_text(
+            "".join(json.dumps(x, sort_keys=True) + "\n" for x in receipts),
+            encoding="utf-8",
+        )
+        verify = subprocess.run(
+            [
+                sys.executable, "-m", "resonance_world.c3r_g1_evaluator_transcript",
+                str(transcript_file), "--public-key-file", str(public_file),
+                "--run-id", RUN_ID, "--units", "2", "--development", "3",
+                "--qualification", "2",
+            ],
+            cwd=ROOT, capture_output=True, text=True, timeout=15, check=False,
+        )
+        assert verify.returncode == 0
+        assert json.loads(verify.stdout)["signature_chain_verified"] is True
+        public_file.write_text("00" * 32 + "\n")
+        rejected = subprocess.run(
+            [
+                sys.executable, "-m", "resonance_world.c3r_g1_evaluator_transcript",
+                str(transcript_file), "--public-key-file", str(public_file),
+                "--run-id", RUN_ID, "--units", "2", "--development", "3",
+                "--qualification", "2",
+            ],
+            cwd=ROOT, capture_output=True, text=True, timeout=15, check=False,
+        )
+        assert rejected.returncode == 2
+        assert json.loads(rejected.stdout)["scientific_acceptance"] is False
         truncated = audit_signed_transcript(
             receipts[:-1], cohort, public_key_hex=_signer().public_key_hex,
             expected_run_id=RUN_ID,
