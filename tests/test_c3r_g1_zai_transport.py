@@ -14,6 +14,7 @@ from resonance_world.c3r_g1_zai_transport import (
     STANDARD_ENDPOINT,
     PhysicalSendLedger,
     ProviderBudgetExhausted,
+    ProviderCircuitOpen,
     ProviderTransportRejected,
     TransportResponse,
     ZaiStandardModelPort,
@@ -122,6 +123,7 @@ def test_timeout_consumes_slot_and_is_never_retried() -> None:
     assert len(seen) == 1
     assert ledger.consumed == 1
     assert ledger.records[0].failure_class == "TimeoutError"
+    assert port.halted is True
     assert "secret-like" not in json.dumps(ledger.to_dict())
     with pytest.raises(ProviderBudgetExhausted):
         port.complete(_request(1))
@@ -285,3 +287,26 @@ def test_offline_smoke_declares_selected_coding_route(
     assert summary["status"] == "offline_preflight_no_sends"
     assert summary["route"] == "coding"
     assert summary["model"] == "glm-5.3"
+
+
+
+def test_provider_rejection_closes_circuit_before_any_second_send() -> None:
+    attempted = []
+
+    def forbidden_transport(url, headers, body, timeout):
+        attempted.append(1)
+        return TransportResponse(429, b"untrusted quota message")
+
+    ledger = PhysicalSendLedger(8)
+    port = ZaiStandardModelPort(
+        "fixture", "glm-5.3", ledger, enabled=True,
+        route="coding", transport=forbidden_transport,
+    )
+    with pytest.raises(ProviderTransportRejected, match="non-200"):
+        port.complete(_request(0))
+    for index in range(1, 8):
+        with pytest.raises(ProviderCircuitOpen, match="circuit"):
+            port.complete(_request(index))
+    assert len(attempted) == 1
+    assert ledger.consumed == 1
+    assert port.halted is True
