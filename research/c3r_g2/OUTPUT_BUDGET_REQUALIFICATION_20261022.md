@@ -84,3 +84,59 @@ Independent transport/provider billing attestation, prospective statistical
 design, replicates and org-level causal comparison remain required.
 No W/H/D records, scientific registry, World outcome laws, authority ledger
 or default historical memory are changed.
+
+## Observed one-shot outcome — authenticated GitHub Actions read
+
+The temporary run **did execute**. The technical smoke and structural audit
+both completed successfully; the overall GitHub job conclusion was **failure**
+because the separate PR-comment step received `HTTP 403 Resource not
+accessible by integration`. This is a GitHub Actions token/permissions
+failure, not a provider transport or parser failure.
+
+- GitHub Actions run: `https://github.com/ElephantRock/Resonance-World/actions/runs/39731691610`
+- Trigger commit: `5fccb899d4601cceebfd35bef36f83b2b2d98f12`
+- Authenticated run's artifact ID: `12405735173`, named
+  `c3r-g1-512-token-one-shot-20261022`.
+- A separate **read-only** PR-triggered GitHub Actions reconciliation run
+  `https://github.com/ElephantRock/Resonance-World/actions/runs/39733094082`
+  authenticated to GitHub, downloaded the ZIP, and executed the offline
+  source cohort/ledger audit. Result:
+  **`structurally_consistent_unattested`**, no structural issues.
+- Recovered self-reported physical sends: **6**, all six ledger entries report
+  HTTP 200. Two remaining logical attempts were denied by the local circuit.
+- Development: **4 scheduled / 4 accepted / 3 succeeded**.
+- Learned qualification: **2 scheduled / 1 accepted / 1 succeeded**.
+- Fresh qualification: **2 scheduled / 0 accepted / 0 succeeded**,
+  including one empty final response at the enlarged generation cap.
+- Total: **8 scheduled / 6 sent / 5 accepted**, with 4 correct accepted
+  actions. **0 of 2 pairs analyzable**.
+- Local reason for early stop: `EmptyFinalOutputLengthCap`, representing an
+  HTTP 200 final reply with empty content and documented token/finish-cap
+  exhaustion. The circuit correctly prevented the last two sends.
+- The original run's `Verify engineering guards`,
+  `Authorized coding task technical probe`, `Independent structural audit`
+  and `Persist bounded report and audit` steps all concluded **success**.
+  Only the informational PR-comment step failed (`HTTP 403`).
+- The temporary trigger YAML was removed from its isolated branch, and the
+  PR-side read-only reconciliation YAML is also retired after reporting.
+  No further provider sends occurred during reconciliation.
+
+### Bounded interpretation
+
+The corrected 512-token setting produced **five parseable actions** where
+the original 16-token run produced none. This demonstrates improvement
+in technical output yield for this very small construction task; it does
+**not** establish the attribution of the improvement without a controlled
+model-condition comparison.
+
+One qualification pair requires accepted actions from **both** the trained
+and fresh model. There were **zero** such pairs, so no trained-vs-fresh
+effect is estimable here. Successful answers during training (3/4) and a
+single trained-only qualification success (1/2 prescribed) cannot be
+promoted into G1 evidence. No organizational G2 treatment ran.
+
+For future research: retain the complete prescribed denominator, lock
+output budgets in advance, include usable-pair/yield criteria, and avoid
+treating GitHub comment permission failures as provider failures.
+Provider billing receipts and evaluator attestation remain outside this
+artifact; scientific acceptance stays **false**.
