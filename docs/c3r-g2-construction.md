@@ -198,3 +198,30 @@ out-of-schema unseen-family transfer are still blocked.
 See `research/c3r_g2/G1_MULTISCHEMA_PILOT_V2.md` and
 `tests/test_c3r_g1_multischema.py`. No historic W/H/D results or
 pattern/mechanism registry entries are changed.
+
+## G1 sealed evaluator subprocess v0.1 (offline only)
+
+A second process now owns the *local fixture's* private context targets and
+consumes only bounded JSONL submissions from the G1 three-arm runner.
+The evaluator returns graded feedback during prescribed source development,
+but returns **acknowledgements only** for holdout submissions. It refuses
+qualification until all development attempts have been registered; final
+holdout outcomes become available only after the entire locked three-arm
+qualifier denominator has been submitted.
+
+The new source modules are:
+- src/resonance_world/c3r_g1_sealed_evaluator.py
+- src/resonance_world/c3r_g1_evaluator_worker.py
+- src/resonance_world/c3r_g1_sealed_runner.py
+
+Regression suite: tests/test_c3r_g1_sealed_evaluator.py, including genuine
+subprocess execution and complete ledger auditing. Full apparatus note:
+research/c3r_g2/G1_SEALED_EVALUATOR_BOUNDARY_V0.1.md.
+
+**Still not independent scientific attestation:** the CI worker and agent
+run under the same OS identity in a synthetic fixture. A 0600 private
+key file and separate Python process by themselves cannot establish
+scientific ownership, prevent same-user access, or prove time-stamped
+prospective commitment. This new interface does not contact Z.AI,
+sign independent results, authorize a paid live campaign, or establish
+Models → Agents (G1). No G2/G3/G4 promotion or registry modification.
