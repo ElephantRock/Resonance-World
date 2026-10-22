@@ -125,24 +125,28 @@ class _CapturePort:
 
 
 def test_fresh_never_sees_feedback_and_placebo_receives_sham_of_same_length() -> None:
-    created: dict[tuple[str, str], _CapturePort] = {}
+    created: dict[tuple[str, str], list[_CapturePort]] = {}
 
     def factory(unit_id, arm):
         port = _CapturePort("offline-fixture-model")
-        created[unit_id, arm] = port
+        created.setdefault((unit_id, arm), []).append(port
         return port
 
     report = PilotRunner(_small().freeze()).run(port_factory=factory)
     assert report.to_dict()["scientific_acceptance"] is False
     for unit_index in range(2):
         unit_id = f"pilot-unit-{unit_index:03d}"
-        learned = created[unit_id, "learned"]
-        fresh = created[unit_id, "fresh"]
-        placebo = created[unit_id, "placebo"]
+        learned_development, learned = created[unit_id, "learned"]
+        (fresh,) = created[unit_id, "fresh"]
+        (placebo,) = created[unit_id, "placebo"]
+        assert len(learned_development.seen) == 2 * 3
+        assert all(r.stage == "development" for r in learned_development.seen)
+        assert all(r.stage == "qualification" for r in learned.seen)
+        assert learned_development is not learned
         assert all(not request.feedback for request in fresh.seen)
         assert all(request.stage == "qualification" for request in fresh.seen)
         assert all(request.stage == "qualification" for request in placebo.seen)
-        assert len(learned.seen) == 2 * (3 + 2)
+        assert len(learned.seen) == 2 * 2
         assert len(fresh.seen) == len(placebo.seen) == 2 * 2
         for q_learned in (r for r in learned.seen if r.stage == "qualification"):
             sham = next(r for r in placebo.seen if r.task.task_id == q_learned.task.task_id)
@@ -161,22 +165,29 @@ def test_never_feedback_qualification_grades_to_any_subsequent_task() -> None:
         return port
 
     PilotRunner(_small().freeze()).run(port_factory=factory)
-    for port in created.values():
-        for request in port.seen:
-            assert all("qualification" not in item.task_id for item in request.feedback)
-            assert all(item.task_id != request.task.task_id for item in request.feedback)
-            assert all(item.context == request.task.context for item in request.feedback)
+    for ports in created.values():
+        for port in ports:
+            for request in port.seen:
+                assert all("qualification" not in item.task_id for item in request.feedback)
+                assert all(item.task_id != request.task.task_id for item in request.feedback)
+                assert all(item.context == request.task.context for item in request.feedback)
 
 
 def test_rejects_reused_port_across_arms_and_units() -> None:
     singleton = _CapturePort("offline-fixture-model")
     with pytest.raises(ValueError, match="must be distinct"):
         PilotRunner(_small().freeze()).run(port_factory=lambda _u, _a: singleton)
-    port_by_arm = {arm: _CapturePort("offline-fixture-model") for arm in PILOT_ARMS}
+    shared = [_CapturePort("offline-fixture-model") for _ in range(4)]
+    count = 0
+
+    def cross_unit_reuse(_unit, _arm):
+        nonlocal count
+        port = shared[count % 4]
+        count += 1
+        return port
+
     with pytest.raises(ValueError, match="cannot reuse"):
-        PilotRunner(_small().freeze()).run(
-            port_factory=lambda _u, arm: port_by_arm[arm]
-        )
+        PilotRunner(_small().freeze()).run(port_factory=cross_unit_reuse)
 
 
 def test_wrong_model_or_unparseable_answers_count_as_itt_failures() -> None:
