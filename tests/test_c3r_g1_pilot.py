@@ -80,6 +80,14 @@ def test_null_policy_yields_zero_delta_with_full_triplet_denominator() -> None:
     assert payload["schema"] == "c3r-g1-three-arm-pilot-v1"
     assert payload["status"] == "offline_fixture_only_no_scientific_inference"
     assert payload["planned_model_calls"] == 480
+    assert len(payload["attempt_records"]) == 480
+    assert len(payload["attempt_trace_sha256"]) == 64
+    assert all(record["action"] in ("A", "B", None)
+               for record in payload["attempt_records"])
+    assert all(
+        record["status"] == "accepted" and record["success"] in (True, False)
+        for record in payload["attempt_records"]
+    )
     assert payload["independent_learner_units"] == 8
     assert payload["heldout_triplets_prescribed"] == 128
     assert payload["heldout_triplets_accepted_all_arms"] == 128
@@ -204,6 +212,11 @@ def test_wrong_model_or_unparseable_answers_count_as_itt_failures() -> None:
     assert data["qual_actions_accepted"] == 8
     assert data["heldout_triplets_accepted_all_arms"] == 0
     assert data["heldout_triplet_yield"] == 0
+    assert len(data["attempt_records"]) == _small().required_calls
+    assert sum(
+        row["stage"] == "qualification" and row["status"] == "wrong_model"
+        for row in data["attempt_records"]
+    ) == 8
     assert data["technical_yield_gate"]["passed_in_fixture"] is False
     assert data["qualification_by_arm"]["fresh"]["failures_by_status"]["wrong_model"] == 8
     assert data["qualification_by_arm"]["placebo"]["failures_by_status"]["invalid_format"] == 8
