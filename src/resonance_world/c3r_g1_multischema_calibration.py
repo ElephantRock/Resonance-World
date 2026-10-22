@@ -200,7 +200,7 @@ class CalibrationRunner:
                         reason = completion.finish_reason
                         completion_tokens = completion.completion_tokens_reported
                         reasoning_tokens = completion.reasoning_tokens_reported
-                        if completion.finish_reason not in (None, "stop"):
+                        if completion.finish_reason != "stop":
                             status = "unfinished_output"
                         elif completion.output not in ("A", "B"):
                             status = "invalid_format"
