@@ -7,8 +7,9 @@ Only an actual provider transport can attest session and token usage.
 from __future__ import annotations
 
 import json
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Callable, Literal
+from typing import Literal
 
 from resonance_world.c3r_g1_crossed_plan import ARMS, CrossedPlan, make_plan
 
@@ -110,12 +111,14 @@ def build_preflight(
                 session_by_key[(cell.unit_id, arm)], payload,
             )
         if token_count is not None:
-            def count(arm: str) -> int:
-                n = token_count(rendered[(cell.unit_id, qualification.task_id, arm)].payload)
-                if type(n) is not int or n < 0:
-                    raise ValueError("local tokenizer must return a nonnegative integer")
-                return n
-            paired_local_counts.append(count("learned") == count("neutral"))
+            learned = rendered[(cell.unit_id, qualification.task_id, "learned")].payload
+            neutral = rendered[(cell.unit_id, qualification.task_id, "neutral")].payload
+            learned_tokens = token_count(learned)
+            neutral_tokens = token_count(neutral)
+            if (type(learned_tokens) is not int or learned_tokens < 0
+                    or type(neutral_tokens) is not int or neutral_tokens < 0):
+                raise ValueError("local tokenizer must return a nonnegative integer")
+            paired_local_counts.append(learned_tokens == neutral_tokens)
 
     views = tuple(rendered[(slot.unit_id, slot.task_id, slot.arm)]
                   for slot in plan.schedule if slot.stage == "qualification")
