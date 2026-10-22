@@ -114,6 +114,14 @@ Technical output quality is reported independently:
 - `development_accepted` and `history_exposure_counts`: expose loss
   of graded source feedback rather than silently pretending the treatment
   history was complete.
+- `attempt_records`: every prescribed attempt with unit, arm, task ID,
+  context, stage, accepted/error status, submitted A/B action if parseable,
+  and graded ITT success. The report also retains
+  `attempt_trace_sha256`, a **self-generated integrity digest**.
+  It does not preserve raw prompts, provider answers, hidden ground-truth
+  plans, reasoning text or credentials. Keep qualification records
+  grader-controlled until the full blind cohort has completed; this trace
+  is **not an independent evaluator signature**.
 
 The proposed **engineering gate** requires at least 95% qualification
 action yield, at least 90% full-triplet yield, and parseable source
