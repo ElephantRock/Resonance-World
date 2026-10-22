@@ -161,7 +161,7 @@ def test_never_feedback_qualification_grades_to_any_subsequent_task() -> None:
 
     def factory(unit_id, arm):
         port = _CapturePort("offline-fixture-model")
-        created[unit_id, arm] = port
+        created.setdefault((unit_id, arm), []).append(port)
         return port
 
     PilotRunner(_small().freeze()).run(port_factory=factory)
