@@ -283,13 +283,18 @@ class LocalFixtureEvaluator:
         if type(private_seed) is not int or not 0 <= private_seed <= 2**32 - 1:
             raise ValueError("private fixture seed must be a uint32")
         self._targets: dict[tuple[str, str], str] = {}
+        self._allowlisted_tasks: set[tuple[str, tuple[object, ...]]] = set()
         for index, unit in enumerate(cohort.units):
             for family_index, group in enumerate(unit.families):
                 self._targets[unit.unit_id, group.context] = (
                     "A" if (private_seed + index + family_index) % 2 == 0 else "B"
                 )
+                for task in (*group.development, *group.qualification):
+                    self._allowlisted_tasks.add((unit.unit_id, task.public_tuple()))
 
     def grade(self, unit_id: str, task: SchemaTask, choice: str) -> bool:
+        if (unit_id, task.public_tuple()) not in self._allowlisted_tasks:
+            raise ValueError("evaluator only accepts tasks from its locked cohort")
         # Grade executable outcomes, not just choice-string equality.
         target = self._targets[unit_id, task.context]
         return apply_choice(task, choice) == apply_choice(task, target)
