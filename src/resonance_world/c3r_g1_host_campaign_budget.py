@@ -50,8 +50,7 @@ def _validate_args(
             or endpoint not in (STANDARD_ENDPOINT, CODING_ENDPOINT)
             or type(maximum) is not int or not 1 <= maximum <= MAX_CAMPAIGN_SENDS
             or type(planned_digests) is not tuple or len(planned_digests) != 8
-            or any(not _digest(x) for x in planned_digests)
-            or len(set(planned_digests)) != len(planned_digests)):
+            or any(not _digest(x) for x in planned_digests)):
         raise ValueError("invalid prospectively locked host campaign parameters")
 
 
