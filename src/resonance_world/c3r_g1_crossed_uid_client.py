@@ -10,9 +10,9 @@ import argparse
 import json
 import os
 import socket
-from datetime import UTC, datetime
 import stat
 import struct
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import TextIO
 
