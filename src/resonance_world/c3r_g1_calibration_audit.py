@@ -8,8 +8,10 @@ No provider access, credentials, model calls, or live-run authorization.
 
 from __future__ import annotations
 
+import argparse
 import hashlib
 import json
+from pathlib import Path
 from dataclasses import dataclass
 from typing import Any
 
@@ -322,3 +324,41 @@ def audit_calibration_transport(
         "rejected" if issues else "structurally_consistent_unattested",
         tuple(dict.fromkeys(issues)), LOGICAL_BUDGET, reserved,
     )
+
+
+
+def _read_bounded_json(path: Path, *, maximum: int) -> object:
+    if path.is_symlink() or not path.is_file() or path.stat().st_size > maximum:
+        raise ValueError("missing, symlinked or oversized calibration artifact")
+    data = path.read_bytes()
+    if len(data) > maximum:
+        raise ValueError("calibration artifact too large")
+    return json.loads(data)
+
+
+def main(argv: list[str] | None = None) -> int:
+    """Validate offline artifacts only. Never opens a provider connection."""
+    parser = argparse.ArgumentParser(
+        description="Check G1 calibration reports against reserved request hashes"
+    )
+    parser.add_argument("--report", required=True, type=Path)
+    parser.add_argument("--ledger", required=True, type=Path)
+    parser.add_argument("--model", required=True)
+    parser.add_argument("--route", choices=("coding", "standard"), required=True)
+    parser.add_argument("--max-tokens", required=True, type=int)
+    args = parser.parse_args(argv)
+    try:
+        report = _read_bounded_json(args.report, maximum=128 * 1024)
+        ledger = _read_bounded_json(args.ledger, maximum=16 * 1024)
+        result = audit_calibration_transport(
+            report, ledger, expected_model=args.model,
+            expected_route=args.route, max_tokens=args.max_tokens,
+        )
+    except (OSError, ValueError, TypeError, KeyError, UnicodeError):
+        result = CalibrationAudit("rejected", ("invalid_or_unavailable_input",), 8, 0)
+    print(json.dumps(result.to_dict(), sort_keys=True, separators=(",", ":")))
+    return 0 if result.verdict == "structurally_consistent_unattested" else 2
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())
