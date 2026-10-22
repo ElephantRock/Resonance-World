@@ -153,6 +153,12 @@ def audit_technical_smoke(
             issues.append(f"{stage}_accounting_mismatch")
             counts_ok = False
             continue
+        # The pinned production adapter reports exactly one physical send
+        # for each completed text response, including exact-parser failures.
+        # Transport exceptions remain in the ledger, not the completion sum.
+        reported = data.get("physical_sends_reported")
+        if reported != accepted + failures.get("invalid_format", 0):
+            issues.append(f"{stage}_completed_send_accounting_mismatch")
         stage_accepted[stage] = accepted
         for key in ("physical_sends_reported", "prompt_tokens_reported",
                     "completion_tokens_reported"):
