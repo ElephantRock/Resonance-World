@@ -19,7 +19,11 @@ import stat
 from pathlib import Path
 from typing import Any
 
-from .c3r_g1_zai_transport import CODING_ENDPOINT, STANDARD_ENDPOINT
+from .c3r_g1_zai_transport import (
+    CODING_ENDPOINT,
+    MAX_GENERATION_TOKENS,
+    STANDARD_ENDPOINT,
+)
 
 MAX_FILE_BYTES = 16 * 1024
 ZERO = "0" * 64
@@ -263,7 +267,7 @@ def main(argv: list[str] | None = None) -> int:
 
     try:
         endpoint = CODING_ENDPOINT if args.route == "coding" else STANDARD_ENDPOINT
-        if not 1 <= args.max_tokens <= 512:
+        if not 1 <= args.max_tokens <= MAX_GENERATION_TOKENS:
             raise ValueError("calibration transport output budget outside fixed cap")
         plan = make_calibration_plan()
         digests = tuple(
