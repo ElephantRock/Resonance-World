@@ -143,3 +143,61 @@ separately and only when its current result is confirmed.
 
 No extra provider sends, live workflows, new registry patterns,
 claim promotion or default-branch changes were requested or performed.
+
+
+## Existing Ed25519 receipt-chain bridge (2026-10-22, offline integration)
+
+The fourth crossed pilot now has a **consumer** for the already implemented
+C3R signed evaluator protocol, rather than a competing signer or new live
+transport. New module: **src/resonance_world/c3r_g1_crossed_receipt_bridge.py**.
+It imports the existing ReceiptVerifier from
+src/resonance_world/c3r_g1_evaluator_receipts.py and requires an explicitly
+**out-of-band pinned evaluator public key and run ID**.
+
+The new *signed payload subtype* is named
+c3r-g1-crossed-attempt-v0.1; the outer receipt envelope remains the
+pre-existing chained Ed25519 c3r-g1-ed25519-receipt-v0.1 format.
+Payloads contain only: schema, frozen plan digest, attempt ordinal,
+unit/task/stage/arm identifiers, attempt status, accepted A/B action,
+boolean claimed correctness, and output SHA256 (when available).
+Unrecognized fields—including accidental private-target fields—are
+rejected even if the payload is signed by the configured key.
+
+**Source phase:** Verify exactly the first **16 chained signed accepted
+development attempts** (and their real action/grade shape), derive
+SourceObservation items for the learned arm, and output the SHA256 of
+source-chain receipt 16. A separately governed custodian must capture
+and timestamp/pin this digest *before qualification begins*.
+
+**Terminal phase:** Verify all **40** signed receipts with exact
+sequence, chain lineage, frozen membership, correct stage/arm ordering,
+and the separately supplied, previously saved source-chain-head SHA256.
+The same validated record set is passed to the existing descriptive
+outcomes auditor without changing the 40-attempt denominator.
+Missing source receipts block learned-arm preparation; explicitly
+signed not-sent/failed logical attempts remain accounted for at terminal
+analysis. A correct signature does not make an incorrect grade correct.
+
+The optional output SHA256 prevents absent or empty-output placeholders
+from being called accepted. It is **not** an independently verified
+provider return hash. A terminal outcome transcript must be withheld
+from the model and from all qualification arms until closure: it contains
+claimed correctness and could otherwise leak holdout labels.
+
+**Not yet implemented or attested:** an actual evaluator-side emitter
+for this fourth crossed payload subtype; a production host/session
+dispatcher; independently witnessed key custody and pre-holdout source
+head deposit; trusted timestamps; provider delivery receipts;
+token/compute parity; independent target-stratified inference and
+replication. Existing signed prototype tests and CI prove engineering
+behavior, not these deployment facts.
+
+The module never signs anything and never accesses the evaluator's
+private target assignment. The accompanying
+**tests/test_c3r_g1_crossed_receipt_bridge.py** uses the existing
+ReceiptSigner **only as an offline test fixture**. It exercises key
+substitution, replay, omission, reorder, signed plan/slot/payload
+mismatch, signed development missingness and unchanged scientific
+nonacceptance. The fourth pilot remains **construction-only**, not
+authorized for 40 live model requests. PR #310 stays Draft and main is
+untouched.
