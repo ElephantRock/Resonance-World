@@ -10,7 +10,7 @@ import json
 from dataclasses import dataclass
 from typing import Callable, Literal
 
-from resonance_world.c3r_g1_crossed_plan import ARMS, CrossedPlan
+from resonance_world.c3r_g1_crossed_plan import ARMS, CrossedPlan, make_plan
 
 Phase = Literal["development", "learned", "fresh", "neutral"]
 PHASES: tuple[Phase, ...] = ("development", "learned", "fresh", "neutral")
@@ -62,6 +62,8 @@ def build_preflight(
     paid-send authorization are all explicitly outside this function.
     """
     plan.audit()
+    if plan.public_digest != make_plan().public_digest:
+        raise ValueError("unfrozen crossed plan digest")
     expected_sources = {
         (cell.unit_id, task.task_id)
         for cell in plan.cells for task in cell.development
