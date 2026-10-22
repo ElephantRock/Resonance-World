@@ -201,3 +201,58 @@ mismatch, signed development missingness and unchanged scientific
 nonacceptance. The fourth pilot remains **construction-only**, not
 authorized for 40 live model requests. PR #310 stays Draft and main is
 untouched.
+
+
+## Staged local source-deposit simulator (2026-10-22, no provider sends)
+
+This follow-up adds two **offline engineering fixtures**, not a new
+model transport or production evaluator:
+
+- src/resonance_world/c3r_g1_crossed_local_evaluator.py:
+  candidate grader keeps a balanced private A/B mapping and its Ed25519
+  signing seed behind a JSONL stdin/stdout subprocess boundary. It issues
+  exactly 16 graded **development** source receipts in plan order, then
+  freezes and exposes the SHA256 of the sixteenth receipt. The program
+  **refuses any holdout attempt** until a signed source custody receipt
+  is accepted. Each of 24 qualification submissions returns only a
+  grade-free receipt-count acknowledgement. Correctness and individual
+  signed holdout records are unavailable until all 40 prescribed
+  attempts have closed and finalization succeeds.
+- src/resonance_world/c3r_g1_crossed_source_deposit.py:
+  a separately invocable local custodian program requires all 16
+  previously signed source receipts and a pre-supplied evaluator public
+  key/run ID. It calls the existing crossed receipt verifier before
+  signing a bounded acknowledgement with a **different Ed25519 key**.
+  The acknowledgement binds the frozen plan digest, source chain head,
+  evaluator signing-key fingerprint and source denominator 16.
+  It is copied to a private owned directory in a single-create file
+  with O_EXCL, no symlink following, fsync and no overwrite on replay.
+
+The agent-facing stage cannot unlock qualification using its own
+declaration: it must present a correctly signed candidate-custodian
+receipt from the pinned distinct key. This is a testable authorization
+edge **only inside the local fixture**. Different Python PIDs are
+functional process separation, **not independent OS UIDs, host isolation
+or independently governed custody**. The signer keys and target seed
+are local fixtures and cannot be treated as trusted pre-registration
+or third-party receipts.
+
+One **subprocess integration test** starts an evaluator and separately
+invokes the custodian CLI, replays source acknowledgements, checks
+grade-free 24-holdout returns and verifies a final 40-attempt chained
+transcript with a preserved missing response. Other tests reject
+unsigned/incomplete sources, tampering, early holdout, repeated
+custody, wrong source head and deposit overwrite. The local staged
+test suite passed **33 tests** counting the existing crossed-plan,
+preflight, outcome and receipt bridge suites. Full repository CI
+status must be checked separately at the current branch head.
+
+**Still absent:** production-grade independent target generation,
+out-of-band public-key enrollment, cross-UID evaluator/custodian
+deployment for this new fourth design, verified trusted time and
+off-host immutable custody, provider-generated signed transport and
+reconciled bills, token/compute parity, powered preregistration and
+independent scientific acceptance. The fixture computes outputs
+from supplied A/B labels; these are **not** provider completions.
+No client API keys, provider/network requests, paid budget or
+scientific/registry promotion are introduced. PR #310 remains Draft.
