@@ -29,8 +29,12 @@ if TYPE_CHECKING:
 
 STANDARD_ENDPOINT = "https://api.z.ai/api/paas/v4/chat/completions"
 CODING_ENDPOINT = "https://api.z.ai/api/coding/paas/v4/chat/completions"
-MAX_RESPONSE_BYTES = 64 * 1024
+MAX_RESPONSE_BYTES = 2 * 1024 * 1024
 MAX_TOTAL_SENDS = 8
+# Upper bound for the explicitly configurable generation budget. The Z.AI
+# endpoint may impose a lower live limit; 1M is context, not output capacity.
+MAX_GENERATION_TOKENS = 131_072
+DEFAULT_GENERATION_TOKENS = 16_384
 
 
 class ProviderBudgetExhausted(RuntimeError):
@@ -160,8 +164,8 @@ class ZaiStandardModelPort:
     ledger: PhysicalSendLedger
     enabled: bool = False
     transport: Transport = _single_https_post
-    timeout_seconds: float = 30.0
-    max_tokens: int = 512
+    timeout_seconds: float = 180.0
+    max_tokens: int = DEFAULT_GENERATION_TOKENS
     route: Literal["standard", "coding"] = "standard"
     campaign_budget: HostCampaignBudget | None = None
     halted: bool = field(default=False, init=False)
@@ -173,10 +177,11 @@ class ZaiStandardModelPort:
             raise ValueError("API key and model must be explicitly supplied")
         if any(ch in self.model_id for ch in "\r\n"):
             raise ValueError("model id contains forbidden control characters")
-        if not 0 < self.timeout_seconds <= 30:
+        if not 0 < self.timeout_seconds <= 300:
             raise ValueError("per-call timeout must be bounded")
-        if type(self.max_tokens) is not int or not 1 <= self.max_tokens <= 512:
-            raise ValueError("response token limit must be between 1 and 512")
+        if (type(self.max_tokens) is not int
+                or not 1 <= self.max_tokens <= MAX_GENERATION_TOKENS):
+            raise ValueError("generation token limit must be in supported configuration range")
 
     def complete(self, request: ModelChoiceRequest) -> ModelChoiceCompletion:
         return self.complete_prompt(request.prompt())
