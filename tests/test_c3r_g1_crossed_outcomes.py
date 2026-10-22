@@ -6,8 +6,8 @@ from dataclasses import replace
 
 import pytest
 
-from resonance_world.c3r_g1_crossed_plan import make_plan
 from resonance_world.c3r_g1_crossed_outcomes import AttemptOutcome, audit_outcomes
+from resonance_world.c3r_g1_crossed_plan import make_plan
 
 
 def _all_accepted() -> tuple[AttemptOutcome, ...]:
