@@ -80,7 +80,7 @@ class PilotDesign:
         for index in range(self.units):
             contexts: list[PilotContext] = []
             for family in range(self.contexts_per_unit):
-                context = f"pilot-u{index:03d}-family-{family}"
+                context = f"pilot-u{index:03d}-context-{family}"
                 # Counterbalanced across units, not encoded in the public task.
                 hidden = PLANS[(self.seed + index + family) % len(PLANS)]
                 dev: list[PublicTask] = []
@@ -258,6 +258,26 @@ class PilotReport:
             }
             for arm in PILOT_ARMS
         }
+        # The attempt-level ledger is compact, contains NO raw response or
+        # private evaluator plan, and permits retrospective recomputation of
+        # all scores. It must remain grader-controlled until qualification ends.
+        trial_records: list[dict[str, object]] = [
+            {
+                "unit_id": row.unit_id,
+                "arm": row.arm,
+                "stage": row.stage,
+                "task_id": row.task_id,
+                "context": row.context,
+                "status": row.status,
+                "success": row.success,
+                "action": (
+                    "A" if row.plan == PLANS[0]
+                    else "B" if row.plan == PLANS[1]
+                    else None
+                ),
+            }
+            for row in self.rows
+        ]
         action_yield = observed / (3 * denominator)
         triplet_yield = complete_triplets / denominator
         # These are proposed *engineering* gates, not scientific G1 gates.
@@ -271,6 +291,8 @@ class PilotReport:
             "status": "offline_fixture_only_no_scientific_inference",
             "pilot_lock": self.lock_digest,
             "planned_model_calls": self.design.required_calls,
+            "attempt_records": trial_records,
+            "attempt_trace_sha256": _hash(trial_records),
             "independent_learner_units": self.design.units,
             "heldout_triplets_prescribed": denominator,
             "heldout_triplets_accepted_all_arms": complete_triplets,
