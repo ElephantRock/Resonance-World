@@ -337,3 +337,32 @@ The historical 512-token diagnostic still shows **zero usable
 learned/fresh qualification pairs**. No new paid provider sends,
 production witness deployment, scientific promotion, Pattern Register
 entry or main-branch merge is associated with v0.5.
+
+## G1 detached signed custodian receipt v0.6 (offline only)
+
+After the public-key-verifiable handoff v0.5, the new
+`src/resonance_world/c3r_g1_custodian_receipt.py` adds an **offline
+local custody simulator** and a standalone receipt-verification CLI.
+A third Ed25519 role — deliberately a separate key from the witness
+and evaluator — signs a **detached receipt** binding the archived
+two-file bundle bytes, exact SHA256 hashes, cohort digest, run ID,
+public-key fingerprints, custodian name and archive reference.
+
+A run-indexed local archive is created exclusively and reverified
+after copying; duplicate run IDs fail closed. Read-only audit requires
+an *out-of-band pinned custodian public key* as well as both existing
+witness/evaluator public keys. Tests reject swapped keys, changes to
+the archive or receipt, forged claims of retention authority, file
+addition/deletion, inconsistent run IDs and duplicate deposits.
+The result is always `signed_local_archive_consistent_unattested`,
+**not** an externally deposited, independently controlled or WORM
+receipt.
+
+Scientific deployment still needs an actual **separately operated
+custodian and published pinned key**, trusted timestamp authority,
+off-platform append-only/WORM retention, independent archival receipt
+and published non-equivocation checkpoints. The local fixture's
+claimed receive time is *not* trusted time; filesystem ownership and
+signatures alone cannot certify immutable storage. See
+`research/c3r_g2/G1_CUSTODIAN_RECEIPT_CONTRACT_V0.6.md`.
+No GLM-5.3 calls, G1/G2 promotions or main merge are implied.
