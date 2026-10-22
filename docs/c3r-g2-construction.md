@@ -279,3 +279,30 @@ See research/c3r_g2/G1_DEPLOYMENT_WITNESSED_GATE_V0.3.md for the
 remaining external authority, append-only storage, scientific power,
 provider reconciliation and live-operation acceptance gates. Nothing
 in this construction authorizes paid calls or promotes G1/G2 results.
+
+## G1 witnessed evidence journal v0.4 (offline only)
+
+The new `src/resonance_world/c3r_g1_witness_journal.py` prototype
+requires a pretrial witness-signed enrollment **before** creating an
+exclusive, owner-private on-disk journal. It then signs, appends and
+`fsync`s the evaluator's verified ready record, every source feedback,
+every grade-free qualification acknowledgement, and the complete
+final evaluator ledger. The final event is rejected unless all
+prescribed three-arm records pass the existing signed transcript audit.
+
+The read-only `audit_witness_journal` procedure/CLI verifies both the
+witness event signatures and the evaluator receipt signatures using
+out-of-band public keys, plus prescribed cohort counts, target
+commitment and event ordering. Tests deliberately corrupt, truncate,
+duplicate and substitute records and keys. No real provider calls are
+performed by the fixture.
+
+**Crucial:** the stored file is *application-level append-only*,
+**not WORM**, not externally published and not protected against a
+filesystem owner or signing-key holder rewriting history. The
+fixture connects witness journal logic inside the local test process
+and is not independent scientific custody. Production G1 still needs
+separately operated witness keys/API, a witnessed pretrial timestamp,
+periodic external checkpoints, immutable third-party retention,
+provider reconciliation and powered blinded study. See
+`research/c3r_g2/G1_WITNESSED_EVIDENCE_JOURNAL_V0.4.md`.
