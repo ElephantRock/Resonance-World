@@ -9,7 +9,7 @@
 - It does **not** import Hermes, reuse D2 Q2/Q3 credentials/authority, or start network traffic on import.
 - It reserves one physical-send slot in the shared in-process ledger **before** each request. An HTTP rejection, network exception, timeout, or malformed provider response **opens a terminal circuit** and prevents subsequent sends; the other prescribed logical tasks remain in the denominator as failed attempts. The failed physical send retains its reservation. Invalid A/B action text counts as an invalid-format outcome but need not stop the run. There is no retry, failover, redirect or tool access.
 - At most **8** physical POSTs may be attempted in a single smoke process. This is a technical expenditure cap, not a promise of fixed monetary costs; model/provider prices and billable token accounting are outside its control.
-- One 15-second timeout and up to 16 generated tokens are allowed per request by default. Max configured response tokens is 64.
+- The corrected GLM-5.3 technical probe allows a **30-second timeout** and a maximum of **512 generated tokens per request**. Eight sends therefore have a combined upper ceiling of 4096 generated tokens, not a fixed billable charge. A truncation with an **empty final answer** closes the provider circuit to stop repeating the previous reasoning-only failure.
 - The existing GitHub repository secret is **`ZAI_API_KEY`**. The manually dispatched workflow passes its value into the CLI process as `C3R_ZAI_API_KEY` (an **environment variable alias, not a second GitHub secret**). Neither raw provider text nor the API key is preserved in reports; the adapter also redacts the key from its representation.
 - The implementation uses Python's standard-library HTTP client with a pinned HTTPS endpoint and redirects disabled; it does not depend on, or modify, frozen Hermes SDK runtime behavior.
 - A test double implementing the port is **not** a live model result, and the port's in-process ledger is **not** an external provider billing reconciliation.
@@ -36,7 +36,7 @@ The operator should verify service access and intended billing plan before execu
 
 The example uses one opaque context and the same arithmetic ordering task schema, with the target ordering fixed at B. Its purpose is to test network/provider semantics, feedback separation, and analyzable yield, **not** to discover an effect. A fixed target may favor or disfavor an initial model policy; qualification is not powered or blinded from the operator.
 
-The report always carries `technical_smoke_not_scientific_evidence`, the cohort digest, per-stage attempted/accepted/failure totals, per-call output digests, and transport reservation outcomes. Never store or expose credential values or raw provider outputs when sharing this report.
+The report always carries `technical_smoke_not_scientific_evidence`, the cohort digest, per-stage attempted/accepted/failure totals, per-call output digests, bounded finish/usage diagnostic metadata, and transport reservation outcomes. Never store or expose credential values or raw provider outputs when sharing this report.
 
 ## Failure handling and stop rules
 
@@ -44,7 +44,7 @@ The report always carries `technical_smoke_not_scientific_evidence`, the cohort 
 - Unexpected credential/endpoint/model availability: stop and report; do not silently switch provider routes or model identities. The coding task uses an explicitly selected Coding Plan endpoint already present in prior D2 code, not the general-balance endpoint.
 - Eight reservations exhausted: fail closed; no ninth request, even if previous calls failed.
 - HTTP 3xx/4xx/5xx, timeout, malformed response: no raw error body, no retries; attempt remains accounted.
-- Invalid model action: no answer repair or hidden grader hint; it remains in the prescribed denominator.
+- Invalid model action: no answer repair or hidden grader hint; it remains in the prescribed denominator. If the model consumes its generation limit while returning **empty final content**, the run halts after that send. Other invalid-format answers can be recorded without necessarily halting.
 - Provider authorization is **not** permission to interpret this smoke as confirmatory G1 acquisition or causal G2 organizational capability.
 - Any later campaign needs an independently precommitted sample and evaluator, service-side or gateway-enforced attribution for physical sends, cost cap and observed yield, matched pre/post model sessions, inferential organization units, prospective power and pre-registered G1/G2 criteria.
 
