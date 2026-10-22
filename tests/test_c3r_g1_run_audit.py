@@ -172,3 +172,13 @@ def test_zero_valid_actions_is_not_model_acquisition() -> None:
     assert result.status == "structurally_consistent_unattested"
     assert result.accepted_actions == 0
     assert result.to_dict()["scientific_acceptance"] is False
+
+
+
+def test_grader_cannot_accept_a_reply_that_the_transport_says_failed() -> None:
+    artifact, lock = _artifact()
+    artifact["send_ledger"]["entries"][0]["http_status"] = None
+    artifact["send_ledger"]["entries"][0]["failure_class"] = "TimeoutError"
+    verdict = audit_technical_smoke(artifact, expected_cohort_digest=lock)
+    assert verdict.status == "rejected_inconsistent_artifact"
+    assert "accepted_or_parsed_without_http_success" in verdict.issues
