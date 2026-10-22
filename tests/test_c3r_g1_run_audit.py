@@ -7,7 +7,7 @@ import json
 
 import pytest
 
-from resonance_world.c3r_g1_model_boundary import ModelG1Runner
+from resonance_world.c3r_g1_model_boundary import ModelCohortLock, ModelG1Runner
 from resonance_world.c3r_g1_run_audit import audit_technical_smoke
 from resonance_world.c3r_g1_zai_transport import (
     PhysicalSendLedger,
@@ -15,7 +15,6 @@ from resonance_world.c3r_g1_zai_transport import (
     ZaiStandardModelPort,
 )
 from resonance_world.c3r_g2_probe import FixtureOracle, make_task
-from resonance_world.c3r_g1_model_boundary import ModelCohortLock
 
 
 def _artifact() -> tuple[dict[str, object], str]:
