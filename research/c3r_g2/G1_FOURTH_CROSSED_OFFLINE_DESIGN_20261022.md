@@ -322,3 +322,60 @@ trusted timestamp, off-host/WORM storage, authentic provider send,
 private-grade audit, token/compute equivalence, powered G1 analysis
 or replication is established. All scientific/promotional gates
 stay **false** and PR #310 remains Draft.
+
+
+## Prospective witness enrollment lock — fourth pilot (2026-10-22)
+
+The existing three-UID **offline** candidate fixture now enforces a signed
+pre-source enrollment check using the repository's existing Ed25519
+ReceiptVerifier. New component:
+**src/resonance_world/c3r_g1_crossed_enrollment.py** (EnrollmentPin).
+
+The strict, bounded signed witness payload binds the registered run ID
+(via receipt envelope), public **frozen plan digest**, evaluator public key,
+custodian public key, **16 source** and **24 qualification** slots, and
+claimed UTC enrollment issue/expiry. Witness, evaluator and custodian
+signing public keys must be distinct; they are supplied as expected
+**out-of-band pins**, not blindly accepted from the signed payload.
+The witness receipt must verify as sequence 1 for the expected run.
+Inclusion of any private answer key field or change to the frozen
+denominators is rejected. Receipt validity is limited to a 30-day
+claimed date window and a separately passed UTC clock check;
+**neither date claim nor machine clock is trusted timestamp evidence**.
+
+The offline three-UID client now requires --enrollment-file and
+--witness-public-key-file. It verifies that enrollment **before opening
+the evaluator socket or sending any development action**. After source,
+it validates the candidate signed custodian deposit using the
+prospectively enrolled custodian key and locked source-chain head;
+after holdout closure, it verifies all 40 existing chained evaluator
+receipts with the same registered evaluator key and source head.
+A missing, mismatched or replayed witness enrollment fails closed.
+
+In **scripts/run_c3r_g1_crossed_three_uid_fixture.sh** the temporary
+CI runner itself signs an ephemeral witness enrollment using a fourth,
+locally generated Ed25519 key **before** the synthetic client begins
+its source actions. This tests the sequence of checks, **not actual
+independent witness authority**. A privileged runner can generate
+all keys and rewrite its own untrusted clock. No externally governed
+pretrial enrollment, remote witness, immutable off-host custody,
+trusted timestamp, provider receipt, cost bill, randomized order
+or prompt-token parity has been furnished.
+
+Six negative and integration checks were added in
+**tests/test_c3r_g1_crossed_enrollment.py**. They cover mismatched
+signers and roles, cross-run replay, tampered enrollment payloads,
+false time windows, forbidden private target fields, and signed
+custodian/source/terminal chain consistency with one unsent attempt
+preserved. The standalone crossed suite now has **44 local tests
+passed**. On branch head 6c5284d, GitHub workflow
+https://github.com/ElephantRock/Resonance-World/actions/runs/39840470644
+completed with **809 tests passed, 4 skipped, Ruff PASS and the
+existing plus crossed three-UID gate PASS**. The architecture audit
+run 39840470672 also passed.
+
+**Remaining scientific status:** construction-only,
+independent-witness-authority_attested=false,
+trusted_timestamp_attested=false, provider_execution_verified=false,
+scientific_acceptance=false. No live model sends, cost-authorized
+experiment, PR merge, pattern registry promotion or G1 causal claim.
