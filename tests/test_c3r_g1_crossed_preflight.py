@@ -97,7 +97,7 @@ def test_different_feedback_never_changes_neutral_or_fresh() -> None:
     first = build_preflight(plan, sources=sources, sessions=sessions)
     flipped = tuple(replace(s, action="B", feedback="correct") for s in sources)
     second = build_preflight(plan, sources=flipped, sessions=sessions)
-    for a, b in zip(first.views, second.views):
+    for a, b in zip(first.views, second.views, strict=True):
         assert a.arm == b.arm
         if a.arm != "learned":
             assert a.payload == b.payload
