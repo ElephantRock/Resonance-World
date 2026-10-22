@@ -10,9 +10,9 @@ import argparse
 import json
 from pathlib import Path
 
-from resonance_world.c3r_g1_run_audit import audit_technical_smoke
-
 from run_c3r_g1_live_smoke import make_smoke_cohort
+
+from resonance_world.c3r_g1_run_audit import audit_technical_smoke
 
 MAX_ARTIFACT_BYTES = 512 * 1024
 
