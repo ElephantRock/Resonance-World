@@ -158,7 +158,7 @@ class ZaiStandardModelPort:
     enabled: bool = False
     transport: Transport = _single_https_post
     timeout_seconds: float = 15.0
-    max_tokens: int = 16
+    max_tokens: int = 512
     route: Literal["standard", "coding"] = "standard"
     halted: bool = field(default=False, init=False)
 
@@ -171,22 +171,28 @@ class ZaiStandardModelPort:
             raise ValueError("model id contains forbidden control characters")
         if not 0 < self.timeout_seconds <= 30:
             raise ValueError("per-call timeout must be bounded")
-        if type(self.max_tokens) is not int or not 1 <= self.max_tokens <= 64:
-            raise ValueError("response token limit must be between 1 and 64")
+        if type(self.max_tokens) is not int or not 1 <= self.max_tokens <= 512:
+            raise ValueError("response token limit must be between 1 and 512")
 
     def complete(self, request: ModelChoiceRequest) -> ModelChoiceCompletion:
         if not self.enabled:
             raise PermissionError("C3R provider dispatch is disabled by default")
         if self.halted:
             raise ProviderCircuitOpen("C3R provider circuit remains closed to new sends")
+        params: dict[str, object] = {
+            "model": self.model_id,
+            "messages": [{"role": "user", "content": request.prompt()}],
+            "temperature": 0,
+            "max_tokens": self.max_tokens,
+            "stream": False,
+        }
+        # GLM-5.3 always reasons. A 16-token cap previously exhausted the
+        # output budget before generating any final answer (8/8 blanks).
+        if self.model_id in ("glm-5.3", "glm-5.3-flash"):
+            params["thinking"] = {"type": "enabled"}
+            params["reasoning_effort"] = "low"
         body = json.dumps(
-            {
-                "model": self.model_id,
-                "messages": [{"role": "user", "content": request.prompt()}],
-                "temperature": 0,
-                "max_tokens": self.max_tokens,
-                "stream": False,
-            },
+            params,
             sort_keys=True, separators=(",", ":"),
         ).encode("utf-8")
         digest = hashlib.sha256(body).hexdigest()
@@ -219,6 +225,11 @@ class ZaiStandardModelPort:
                 raise ProviderTransportRejected("missing textual model answer")
             usage = decoded.get("usage")
             usage = usage if isinstance(usage, dict) else {}
+            details = usage.get("completion_tokens_details")
+            details = details if isinstance(details, dict) else {}
+            finish_reason = choices[0].get("finish_reason")
+            finish_reason = finish_reason if isinstance(finish_reason, str) else None
+            reasoning = message.get("reasoning_content")
             self.ledger.finish(ordinal, http_status=200)
             return ModelChoiceCompletion(
                 output=content,
@@ -226,6 +237,9 @@ class ZaiStandardModelPort:
                 physical_sends_reported=1,
                 prompt_tokens_reported=_usage(usage.get("prompt_tokens")),
                 completion_tokens_reported=_usage(usage.get("completion_tokens")),
+                finish_reason=finish_reason,
+                reasoning_present=bool(reasoning) if reasoning is not None else None,
+                reasoning_tokens_reported=_usage(details.get("reasoning_tokens")),
             )
         except Exception as exc:
             # A failed send/response is terminal for this short technical run.
