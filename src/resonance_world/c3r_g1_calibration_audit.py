@@ -21,6 +21,10 @@ from .c3r_g1_multischema_calibration import (
     STATES,
     CalibrationRunner,
 )
+from .c3r_g1_zai_transport import (
+    DEFAULT_GENERATION_TOKENS,
+    MAX_GENERATION_TOKENS,
+)
 
 _RECORD_FIELDS = frozenset({
     "stage", "family", "arm", "task_id", "status", "answer_accepted",
@@ -97,12 +101,12 @@ def audit_calibration_transport(
     report: object, ledger: object, *,
     expected_model: str = "glm-5.3",
     expected_route: str = "coding",
-    max_tokens: int = 512,
+    max_tokens: int = DEFAULT_GENERATION_TOKENS,
 ) -> CalibrationAudit:
     issues: list[str] = []
     if (not isinstance(expected_model, str) or not expected_model.strip()
             or expected_route not in ("standard", "coding")
-            or not _int(max_tokens, lower=1, upper=512)):
+            or not _int(max_tokens, lower=1, upper=MAX_GENERATION_TOKENS)):
         raise ValueError("reviewed expected model, route and budget required")
     if not isinstance(report, dict) or not isinstance(ledger, dict):
         return CalibrationAudit("rejected", ("missing_report_or_ledger",), 8, 0)
