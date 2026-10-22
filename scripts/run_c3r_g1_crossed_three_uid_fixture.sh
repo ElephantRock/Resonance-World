@@ -132,6 +132,20 @@ if ! sudo -u "$AGENT_USER" test -S "$EVAL_SOCKET" || \
   echo 'UID-gated server sockets are unavailable' >&2
   exit 2
 fi
+# Reject unauthorized cross-role UIDs before the legitimate agent connects.
+for row in "$CUST_USER:$EVAL_SOCKET" "$EVAL_USER:$CUST_SOCKET"; do
+  unwanted_uid="${row%%:*}"
+  target_socket="${row#*:}"
+  sudo -u "$unwanted_uid" env -i "$PYTHON_BIN" - "$target_socket" <<'PYUNTRUSTED'
+import socket
+import sys
+with socket.socket(socket.AF_UNIX, socket.SOCK_STREAM) as s:
+    s.settimeout(5)
+    s.connect(sys.argv[1])
+    if s.recv(1) != b"":
+        raise SystemExit("unregistered role received bytes from UID-gated service")
+PYUNTRUSTED
+done
 sudo -u "$AGENT_USER" env -i PYTHONPATH="$PYTHONPATH" "$PYTHON_BIN" -m \
   resonance_world.c3r_g1_crossed_uid_client \
   --evaluator-socket "$EVAL_SOCKET" --custodian-socket "$CUST_SOCKET" \
