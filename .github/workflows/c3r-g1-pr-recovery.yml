@@ -1,0 +1,117 @@
+name: C3R G1 PR-Visible Readonly Reconciliation
+
+on:
+  pull_request:
+    types: [synchronize]
+    paths:
+      - .github/workflows/c3r-g1-pr-recovery.yml
+
+permissions:
+  contents: read
+  actions: read
+
+jobs:
+  reconcile:
+    if: github.event.pull_request.number == 310
+    runs-on: ubuntu-latest
+    timeout-minutes: 12
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install offline audit package
+        run: python -m pip install -e .
+      - name: Read target push run and print bounded evidence
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          import json
+          import os
+          import subprocess
+          import sys
+          import time
+          from pathlib import Path
+          
+          repo = os.environ['GITHUB_REPOSITORY']
+          target_sha = '5fccb899d4601cceebfd35bef36f83b2b2d98f12'
+          wanted_name = 'C3R G1 Approved Output-Budget Requalification'
+          artifact_name = 'c3r-g1-512-token-one-shot-20261022'
+          branch = 'experiment%2Fc3r-g1-budget-smoke-20261022'
+          
+          def gh(*args, timeout=45):
+              return subprocess.run(['gh', *args], capture_output=True, text=True,
+                                    check=False, timeout=timeout)
+          
+          listing = gh('api', f'repos/{repo}/actions/runs?event=push&branch={branch}&per_page=100')
+          if listing.returncode != 0:
+              print('C3R_RECONCILIATION: authorized Actions-run lookup failed.')
+              raise SystemExit(0)
+          try:
+              records = json.loads(listing.stdout)['workflow_runs']
+              matches = [r for r in records if r.get('head_sha') == target_sha
+                         and r.get('name') == wanted_name and r.get('event') == 'push']
+          except (ValueError, TypeError, KeyError):
+              matches = []
+          if len(matches) != 1:
+              print(f'C3R_RECONCILIATION: matching_run_count={len(matches)}; no provider outcome inferred.')
+              raise SystemExit(0)
+          run_id = int(matches[0]['id'])
+          print(f'C3R_RECONCILIATION_RUN=https://github.com/{repo}/actions/runs/{run_id}')
+          info = {}
+          for _ in range(36):
+              response = gh('api', f'repos/{repo}/actions/runs/{run_id}')
+              if response.returncode != 0:
+                  print('C3R_RECONCILIATION: cannot read run status.')
+                  raise SystemExit(0)
+              try:
+                  info = json.loads(response.stdout)
+              except ValueError:
+                  print('C3R_RECONCILIATION: malformed run status.')
+                  raise SystemExit(0)
+              if info.get('status') == 'completed':
+                  break
+              time.sleep(10)
+          print('C3R_RECONCILIATION_STATUS=' + str(info.get('status')))
+          print('C3R_RECONCILIATION_CONCLUSION=' + str(info.get('conclusion')))
+          if info.get('status') != 'completed':
+              print('C3R_RECONCILIATION: still running, no outcome inferred.')
+              raise SystemExit(0)
+          
+          directory = Path('output/c3r_g1_recovery')
+          directory.mkdir(parents=True, exist_ok=True)
+          download = gh('run', 'download', str(run_id), '--repo', repo,
+                        '--name', artifact_name, '--dir', str(directory), timeout=90)
+          report_file = directory / 'technical-qualification.json'
+          if download.returncode != 0 or not report_file.is_file():
+              print('C3R_RECONCILIATION: artifact missing or download refused; no model result inferred.')
+              raise SystemExit(0)
+          try:
+              data = json.loads(report_file.read_text(encoding='utf-8'))
+              ledger = data['send_ledger']
+              report = data['report']
+              entries = ledger['entries']
+              print('C3R_REPORTED_PHYSICAL_SENDS=' + str(int(ledger['reserved'])))
+              print('C3R_REPORTED_HTTP_200=' + str(sum(x.get('http_status') == 200 for x in entries)))
+              for stage in ('development', 'qualification_learned', 'qualification_fresh'):
+                  row = report[stage]
+                  print('C3R_STAGE_' + stage + '='
+                        + str(int(row['attempts'])) + ' attempts, '
+                        + str(int(row['accepted'])) + ' accepted, '
+                        + str(int(row['successes'])) + ' successes, '
+                        + str(int(row.get('empty_output_count', 0))) + ' empty finals')
+              print('C3R_REPORTED_PAIRED_ANALYZABLE=' + str(int(report['paired_analyzable'])))
+          except (OSError, ValueError, TypeError, KeyError):
+              print('C3R_RECONCILIATION: artifact is not safely parseable.')
+              raise SystemExit(0)
+          audit = subprocess.run([sys.executable, 'scripts/audit_c3r_g1_smoke.py',
+                                  str(report_file), '--model', 'glm-5.3', '--route', 'coding'],
+                                 capture_output=True, text=True, timeout=45, check=False)
+          try:
+              verdict = json.loads(audit.stdout)
+              print('C3R_STRUCTURAL_AUDIT=' + str(verdict.get('status')))
+              print('C3R_STRUCTURAL_ISSUES=' + ','.join(verdict.get('issues', [])))
+          except (ValueError, TypeError):
+              print('C3R_STRUCTURAL_AUDIT=unavailable')
+          print('C3R_SCIENTIFIC_ACCEPTANCE=false')
+          
