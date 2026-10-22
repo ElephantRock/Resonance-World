@@ -122,6 +122,31 @@ A synthetic pass does **not** authorize a live campaign and does not
 establish any cognitive G1 acquisition. The `scientific_acceptance`
 field is permanently false in v2.
 
+## Independent offline accounting verifier
+
+`src/resonance_world/c3r_g1_multischema_audit.py` recomputes
+the trial evidence from the locked **public** cohort without trusting
+summary numbers. It checks exact membership and arm coverage of **every**
+prescribed development and qualification attempt, duplicate/missing
+records, action/status consistency, source history count, per-arm and
+per-family ITT success, unit-level contrast means, complete-triplet
+yield and the suggested technical gates.
+
+`audit_multischema(report, cohort)` checks structure without seeing
+any answer key. An optional `LocalFixtureEvaluator` also checks every
+accepted Boolean grade against the local fixture's hidden target. Neither
+variant authenticates GitHub, remote model calls, the independent
+evaluator or provider billing. Both can return only
+`structurally_consistent_unattested`, never scientific acceptance.
+Any raw response, credential, private target, changed score, missing
+trial or attempt to promote a result is rejected.
+
+The source output keeps a **self-generated** SHA256 digest of the
+record list, not a signed attestation; a motivated actor can recompute
+it on forged data. The optional local fixture-grade check exposes
+accidental grade tampering, but does not replace prospective third-party
+evaluator ownership or signed provenance.
+
 ## Regression safeguards
 
 Tests verify (1) genuinely different executable semantics, (2) correct
