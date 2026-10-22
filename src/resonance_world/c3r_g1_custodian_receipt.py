@@ -158,6 +158,8 @@ class LocalCustodianFixture:
         witness_public_hex: str, evaluator_public_hex: str,
         run_id: str, admission_utc: str, claimed_received_at_utc: str,
     ) -> Path:
+        if len({self.public_hex, witness_public_hex, evaluator_public_hex}) != 3:
+            raise ValueError("custodian, witness and evaluator must use distinct keys")
         # Do not create even an archive directory for invalid source evidence.
         if verify_handoff(
             bundle, cohort, witness_public_hex=witness_public_hex,
@@ -220,6 +222,8 @@ def verify_custodian_receipt(
     run_id: str, admission_utc: str,
 ) -> CustodyCheck:
     try:
+        if len({custodian_public_hex, witness_public_hex, evaluator_public_hex}) != 3:
+            raise ValueError("custodian role must use a distinct pinned key")
         if entry.is_symlink() or not entry.is_dir() or {
             path.name for path in entry.iterdir()
         } != {ARCHIVE_DIR, RECEIPT_NAME}:
