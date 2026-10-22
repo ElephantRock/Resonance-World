@@ -100,18 +100,18 @@ sudo -u "$EVAL_USER" env PYTHONPATH="$PYTHONPATH" \
 SERVER_PID=$!
 
 for _ in $(seq 1 200); do
-  if [[ -S "$SOCKET" ]]; then break; fi
+  if sudo -u "$AGENT_USER" test -S "$SOCKET"; then break; fi
   if ! kill -0 "$SERVER_PID" 2>/dev/null; then
     echo "Evaluator exited before creating its socket" >&2
     exit 2
   fi
   sleep 0.05
 done
-if [[ ! -S "$SOCKET" ]]; then
+if ! sudo -u "$AGENT_USER" test -S "$SOCKET"; then
   echo "Evaluator socket not created" >&2
   exit 2
 fi
-if [[ "$(stat -c '%u' "$SOCKET")" != "$EVAL_UID" ]]; then
+if [[ "$(sudo -u "$AGENT_USER" stat -c '%u' "$SOCKET")" != "$EVAL_UID" ]]; then
   echo "Socket owner does not match evaluator" >&2
   exit 2
 fi
