@@ -61,3 +61,24 @@ The repository already has a secret named `ZAI_API_KEY`. **Do not create or rena
 ## Authorized one-shot CI execution
 
 The user explicitly authorized the limited live attempt. Because the connected GitHub tool does not expose manual workflow dispatch, an isolated one-shot push-only workflow may be placed on a dedicated branch with an exact branch filter and unique head-commit-message predicate. Its only execution path performs offline checks first, then the same **8-send** smoke using existing `ZAI_API_KEY` and the pinned coding route. It must be removed from that branch once the outcome is read; it must never be added to `main` or used as a default CI workflow. The ordinary dispatch-only workflow in this PR remains unchanged in trigger type. No result will be claimed until actual run logs/artifacts are inspected.
+
+## Evidence reconciliation before any retry
+
+The one-shot launch attempt on 2026-10-21 remains **unresolved**: the
+GitHub connector can see PR-triggered workflows but not the earlier
+push-triggered Actions event, so there is no verified provider-send count or
+model report. **Do not initiate another smoke to resolve this ambiguity.**
+
+See `SMOKE_RECONCILIATION.md` for the exact launch/retirement commits,
+Actions lookup link, recovery procedure and epistemic acceptance rules.
+If a bounded technical artifact becomes available, validate it offline:
+
+```bash
+python scripts/audit_c3r_g1_smoke.py technical-qualification.json \
+  --model glm-5.3 --route coding
+```
+
+This is a no-secret, no-network check for report structure and internally
+consistent attempts/send accounting. Passing means
+`structurally_consistent_unattested`, **not** validated provider execution,
+scientific G1 learning or organizational G2 effect.
