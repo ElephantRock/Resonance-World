@@ -103,3 +103,16 @@ def test_different_feedback_never_changes_neutral_or_fresh() -> None:
             assert a.payload == b.payload
         else:
             assert a.payload != b.payload
+
+
+def test_modified_plan_cannot_smuggle_target_data() -> None:
+    plan, sources, sessions = fixture()
+    cells = list(plan.cells)
+    cell = cells[4]  # a text-family cell; the schedule keeps its original IDs
+    source = list(cell.development)
+    source[0] = replace(source[0], operands="ab-target-B-secret-ab")
+    cells[4] = replace(cell, development=tuple(source))
+    contaminated = replace(plan, cells=tuple(cells))
+    contaminated.audit()  # Structurally valid does not mean pre-frozen.
+    with pytest.raises(ValueError, match="unfrozen crossed plan digest"):
+        build_preflight(contaminated, sources=sources, sessions=sessions)
