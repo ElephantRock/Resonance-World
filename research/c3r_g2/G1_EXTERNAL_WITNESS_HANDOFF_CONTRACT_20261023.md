@@ -1,4 +1,8 @@
-# C3R G1 — External Archive / Witness Handoff Contract (2026-10-23)
+# C3R G1 — Retired External Handoff Reference (2026-10-23)
+
+> **SUPERSEDED — NOT A REQUIREMENT.** The project has chosen INTERNAL-ONLY verification and no independent/external auditor or archive. This file documents a former experimental interface for historical reproducibility, **not** a roadmap, prerequisite, approval gate or next step. The operative decision is [G1_INTERNAL_FIRST_FAST_PATH_DECISION_20261023.md](G1_INTERNAL_FIRST_FAST_PATH_DECISION_20261023.md). Do not deploy or extend the external path unless the project direction is explicitly changed.
+
+
 
 **Status:** offline verification interface, experimental only; **not an independent archive service, independent witness attestation, trusted time, G1 causal proof or permission for 40 model sends**. Branch: research/c3r-g2-causal-foundation, PR #310 (Draft).
 
@@ -8,11 +12,11 @@ The fourth crossed pilot prescribes **16 development/source** and **24 qualifica
 
 The additional module **src/resonance_world/c3r_g1_crossed_external_handoff.py** provides a **read-only** source/terminal evidence verifier. It accepts a package from disk and public keys supplied separately by the investigator. It neither holds any signing key nor makes model, archive, timestamping, or network calls. A fifth cryptographic role, the proposed **archive/publisher signing authority**, is represented by a public verification key; **no external archive was connected**.
 
-## Independent prerequisites (not provided)
+## Retired proposal requirements (not applicable to internal operation)
 
-Before an actual study, an independently operated archive authority must establish and publish an enrollment for its signing key out of band. Investigator custody of the expected run ID and four distinct public verification keys (evaluator, custodian, witness, archive) must be verifiable separately from the received evidence. A privileged experiment operator cannot be allowed to replace that source of truth.
+The former external-archive proposal would have required an independently operated archive authority to establish and publish an enrollment for its signing key out of band. Investigator custody of the expected run ID and four distinct public verification keys (evaluator, custodian, witness, archive) must be verifiable separately from the received evidence. A privileged experiment operator cannot be allowed to replace that source of truth.
 
-An actual archive must retain the source bundle and resulting **archive receipt digest before the first qualification action**, under externally governed immutable retention, with independently checkable trusted time and availability. A claimed timestamp in locally signed JSON does **not** satisfy this. An independent arbiter would need to attest receipt/custody and reconcile evidence; source and archive signer keys alone cannot prove timing or remote storage.
+The retired proposal also envisioned that an archive would retain the source bundle and resulting **archive receipt digest before the first qualification action**, under externally governed immutable retention, with independently checkable trusted time and availability. A claimed timestamp in locally signed JSON does **not** satisfy this. That retired proposal would have needed a separate arbiter to attest receipt/custody and reconcile evidence; source and archive signer keys alone cannot prove timing or remote storage.
 
 ## Source handoff — strict canonical form
 
@@ -34,7 +38,7 @@ A terminal package adds exactly one field, terminal_receipts (40 logical signed 
 
 The terminal bundle contains holdout grade claims. **It must never be provided to the agent or qualification arms until the qualification stage is closed.** The source package may include graded development feedback and must be shared only with explicitly authorized learning paths.
 
-## Read-only offline CLI
+## Historical, optional read-only offline CLI (not part of internal path)
 
 Source example (placeholders, not live service endpoints):
 
@@ -54,4 +58,4 @@ For terminal use --mode terminal with the 40-attempt bundle and **--previous-arc
 
 Initial GitHub CI run **39897989475** passed **833 tests, 4 skipped**, Ruff, and the four-UID construction gate; Architecture Audit run **39897989415** also passed. Verify CI again at the latest doc-update head.
 
-**Scientific and deployment gates remain CLOSED:** external key ownership, provenance and trusted chronology, immutable remote storage, authentic provider responses/session IDs and billing, tokenizer/compute parity, independent private-grade audit, prospective design power, replication and scientific acceptance. No paid provider calls, pattern-register promotion or main-branch merge are implied.
+**Current internal scientific gates remain CLOSED:** authentic provider responses/session IDs and billing, tokenizer/compute parity, private-grade correctness checks, prospective design power, and scientific acceptance. External key ownership, third-party timestamping, independent external audits and remote archive retention are NOT required by the current internal architecture. No paid provider calls, pattern-register promotion or main-branch merge are implied.
