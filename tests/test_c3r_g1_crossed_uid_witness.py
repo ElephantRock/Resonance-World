@@ -8,12 +8,12 @@ from datetime import UTC, datetime
 
 import pytest
 
+from resonance_world.c3r_g1_crossed_enrollment import EnrollmentPin
 from resonance_world.c3r_g1_crossed_local_evaluator import CrossedLocalEvaluator
 from resonance_world.c3r_g1_crossed_plan import make_plan
 from resonance_world.c3r_g1_crossed_source_deposit import deposit_source_receipts
 from resonance_world.c3r_g1_crossed_uid_witness import issue_checkpoint
 from resonance_world.c3r_g1_crossed_witness_checkpoint import verify_witness_checkpoint
-from resonance_world.c3r_g1_crossed_enrollment import EnrollmentPin
 from resonance_world.c3r_g1_evaluator_receipts import ReceiptSigner
 
 RUN = "g1x-fouruid-fixture-direct"
