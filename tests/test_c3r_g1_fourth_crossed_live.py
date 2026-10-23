@@ -112,9 +112,11 @@ def test_provider_errors_stay_in_denominator_with_no_automatic_retries(
         max_workers=3,
     )
     assert report["physical_sends_reserved"] == 16
-    assert report["source_gate_closed"] is False
+    assert report["source_gate_closed"] is True
+    assert report["source_contexts_eligible"] == 0
+    assert report["source_contexts_incomplete"] == 8
     assert report["status_counts"] == {
-        "provider_error": 16, "not_sent_after_source_failure": 24,
+        "provider_error": 16, "not_sent": 24,
     }
     assert sum(row["correct"] is None for row in report["records"]) == 40
     assert sum(row["choice_sha256"] is None for row in report["records"]) == 40
@@ -170,3 +172,41 @@ def test_duplicate_attempt_slot_fails_before_provider_dispatch(tmp_path: Path):
         ledger.reserve(index=0, prompt="other", model=x.MODEL, route="coding")
     assert ledger.count == 1
     assert not list(ledger.root.glob("send-01.json"))
+
+
+
+def test_one_source_failed_context_does_not_block_seven_healthy_triplets(
+    tmp_path: Path,
+) -> None:
+    x = _load()
+
+    class FailsOnlyOneSource:
+        def complete_prompt(self, prompt: str) -> ModelChoiceCompletion:
+            if "dev-g1x-tex-00-0" in prompt:
+                raise TimeoutError("private provider failure should never leak")
+            return FakePort().complete_prompt(prompt)
+
+    result = x.run_crossed_live(
+        run_id="g1-crossed-partial-01",
+        workspace=_workspace(tmp_path),
+        target_seed=os.urandom(32),
+        port_factory=FailsOnlyOneSource,
+        max_workers=3,
+    )
+    assert result["source_contexts_eligible"] == 7
+    assert result["source_contexts_incomplete"] == 1
+    assert result["physical_sends_reserved"] == 37
+    assert result["status_counts"] == {
+        "accepted": 36, "provider_error": 1, "not_sent": 3,
+    }
+    affected = [
+        row for row in result["records"]
+        if row["unit_id"] == "g1x-tex-00"
+        and row["stage"] == "qualification"
+    ]
+    assert len(affected) == 3
+    assert all(row["not_sent_reason"] == "incomplete_source_for_context"
+               for row in affected)
+    assert all(row["correct"] is None for row in affected)
+    assert result["qualification_by_arm"]["learned"]["prescribed"] == 8
+    assert result["scientific_acceptance"] is False
