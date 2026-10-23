@@ -53,6 +53,7 @@ def _expected(
         make_plan(), receipts=source_receipts, mode="development",
         expected_run_id=run_id,
         pinned_evaluator_public_key_hex=evaluator_public_key_hex,
+        allow_incomplete_development=True,
     )
     return {
         "schema": _SCHEMA,
