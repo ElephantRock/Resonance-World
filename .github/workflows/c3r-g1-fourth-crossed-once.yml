@@ -44,15 +44,15 @@ jobs:
           umask 077
           mkdir -m 700 -p "$RUNNER_TEMP/c3r-g1-fourth-live" output/c3r_g2
           python scripts/run_c3r_g1_fourth_crossed_live.py \
-            --live --run-id g1-crossed-real-20261023-01 \
+            --live --run-id g1-crossed-real-20261023-02 \
             --workspace "$RUNNER_TEMP/c3r-g1-fourth-live" \
-            --workers 4 --max-tokens 16384 \
-            > output/c3r_g2/g1-fourth-crossed-real.json
+            --workers 3 --max-tokens 16384 \
+            > output/c3r_g2/g1-fourth-crossed-real-b.json
       - name: Retain sanitized results only
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: g1-fourth-real-crossed-20261023
-          path: output/c3r_g2/g1-fourth-crossed-real.json
+          name: g1-fourth-real-crossed-20261023-b
+          path: output/c3r_g2/g1-fourth-crossed-real-b.json
           retention-days: 14
           if-no-files-found: ignore
