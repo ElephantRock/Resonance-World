@@ -1,0 +1,92 @@
+name: G1 Terminal-Only Procedure Two-Retention REAL Cohorts
+
+# One unique marker triggers exactly three new sessions x three independent cohorts.
+# No retry on ambiguous provider sends; the runner must be removed after use.
+on:
+  push:
+    branches:
+      - research/c3r-g2-causal-foundation
+    paths:
+      - research/c3r_g2/G1_TERMINAL_RETENTION_REAL_DISPATCH_20261023.md
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c3r-g1-terminal-retention-real-20261023-single-use
+  cancel-in-progress: false
+
+jobs:
+  terminal-learning:
+    if: github.repository == 'ElephantRock/Resonance-World'
+    runs-on: ubuntu-latest
+    timeout-minutes: 110
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        cohort: ['01', '02', '03']
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      PYTHONDONTWRITEBYTECODE: '1'
+      COHORT: ${{ matrix.cohort }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install internal GLM transport
+        run: |
+          python -m pip install -e .
+          python -m pip install 'cryptography>=42'
+      - name: Validate credential and all three offline no-send phases
+        shell: bash
+        run: |
+          test -n "$C3R_ZAI_API_KEY" || { echo "No ZAI_API_KEY; no sends"; exit 2; }
+          for phase in source retention1 retention2; do
+            python scripts/run_c3r_g1_terminal_retention_live.py \
+              --phase "$phase" --run-id "g1-terminal-retention-20261023-$COHORT" \
+              >/dev/null
+          done
+      - name: Phase 1 - real full-program terminal-grade exploration
+        shell: bash
+        run: |
+          umask 077
+          mkdir -m 700 -p "$RUNNER_TEMP/g1-terminal-$COHORT" output/c3r_g2
+          python scripts/run_c3r_g1_terminal_retention_live.py \
+            --live --phase source \
+            --run-id "g1-terminal-retention-20261023-$COHORT" \
+            --workspace "$RUNNER_TEMP/g1-terminal-$COHORT" \
+            --workers 3 --timeout-seconds 120 --max-tokens 4096 \
+            > "output/c3r_g2/g1-terminal-$COHORT-source.json"
+      - name: Phase 2 - independent interpreter, new first retention input
+        shell: bash
+        run: |
+          umask 077
+          python scripts/run_c3r_g1_terminal_retention_live.py \
+            --live --phase retention1 \
+            --run-id "g1-terminal-retention-20261023-$COHORT" \
+            --workspace "$RUNNER_TEMP/g1-terminal-$COHORT" \
+            --workers 3 --timeout-seconds 120 --max-tokens 4096 \
+            > "output/c3r_g2/g1-terminal-$COHORT-retention1.json"
+      - name: Phase 3 - third independent interpreter, new second retention input
+        shell: bash
+        run: |
+          umask 077
+          python scripts/run_c3r_g1_terminal_retention_live.py \
+            --live --phase retention2 \
+            --run-id "g1-terminal-retention-20261023-$COHORT" \
+            --workspace "$RUNNER_TEMP/g1-terminal-$COHORT" \
+            --workers 3 --timeout-seconds 120 --max-tokens 4096 \
+            > "output/c3r_g2/g1-terminal-$COHORT-retention2.json"
+      - name: Retain ONLY redacted phase evidence without hidden targets
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g1-terminal-retention-${{ matrix.cohort }}-20261023
+          path: |
+            output/c3r_g2/g1-terminal-${{ matrix.cohort }}-source.json
+            output/c3r_g2/g1-terminal-${{ matrix.cohort }}-retention1.json
+            output/c3r_g2/g1-terminal-${{ matrix.cohort }}-retention2.json
+          retention-days: 14
+          if-no-files-found: ignore
