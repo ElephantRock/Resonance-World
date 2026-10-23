@@ -109,7 +109,9 @@ class CrossedLocalEvaluator:
             raise ValueError("crossed evaluator already finished prescribed attempts")
         index = len(self._records)
         if index == 16 and not self._custody_accepted:
-            raise ValueError("holdout prohibited before signed source custody acknowledgement")
+            raise ValueError("holdout prohibited before source lock or custody")
+        if index == 16 and self._internal_checkpoint_dir is not None:
+            self._check_internal_source_lock()
         if (status not in ("accepted", "invalid_format", "provider_error", "not_sent")
                 or (status == "accepted" and choice not in ("A", "B"))
                 or (status != "accepted" and choice is not None)):
@@ -153,6 +155,17 @@ class CrossedLocalEvaluator:
             "qualification_received": len(self._records) - 16,
         }
 
+    def _check_internal_source_lock(self) -> None:
+        if (self._internal_checkpoint_dir is None
+                or self._internal_source_lock_sha256 is None):
+            raise ValueError("no internal source lock is recorded")
+        verify_internal_source_lock(
+            directory=self._internal_checkpoint_dir, run_id=self._run_id,
+            evaluator_public_key_hex=self.evaluator_public_key_hex,
+            source_receipts=tuple(self._records[:16]),
+            expected_lock_sha256=self._internal_source_lock_sha256,
+        )
+
     def seal_source(self) -> dict[str, object]:
         if self._finished or len(self._records) != 16 or self._source_head is not None:
             raise ValueError("source must be sealed once after exactly sixteen attempts")
@@ -161,12 +174,25 @@ class CrossedLocalEvaluator:
             expected_run_id=self._run_id,
             pinned_evaluator_public_key_hex=self.evaluator_public_key_hex,
         )
+        if self._internal_checkpoint_dir is not None:
+            _record, sha = write_internal_source_lock(
+                directory=self._internal_checkpoint_dir, run_id=self._run_id,
+                evaluator_public_key_hex=self.evaluator_public_key_hex,
+                source_receipts=tuple(self._records),
+            )
+            self._internal_source_lock_sha256 = sha
+            self._custody_accepted = True
         self._source_head = checked.source_chain_head_sha256
         return {
             "schema": "c3r-g1-crossed-local-response-v0.1",
-            "phase": "await_source_custody",
+            "phase": (
+                "internal_source_frozen_qualification_allowed"
+                if self._internal_checkpoint_dir is not None
+                else "await_source_custody"
+            ),
             "source_chain_head_sha256": self._source_head,
             "source_receipt_count": 16,
+            "internal_source_lock_sha256": self._internal_source_lock_sha256,
             "custodian_independence_attested": False,
             "scientific_acceptance": False,
         }
@@ -176,6 +202,8 @@ class CrossedLocalEvaluator:
         witness_checkpoint: dict[str, object] | None = None,
         claimed_clock_check_utc: datetime | None = None,
     ) -> dict[str, object]:
+        if self._internal_checkpoint_dir is not None:
+            raise ValueError("internal mode has no custodian approval step")
         if (self._source_head is None or self._custody_accepted
                 or len(self._records) != 16 or self._finished):
             raise ValueError("custody must be acknowledged exactly once before holdout")
@@ -213,13 +241,15 @@ class CrossedLocalEvaluator:
     def finalize(self) -> dict[str, object]:
         if not self._custody_accepted or self._finished or len(self._records) != 40:
             raise ValueError("qualification cannot finalize before full 40-slot closure")
-        self._finished = True
+        if self._internal_checkpoint_dir is not None:
+            self._check_internal_source_lock()
         checked = verify_crossed_receipt_chain(
             self._plan, receipts=tuple(self._records), mode="terminal",
             expected_run_id=self._run_id,
             pinned_evaluator_public_key_hex=self.evaluator_public_key_hex,
             expected_source_chain_head_sha256=self._source_head,
         )
+        self._finished = True
         return {
             "schema": "c3r-g1-crossed-local-final-v0.1",
             "phase": "completed_local_fixture_only",
@@ -227,6 +257,12 @@ class CrossedLocalEvaluator:
             "source_chain_head_sha256": self._source_head,
             "audit": checked.audit,
             "actual_provider_sends": 0,
+            "source_gate_mode": (
+                "internal_durable_checkpoint" if self._internal_checkpoint_dir is not None
+                else "signed_custodian_witness"
+            ),
+            "internal_source_lock_sha256": self._internal_source_lock_sha256,
+            "requires_external_approval": False,
             "prospective_witness_checkpoint_checked": self._witness_checkpoint is not None,
             "witness_checkpoint_sha256": (
                 self._witness_checkpoint.witness_checkpoint_sha256
