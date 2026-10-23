@@ -92,11 +92,13 @@ def test_rejects_duplicate_effort_or_wrong_plan(tmp_path: Path):
 def test_rejects_missing_attempt_or_grade_mutation(tmp_path: Path):
     analyzer = _load("analyze_c3r_g1_glm53_efforts.py")
     paths = list(_three(tmp_path))
-    data = json.loads(paths[0].read_text())
+    original = paths[0].read_text()
+    data = json.loads(original)
     data["records"] = data["records"][:-1]
     paths[0].write_text(json.dumps(data))
     with pytest.raises(ValueError, match="40 retained"):
         analyzer.analyze(tuple(paths))
+    paths[0].write_text(original)
     data = json.loads(paths[1].read_text())
     arm = next(row for row in data["records"] if row["stage"] == "qualification"
                and row["arm"] == "learned")
