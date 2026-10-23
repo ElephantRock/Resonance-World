@@ -326,3 +326,24 @@ def test_runner_rejects_disabled_glm53_before_reserving_any_call(
             model_id="glm-5.3", thinking_mode="disabled",
         )
     assert list(root.iterdir()) == []
+
+
+
+def test_uniform_predeclared_fallback_in_all_arms_when_history_ungraded():
+    x = _load()
+    cell = next(c for c in make_plan().cells if c.family == "text")
+    task = cell.qualification[0]
+    history = tuple({
+        "task_id": t.task_id, "choice": "B", "correct": True,
+    } for t in cell.development)
+    clause = "A is the pre-registered default guess"
+    for arm in ("development", "fresh", "neutral", "learned"):
+        msg = x.prompt_for(
+            task, source_history=() if arm == "fresh" else history, arm=arm,
+        )
+        assert clause in msg
+        assert msg.endswith("Reply exactly A or B.")
+        assert "hidden selection" in msg
+    assert "success=" not in x.prompt_for(
+        task, source_history=(), arm="fresh",
+    )
