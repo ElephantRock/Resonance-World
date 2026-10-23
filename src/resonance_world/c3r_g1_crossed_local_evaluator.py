@@ -281,12 +281,21 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="G1 crossed zero-provider evaluator subprocess")
     parser.add_argument("--target-seed-file", required=True, type=Path)
     parser.add_argument("--signing-seed-file", required=True, type=Path)
-    parser.add_argument("--custodian-public-key-file", required=True, type=Path)
+    parser.add_argument("--custodian-public-key-file", type=Path)
+    parser.add_argument("--internal-checkpoint-dir", type=Path)
     parser.add_argument("--run-id", required=True)
     parser.add_argument("--enrollment-file", type=Path)
     parser.add_argument("--witness-public-key-file", type=Path)
     args = parser.parse_args(argv)
     try:
+        if (args.internal_checkpoint_dir is None) == (
+            args.custodian_public_key_file is None
+        ):
+            raise ValueError("select exactly one internal checkpoint or custodian mode")
+        if (args.internal_checkpoint_dir is not None
+                and (args.enrollment_file is not None
+                     or args.witness_public_key_file is not None)):
+            raise ValueError("internal mode cannot block on witness enrollment")
         if (args.enrollment_file is None) != (args.witness_public_key_file is None):
             raise ValueError("witness enrollment and public key must be specified together")
         enrollment = None
@@ -305,9 +314,11 @@ def main(argv: list[str] | None = None) -> int:
             run_id=args.run_id,
             private_target_seed=read_private_seed(args.target_seed_file),
             signing_seed=read_private_seed(args.signing_seed_file),
-            pinned_custodian_public_key_hex=args.custodian_public_key_file.read_text(
-                encoding="ascii"
-            ).strip(),
+            pinned_custodian_public_key_hex=(
+                args.custodian_public_key_file.read_text(encoding="ascii").strip()
+                if args.custodian_public_key_file is not None else None
+            ),
+            internal_checkpoint_dir=args.internal_checkpoint_dir,
             signed_enrollment=enrollment,
             pinned_witness_public_key_hex=witness_key,
             claimed_clock_check_utc=local_clock,
