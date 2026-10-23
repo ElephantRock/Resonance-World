@@ -11,7 +11,7 @@ import argparse
 import hashlib
 import json
 import sys
-from datetime import datetime
+from datetime import UTC, datetime
 from pathlib import Path
 
 from resonance_world.c3r_g1_crossed_enrollment import EnrollmentPin
@@ -226,8 +226,24 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--signing-seed-file", required=True, type=Path)
     parser.add_argument("--custodian-public-key-file", required=True, type=Path)
     parser.add_argument("--run-id", required=True)
+    parser.add_argument("--enrollment-file", type=Path)
+    parser.add_argument("--witness-public-key-file", type=Path)
     args = parser.parse_args(argv)
     try:
+        if (args.enrollment_file is None) != (args.witness_public_key_file is None):
+            raise ValueError("witness enrollment and public key must be specified together")
+        enrollment = None
+        witness_key = None
+        local_clock = None
+        if args.enrollment_file is not None:
+            if (args.enrollment_file.is_symlink()
+                    or args.enrollment_file.stat().st_size > 4096):
+                raise ValueError("witness enrollment file is redirected or oversized")
+            enrollment = json.loads(args.enrollment_file.read_text(encoding="utf-8"))
+            witness_key = args.witness_public_key_file.read_text(
+                encoding="ascii"
+            ).strip()
+            local_clock = datetime.now(UTC)
         engine = CrossedLocalEvaluator(
             run_id=args.run_id,
             private_target_seed=read_private_seed(args.target_seed_file),
@@ -235,6 +251,9 @@ def main(argv: list[str] | None = None) -> int:
             pinned_custodian_public_key_hex=args.custodian_public_key_file.read_text(
                 encoding="ascii"
             ).strip(),
+            signed_enrollment=enrollment,
+            pinned_witness_public_key_hex=witness_key,
+            claimed_clock_check_utc=local_clock,
         )
         _emit(engine.ready())
         for _ in range(MAX_MESSAGES):
