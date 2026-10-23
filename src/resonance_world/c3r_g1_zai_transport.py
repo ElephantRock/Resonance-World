@@ -175,8 +175,9 @@ class ZaiStandardModelPort:
         if self.route not in ("standard", "coding"):
             raise ValueError("provider route must be standard or coding")
         if (self.thinking_mode not in ("default", "disabled")
-                or (self.thinking_mode == "disabled" and self.model_id != "glm-5.2")):
-            raise ValueError("disabled-thinking mode is restricted to GLM-5.2")
+                or (self.thinking_mode == "disabled"
+                     and self.model_id not in ("glm-5.2", "glm-4.7"))):
+            raise ValueError("disabled-thinking mode is restricted to GLM-5.2 or GLM-4.7")
         if not self.api_key.strip() or not self.model_id.strip():
             raise ValueError("API key and model must be explicitly supplied")
         if any(ch in self.model_id for ch in "\r\n"):
