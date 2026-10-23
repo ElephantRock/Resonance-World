@@ -406,7 +406,7 @@ def test_unknown_provider_finish_reason_is_normalized_not_leaked() -> None:
 
 
 
-def test_glm52_disabled_thinking_is_uniform_explicit_api_parameter() -> None:
+def test_glm52_legacy_model_always_requests_thinking_enabled() -> None:
     sent = []
 
     def capture(url, headers, body, timeout):
@@ -421,12 +421,12 @@ def test_glm52_disabled_thinking_is_uniform_explicit_api_parameter() -> None:
     port = ZaiStandardModelPort(
         api_key="credential-only-for-test", model_id="glm-5.2",
         ledger=PhysicalSendLedger(1), transport=capture,
-        thinking_mode="disabled", route="coding", enabled=True,
+        thinking_mode="default", route="coding", enabled=True,
         max_tokens=256,
     )
     answer = port.complete_prompt("Choose exactly A or B")
     assert answer.output == "A"
-    assert sent[0]["thinking"] == {"type": "disabled"}
+    assert sent[0]["thinking"] == {"type": "enabled"}
     assert "reasoning_effort" not in sent[0]
     assert sent[0]["model"] == "glm-5.2"
     assert sent[0]["max_tokens"] == 256
@@ -434,7 +434,7 @@ def test_glm52_disabled_thinking_is_uniform_explicit_api_parameter() -> None:
 
 def test_glm53_cannot_disable_thinking_even_when_provider_enabled() -> None:
     for model in ("glm-5.3", "glm-5.3-flash", "unverified-model"):
-        with pytest.raises(ValueError, match="disabled-thinking"):
+        with pytest.raises(ValueError, match="disable"):
             ZaiStandardModelPort(
                 api_key="test", model_id=model, ledger=PhysicalSendLedger(1),
                 enabled=True, thinking_mode="disabled",
@@ -442,7 +442,7 @@ def test_glm53_cannot_disable_thinking_even_when_provider_enabled() -> None:
 
 
 
-def test_glm47_offline_explicit_nonthinking_request_is_supported() -> None:
+def test_glm47_legacy_model_no_longer_attempts_disabling() -> None:
     observed = []
 
     def capture(_url, _headers, body, _timeout):
@@ -457,11 +457,46 @@ def test_glm47_offline_explicit_nonthinking_request_is_supported() -> None:
     result = ZaiStandardModelPort(
         api_key="fixture-secret", model_id="glm-4.7",
         ledger=PhysicalSendLedger(1), enabled=True,
-        route="coding", thinking_mode="disabled", max_tokens=512,
+        route="coding", thinking_mode="default", max_tokens=512,
         transport=capture,
     ).complete_prompt("Reply with A or B.")
     assert result.output == "B"
     assert observed[0]["model"] == "glm-4.7"
-    assert observed[0]["thinking"] == {"type": "disabled"}
+    assert observed[0]["thinking"] == {"type": "enabled"}
     assert observed[0]["max_tokens"] == 512
     assert "reasoning_effort" not in observed[0]
+
+
+
+@pytest.mark.parametrize("effort", ["low", "high", "max"])
+def test_glm53_reasoning_levels_explicit_and_thinking_enabled(effort: str) -> None:
+    sent = []
+
+    def capture(_url, _headers, body, _timeout):
+        sent.append(json.loads(body))
+        return TransportResponse(
+            200, json.dumps({
+                "choices": [{"finish_reason": "stop",
+                             "message": {"content": "A"}}],
+                "usage": {"prompt_tokens": 18, "completion_tokens": 2},
+            }).encode(),
+        )
+
+    port = ZaiStandardModelPort(
+        api_key="fixture", model_id="glm-5.3",
+        ledger=PhysicalSendLedger(1), enabled=True, route="coding",
+        reasoning_effort=effort, transport=capture,
+    )
+    assert port.complete_prompt("Reply A or B.").output == "A"
+    assert sent[0]["thinking"] == {"type": "enabled"}
+    assert sent[0]["reasoning_effort"] == effort
+
+
+def test_glm53_rejects_none_or_disabled_effort_without_sending() -> None:
+    for invalid in ("none", "disabled", "medium", ""):
+        with pytest.raises(ValueError, match="reasoning effort"):
+            ZaiStandardModelPort(
+                api_key="fixture", model_id="glm-5.3",
+                ledger=PhysicalSendLedger(1), enabled=True,
+                reasoning_effort=invalid,
+            )
