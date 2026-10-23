@@ -23,3 +23,18 @@ All eight text source responses had reported completion output at the 512-token 
 Previously the GLM-5.3 run showed all eight Fresh/Neutral text holdouts timing out after full training (run 39937406266). Attempting GLM-5.2 disabled-thinking with a tight 512 cap did not solve control completeness and prevented text qualification. The next experiment should first issue a tiny **technical calibration** for a model documented to support per-turn disabled thinking (e.g., GLM-4.7) on the same route. Calibrate response availability for two control-shaped text prompts, with low generation cap and no raw outputs leaked; only then run a new 40-slot empirical trial under uniform mode. Both calibration and model change must be disclosed. Do not resend requests with previous run IDs, merge different models' outcomes as one treatment effect or claim G1 scientific acceptance.
 
 No external auditor or gatekeeper is involved. The only gate is automatic readiness of the chosen provider/model mode before conducting more real requests.
+
+
+## Thinking-parameter correction (2026-10-23)
+
+**Historical results are preserved unchanged.** The request field
+thinking.type=disabled in this experiment does **not** constitute
+evidence that thinking was actually disabled; provider-returned
+reasoning tokens demonstrate that no zero-reasoning condition was
+verified. See G1_GLM_THINKING_MODE_CORRECTION_20261023.md.
+For **future GLM-5.3** trials the project now always sends
+thinking.type=enabled and explicitly selects reasoning_effort from
+**low / high / max** only. Older-model experiments may not be
+compared as identical compute conditions merely because they carried
+a disabled request field. This correction changes no signed
+observations, experiment denominators or scientific-acceptance status.
