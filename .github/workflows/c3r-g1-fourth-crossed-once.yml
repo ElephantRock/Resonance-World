@@ -29,7 +29,9 @@ jobs:
         with:
           python-version: "3.12"
       - name: Install C3R package
-        run: python -m pip install -e .
+        run: |
+          python -m pip install -e .
+          python -m pip install 'cryptography>=42'
       - name: Verify credential and frozen 40-slot plan without sending
         shell: bash
         run: |
