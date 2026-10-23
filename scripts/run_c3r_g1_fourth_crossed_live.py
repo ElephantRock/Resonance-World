@@ -204,15 +204,15 @@ def run_crossed_live(
     target_seed: bytes, max_workers: int = 4,
     enabled_families: tuple[str, ...] = ("arithmetic", "text"),
     model_id: str = MODEL, thinking_mode: str = "default",
+    reasoning_effort: str = "low",
 ) -> dict[str, object]:
     """Two parallel phases; all source evidence closes before holdout sends."""
     if type(max_workers) is not int or not 1 <= max_workers <= 8:
         raise ValueError("live parallelism requires 1..8 workers")
     if (model_id not in ("glm-5.3", "glm-5.2", "glm-4.7")
-            or thinking_mode not in ("default", "disabled")
-            or (thinking_mode == "disabled"
-                and model_id not in ("glm-5.2", "glm-4.7"))):
-        raise ValueError("model and thinking mode must be a supported fixed combination")
+            or thinking_mode != "default"
+            or reasoning_effort not in ("low", "high", "max")):
+        raise ValueError("model, thinking and reasoning effort must be supported")
     if (not isinstance(enabled_families, tuple) or not enabled_families
             or len(set(enabled_families)) != len(enabled_families)
             or not set(enabled_families) <= {"arithmetic", "text"}):
@@ -387,7 +387,10 @@ def run_crossed_live(
     return {
         "schema": "g1-crossed-fourth-live-observation-v0.1",
         "run_id": run_id, "model": model_id, "route": "coding",
-        "thinking_mode": thinking_mode,
+        "thinking_mode": "enabled_requested",
+        "reasoning_effort_requested": (
+            reasoning_effort if model_id == "glm-5.3" else None
+        ),
         "plan_digest": plan.public_digest,
         "source_lock_sha256": freeze["internal_source_lock_sha256"],
         "source_gate_closed": True,
@@ -419,8 +422,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--max-tokens", type=int, default=DEFAULT_TOKENS)
     parser.add_argument("--model", choices=("glm-5.3", "glm-5.2", "glm-4.7"),
                         default=MODEL)
-    parser.add_argument("--thinking-mode", choices=("default", "disabled"),
-                        default="default")
+    parser.add_argument("--thinking-mode", choices=("default",), default="default")
+    parser.add_argument("--reasoning-effort", choices=("low", "high", "max"),
+                        default="low")
     parser.add_argument("--family", action="append", choices=("arithmetic", "text"))
     args = parser.parse_args(argv)
     plan = make_plan()
@@ -446,6 +450,7 @@ def main(argv: list[str] | None = None) -> int:
             enabled=True, timeout_seconds=180,
             max_tokens=args.max_tokens,
             thinking_mode=args.thinking_mode,
+            reasoning_effort=args.reasoning_effort,
         )
     result = run_crossed_live(
         run_id=args.run_id, workspace=args.workspace,
@@ -453,6 +458,7 @@ def main(argv: list[str] | None = None) -> int:
         port_factory=port_factory, max_workers=args.workers,
         enabled_families=tuple(args.family) if args.family else ("arithmetic", "text"),
         model_id=args.model, thinking_mode=args.thinking_mode,
+        reasoning_effort=args.reasoning_effort,
     )
     print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     return 0 if (result["source_gate_closed"] is True
