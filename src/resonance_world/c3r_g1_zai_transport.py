@@ -167,17 +167,20 @@ class ZaiStandardModelPort:
     timeout_seconds: float = 180.0
     max_tokens: int = DEFAULT_GENERATION_TOKENS
     route: Literal["standard", "coding"] = "standard"
-    thinking_mode: Literal["default", "disabled"] = "default"
+    thinking_mode: Literal["default"] = "default"
+    reasoning_effort: Literal["low", "high", "max"] = "low"
     campaign_budget: HostCampaignBudget | None = None
     halted: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         if self.route not in ("standard", "coding"):
             raise ValueError("provider route must be standard or coding")
-        if (self.thinking_mode not in ("default", "disabled")
-                or (self.thinking_mode == "disabled"
-                     and self.model_id not in ("glm-5.2", "glm-4.7"))):
-            raise ValueError("disabled-thinking mode is restricted to GLM-5.2 or GLM-4.7")
+        # The research project does not attempt to disable GLM thinking.
+        # GLM-5.3 is always-on and has exactly low/high/max effort levels.
+        if self.thinking_mode != "default":
+            raise ValueError("GLM thinking disable requests are not supported")
+        if self.reasoning_effort not in ("low", "high", "max"):
+            raise ValueError("reasoning effort must be low, high or max")
         if not self.api_key.strip() or not self.model_id.strip():
             raise ValueError("API key and model must be explicitly supplied")
         if any(ch in self.model_id for ch in "\r\n"):
@@ -215,11 +218,10 @@ class ZaiStandardModelPort:
         }
         # GLM-5.3 always reasons. A 16-token cap previously exhausted the
         # output budget before generating any final answer (8/8 blanks).
-        if self.model_id in ("glm-5.3", "glm-5.3-flash"):
+        if self.model_id.startswith("glm-"):
             params["thinking"] = {"type": "enabled"}
-            params["reasoning_effort"] = "low"
-        elif self.thinking_mode == "disabled":
-            params["thinking"] = {"type": "disabled"}
+        if self.model_id in ("glm-5.3", "glm-5.3-flash"):
+            params["reasoning_effort"] = self.reasoning_effort
         body = json.dumps(
             params,
             sort_keys=True, separators=(",", ":"),
