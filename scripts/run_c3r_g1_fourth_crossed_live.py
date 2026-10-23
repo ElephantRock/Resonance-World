@@ -218,6 +218,47 @@ def run_crossed_live(
             for index, outcome in observations:
                 source_results[index] = outcome
 
+    # Do not unlock or physically send holdout when the 16-source boundary
+    # cannot be graded. Keep all 40 prescribed slots in the ITT record.
+    if any(item["status"] != "accepted" for item in source_results.values()):
+        failed_rows = []
+        for index, slot in enumerate(plan.schedule):
+            item = source_results[index] if index < 16 else {
+                "status": "not_sent_after_source_failure",
+                "choice_sha256": None, "finish_reason": None,
+                "completion_tokens": None, "reasoning_tokens": None,
+                "prompt_tokens": None,
+            }
+            failed_rows.append({
+                "index": index, "stage": slot.stage,
+                "unit_id": slot.unit_id,
+                "family": next(c.family for c in plan.cells if c.unit_id == slot.unit_id),
+                "arm": slot.arm, "status": item["status"],
+                "choice_sha256": item["choice_sha256"],
+                "correct": None,
+                "finish_reason": item["finish_reason"],
+                "completion_tokens_reported": item["completion_tokens"],
+                "reasoning_tokens_reported": item["reasoning_tokens"],
+                "prompt_tokens_reported": item["prompt_tokens"],
+            })
+        return {
+            "schema": "g1-crossed-fourth-live-observation-v0.1",
+            "run_id": run_id, "model": MODEL, "route": "coding",
+            "plan_digest": plan.public_digest,
+            "source_lock_sha256": None, "source_gate_closed": False,
+            "prescribed_attempts": SEND_MAXIMUM,
+            "source_attempts": 16, "holdout_attempts": 24,
+            "physical_sends_reserved": journal.count,
+            "physical_sends_vendor_billed_attested": False,
+            "records": failed_rows,
+            "status_counts": dict(Counter(row["status"] for row in failed_rows)),
+            "provider_prompt_token_parity_attested": False,
+            "independent_model_session_memory_attested": False,
+            "external_auditor_required": False,
+            "scientific_acceptance": False,
+            "interpretation": "source_incomplete_all_holdout_not_sent",
+        }
+
     evaluator_folder = journal.root / "source"
     evaluator_folder.mkdir(mode=0o700)
     evaluator = CrossedLocalEvaluator(
