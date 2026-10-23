@@ -304,6 +304,12 @@ def run_holdout(*, workspace: Path, run_id: str, port_factory,
                             if row["unit_id"] == u["unit_id"]])
         if stored[u["unit_id"]]["policy"] != expected:
             raise ValueError("experience policy disagrees with frozen source feedback")
+    # One-shot phase admission prevents replay even if no provider send was
+    # reached before an interrupted holdout. The start marker is exclusive.
+    _once(folder, "holdout-start.json", {
+        "run_id": run_id, "source_digest": _digest(source),
+        "capsule_digest": _digest(capsule), "state": "started_no_auto_retry",
+    })
     journal = FileJournal(folder, run_id)
     schedule = [(i, unit, arm) for i, unit in enumerate(manifest["units"])
                 for arm in ARMS]
