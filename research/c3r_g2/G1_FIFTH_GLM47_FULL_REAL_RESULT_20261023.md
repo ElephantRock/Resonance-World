@@ -42,3 +42,18 @@ Neutral qualification: 1,943 prompt, 65 completion (37 reasoning).
 This is strong **functional/operational evidence** that a model receiving reinserted graded examples can pick the context's hidden A/B choice when the two controls use a fixed A fallback. It is NOT evidence of persistent agent memory, parametric model learning, institutional regeneration, or an externally validated G1 causal effect. The +50pp difference is largely expected by design from balanced binary hidden targets plus deterministic A baselines if the learned arm uses its labeled feedback. The study is small (8 reused context/holdout triplets), changed both model and prompt from earlier runs, does not match token/compute exposure and is not a powered causal study.
 
 The next scientifically discriminating step is a **genuine persistent experience-store agent vs fresh and neutral agents** on NEW private task items and context sets, with internally registered balanced allocation, comparable token/compute and multiple seeds. The user requested no external auditor or approval chain; keep all assurance internal and nonblocking. Do not automatically promote G1 scientific_acceptance or the Pattern Register. PR #310 remains Draft.
+
+
+## Thinking-parameter correction (2026-10-23)
+
+**Historical results are preserved unchanged.** The request field
+thinking.type=disabled in this experiment does **not** constitute
+evidence that thinking was actually disabled; provider-returned
+reasoning tokens demonstrate that no zero-reasoning condition was
+verified. See G1_GLM_THINKING_MODE_CORRECTION_20261023.md.
+For **future GLM-5.3** trials the project now always sends
+thinking.type=enabled and explicitly selects reasoning_effort from
+**low / high / max** only. Older-model experiments may not be
+compared as identical compute conditions merely because they carried
+a disabled request field. This correction changes no signed
+observations, experiment denominators or scientific-acceptance status.
