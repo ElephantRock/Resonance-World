@@ -69,12 +69,13 @@ def test_internal_auto_unlock_without_witness_or_custodian(tmp_path: Path) -> No
 
 def test_source_lock_rejects_early_qualification_and_unfinished_source(tmp_path: Path) -> None:
     engine = _engine(_directory(tmp_path))
-    with pytest.raises(ValueError, match="before source lock"):
-        engine.submit(status="accepted", choice="A")
     for _ in range(15):
         engine.submit(status="accepted", choice="A")
     with pytest.raises(ValueError, match="exactly sixteen"):
         engine.seal_source()
+    engine.submit(status="accepted", choice="A")
+    with pytest.raises(ValueError, match="before source lock"):
+        engine.submit(status="accepted", choice="A")
 
 
 def test_duplicate_run_id_exclusive_file_fails_closed(tmp_path: Path) -> None:
