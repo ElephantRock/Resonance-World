@@ -14,6 +14,7 @@ import hashlib
 import json
 import os
 import threading
+import time
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
@@ -145,6 +146,7 @@ def _safe_send(
 ) -> dict[str, object]:
     """One reserved physical attempt, never retried even on ambiguous timeout."""
     journal.reserve(index=slot_index, prompt=prompt, model=model_id, route="coding")
+    request_started = time.monotonic()
     port = port_factory()
     try:
         reply = port.complete_prompt(prompt)
@@ -160,6 +162,7 @@ def _safe_send(
         )
         return {
             "status": "provider_error", "choice": None, "choice_sha256": None,
+            "latency_ms": round((time.monotonic() - request_started) * 1000, 2),
             "finish_reason": None, "completion_tokens": None,
             "reasoning_tokens": None, "prompt_tokens": None,
             "failure_class": safe_class
@@ -184,6 +187,7 @@ def _safe_send(
         choice = reply.output
     return {
         "status": status,
+        "latency_ms": round((time.monotonic() - request_started) * 1000, 2),
         "choice": choice,
         "choice_sha256": _CHOICE_SHA.get(reply.output)
         if isinstance(reply, ModelChoiceCompletion) else None,
@@ -356,6 +360,7 @@ def run_crossed_live(
             "finish_reason": evidence["finish_reason"],
             "provider_failure_class": evidence["failure_class"],
             "provider_http_status": evidence["http_status"],
+            "latency_ms": evidence.get("latency_ms"),
             "completion_tokens_reported": evidence["completion_tokens"],
             "reasoning_tokens_reported": evidence["reasoning_tokens"],
             "prompt_tokens_reported": evidence["prompt_tokens"],
@@ -404,6 +409,7 @@ def run_crossed_live(
         "records": rows,
         "by_family": comparisons, "qualification_by_arm": pairwise,
         "status_counts": dict(Counter(row["status"] for row in rows)),
+        "wall_time_measurement": "local_monotonic_per_attempt_includes_transport",
         "provider_prompt_token_parity_attested": False,
         "independent_model_session_memory_attested": False,
         "external_auditor_required": False,
