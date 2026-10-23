@@ -229,3 +229,47 @@ def test_public_only_cli_execution_then_readonly_inspection(tmp_path: Path) -> N
     assert json.loads(inspect.stdout)["mode"] == "inspection_only"
     assert "target_seed" not in inspect.stdout
     assert "scientific_acceptance" in inspect.stdout
+
+
+
+def test_pause_admission_and_resume_unclaimed_only(tmp_path: Path) -> None:
+    path = _workspace(tmp_path)
+    ids = ("phase-1", "phase-2", "phase-3", "phase-4")
+    part = batch.run_batch(
+        workspace=path, run_ids=ids, max_workers=2, max_in_flight=2,
+        max_new_runs=2,
+    )
+    assert part["new_run_claims"] == 2
+    assert part["admission_limited"] is True
+    assert part["counts"]["not_claimed"] == 2
+    assert part["counts"]["completed_and_verified_internally"] == 2
+    first_file = batch._paths(path, ids[0])[2]
+    retained_terminal = first_file.read_bytes()
+    follow_up = batch.run_batch(
+        workspace=path, run_ids=ids, max_workers=2, max_in_flight=3,
+        max_new_runs=2,
+    )
+    assert follow_up["new_run_claims"] == 2
+    assert follow_up["counts"] == {"completed_and_verified_internally": 4}
+    assert first_file.read_bytes() == retained_terminal
+    all_complete = batch.run_batch(
+        workspace=path, run_ids=ids, max_workers=1, max_in_flight=1,
+    )
+    assert all_complete["new_run_claims"] == 0
+    assert all_complete["automatic_retries"] == 0
+
+
+def test_admission_limit_zero_leaves_entire_batch_unstarted(tmp_path: Path) -> None:
+    path = _workspace(tmp_path)
+    dry = batch.run_batch(
+        workspace=path, run_ids=("not-started",),
+        max_workers=1, max_in_flight=1, max_new_runs=0,
+    )
+    assert dry["new_run_claims"] == 0
+    assert dry["counts"] == {"not_claimed": 1}
+    assert list(path.iterdir()) == []
+    with pytest.raises(ValueError):
+        batch.run_batch(
+            workspace=path, run_ids=("not-started",),
+            max_workers=1, max_in_flight=1, max_new_runs=True,
+        )
