@@ -136,10 +136,10 @@ class DurableAttemptJournal:
 def _safe_send(
     slot_index: int, prompt: str, *,
     journal: DurableAttemptJournal,
-    port_factory,
+    port_factory, model_id: str = MODEL,
 ) -> dict[str, object]:
     """One reserved physical attempt, never retried even on ambiguous timeout."""
-    journal.reserve(index=slot_index, prompt=prompt, model=MODEL, route="coding")
+    journal.reserve(index=slot_index, prompt=prompt, model=model_id, route="coding")
     port = port_factory()
     try:
         reply = port.complete_prompt(prompt)
@@ -168,7 +168,7 @@ def _safe_send(
                 and type(latest.http_status) is int else None
             ),
         }
-    if not isinstance(reply, ModelChoiceCompletion) or reply.model_id != MODEL:
+    if not isinstance(reply, ModelChoiceCompletion) or reply.model_id != model_id:
         status = "invalid_format"
         choice = None
     elif reply.finish_reason != "stop" or reply.output not in ("A", "B"):
@@ -198,10 +198,15 @@ def run_crossed_live(
     *, run_id: str, workspace: Path, port_factory,
     target_seed: bytes, max_workers: int = 4,
     enabled_families: tuple[str, ...] = ("arithmetic", "text"),
+    model_id: str = MODEL, thinking_mode: str = "default",
 ) -> dict[str, object]:
     """Two parallel phases; all source evidence closes before holdout sends."""
     if type(max_workers) is not int or not 1 <= max_workers <= 8:
         raise ValueError("live parallelism requires 1..8 workers")
+    if (model_id not in ("glm-5.3", "glm-5.2")
+            or thinking_mode not in ("default", "disabled")
+            or (thinking_mode == "disabled" and model_id != "glm-5.2")):
+        raise ValueError("model and thinking mode must be a supported fixed combination")
     if (not isinstance(enabled_families, tuple) or not enabled_families
             or len(set(enabled_families)) != len(enabled_families)
             or not set(enabled_families) <= {"arithmetic", "text"}):
@@ -231,6 +236,7 @@ def run_crossed_live(
                 )
                 outcome = _safe_send(
                     index, message, journal=journal, port_factory=port_factory,
+                    model_id=model_id,
                 )
             correct = (
                 outcome["choice"] == target[cell.context_id]
@@ -295,6 +301,7 @@ def run_crossed_live(
         prompt = prompt_for(task, source_history=history, arm=slot.arm)
         return index, _safe_send(
             index, prompt, journal=journal, port_factory=port_factory,
+            model_id=model_id,
         ), hashlib.sha256(prompt.encode()).hexdigest()
 
     qualification: dict[int, dict[str, object]] = {}
@@ -373,7 +380,8 @@ def run_crossed_live(
         }
     return {
         "schema": "g1-crossed-fourth-live-observation-v0.1",
-        "run_id": run_id, "model": MODEL, "route": "coding",
+        "run_id": run_id, "model": model_id, "route": "coding",
+        "thinking_mode": thinking_mode,
         "plan_digest": plan.public_digest,
         "source_lock_sha256": freeze["internal_source_lock_sha256"],
         "source_gate_closed": True,
@@ -402,6 +410,9 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workspace", type=Path)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--max-tokens", type=int, default=DEFAULT_TOKENS)
+    parser.add_argument("--model", choices=("glm-5.3", "glm-5.2"), default=MODEL)
+    parser.add_argument("--thinking-mode", choices=("default", "disabled"),
+                        default="default")
     parser.add_argument("--family", action="append", choices=("arithmetic", "text"))
     args = parser.parse_args(argv)
     plan = make_plan()
@@ -422,16 +433,18 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("C3R_ZAI_API_KEY missing, no live sends")
     def port_factory():
         return ZaiStandardModelPort(
-            api_key=key, model_id=MODEL,
+            api_key=key, model_id=args.model,
             ledger=PhysicalSendLedger(1), route="coding",
             enabled=True, timeout_seconds=180,
             max_tokens=args.max_tokens,
+            thinking_mode=args.thinking_mode,
         )
     result = run_crossed_live(
         run_id=args.run_id, workspace=args.workspace,
         target_seed=os.urandom(32),
         port_factory=port_factory, max_workers=args.workers,
         enabled_families=tuple(args.family) if args.family else ("arithmetic", "text"),
+        model_id=args.model, thinking_mode=args.thinking_mode,
     )
     print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     return 0 if (result["source_gate_closed"] is True
