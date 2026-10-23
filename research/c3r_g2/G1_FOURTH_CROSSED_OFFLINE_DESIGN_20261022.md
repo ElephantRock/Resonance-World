@@ -439,3 +439,58 @@ trusted timestamp, no scientific G1 acquisition claim, no
 independent replication, and no Pattern Register promotion.
 The PR remains Draft pending independent evidence and prospective
 powered study requirements.
+
+
+## Fourth-UID witness checkpoint integration (2026-10-23)
+
+**Construction milestone, not independent custody or G1 acceptance.**
+The previous three-UID fixture now has an explicit **fourth Linux
+identity** for the candidate witness. The compatibility-preserving
+shell script name remains run_c3r_g1_crossed_three_uid_fixture.sh,
+but PR #310 CI identifies it as the four-UID chained witness
+checkpoint gate. This supersedes the preceding section's statement
+that no Linux cross-UID witness round trip exists.
+
+Evaluator, custodian, agent and witness operate as distinct ephemeral
+non-root Linux UIDs; the existing SO_PEERCRED socket boundary is
+applied to the fourth service. The witness account alone creates
+and holds its private Ed25519 signing seed in mode-0600 storage;
+the other roles are tested for read denial. The witness public
+key and sequence-1 enrollment are emitted before the agent's first
+source action. Enrollment binds all role public keys, the run ID
+and the frozen 16-development + 24-qualification denominator.
+
+After 16 signed source responses the agent sends all sixteen
+receipt envelopes and the custodian's signed deposit to the
+witness via its own UID-gated Unix socket. New module
+src/resonance_world/c3r_g1_crossed_uid_witness.py verifies the
+enrollment against the signer key, the full source receipt chain
+and the custodian deposit against the prospectively pinned keys.
+Only then can the one-shot witness sign receipt sequence 2,
+binding the enrolled digest, source-chain head and exact
+custodian receipt digest. The agent verifies that checkpoint
+and passes it to the evaluator, which verifies it again in
+its enrollment-enabled mode **before any qualification**.
+
+Qualification acknowledgements contain no holdout grade until
+closure. The terminal ledger preserves all 40 prescribed
+logical attempts and intentionally records one not_sent holdout
+as unresolved. Provider sends: **zero**.
+
+Additional changes: fourth-UID SO_PEERCRED service role, UID
+client requiring signed checkpoint, enrollment-capable evaluator
+CLI, four-UID shell scenario and five targeted negative/positive
+unit tests for wrong signer, wrong custody, missing/reordered source,
+and false claimed times. The shell attempts an unauthorized
+custodian-UID connection to the witness socket; no witness
+response may be received.
+
+**Boundaries:** common privileged GitHub host control; an
+ephemeral locally issued witness key; no independent
+third-party custody, off-host archival/WORM storage or trusted
+timestamp; no authenticated provider completions/IDs, token
+parity, billing or causal G1 evidence. Local signing and SO_PEERCRED
+do not attest external authority or independent replication.
+This remains offline construction. No live sends, new budget
+authorization, scientific acceptance, Pattern Register promotion
+or main branch merge.
