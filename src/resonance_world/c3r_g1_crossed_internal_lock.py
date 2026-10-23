@@ -90,14 +90,10 @@ def write_internal_source_lock(
         path, os.O_WRONLY | os.O_CREAT | os.O_EXCL | getattr(os, "O_NOFOLLOW", 0),
         0o600,
     )
-    try:
-        with os.fdopen(fd, "wb") as stream:
-            stream.write(data)
-            stream.flush()
-            os.fsync(stream.fileno())
-    finally:
-        # fdopen owns/ closes fd even when its write/fsync raises.
-        pass
+    with os.fdopen(fd, "wb") as stream:
+        stream.write(data)
+        stream.flush()
+        os.fsync(stream.fileno())
     dfd = os.open(directory, os.O_RDONLY | getattr(os, "O_DIRECTORY", 0))
     try:
         os.fsync(dfd)
@@ -123,10 +119,9 @@ def verify_internal_source_lock(
         if (not stat.S_ISREG(info.st_mode) or info.st_uid != os.geteuid()
                 or info.st_mode & 0o077 or info.st_size > _MAX_LOCK_BYTES):
             raise ValueError("internal source checkpoint file is unsafe")
-        with os.fdopen(fd, "rb") as stream:
-            raw = stream.read(_MAX_LOCK_BYTES + 1)
+        raw = os.read(fd, _MAX_LOCK_BYTES + 1)
     finally:
-        pass
+        os.close(fd)
     if len(raw) > _MAX_LOCK_BYTES:
         raise ValueError("oversized internal source checkpoint")
     record = json.loads(raw)
