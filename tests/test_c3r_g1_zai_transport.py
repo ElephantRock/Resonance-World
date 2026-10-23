@@ -403,3 +403,39 @@ def test_unknown_provider_finish_reason_is_normalized_not_leaked() -> None:
     assert completion.output == "B"
     assert raw_metadata not in repr(completion)
     assert raw_metadata not in json.dumps(port.ledger.to_dict())
+
+
+
+def test_glm52_disabled_thinking_is_uniform_explicit_api_parameter() -> None:
+    sent = []
+
+    def capture(url, headers, body, timeout):
+        sent.append(json.loads(body))
+        return TransportResponse(
+            200, json.dumps({
+                "choices": [{"finish_reason": "stop", "message": {"content": "A"}}],
+                "usage": {"prompt_tokens": 25, "completion_tokens": 1},
+            }).encode(),
+        )
+
+    port = ZaiStandardModelPort(
+        api_key="credential-only-for-test", model_id="glm-5.2",
+        ledger=PhysicalSendLedger(1), transport=capture,
+        thinking_mode="disabled", route="coding", enabled=True,
+        max_tokens=256,
+    )
+    answer = port.complete_prompt("Choose exactly A or B")
+    assert answer.output == "A"
+    assert sent[0]["thinking"] == {"type": "disabled"}
+    assert "reasoning_effort" not in sent[0]
+    assert sent[0]["model"] == "glm-5.2"
+    assert sent[0]["max_tokens"] == 256
+
+
+def test_glm53_cannot_disable_thinking_even_when_provider_enabled() -> None:
+    for model in ("glm-5.3", "glm-5.3-flash", "unverified-model"):
+        with pytest.raises(ValueError, match="disabled-thinking"):
+            ZaiStandardModelPort(
+                api_key="test", model_id=model, ledger=PhysicalSendLedger(1),
+                enabled=True, thinking_mode="disabled",
+            )
