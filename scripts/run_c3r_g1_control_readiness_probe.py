@@ -11,10 +11,11 @@ import argparse
 import json
 import os
 
+from run_c3r_g1_fourth_crossed_live import prompt_for
+
 from resonance_world.c3r_g1_crossed_plan import make_plan
 from resonance_world.c3r_g1_model_boundary import ModelChoiceCompletion
 from resonance_world.c3r_g1_zai_transport import PhysicalSendLedger, ZaiStandardModelPort
-from run_c3r_g1_fourth_crossed_live import prompt_for
 
 
 def run_control_probes(port_factory) -> dict[str, object]:
