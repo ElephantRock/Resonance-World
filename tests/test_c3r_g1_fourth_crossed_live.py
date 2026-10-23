@@ -111,11 +111,15 @@ def test_provider_errors_stay_in_denominator_with_no_automatic_retries(
         port_factory=lambda: FakePort(fail=True),
         max_workers=3,
     )
-    assert report["physical_sends_reserved"] == 40
-    assert report["status_counts"] == {"provider_error": 40}
+    assert report["physical_sends_reserved"] == 16
+    assert report["source_gate_closed"] is False
+    assert report["status_counts"] == {
+        "provider_error": 16, "not_sent_after_source_failure": 24,
+    }
     assert sum(row["correct"] is None for row in report["records"]) == 40
     assert sum(row["choice_sha256"] is None for row in report["records"]) == 40
-    assert report["qualification_by_arm"]["learned"]["correct"] == 0
+    assert len([row for row in report["records"]
+                if row["stage"] == "qualification"]) == 24
     assert report["scientific_acceptance"] is False
     assert "do not echo secret provider failure" not in json.dumps(report)
 
