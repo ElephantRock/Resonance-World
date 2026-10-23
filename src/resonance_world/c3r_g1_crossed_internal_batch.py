@@ -22,7 +22,7 @@ from resonance_world.c3r_g1_crossed_local_evaluator import CrossedLocalEvaluator
 from resonance_world.c3r_g1_crossed_plan import make_plan
 from resonance_world.c3r_g1_crossed_receipt_bridge import verify_crossed_receipt_chain
 
-_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,63}\Z")
+_NAME = re.compile(r"[A-Za-z0-9][A-Za-z0-9_.-]{7,63}\Z")
 _MAX_FINAL = 512 * 1024
 _MAX_JOBS = 64
 
