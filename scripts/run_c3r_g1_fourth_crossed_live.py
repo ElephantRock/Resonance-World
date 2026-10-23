@@ -140,13 +140,33 @@ def _safe_send(
 ) -> dict[str, object]:
     """One reserved physical attempt, never retried even on ambiguous timeout."""
     journal.reserve(index=slot_index, prompt=prompt, model=MODEL, route="coding")
+    port = port_factory()
     try:
-        reply = port_factory().complete_prompt(prompt)
-    except Exception:
+        reply = port.complete_prompt(prompt)
+    except Exception as exc:
+        # Diagnostic metadata comes from locally controlled types/ledger only.
+        # Neither exception messages nor raw provider bodies are persisted.
+        attempts = getattr(getattr(port, "ledger", None), "records", [])
+        latest = attempts[-1] if attempts else None
+        safe_class = (
+            latest.failure_class
+            if latest is not None and latest.failure_class not in (None, "reserved")
+            else type(exc).__name__
+        )
         return {
             "status": "provider_error", "choice": None, "choice_sha256": None,
             "finish_reason": None, "completion_tokens": None,
             "reasoning_tokens": None, "prompt_tokens": None,
+            "failure_class": safe_class
+            if safe_class in (
+                "HttpNon200", "ProviderTransportRejected", "TimeoutError",
+                "URLError", "HTTPError", "JSONDecodeError", "OSError",
+                "ValueError", "TypeError", "RuntimeError",
+            ) else "OtherTransportError",
+            "http_status": (
+                latest.http_status if latest is not None
+                and type(latest.http_status) is int else None
+            ),
         }
     if not isinstance(reply, ModelChoiceCompletion) or reply.model_id != MODEL:
         status = "invalid_format"
@@ -169,16 +189,23 @@ def _safe_send(
         if isinstance(reply, ModelChoiceCompletion) else None,
         "prompt_tokens": reply.prompt_tokens_reported
         if isinstance(reply, ModelChoiceCompletion) else None,
+        "failure_class": None,
+        "http_status": 200 if isinstance(reply, ModelChoiceCompletion) else None,
     }
 
 
 def run_crossed_live(
     *, run_id: str, workspace: Path, port_factory,
     target_seed: bytes, max_workers: int = 4,
+    enabled_families: tuple[str, ...] = ("arithmetic", "text"),
 ) -> dict[str, object]:
     """Two parallel phases; all source evidence closes before holdout sends."""
     if type(max_workers) is not int or not 1 <= max_workers <= 8:
         raise ValueError("live parallelism requires 1..8 workers")
+    if (not isinstance(enabled_families, tuple) or not enabled_families
+            or len(set(enabled_families)) != len(enabled_families)
+            or not set(enabled_families) <= {"arithmetic", "text"}):
+        raise ValueError("enabled families must be a nonempty supported subset")
     plan: CrossedPlan = make_plan()
     journal = DurableAttemptJournal(workspace, run_id=run_id)
     target = evaluator_private_assignment(plan, secret=target_seed)
@@ -191,10 +218,20 @@ def run_crossed_live(
         observations = []
         for task in cell.development:
             index = index_for[(cell.unit_id, task.task_id, "learned")]
-            message = prompt_for(task, source_history=tuple(recorded), arm="development")
-            outcome = _safe_send(
-                index, message, journal=journal, port_factory=port_factory,
-            )
+            if cell.family not in enabled_families:
+                outcome = {
+                    "status": "not_sent", "choice": None, "choice_sha256": None,
+                    "finish_reason": None, "completion_tokens": None,
+                    "reasoning_tokens": None, "prompt_tokens": None,
+                    "failure_class": None, "http_status": None,
+                }
+            else:
+                message = prompt_for(
+                    task, source_history=tuple(recorded), arm="development"
+                )
+                outcome = _safe_send(
+                    index, message, journal=journal, port_factory=port_factory,
+                )
             correct = (
                 outcome["choice"] == target[cell.context_id]
                 if outcome["status"] == "accepted" else None
@@ -253,6 +290,7 @@ def run_crossed_live(
                 "status": "not_sent", "choice": None, "choice_sha256": None,
                 "finish_reason": None, "completion_tokens": None,
                 "reasoning_tokens": None, "prompt_tokens": None,
+                "failure_class": None, "http_status": None,
             }, None
         prompt = prompt_for(task, source_history=history, arm=slot.arm)
         return index, _safe_send(
@@ -303,6 +341,8 @@ def run_crossed_live(
             "choice_sha256": evidence["choice_sha256"],
             "correct": grade,
             "finish_reason": evidence["finish_reason"],
+            "provider_failure_class": evidence["failure_class"],
+            "provider_http_status": evidence["http_status"],
             "completion_tokens_reported": evidence["completion_tokens"],
             "reasoning_tokens_reported": evidence["reasoning_tokens"],
             "prompt_tokens_reported": evidence["prompt_tokens"],
@@ -339,6 +379,7 @@ def run_crossed_live(
         "source_gate_closed": True,
         "source_contexts_eligible": len(eligible_units),
         "source_contexts_incomplete": len(plan.cells) - len(eligible_units),
+        "enabled_families": list(enabled_families),
         "prescribed_attempts": SEND_MAXIMUM,
         "source_attempts": 16, "holdout_attempts": 24,
         "physical_sends_reserved": journal.count,
@@ -361,6 +402,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workspace", type=Path)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--max-tokens", type=int, default=DEFAULT_TOKENS)
+    parser.add_argument("--family", action="append", choices=("arithmetic", "text"))
     args = parser.parse_args(argv)
     plan = make_plan()
     if not args.live:
@@ -389,6 +431,7 @@ def main(argv: list[str] | None = None) -> int:
         run_id=args.run_id, workspace=args.workspace,
         target_seed=os.urandom(32),
         port_factory=port_factory, max_workers=args.workers,
+        enabled_families=tuple(args.family) if args.family else ("arithmetic", "text"),
     )
     print(json.dumps(result, sort_keys=True, separators=(",", ":")))
     return 0 if (result["source_gate_closed"] is True
