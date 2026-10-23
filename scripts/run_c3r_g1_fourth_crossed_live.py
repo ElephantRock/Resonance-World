@@ -203,9 +203,10 @@ def run_crossed_live(
     """Two parallel phases; all source evidence closes before holdout sends."""
     if type(max_workers) is not int or not 1 <= max_workers <= 8:
         raise ValueError("live parallelism requires 1..8 workers")
-    if (model_id not in ("glm-5.3", "glm-5.2")
+    if (model_id not in ("glm-5.3", "glm-5.2", "glm-4.7")
             or thinking_mode not in ("default", "disabled")
-            or (thinking_mode == "disabled" and model_id != "glm-5.2")):
+            or (thinking_mode == "disabled"
+                and model_id not in ("glm-5.2", "glm-4.7"))):
         raise ValueError("model and thinking mode must be a supported fixed combination")
     if (not isinstance(enabled_families, tuple) or not enabled_families
             or len(set(enabled_families)) != len(enabled_families)
@@ -410,7 +411,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workspace", type=Path)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--max-tokens", type=int, default=DEFAULT_TOKENS)
-    parser.add_argument("--model", choices=("glm-5.3", "glm-5.2"), default=MODEL)
+    parser.add_argument("--model", choices=("glm-5.3", "glm-5.2", "glm-4.7"),
+                        default=MODEL)
     parser.add_argument("--thinking-mode", choices=("default", "disabled"),
                         default="default")
     parser.add_argument("--family", action="append", choices=("arithmetic", "text"))
