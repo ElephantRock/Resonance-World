@@ -60,6 +60,7 @@ def run_control_probes(port_factory) -> dict[str, object]:
         "schema": "c3r-g1-internal-control-readiness-v0.1",
         "model": "glm-4.7",
         "requested_thinking_mode": "disabled",
+        "control_prompt_policy": "default_A_if_no_actual_grades_v1",
         "technical_physical_send_reservations": 2,
         "readiness_passed": all(x["status"] == "valid_short_answer" for x in results),
         "observations": results,
