@@ -167,12 +167,16 @@ class ZaiStandardModelPort:
     timeout_seconds: float = 180.0
     max_tokens: int = DEFAULT_GENERATION_TOKENS
     route: Literal["standard", "coding"] = "standard"
+    thinking_mode: Literal["default", "disabled"] = "default"
     campaign_budget: HostCampaignBudget | None = None
     halted: bool = field(default=False, init=False)
 
     def __post_init__(self) -> None:
         if self.route not in ("standard", "coding"):
             raise ValueError("provider route must be standard or coding")
+        if (self.thinking_mode not in ("default", "disabled")
+                or (self.thinking_mode == "disabled" and self.model_id != "glm-5.2")):
+            raise ValueError("disabled-thinking mode is restricted to GLM-5.2")
         if not self.api_key.strip() or not self.model_id.strip():
             raise ValueError("API key and model must be explicitly supplied")
         if any(ch in self.model_id for ch in "\r\n"):
@@ -213,6 +217,8 @@ class ZaiStandardModelPort:
         if self.model_id in ("glm-5.3", "glm-5.3-flash"):
             params["thinking"] = {"type": "enabled"}
             params["reasoning_effort"] = "low"
+        elif self.thinking_mode == "disabled":
+            params["thinking"] = {"type": "disabled"}
         body = json.dumps(
             params,
             sort_keys=True, separators=(",", ":"),
