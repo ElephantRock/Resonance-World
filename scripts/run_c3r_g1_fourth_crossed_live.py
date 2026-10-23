@@ -218,47 +218,12 @@ def run_crossed_live(
             for index, outcome in observations:
                 source_results[index] = outcome
 
-    # Do not unlock or physically send holdout when the 16-source boundary
-    # cannot be graded. Keep all 40 prescribed slots in the ITT record.
-    if any(item["status"] != "accepted" for item in source_results.values()):
-        failed_rows = []
-        for index, slot in enumerate(plan.schedule):
-            item = source_results[index] if index < 16 else {
-                "status": "not_sent_after_source_failure",
-                "choice_sha256": None, "finish_reason": None,
-                "completion_tokens": None, "reasoning_tokens": None,
-                "prompt_tokens": None,
-            }
-            failed_rows.append({
-                "index": index, "stage": slot.stage,
-                "unit_id": slot.unit_id,
-                "family": next(c.family for c in plan.cells if c.unit_id == slot.unit_id),
-                "arm": slot.arm, "status": item["status"],
-                "choice_sha256": item["choice_sha256"],
-                "correct": None,
-                "finish_reason": item["finish_reason"],
-                "completion_tokens_reported": item["completion_tokens"],
-                "reasoning_tokens_reported": item["reasoning_tokens"],
-                "prompt_tokens_reported": item["prompt_tokens"],
-            })
-        return {
-            "schema": "g1-crossed-fourth-live-observation-v0.1",
-            "run_id": run_id, "model": MODEL, "route": "coding",
-            "plan_digest": plan.public_digest,
-            "source_lock_sha256": None, "source_gate_closed": False,
-            "prescribed_attempts": SEND_MAXIMUM,
-            "source_attempts": 16, "holdout_attempts": 24,
-            "physical_sends_reserved": journal.count,
-            "physical_sends_vendor_billed_attested": False,
-            "records": failed_rows,
-            "status_counts": dict(Counter(row["status"] for row in failed_rows)),
-            "provider_prompt_token_parity_attested": False,
-            "independent_model_session_memory_attested": False,
-            "external_auditor_required": False,
-            "scientific_acceptance": False,
-            "interpretation": "source_incomplete_all_holdout_not_sent",
-        }
-
+    # All sixteen source attempt receipts are frozen. Only contexts with two
+    # accepted graded sources may perform holdout, rather than blocking all
+    # otherwise healthy independent contexts on one provider failure.
+    eligible_units = {
+        unit for unit, history in histories.items() if len(history) == 2
+    }
     evaluator_folder = journal.root / "source"
     evaluator_folder.mkdir(mode=0o700)
     evaluator = CrossedLocalEvaluator(
@@ -283,6 +248,12 @@ def run_crossed_live(
         cell = cells_by_id[slot.unit_id]
         task = cell.qualification[0]
         history = histories[slot.unit_id]
+        if slot.unit_id not in eligible_units:
+            return index, {
+                "status": "not_sent", "choice": None, "choice_sha256": None,
+                "finish_reason": None, "completion_tokens": None,
+                "reasoning_tokens": None, "prompt_tokens": None,
+            }, None
         prompt = prompt_for(task, source_history=history, arm=slot.arm)
         return index, _safe_send(
             index, prompt, journal=journal, port_factory=port_factory,
@@ -324,6 +295,11 @@ def run_crossed_live(
             "family": cells_by_id[slot.unit_id].family,
             "arm": slot.arm,
             "status": evidence["status"],
+            "not_sent_reason": (
+                "incomplete_source_for_context"
+                if slot.stage == "qualification"
+                and slot.unit_id not in eligible_units else None
+            ),
             "choice_sha256": evidence["choice_sha256"],
             "correct": grade,
             "finish_reason": evidence["finish_reason"],
@@ -360,6 +336,9 @@ def run_crossed_live(
         "run_id": run_id, "model": MODEL, "route": "coding",
         "plan_digest": plan.public_digest,
         "source_lock_sha256": freeze["internal_source_lock_sha256"],
+        "source_gate_closed": True,
+        "source_contexts_eligible": len(eligible_units),
+        "source_contexts_incomplete": len(plan.cells) - len(eligible_units),
         "prescribed_attempts": SEND_MAXIMUM,
         "source_attempts": 16, "holdout_attempts": 24,
         "physical_sends_reserved": journal.count,
@@ -412,7 +391,8 @@ def main(argv: list[str] | None = None) -> int:
         port_factory=port_factory, max_workers=args.workers,
     )
     print(json.dumps(result, sort_keys=True, separators=(",", ":")))
-    return 0 if result["physical_sends_reserved"] == SEND_MAXIMUM else 2
+    return 0 if (result["source_gate_closed"] is True
+                 and len(result["records"]) == SEND_MAXIMUM) else 2
 
 
 if __name__ == "__main__":
