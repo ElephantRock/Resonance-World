@@ -30,7 +30,7 @@ def test_control_probe_accepts_both_short_answers_without_private_grade():
             assert "success=true" not in prompt
             assert "success=false" not in prompt
             return ModelChoiceCompletion(
-                output="A", model_id="glm-4.7", physical_sends_reported=1,
+                output="A", model_id="glm-5.3", physical_sends_reported=1,
                 finish_reason="stop", prompt_tokens_reported=111,
                 completion_tokens_reported=1, reasoning_tokens_reported=0,
             )
@@ -38,6 +38,8 @@ def test_control_probe_accepts_both_short_answers_without_private_grade():
     report = probe.run_control_probes(Port)
     assert report["readiness_passed"] is True
     assert report["technical_physical_send_reservations"] == 2
+    assert report["requested_thinking_mode"] == "enabled"
+    assert report["reasoning_effort_requested"] == "low"
     assert report["source_task_grade_used"] is False
     assert report["counts_as_g1_experiment"] is False
     assert report["scientific_acceptance"] is False
@@ -49,7 +51,7 @@ def test_probe_rejects_invalid_answers_and_reasoning_length_exhaustion():
     class LongAnswer:
         def complete_prompt(self, prompt):
             return ModelChoiceCompletion(
-                output="A", model_id="glm-4.7",
+                output="A", model_id="glm-5.3",
                 physical_sends_reported=1, finish_reason="length",
                 completion_tokens_reported=512,
                 reasoning_tokens_reported=509,
