@@ -228,6 +228,7 @@ def inspect_batch(*, workspace: Path, run_ids: tuple[str, ...]) -> dict[str, obj
 def run_batch(
     *, workspace: Path, run_ids: tuple[str, ...],
     max_workers: int = 2, max_in_flight: int = 4,
+    max_new_runs: int | None = None,
 ) -> dict[str, object]:
     """Bound submissions, isolate failures, and never resubmit a claimed run.
 
@@ -238,6 +239,10 @@ def run_batch(
             or not 1 <= max_workers <= 8
             or not max_workers <= max_in_flight <= 2 * max_workers):
         raise ValueError("worker count 1..8 and in-flight cap workers..2*workers required")
+    if (max_new_runs is not None
+            and (type(max_new_runs) is not int
+                 or not 0 <= max_new_runs <= len(run_ids))):
+        raise ValueError("new run admission limit must fit requested batch")
     pending: dict[Future[None], str] = {}
     submitted = 0
     high_water = 0
@@ -246,6 +251,9 @@ def run_batch(
     with ThreadPoolExecutor(max_workers=max_workers) as executor:
         while pending or not exhausted:
             while not exhausted and len(pending) < max_in_flight:
+                if max_new_runs is not None and submitted >= max_new_runs:
+                    exhausted = True
+                    break
                 try:
                     run_id = next(ids)
                 except StopIteration:
@@ -285,6 +293,7 @@ def run_batch(
         "in_flight_limit": max_in_flight,
         "observed_high_water": high_water,
         "new_run_claims": submitted,
+        "admission_limited": max_new_runs is not None,
         "automatic_retries": 0,
     })
     return output
@@ -296,6 +305,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--run-id", action="append", required=True)
     parser.add_argument("--workers", type=int, default=2)
     parser.add_argument("--in-flight", type=int, default=4)
+    parser.add_argument("--max-new-runs", type=int)
     parser.add_argument("--inspect", action="store_true")
     args = parser.parse_args(argv)
     try:
@@ -305,6 +315,7 @@ def main(argv: list[str] | None = None) -> int:
             result = run_batch(
                 workspace=args.workspace, run_ids=tuple(args.run_id),
                 max_workers=args.workers, max_in_flight=args.in_flight,
+                max_new_runs=args.max_new_runs,
             )
         print(json.dumps(result, sort_keys=True))
         return 0 if result["counts"].get("completed_and_verified_internally", 0) == len(
