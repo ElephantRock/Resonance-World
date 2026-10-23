@@ -242,3 +242,18 @@ def test_cli_process_batch_and_readonly_inspection(tmp_path: Path) -> None:
     assert '"correct"' not in inspected.stdout
     assert '"receipts"' not in inspected.stdout
     assert "scientific_acceptance" in inspected.stdout
+
+
+
+def test_manual_or_duplicate_child_admission_is_exclusive(tmp_path: Path) -> None:
+    path = _workspace(tmp_path)
+    process_batch._claim(path, "proc-child-once-0001")
+    process_batch._start_worker_once(path, "proc-child-once-0001")
+    with pytest.raises(FileExistsError):
+        process_batch._start_worker_once(path, "proc-child-once-0001")
+    start_marker = next(path.glob("*.started.json"))
+    assert start_marker.stat().st_mode & 0o077 == 0
+    assert json.loads(start_marker.read_text())["run_id"] == "proc-child-once-0001"
+    assert process_batch.inspect_batch(
+        workspace=path, run_ids=("proc-child-once-0001",),
+    )["counts"] == {"unresolved_no_auto_retry": 1}
