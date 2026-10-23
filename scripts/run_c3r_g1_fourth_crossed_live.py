@@ -76,7 +76,12 @@ def prompt_for(task: PublicTask, *, source_history: tuple[dict[str, object], ...
         "Select the implementation used by this context. The context's "
         "hidden rule consistently selects either A or B; public operands "
         "do not reveal the hidden selection. Infer it only from graded "
-        "development history, if supplied. Reply exactly A or B.\n"
+        "development history, if supplied. If no actual graded outcomes "
+        "are available (including masked or absent history), A is the "
+        "pre-registered default guess: answer A immediately, without "
+        "trying to infer hidden random assignments. If real graded "
+        "outcomes are available, use them to select A or B. "
+        "Reply exactly A or B.\n"
         f"Available implementations: {rule}\n"
         f"Public task: {json.dumps(task.record(), sort_keys=True)}\n"
         f"Past development evidence:\n{history_text}\n"
@@ -400,6 +405,7 @@ def run_crossed_live(
         "independent_model_session_memory_attested": False,
         "external_auditor_required": False,
         "scientific_acceptance": False,
+        "control_fallback_policy": "default_A_if_no_actual_grades_v1",
         "interpretation": "exploratory_crossed_real_model_if_vendor_authenticated",
     }
 
