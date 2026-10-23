@@ -439,3 +439,29 @@ def test_glm53_cannot_disable_thinking_even_when_provider_enabled() -> None:
                 api_key="test", model_id=model, ledger=PhysicalSendLedger(1),
                 enabled=True, thinking_mode="disabled",
             )
+
+
+
+def test_glm47_offline_explicit_nonthinking_request_is_supported() -> None:
+    observed = []
+
+    def capture(_url, _headers, body, _timeout):
+        observed.append(json.loads(body))
+        return TransportResponse(
+            200, json.dumps({
+                "choices": [{"finish_reason": "stop", "message": {"content": "B"}}],
+                "usage": {"prompt_tokens": 20, "completion_tokens": 1},
+            }).encode(),
+        )
+
+    result = ZaiStandardModelPort(
+        api_key="fixture-secret", model_id="glm-4.7",
+        ledger=PhysicalSendLedger(1), enabled=True,
+        route="coding", thinking_mode="disabled", max_tokens=512,
+        transport=capture,
+    ).complete_prompt("Reply with A or B.")
+    assert result.output == "B"
+    assert observed[0]["model"] == "glm-4.7"
+    assert observed[0]["thinking"] == {"type": "disabled"}
+    assert observed[0]["max_tokens"] == 512
+    assert "reasoning_effort" not in observed[0]
