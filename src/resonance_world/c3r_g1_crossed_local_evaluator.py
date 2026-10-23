@@ -11,13 +11,19 @@ import argparse
 import hashlib
 import json
 import sys
+from datetime import datetime
 from pathlib import Path
 
+from resonance_world.c3r_g1_crossed_enrollment import EnrollmentPin
 from resonance_world.c3r_g1_crossed_plan import evaluator_private_assignment, make_plan
 from resonance_world.c3r_g1_crossed_receipt_bridge import verify_crossed_receipt_chain
 from resonance_world.c3r_g1_crossed_source_deposit import (
     read_private_seed,
     verify_source_deposit,
+)
+from resonance_world.c3r_g1_crossed_witness_checkpoint import (
+    WitnessCheckpoint,
+    verify_witness_checkpoint,
 )
 from resonance_world.c3r_g1_evaluator_receipts import ReceiptSigner
 
@@ -31,6 +37,9 @@ class CrossedLocalEvaluator:
     def __init__(
         self, *, run_id: str, private_target_seed: bytes,
         signing_seed: bytes, pinned_custodian_public_key_hex: str,
+        signed_enrollment: dict[str, object] | None = None,
+        pinned_witness_public_key_hex: str | None = None,
+        claimed_clock_check_utc: datetime | None = None,
     ) -> None:
         self._plan = make_plan()
         self._targets = evaluator_private_assignment(
@@ -45,6 +54,23 @@ class CrossedLocalEvaluator:
         self._source_head: str | None = None
         self._custody_accepted = False
         self._finished = False
+        self._witness_checkpoint: WitnessCheckpoint | None = None
+        self._witness_enrollment = signed_enrollment
+        self._witness_pin: EnrollmentPin | None = None
+        self._claimed_clock_check_utc = claimed_clock_check_utc
+        witness_inputs = (signed_enrollment, pinned_witness_public_key_hex,
+                          claimed_clock_check_utc)
+        if any(value is not None for value in witness_inputs):
+            if any(value is None for value in witness_inputs):
+                raise ValueError("witness enrollment requires all pre-source pins")
+            self._witness_pin = EnrollmentPin.verify(
+                signed_enrollment,
+                pinned_witness_public_key_hex=pinned_witness_public_key_hex,
+                expected_run_id=run_id,
+                expected_evaluator_public_key_hex=self.evaluator_public_key_hex,
+                expected_custodian_public_key_hex=pinned_custodian_public_key_hex,
+                claimed_clock_check_utc=claimed_clock_check_utc,
+            )
 
     @property
     def evaluator_public_key_hex(self) -> str:
@@ -129,16 +155,32 @@ class CrossedLocalEvaluator:
             "scientific_acceptance": False,
         }
 
-    def acknowledge_custody(self, deposit: dict[str, object]) -> dict[str, object]:
+    def acknowledge_custody(
+        self, deposit: dict[str, object], *,
+        witness_checkpoint: dict[str, object] | None = None,
+    ) -> dict[str, object]:
         if (self._source_head is None or self._custody_accepted
                 or len(self._records) != 16 or self._finished):
             raise ValueError("custody must be acknowledged exactly once before holdout")
+        if self._witness_pin is None and witness_checkpoint is not None:
+            raise ValueError("witness checkpoint requires pre-source enrollment")
         verify_source_deposit(
             deposit=deposit, source_head=self._source_head,
             expected_run_id=self._run_id,
             evaluator_public_key_hex=self.evaluator_public_key_hex,
             pinned_custodian_public_key_hex=self._custodian_pin,
         )
+        if self._witness_pin is not None:
+            if witness_checkpoint is None:
+                raise ValueError("registered witness checkpoint required before holdout")
+            self._witness_checkpoint = verify_witness_checkpoint(
+                self._witness_pin,
+                signed_enrollment=self._witness_enrollment,
+                signed_checkpoint=witness_checkpoint,
+                signed_custodian_deposit=deposit,
+                source_chain_head_sha256=self._source_head,
+                claimed_clock_check_utc=self._claimed_clock_check_utc,
+            )
         self._custody_accepted = True
         return {
             "schema": "c3r-g1-crossed-local-response-v0.1",
@@ -164,6 +206,11 @@ class CrossedLocalEvaluator:
             "source_chain_head_sha256": self._source_head,
             "audit": checked.audit,
             "actual_provider_sends": 0,
+            "prospective_witness_checkpoint_checked": self._witness_checkpoint is not None,
+            "witness_checkpoint_sha256": (
+                self._witness_checkpoint.witness_checkpoint_sha256
+                if self._witness_checkpoint is not None else None
+            ),
             "scientific_acceptance": False,
         }
 
@@ -202,8 +249,12 @@ def main(argv: list[str] | None = None) -> int:
                 response = engine.submit(status=obj["status"], choice=obj["choice"])
             elif op == "seal_source" and set(obj) == {"op"}:
                 response = engine.seal_source()
-            elif op == "acknowledge_custody" and set(obj) == {"op", "deposit"}:
-                response = engine.acknowledge_custody(obj["deposit"])
+            elif op == "acknowledge_custody" and set(obj) in (
+                {"op", "deposit"}, {"op", "deposit", "witness_checkpoint"},
+            ):
+                response = engine.acknowledge_custody(
+                    obj["deposit"], witness_checkpoint=obj.get("witness_checkpoint"),
+                )
             elif op == "finalize" and set(obj) == {"op"}:
                 _emit(engine.finalize())
                 return 0
