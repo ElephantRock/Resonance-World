@@ -74,11 +74,11 @@ def test_unresolved_claim_is_not_automatically_restarted(
     tmp_path: Path,
 ) -> None:
     path = _workspace(tmp_path)
-    batch._claim(path, "interrupted")
-    report = batch.inspect_batch(workspace=path, run_ids=("interrupted",))
+    batch._claim(path, "interrupted-01")
+    report = batch.inspect_batch(workspace=path, run_ids=("interrupted-01",))
     assert report["counts"] == {"unresolved_no_auto_retry": 1}
     follow_up = batch.run_batch(
-        workspace=path, run_ids=("interrupted", "new-one"),
+        workspace=path, run_ids=("interrupted-01", "new-one-01"),
         max_workers=1, max_in_flight=1,
     )
     assert follow_up["new_run_claims"] == 1
@@ -93,13 +93,13 @@ def test_one_worker_failure_isolated_and_never_silently_retried(
     actual = batch._execute_internal_run
 
     def broken_once(directory: Path, name: str) -> None:
-        if name == "bad":
+        if name == "bad-case-01":
             raise RuntimeError("never include private exception text")
         actual(directory, name)
 
     monkeypatch.setattr(batch, "_execute_internal_run", broken_once)
     summary = batch.run_batch(
-        workspace=path, run_ids=("bad", "healthy"),
+        workspace=path, run_ids=("bad-case-01", "healthy-01"),
         max_workers=2, max_in_flight=2,
     )
     assert summary["counts"] == {
@@ -108,10 +108,10 @@ def test_one_worker_failure_isolated_and_never_silently_retried(
     }
     assert "never include private exception text" not in json.dumps(summary)
     assert summary["physical_provider_sends"] == 0
-    _claim, _directory, _terminal, failed = batch._paths(path, "bad")
+    _claim, _directory, _terminal, failed = batch._paths(path, "bad-case-01")
     assert json.loads(failed.read_text())["error_type"] == "RuntimeError"
     rerun = batch.run_batch(
-        workspace=path, run_ids=("bad", "healthy"),
+        workspace=path, run_ids=("bad-case-01", "healthy-01"),
         max_workers=1, max_in_flight=1,
     )
     assert rerun["new_run_claims"] == 0
@@ -197,17 +197,17 @@ def test_corrupted_claim_and_cross_run_source_cannot_be_counted_complete(
 ) -> None:
     path = _workspace(tmp_path)
     batch.run_batch(
-        workspace=path, run_ids=("alpha", "beta"),
+        workspace=path, run_ids=("alpha-001", "beta-001"),
         max_workers=2, max_in_flight=2,
     )
-    claim, _directory, _term, _failure = batch._paths(path, "alpha")
+    claim, _directory, _term, _failure = batch._paths(path, "alpha-001")
     claimed = json.loads(claim.read_text())
-    claimed["run_id"] = "beta"
+    claimed["run_id"] = "beta-001"
     claim.write_text(json.dumps(claimed))
-    _claim, other_dir, _terminal, _fail = batch._paths(path, "beta")
+    _claim, other_dir, _terminal, _fail = batch._paths(path, "beta-001")
     lock = next(other_dir.glob("*.json"))
     lock.unlink()
-    inspected = batch.inspect_batch(workspace=path, run_ids=("alpha", "beta"))
+    inspected = batch.inspect_batch(workspace=path, run_ids=("alpha-001", "beta-001"))
     assert inspected["counts"] == {"integrity_failure": 2}
 
 
@@ -215,7 +215,7 @@ def test_public_only_cli_execution_then_readonly_inspection(tmp_path: Path) -> N
     path = _workspace(tmp_path)
     cmd = [
         sys.executable, "-m", "resonance_world.c3r_g1_crossed_internal_batch",
-        "--workspace", str(path), "--run-id", "cli-001",
+        "--workspace", str(path), "--run-id", "cli-0001",
         "--workers", "1", "--in-flight", "1",
     ]
     env = dict(os.environ)
@@ -234,7 +234,7 @@ def test_public_only_cli_execution_then_readonly_inspection(tmp_path: Path) -> N
 
 def test_pause_admission_and_resume_unclaimed_only(tmp_path: Path) -> None:
     path = _workspace(tmp_path)
-    ids = ("phase-1", "phase-2", "phase-3", "phase-4")
+    ids = ("phase-01", "phase-02", "phase-03", "phase-04")
     part = batch.run_batch(
         workspace=path, run_ids=ids, max_workers=2, max_in_flight=2,
         max_new_runs=2,
