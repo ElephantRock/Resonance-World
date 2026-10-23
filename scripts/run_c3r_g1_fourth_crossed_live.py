@@ -426,6 +426,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--workspace", type=Path)
     parser.add_argument("--workers", type=int, default=4)
     parser.add_argument("--max-tokens", type=int, default=DEFAULT_TOKENS)
+    parser.add_argument("--timeout-seconds", type=float, default=180)
     parser.add_argument("--model", choices=("glm-5.3", "glm-5.2", "glm-4.7"),
                         default=MODEL)
     parser.add_argument("--thinking-mode", choices=("default",), default="default")
@@ -444,7 +445,8 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if (args.workspace is None or not args.workspace.is_absolute()
             or not 1 <= args.max_tokens <= MAX_GENERATION_TOKENS
-            or not 1 <= args.workers <= 8):
+            or not 1 <= args.workers <= 8
+            or not 5 <= args.timeout_seconds <= 300):
         raise SystemExit("invalid live experiment parameters")
     key = os.environ.get("C3R_ZAI_API_KEY", "").strip()
     if not key:
@@ -453,7 +455,7 @@ def main(argv: list[str] | None = None) -> int:
         return ZaiStandardModelPort(
             api_key=key, model_id=args.model,
             ledger=PhysicalSendLedger(1), route="coding",
-            enabled=True, timeout_seconds=180,
+            enabled=True, timeout_seconds=args.timeout_seconds,
             max_tokens=args.max_tokens,
             thinking_mode=args.thinking_mode,
             reasoning_effort=args.reasoning_effort,
