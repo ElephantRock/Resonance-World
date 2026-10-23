@@ -283,3 +283,46 @@ def test_family_selection_rejects_invalid_duplicate_before_model_send(
             target_seed=os.urandom(32), port_factory=FakePort,
             enabled_families=("text", "text"),
         )
+
+
+
+def test_glm52_uniform_nonthinking_real_runner_contract_isolation(
+    tmp_path: Path,
+) -> None:
+    x = _load()
+
+    class GLM52Choice:
+        def complete_prompt(self, prompt: str) -> ModelChoiceCompletion:
+            return ModelChoiceCompletion(
+                output="A", model_id="glm-5.2", physical_sends_reported=1,
+                prompt_tokens_reported=35, completion_tokens_reported=1,
+                reasoning_tokens_reported=0, finish_reason="stop",
+            )
+
+    output = x.run_crossed_live(
+        run_id="g1-glm52-all-three-arms-04",
+        workspace=_workspace(tmp_path), target_seed=os.urandom(32),
+        port_factory=GLM52Choice, max_workers=4,
+        model_id="glm-5.2", thinking_mode="disabled",
+    )
+    assert output["model"] == "glm-5.2"
+    assert output["thinking_mode"] == "disabled"
+    assert output["physical_sends_reserved"] == 40
+    assert output["status_counts"] == {"accepted": 40}
+    assert output["qualification_by_arm"]["fresh"]["accepted"] == 8
+    assert output["qualification_by_arm"]["neutral"]["accepted"] == 8
+    assert output["scientific_acceptance"] is False
+
+
+def test_runner_rejects_disabled_glm53_before_reserving_any_call(
+    tmp_path: Path,
+) -> None:
+    x = _load()
+    root = _workspace(tmp_path)
+    with pytest.raises(ValueError, match="model and thinking"):
+        x.run_crossed_live(
+            run_id="g1-bad-glm53-thinking-04", workspace=root,
+            target_seed=os.urandom(32), port_factory=FakePort,
+            model_id="glm-5.3", thinking_mode="disabled",
+        )
+    assert list(root.iterdir()) == []
