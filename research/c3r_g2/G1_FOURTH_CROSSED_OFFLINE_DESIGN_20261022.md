@@ -379,3 +379,63 @@ independent-witness-authority_attested=false,
 trusted_timestamp_attested=false, provider_execution_verified=false,
 scientific_acceptance=false. No live model sends, cost-authorized
 experiment, PR merge, pattern registry promotion or G1 causal claim.
+
+
+## Optional prequalification witness checkpoint (2026-10-23)
+
+A distinct **local verification contract** now extends the fourth G1
+construction without enabling live provider execution. Its module is
+**src/resonance_world/c3r_g1_crossed_witness_checkpoint.py**.
+
+The original prospective witness enrollment is receipt **sequence 1**.
+A second Ed25519 receipt must be **sequence 2 in the same signed chain**.
+The verifier rechecks both receipts using the externally supplied
+witness public-key pin, rejects altered lineage/replay/wrong run,
+and binds the second receipt to:
+
+- the canonical SHA256 of the signed enrollment;
+- the frozen public plan digest;
+- the verifier-derived 16-development-receipt chain head;
+- the canonical SHA256 of the validated signed custodian deposit;
+- the original 16 + 24 prescribed logical denominators; and
+- a claimed checkpoint time inside the claimed enrollment window.
+
+It requires all scientific/independence/external-timestamp/remote-custody
+flags inside the checkpoint to remain **false**, and rejects extra
+fields, including hidden target data. A local clock check is **not**
+trusted timestamp evidence: nothing in this module attests that the
+witness actually observed or externally published the source head
+before any qualification attempt.
+
+The **CrossedLocalEvaluator** offers an opt-in local gate: pass the
+original signed enrollment, pinned witness public key and claimed
+UTC clock at construction *before any source action*. With this
+enrollment configured, its custody acknowledgement requires the
+matching second signed witness checkpoint; it refuses early holdout
+otherwise. The finalized audit retains the checkpoint's digest and
+explicitly does not grant scientific acceptance.
+
+**Important integration limitation:** the existing disposable
+three-UID shell and CLI still exercise the older signed custodian
+gate. They **do not yet feed the second witness checkpoint into the
+Linux evaluator subprocess**, do not deploy an independently
+governed witness service, and do not confirm external or immutable
+prequalification deposit. The strengthened optional path is exercised
+in Python unit/integration tests, **not yet as a cross-host or
+cross-UID witness round trip**. It must not be described as an
+external witness deployment.
+
+The additional
+**tests/test_c3r_g1_crossed_witness_checkpoint.py** includes eight
+independent tests for valid gated closure, missing pre-enrollment,
+wrong enrollment, sequence/replay/signature corruption,
+custodian/source swaps, correctly signed but semantically invalid
+claims, UTC-claim failures, missingness preservation, and private
+target field rejection. The crossed G1 suite passes **52/52 local
+tests**. Recheck GitHub CI for the exact branch head separately.
+
+No live or paid provider calls, no third-party key custody, no
+trusted timestamp, no scientific G1 acquisition claim, no
+independent replication, and no Pattern Register promotion.
+The PR remains Draft pending independent evidence and prospective
+powered study requirements.
