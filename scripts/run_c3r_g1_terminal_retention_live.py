@@ -18,13 +18,10 @@ import argparse
 import json
 import os
 import random
-import re
 import statistics
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
-
-from resonance_world.c3r_g1_zai_transport import PhysicalSendLedger, ZaiStandardModelPort
 
 from run_c3r_g1_three_step_procedure_live import (
     ARMS,
@@ -42,6 +39,8 @@ from run_c3r_g1_three_step_procedure_live import (
     _task,
     _write_once,
 )
+
+from resonance_world.c3r_g1_zai_transport import PhysicalSendLedger, ZaiStandardModelPort
 
 SCHEMA = "c3r-g1-terminal-grade-two-retentions-v0.1"
 SOURCE_SLOTS = 56
