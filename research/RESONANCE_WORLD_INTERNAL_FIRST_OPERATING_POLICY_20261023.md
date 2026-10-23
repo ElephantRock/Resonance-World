@@ -40,3 +40,17 @@ The internal source checkpoint is exclusive (O_EXCL) and fsynced: it guards agai
 **Next work priorities** should target internal experiment quality (authentic provider/session receipts when authorized, paired/crossed randomization and balance, prompt/token parity, accurate private grading and reproducibility) plus scalable execution architecture, rather than adding signers and approvers.
 
 No new paid model calls, main-branch merge, scientific claim, or Pattern Register promotion is authorized by this policy alone.
+
+
+## 2026-10-23 implementation — POSIX hard-deadline worker option
+
+The internal-only C3R G1 research branch now contains
+src/resonance_world/c3r_g1_crossed_internal_process_batch.py as an
+additional offline process supervisor. Unlike the original thread
+fixture, it has bounded active POSIX subprocesses with per-run
+deadlines and process-group termination, strict one-shot claim/start
+markers, and private postclosure verification. This specifically
+addresses the previously documented inability to kill stuck threads.
+It is not a production provider adapter and does not imply live
+model calls or scientific acceptance. The old thread runner is
+retained for compatibility, not an external approval chain.
