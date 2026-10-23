@@ -210,3 +210,76 @@ def test_one_source_failed_context_does_not_block_seven_healthy_triplets(
     assert all(row["correct"] is None for row in affected)
     assert result["qualification_by_arm"]["learned"]["prescribed"] == 8
     assert result["scientific_acceptance"] is False
+
+
+
+def test_text_only_actual_trial_skips_arithmetic_without_global_wait(
+    tmp_path: Path,
+) -> None:
+    x = _load()
+    report = x.run_crossed_live(
+        run_id="g1-text-only-diagnostic-03",
+        workspace=_workspace(tmp_path),
+        target_seed=os.urandom(32),
+        port_factory=FakePort,
+        max_workers=2,
+        enabled_families=("text",),
+    )
+    assert report["enabled_families"] == ["text"]
+    assert report["physical_sends_reserved"] == 20
+    assert report["source_contexts_eligible"] == 4
+    assert report["source_contexts_incomplete"] == 4
+    assert report["status_counts"] == {"accepted": 20, "not_sent": 20}
+    assert len(report["records"]) == 40
+    assert all(
+        row["status"] == "not_sent"
+        for row in report["records"] if row["family"] == "arithmetic"
+    )
+    assert all(
+        row["status"] == "accepted"
+        for row in report["records"] if row["family"] == "text"
+    )
+    assert report["qualification_by_arm"]["learned"]["prescribed"] == 8
+    assert report["qualification_by_arm"]["fresh"]["prescribed"] == 8
+    assert report["scientific_acceptance"] is False
+
+
+def test_provider_failure_class_exposes_only_local_allowlisted_metadata(
+    tmp_path: Path,
+) -> None:
+    x = _load()
+    class FakeRequest:
+        def __init__(self):
+            from types import SimpleNamespace
+
+            self.ledger = SimpleNamespace(records=[
+                SimpleNamespace(failure_class="HttpNon200", http_status=429),
+            ])
+
+        def complete_prompt(self, _prompt):
+            raise RuntimeError("private provider bearer secret and raw body")
+
+    journal = x.DurableAttemptJournal(
+        _workspace(tmp_path), run_id="g1-safe-error-metadata-03",
+    )
+    result = x._safe_send(
+        0, "public task", journal=journal, port_factory=FakeRequest,
+    )
+    assert result["status"] == "provider_error"
+    assert result["failure_class"] == "HttpNon200"
+    assert result["http_status"] == 429
+    assert "private" not in json.dumps(result)
+    assert journal.count == 1
+
+
+def test_family_selection_rejects_invalid_duplicate_before_model_send(
+    tmp_path: Path,
+) -> None:
+    x = _load()
+    root = _workspace(tmp_path)
+    with pytest.raises(ValueError, match="enabled families"):
+        x.run_crossed_live(
+            run_id="g1-bad-family-03", workspace=root,
+            target_seed=os.urandom(32), port_factory=FakePort,
+            enabled_families=("text", "text"),
+        )
