@@ -193,14 +193,17 @@ def _holdout_prompt(unit: dict[str, object], policy: str) -> str:
 
 
 class SlotJournal:
-    def __init__(self, root: Path, run_id: str):
+    def __init__(self, root: Path, run_id: str, max_slots: int = 48):
+        if type(max_slots) is not int or not 1 <= max_slots <= 256:
+            raise ValueError("invalid prescribed slot count")
         self.root = root
         self.run_id = run_id
+        self.max_slots = max_slots
         self._lock = threading.Lock()
         self._indices: set[int] = set()
 
     def reserve(self, index: int, prompt: str) -> None:
-        if type(index) is not int or not 0 <= index < 48:
+        if type(index) is not int or not 0 <= index < self.max_slots:
             raise ValueError("invalid physical attempt index")
         with self._lock:
             _write_once(self.root, f"send-{index:02d}.json", {
