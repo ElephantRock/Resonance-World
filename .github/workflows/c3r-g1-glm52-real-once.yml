@@ -1,0 +1,59 @@
+name: G1 GLM-5.2 Uniform Nonthinking Real Trial
+
+on:
+  push:
+    branches:
+      - research/c3r-g2-causal-foundation
+    paths:
+      - research/c3r_g2/G1_GLM52_REAL_DISPATCH_20261023.md
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c3r-g1-glm52-nonthinking-one-shot-20261023
+  cancel-in-progress: false
+
+jobs:
+  crossed-glm52:
+    if: github.repository == 'ElephantRock/Resonance-World'
+    runs-on: ubuntu-latest
+    timeout-minutes: 65
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      PYTHONDONTWRITEBYTECODE: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install locked local evaluator requirements
+        run: |
+          python -m pip install -e .
+          python -m pip install 'cryptography>=42'
+      - name: Credential-free plan preflight and secret presence
+        shell: bash
+        run: |
+          test -n "$C3R_ZAI_API_KEY" || { echo "Missing ZAI_API_KEY; no sends"; exit 2; }
+          python -m resonance_world.c3r_g1_crossed_plan > /dev/null
+          python scripts/run_c3r_g1_fourth_crossed_live.py > /dev/null
+      - name: Run REAL GLM-5.2 all 40 G1 slots, uniformly disabled thinking
+        shell: bash
+        run: |
+          umask 077
+          mkdir -m 700 -p "$RUNNER_TEMP/g1-glm52-nonthinking" output/c3r_g2
+          python scripts/run_c3r_g1_fourth_crossed_live.py \
+            --live \
+            --run-id g1-crossed-glm52-nonthinking-20261023-04 \
+            --workspace "$RUNNER_TEMP/g1-glm52-nonthinking" \
+            --model glm-5.2 --thinking-mode disabled \
+            --workers 4 --max-tokens 512 \
+            > output/c3r_g2/g1-glm52-crossed-real.json
+      - name: Retain sanitized private-free scored results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g1-glm52-uniform-nonthinking-20261023
+          path: output/c3r_g2/g1-glm52-crossed-real.json
+          retention-days: 14
+          if-no-files-found: ignore
