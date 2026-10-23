@@ -175,6 +175,7 @@ class CrossedLocalEvaluator:
             self._plan, receipts=tuple(self._records), mode="development",
             expected_run_id=self._run_id,
             pinned_evaluator_public_key_hex=self.evaluator_public_key_hex,
+            allow_incomplete_development=self._internal_checkpoint_dir is not None,
         )
         if self._internal_checkpoint_dir is not None:
             _record, sha = write_internal_source_lock(
