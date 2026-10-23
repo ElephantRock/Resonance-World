@@ -15,6 +15,10 @@ from datetime import UTC, datetime
 from pathlib import Path
 
 from resonance_world.c3r_g1_crossed_enrollment import EnrollmentPin
+from resonance_world.c3r_g1_crossed_internal_lock import (
+    verify_internal_source_lock,
+    write_internal_source_lock,
+)
 from resonance_world.c3r_g1_crossed_plan import evaluator_private_assignment, make_plan
 from resonance_world.c3r_g1_crossed_receipt_bridge import verify_crossed_receipt_chain
 from resonance_world.c3r_g1_crossed_source_deposit import (
@@ -36,7 +40,8 @@ class CrossedLocalEvaluator:
 
     def __init__(
         self, *, run_id: str, private_target_seed: bytes,
-        signing_seed: bytes, pinned_custodian_public_key_hex: str,
+        signing_seed: bytes, pinned_custodian_public_key_hex: str | None = None,
+        internal_checkpoint_dir: Path | None = None,
         signed_enrollment: dict[str, object] | None = None,
         pinned_witness_public_key_hex: str | None = None,
         claimed_clock_check_utc: datetime | None = None,
@@ -48,8 +53,19 @@ class CrossedLocalEvaluator:
         self._signer = ReceiptSigner(signing_seed, run_id=run_id)
         self._run_id = run_id
         self._custodian_pin = pinned_custodian_public_key_hex
+        self._internal_checkpoint_dir = internal_checkpoint_dir
+        self._internal_source_lock_sha256: str | None = None
+        if internal_checkpoint_dir is not None:
+            if pinned_custodian_public_key_hex is not None:
+                raise ValueError("internal mode cannot depend on a custodian")
+            if any(v is not None for v in (
+                signed_enrollment, pinned_witness_public_key_hex, claimed_clock_check_utc,
+            )):
+                raise ValueError("internal mode cannot depend on a witness")
+        elif not pinned_custodian_public_key_hex:
+            raise ValueError("signed custody mode requires custodian key")
         if self._signer.public_key_hex == pinned_custodian_public_key_hex:
-            raise ValueError("custodian must not share the evaluator signing key")
+            raise ValueError("custodian must not share evaluator signing key")
         self._records: list[dict[str, object]] = []
         self._source_head: str | None = None
         self._custody_accepted = False
