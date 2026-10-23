@@ -62,3 +62,17 @@ Tests in **tests/test_c3r_g1_crossed_internal_batch.py** cover independent compl
 **No claim of production scheduling or performance gains:** The current ThreadPoolExecutor is suitable for the synthetic/offline fixture, but cannot forcibly terminate a stalled thread or provide a hard per-run deadline. A production provider adapter would require process-bound deadlines, cancellation semantics, idempotent dispatch records, budgets and externally sourced provider receipts *inside project control*. No such adapter is activated here.
 
 Scientific G1 prerequisites remain internal: real model observations when separately authorized, correct private grading, matched sessions/tokens/compute, fixed experimental allocation, complete denominators and causal analysis. **scientific_acceptance=false** and Pattern Register promotion remains blocked by scientific evaluation, not by an external auditor.
+
+
+## POSIX process supervisor supersession (2026-10-23)
+
+The ThreadPoolExecutor scheduler documented above remains a tested,
+compatible offline fixture, **not the preferred hard-timeout runner**.
+The project now also implements
+src/resonance_world/c3r_g1_crossed_internal_process_batch.py, described
+in G1_INTERNAL_HARD_DEADLINE_PROCESS_BATCH_20261023.md. It admits only
+a bounded number of POSIX child processes, enforces per-process monotonic
+deadlines with process-group SIGKILL/reaping, isolates credentials from
+the inherited environment, writes an exclusive child-start marker and
+never retries a claimed run. Source/holdout separation and scientific
+nonacceptance are unchanged. No outside approval is added.
