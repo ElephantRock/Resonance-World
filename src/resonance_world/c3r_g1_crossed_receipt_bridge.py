@@ -86,6 +86,7 @@ def verify_crossed_receipt_chain(
     expected_run_id: str,
     pinned_evaluator_public_key_hex: str,
     expected_source_chain_head_sha256: str | None = None,
+    allow_incomplete_development: bool = False,
 ) -> CrossedVerifiedBatch:
     """Verify exactly 16 source or 40 terminal existing-protocol receipts.
 
@@ -153,12 +154,21 @@ def verify_crossed_receipt_chain(
         "verdict": "signed_structural_claims_only_unattested",
     }
     if mode == "development":
-        if any(r.status != "accepted" for r in outcomes):
+        if (any(r.status != "accepted" for r in outcomes)
+                and not allow_incomplete_development):
             raise ValueError("development requires sixteen accepted signed grades")
+        # Internal-only partial-source mode retains all 16 signed attempts
+        # in the frozen chain but exposes feedback only for accepted grades.
+        if allow_incomplete_development:
+            audit["source_attempts_recorded"] = 16
+            audit["source_accepted_grade_count"] = sum(
+                r.status == "accepted" for r in outcomes
+            )
+            audit["partial_source_internal_only"] = True
         sources = tuple(SourceObservation(
             r.unit_id, r.task_id, r.action,
             "correct" if r.correct else "incorrect",
-        ) for r in outcomes)
+        ) for r in outcomes if r.status == "accepted")
         return CrossedVerifiedBatch(sources, None, source_head, audit)
 
     descriptive = audit_outcomes(plan, outcomes=tuple(outcomes))
