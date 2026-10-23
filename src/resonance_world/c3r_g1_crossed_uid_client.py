@@ -19,6 +19,7 @@ from typing import TextIO
 from resonance_world.c3r_g1_crossed_enrollment import EnrollmentPin
 from resonance_world.c3r_g1_crossed_plan import make_plan
 from resonance_world.c3r_g1_crossed_receipt_bridge import verify_crossed_receipt_chain
+from resonance_world.c3r_g1_crossed_witness_checkpoint import verify_witness_checkpoint
 
 MAX_REPLY_BYTES = 160 * 1024
 
@@ -63,15 +64,21 @@ def _send(reader: TextIO, writer: TextIO, request: dict[str, object]) -> dict:
 def run_fixture(*, evaluator_socket: Path, custodian_socket: Path,
                 evaluator_uid: int, custodian_uid: int,
                 evaluator_public_key_hex: str, custodian_public_key_hex: str,
-                run_id: str, enrollment_pin: EnrollmentPin | None = None
+                run_id: str, enrollment_pin: EnrollmentPin | None = None,
+                signed_enrollment: dict[str, object] | None = None,
+                witness_socket: Path | None = None, witness_uid: int | None = None
                 ) -> dict[str, object]:
     """Cross-UID toy exercise; source-grade and holdout-receipt isolation."""
     me = os.geteuid()
     if 0 in (me, evaluator_uid, custodian_uid) or len({
             me, evaluator_uid, custodian_uid}) != 3:
         raise ValueError("three different unprivileged OS identities required")
+    if (witness_socket is None or type(witness_uid) is not int
+            or witness_uid < 1 or witness_uid in {me, evaluator_uid, custodian_uid}):
+        raise ValueError("four distinct unprivileged UIDs and witness socket required")
     plan = make_plan()
-    if (enrollment_pin is None or enrollment_pin.run_id != run_id
+    if (signed_enrollment is None
+            or enrollment_pin is None or enrollment_pin.run_id != run_id
             or enrollment_pin.public_plan_digest != plan.public_digest
             or enrollment_pin.evaluator_public_key_hex != evaluator_public_key_hex
             or enrollment_pin.custodian_public_key_hex != custodian_public_key_hex):
@@ -126,8 +133,33 @@ def run_fixture(*, evaluator_socket: Path, custodian_socket: Path,
             )
             if not checked_deposit["source_deposit_signed_by_registered_custodian"]:
                 raise ValueError("prospectively pinned source custodian rejected")
+            with _connect(witness_socket, expected_server_uid=witness_uid) as witness:
+                witness_reader = witness.makefile("r", encoding="utf-8")
+                witness_writer = witness.makefile("w", encoding="utf-8")
+                try:
+                    witness_answer = _send(witness_reader, witness_writer, {
+                        "op": "checkpoint", "source_receipts": source,
+                        "custodian_deposit": deposit,
+                    })
+                finally:
+                    witness_writer.close()
+                    witness_reader.close()
+            if witness_answer.get("phase") != "signed_local_witness_checkpoint":
+                raise ValueError("witness checkpoint signing rejected source custody")
+            checkpoint = witness_answer.get("signed_witness_checkpoint")
+            witnessed = verify_witness_checkpoint(
+                enrollment_pin,
+                signed_enrollment=signed_enrollment,
+                signed_checkpoint=checkpoint,
+                signed_custodian_deposit=deposit,
+                source_chain_head_sha256=verified.source_chain_head_sha256,
+                claimed_clock_check_utc=datetime.now(UTC),
+            )
+            if witnessed.audit()["scientific_acceptance"] is not False:
+                raise ValueError("witness checkpoint claimed scientific approval")
             opened = _send(reader, writer, {
                 "op": "acknowledge_custody", "deposit": deposit,
+                "witness_checkpoint": checkpoint,
             })
             if opened.get("phase") != "qualification_allowed_by_local_signed_custody_claim":
                 raise ValueError("qualification gate did not require signed custody")
@@ -147,7 +179,10 @@ def run_fixture(*, evaluator_socket: Path, custodian_socket: Path,
                 receipts=tuple(final["receipts"]),
                 expected_source_head_sha256=verified.source_chain_head_sha256,
             )
-            if (final.get("actual_provider_sends") != 0
+            if (final.get("prospective_witness_checkpoint_checked") is not True
+                    or final.get("witness_checkpoint_sha256")
+                    != witnessed.witness_checkpoint_sha256
+                    or final.get("actual_provider_sends") != 0
                     or final.get("scientific_acceptance") is not False
                     or final.get("source_chain_head_sha256")
                     != verified.source_chain_head_sha256
@@ -165,6 +200,9 @@ def run_fixture(*, evaluator_socket: Path, custodian_socket: Path,
                 "qualification_grade_released_before_closure": False,
                 "source_deposit_binds_chain_head": True,
                 "pre_source_witness_enrollment_checked": True,
+                "fourth_witness_uid": witness_uid,
+                "witness_checkpoint_sha256": witnessed.witness_checkpoint_sha256,
+                "source_checkpoint_verified_before_holdout": True,
                 "enrollment_sha256": enrollment_pin.signed_enrollment_sha256,
                 "independent_witness_attested": False,
                 "local_custodian_operator_independent": False,
@@ -181,6 +219,8 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description="Crossed G1 third UID offline client")
     parser.add_argument("--evaluator-socket", type=Path, required=True)
     parser.add_argument("--custodian-socket", type=Path, required=True)
+    parser.add_argument("--witness-socket", type=Path, required=True)
+    parser.add_argument("--witness-uid", type=int, required=True)
     parser.add_argument("--evaluator-uid", type=int, required=True)
     parser.add_argument("--custodian-uid", type=int, required=True)
     parser.add_argument("--evaluator-public-key-file", type=Path, required=True)
@@ -218,6 +258,8 @@ def main(argv: list[str] | None = None) -> int:
                 encoding="ascii"
             ).strip(),
             run_id=args.run_id, enrollment_pin=pin,
+            signed_enrollment=enrollment,
+            witness_socket=args.witness_socket, witness_uid=args.witness_uid,
         )
     except (ValueError, OSError, KeyError, TypeError, UnicodeError, TimeoutError):
         print(json.dumps({
