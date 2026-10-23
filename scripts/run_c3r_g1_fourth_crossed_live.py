@@ -13,7 +13,6 @@ import argparse
 import hashlib
 import json
 import os
-import stat
 import threading
 from collections import Counter
 from concurrent.futures import ThreadPoolExecutor, as_completed
