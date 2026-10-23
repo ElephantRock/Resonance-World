@@ -12,3 +12,7 @@ This marker is the single-use push trigger for .github/workflows/c3r-g1-fourth-c
 - This is a **real exploratory model experiment**, not proof of autonomous persistent agent learning or a powered G1 acceptance decision.
 
 **On workflow completion:** inspect its sanitized artifact, publish descriptive evidence, and retire the one-shot launcher. Do not rerun the workflow if provider send outcomes were uncertain.
+
+## Zero-send dependency correction and re-dispatch
+
+The original push-triggered workflow run 39911077580 failed at its pre-send Python import with ModuleNotFoundError: cryptography. Its provider execution step was **skipped**, no model requests were initiated, and no artifact/result was produced. The workflow now explicitly installs cryptography. This marker-only update authorizes the *first actual physical dispatch*; it is not an ambiguous-request retry.
