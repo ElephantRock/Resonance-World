@@ -1,0 +1,69 @@
+name: G1 GLM-5.3 Low High Max Real Cohorts
+
+# One new marker starts three distinct real-model cohorts.
+# No automatic reruns of sent or ambiguously sent physical attempts.
+on:
+  push:
+    branches:
+      - research/c3r-g2-causal-foundation
+    paths:
+      - research/c3r_g2/G1_GLM53_THREE_EFFORT_REAL_DISPATCH_20261023.md
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c3r-g1-glm53-effort-real-20261023-v1
+  cancel-in-progress: false
+
+jobs:
+  glm53-effort:
+    if: github.repository == 'ElephantRock/Resonance-World'
+    runs-on: ubuntu-latest
+    timeout-minutes: 80
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        effort: [low, high, max]
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      PYTHONDONTWRITEBYTECODE: "1"
+      EFFORT: ${{ matrix.effort }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install internal research package and signer
+        run: |
+          python -m pip install -e .
+          python -m pip install 'cryptography>=42'
+      - name: Check credential and frozen plan without model sends
+        shell: bash
+        run: |
+          test -n "$C3R_ZAI_API_KEY" || { echo "ZAI_API_KEY missing; zero sends"; exit 2; }
+          python -m resonance_world.c3r_g1_crossed_plan >/dev/null
+          python scripts/run_c3r_g1_fourth_crossed_live.py >/dev/null
+      - name: Send actual GLM-5.3 requests with explicitly enabled thinking
+        shell: bash
+        run: |
+          umask 077
+          mkdir -m 700 -p "$RUNNER_TEMP/g1-glm53-effort-$EFFORT" output/c3r_g2
+          python scripts/run_c3r_g1_fourth_crossed_live.py \
+            --live \
+            --run-id "g1-glm53-effort-$EFFORT-20261023-07" \
+            --workspace "$RUNNER_TEMP/g1-glm53-effort-$EFFORT" \
+            --model glm-5.3 --thinking-mode default \
+            --reasoning-effort "$EFFORT" \
+            --workers 3 --max-tokens 8192 \
+            --timeout-seconds 120 \
+            > "output/c3r_g2/g1-glm53-effort-$EFFORT-real.json"
+      - name: Retain sanitized, grade-closed cohort outcome
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: "g1-glm53-effort-${{ matrix.effort }}-real-20261023"
+          path: "output/c3r_g2/g1-glm53-effort-${{ matrix.effort }}-real.json"
+          retention-days: 14
+          if-no-files-found: ignore
