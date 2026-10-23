@@ -273,3 +273,42 @@ def test_admission_limit_zero_leaves_entire_batch_unstarted(tmp_path: Path) -> N
             workspace=path, run_ids=("not-started",),
             max_workers=1, max_in_flight=1, max_new_runs=True,
         )
+
+
+
+def test_concurrent_duplicate_claim_is_single_winner(tmp_path: Path) -> None:
+    path = _workspace(tmp_path)
+    barrier = threading.Barrier(2)
+    winners: list[str] = []
+    seen_lock = threading.Lock()
+
+    def racer() -> None:
+        barrier.wait(timeout=3)
+        try:
+            batch._claim(path, "competing-claim-001")
+            state = "claimed"
+        except FileExistsError:
+            state = "collision"
+        with seen_lock:
+            winners.append(state)
+
+    threads = [threading.Thread(target=racer) for _ in range(2)]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join(timeout=5)
+        assert not thread.is_alive()
+    assert sorted(winners) == ["claimed", "collision"]
+    result = batch.inspect_batch(
+        workspace=path, run_ids=("competing-claim-001",),
+    )
+    assert result["counts"] == {"unresolved_no_auto_retry": 1}
+
+
+def test_too_short_receipt_run_id_rejected_before_any_side_effect(
+    tmp_path: Path,
+) -> None:
+    path = _workspace(tmp_path)
+    with pytest.raises(ValueError, match="run IDs"):
+        batch.run_batch(workspace=path, run_ids=("short",))
+    assert list(path.iterdir()) == []
