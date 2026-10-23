@@ -536,3 +536,52 @@ trusted timestamps, real provider session/sends and bills, prompt-
 token/compute equivalence, independent correctness grading and
 scientific causal G1 acceptance. All attestation, live-ready,
 acceptance and pattern-promotion claims stay **false**.
+
+
+## Internal-First governance supersession (2026-10-23)
+
+**Decision:** the operative architecture for future G1 construction is
+internal-only. The preceding sections about independently operated
+witnesses, external retention, external time authorities and archive
+approvers now describe *historical optional prototypes only*.
+They are **NOT prerequisites for execution, research progression,
+or scientific review**. Reference:
+G1_INTERNAL_FIRST_FAST_PATH_DECISION_20261023.md.
+
+The new internal fast path validates the first sixteen signed evaluator
+source receipts and durably stores one exclusive per-run local
+checkpoint (O_EXCL, file and directory fsync, private 0600 file in
+an owned 0700 directory). Its fingerprint includes frozen plan,
+run ID, evaluator public key, source chain head and source transcript
+digest, but no private answer map. On a successful source lock,
+the evaluator opens qualification automatically; there is **no
+blocking custodian, witness, archiver, approval request, network
+service or third-party verifier**.
+
+The local lock is checked before the first holdout action and at
+terminal closure, not on every attempt. The fixed **16 development +
+24 qualification** denominator, grade nonleakage, signed transcript
+validation and fail-closed replay/tamper handling remain unchanged.
+Attempts from independent runs can progress in parallel when their
+run IDs and source-lock namespaces are isolated. Model-provider
+sends by this offline fixture remain zero.
+
+Implementation:
+src/resonance_world/c3r_g1_crossed_internal_lock.py and the
+--internal-checkpoint-dir option in
+src/resonance_world/c3r_g1_crossed_local_evaluator.py. Regression
+tests: tests/test_c3r_g1_crossed_internal_lock.py. Prior four-UID
+Linux tests may remain as compatibility checks but **are not on
+the internal runtime critical path**.
+
+This removes external-approval bottlenecks at the cost of
+foregoing claims of third-party custody or impartial external
+attestation. No third party is requested. Filesystem mode, O_EXCL,
+fsync and self-signed records **do not** establish protection
+against a malicious privileged host operator. Do not infer G1
+scientific acceptance from these construction checks. Internal
+scientific prerequisites remain methodologically necessary:
+prospective trial definition, authentic provider traces when
+authorized, target/grade accuracy, session non-contamination,
+matched compute/tokenization, and causal comparisons. No new
+paid execution, Pattern Register promotion or PR merge.
