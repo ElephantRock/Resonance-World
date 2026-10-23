@@ -380,3 +380,26 @@ def test_unsupported_reasoning_effort_rejected_before_experiment(
             reasoning_effort="none",
         )
     assert list(root.iterdir()) == []
+
+
+
+def test_monotonic_latency_reported_for_every_dispatched_slot(
+    tmp_path: Path,
+) -> None:
+    x = _load()
+    result = x.run_crossed_live(
+        run_id="g1-monotonic-timing-20261023",
+        workspace=_workspace(tmp_path), target_seed=os.urandom(32),
+        port_factory=FakePort, max_workers=2,
+        reasoning_effort="low",
+    )
+    assert result["wall_time_measurement"] == (
+        "local_monotonic_per_attempt_includes_transport"
+    )
+    assert all(
+        isinstance(row["latency_ms"], (float, int))
+        and row["latency_ms"] >= 0
+        for row in result["records"]
+    )
+    assert result["reasoning_effort_requested"] == "low"
+    assert result["scientific_acceptance"] is False
