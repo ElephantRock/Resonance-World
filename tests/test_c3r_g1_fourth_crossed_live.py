@@ -286,7 +286,7 @@ def test_family_selection_rejects_invalid_duplicate_before_model_send(
 
 
 
-def test_glm52_uniform_nonthinking_real_runner_contract_isolation(
+def test_glm52_request_now_always_explicitly_enables_thinking(
     tmp_path: Path,
 ) -> None:
     x = _load()
@@ -303,10 +303,11 @@ def test_glm52_uniform_nonthinking_real_runner_contract_isolation(
         run_id="g1-glm52-all-three-arms-04",
         workspace=_workspace(tmp_path), target_seed=os.urandom(32),
         port_factory=GLM52Choice, max_workers=4,
-        model_id="glm-5.2", thinking_mode="disabled",
+        model_id="glm-5.2", thinking_mode="default",
     )
     assert output["model"] == "glm-5.2"
-    assert output["thinking_mode"] == "disabled"
+    assert output["thinking_mode"] == "enabled_requested"
+    assert output["reasoning_effort_requested"] is None
     assert output["physical_sends_reserved"] == 40
     assert output["status_counts"] == {"accepted": 40}
     assert output["qualification_by_arm"]["fresh"]["accepted"] == 8
@@ -319,7 +320,7 @@ def test_runner_rejects_disabled_glm53_before_reserving_any_call(
 ) -> None:
     x = _load()
     root = _workspace(tmp_path)
-    with pytest.raises(ValueError, match="model and thinking"):
+    with pytest.raises(ValueError, match="thinking"):
         x.run_crossed_live(
             run_id="g1-bad-glm53-thinking-04", workspace=root,
             target_seed=os.urandom(32), port_factory=FakePort,
@@ -347,3 +348,35 @@ def test_uniform_predeclared_fallback_in_all_arms_when_history_ungraded():
     assert "success=" not in x.prompt_for(
         task, source_history=(), arm="fresh",
     )
+
+
+
+def test_glm53_low_high_max_are_distinct_valid_reported_arms(tmp_path: Path) -> None:
+    x = _load()
+    for effort in ("low", "high", "max"):
+        root = tmp_path / effort
+        root.mkdir(mode=0o700)
+        report = x.run_crossed_live(
+            run_id=f"g1-glm53-effort-{effort}-20261023",
+            workspace=root, target_seed=os.urandom(32),
+            port_factory=FakePort, model_id="glm-5.3",
+            reasoning_effort=effort,
+        )
+        assert report["reasoning_effort_requested"] == effort
+        assert report["thinking_mode"] == "enabled_requested"
+        assert report["physical_sends_reserved"] == 40
+        assert report["scientific_acceptance"] is False
+
+
+def test_unsupported_reasoning_effort_rejected_before_experiment(
+    tmp_path: Path,
+) -> None:
+    x = _load()
+    root = _workspace(tmp_path)
+    with pytest.raises(ValueError, match="reasoning effort"):
+        x.run_crossed_live(
+            run_id="g1-bad-effort-20261023", workspace=root,
+            target_seed=os.urandom(32), port_factory=FakePort,
+            reasoning_effort="none",
+        )
+    assert list(root.iterdir()) == []
