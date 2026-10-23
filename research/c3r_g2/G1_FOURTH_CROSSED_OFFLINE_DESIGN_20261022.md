@@ -494,3 +494,45 @@ do not attest external authority or independent replication.
 This remains offline construction. No live sends, new budget
 authorization, scientific acceptance, Pattern Register promotion
 or main branch merge.
+
+
+## External archive handoff interface (2026-10-23)
+
+A **read-only, strictly offline external handoff verifier** is now
+implemented at src/resonance_world/c3r_g1_crossed_external_handoff.py,
+with eleven negative/positive tests and a public-key-only CLI.
+Its standalone trust and serialization contract is documented in
+**research/c3r_g2/G1_EXTERNAL_WITNESS_HANDOFF_CONTRACT_20261023.md**.
+
+This is an **interface to an as-yet-unoperated external archive**, not
+evidence that such an archive exists. An additional *archive authority*
+Ed25519 public key must be pinned separately from the evaluator,
+custodian and witness keys. The module never signs records, imports
+private answer keys, transmits evidence or contacts a provider.
+
+For **source handoff**, the verifier checks the frozen 16 signed source
+receipts, the original witness enrollment and chained checkpoint,
+the signed custodian deposit, then a separate signed archive receipt
+that binds the canonical source manifest digest. It outputs an archive
+receipt SHA256 **for actual independent retention before holdout**.
+The receipt's claimed timestamp is not independently witnessed time.
+
+For **terminal handoff**, the verifier requires all 40 signed logical
+attempts and the source-stage archive receipt SHA256 supplied
+out-of-band. It rejects missing/altered source prefixes, invalid
+signatures, wrong runs/roles, missing prescribed qualification rows,
+unregistered payload fields, and substituted archival receipts.
+No change to the original 16+24 denominator or provider-spend
+authorization is permitted.
+
+Eleven local tests passed for the read-only contract; the initial CI
+on source-and-test commit 4c89bc6 succeeded with **833 passed,
+4 skipped**, Ruff and the four-UID Linux gate. Subsequent document
+commits must be checked again at their own exact HEAD.
+
+**Unresolved (unchanged):** key custody with a real external operator,
+independently verifiable pre-holdout deposit and secure retention,
+trusted timestamps, real provider session/sends and bills, prompt-
+token/compute equivalence, independent correctness grading and
+scientific causal G1 acceptance. All attestation, live-ready,
+acceptance and pattern-promotion claims stay **false**.
