@@ -257,3 +257,32 @@ def test_manual_or_duplicate_child_admission_is_exclusive(tmp_path: Path) -> Non
     assert process_batch.inspect_batch(
         workspace=path, run_ids=("proc-child-once-0001",),
     )["counts"] == {"unresolved_no_auto_retry": 1}
+
+
+
+def test_process_worker_does_not_inherit_provider_or_repository_credentials(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = _workspace(tmp_path)
+    monkeypatch.setenv("OPENAI_API_KEY", "mock-private-secret")
+    monkeypatch.setenv("GITHUB_TOKEN", "mock-repository-credential")
+    monkeypatch.setenv("C3R_PRIVATE_TARGET_SEED", "should-never-be-inherited")
+    observed: dict[str, object] = {}
+
+    def intercept_popen(command, **kwargs):
+        observed["command"] = command
+        observed["kwargs"] = kwargs
+        return object()
+
+    monkeypatch.setattr(process_batch.subprocess, "Popen", intercept_popen)
+    process_batch._spawn(path, "proc-env-isolation-0001")
+    args = observed["kwargs"]
+    child_env = args["env"]
+    assert "OPENAI_API_KEY" not in child_env
+    assert "GITHUB_TOKEN" not in child_env
+    assert "C3R_PRIVATE_TARGET_SEED" not in child_env
+    assert args["start_new_session"] is True
+    assert args["close_fds"] is True
+    assert args["stdout"] == subprocess.DEVNULL
+    assert args["stderr"] == subprocess.DEVNULL
+    assert args["stdin"] == subprocess.DEVNULL
