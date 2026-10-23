@@ -1,4 +1,4 @@
-"""Two-send real-model control-readiness probe before a new G1 run.
+"""GLM-5.3 low-effort two-send control-readiness probe before a new G1 run.
 
 No grading, no hidden labels, no retries or outside auditor. A technical
 probe is *never* counted as a 40-slot scientific experiment observation.
@@ -35,7 +35,7 @@ def run_control_probes(port_factory) -> dict[str, object]:
             if not isinstance(result, ModelChoiceCompletion):
                 raise ValueError("unrecognized provider completion object")
             tokens = result.completion_tokens_reported
-            ready = (result.model_id == "glm-4.7"
+            ready = (result.model_id == "glm-5.3"
                      and result.finish_reason == "stop"
                      and result.output in ("A", "B")
                      and (tokens is None or tokens <= 128))
@@ -58,8 +58,9 @@ def run_control_probes(port_factory) -> dict[str, object]:
         results.append(record)
     return {
         "schema": "c3r-g1-internal-control-readiness-v0.1",
-        "model": "glm-4.7",
-        "requested_thinking_mode": "disabled",
+        "model": "glm-5.3",
+        "requested_thinking_mode": "enabled",
+        "reasoning_effort_requested": "low",
         "control_prompt_policy": "default_A_if_no_actual_grades_v1",
         "technical_physical_send_reservations": 2,
         "readiness_passed": all(x["status"] == "valid_short_answer" for x in results),
@@ -82,8 +83,8 @@ def main(argv: list[str] | None = None) -> int:
         raise SystemExit("provider credential absent, no send")
     def port_factory():
         return ZaiStandardModelPort(
-            api_key=key, model_id="glm-4.7", ledger=PhysicalSendLedger(1),
-            enabled=True, route="coding", thinking_mode="disabled",
+            api_key=key, model_id="glm-5.3", ledger=PhysicalSendLedger(1),
+            enabled=True, route="coding", reasoning_effort="low",
             max_tokens=512, timeout_seconds=90,
         )
     report = run_control_probes(port_factory)
