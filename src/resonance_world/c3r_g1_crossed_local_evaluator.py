@@ -158,6 +158,7 @@ class CrossedLocalEvaluator:
     def acknowledge_custody(
         self, deposit: dict[str, object], *,
         witness_checkpoint: dict[str, object] | None = None,
+        claimed_clock_check_utc: datetime | None = None,
     ) -> dict[str, object]:
         if (self._source_head is None or self._custody_accepted
                 or len(self._records) != 16 or self._finished):
@@ -179,7 +180,11 @@ class CrossedLocalEvaluator:
                 signed_checkpoint=witness_checkpoint,
                 signed_custodian_deposit=deposit,
                 source_chain_head_sha256=self._source_head,
-                claimed_clock_check_utc=self._claimed_clock_check_utc,
+                claimed_clock_check_utc=(
+                    claimed_clock_check_utc
+                    if claimed_clock_check_utc is not None
+                    else self._claimed_clock_check_utc
+                ),
             )
         self._custody_accepted = True
         return {
@@ -273,6 +278,9 @@ def main(argv: list[str] | None = None) -> int:
             ):
                 response = engine.acknowledge_custody(
                     obj["deposit"], witness_checkpoint=obj.get("witness_checkpoint"),
+                    claimed_clock_check_utc=(
+                        datetime.now(UTC) if "witness_checkpoint" in obj else None
+                    ),
                 )
             elif op == "finalize" and set(obj) == {"op"}:
                 _emit(engine.finalize())
