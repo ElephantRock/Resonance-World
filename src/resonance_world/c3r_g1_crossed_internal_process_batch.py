@@ -50,6 +50,20 @@ def _check_claim(workspace: Path, run_id: str) -> None:
         raise ValueError("child may not replay a terminal or failed run")
 
 
+
+def _start_worker_once(workspace: Path, run_id: str) -> None:
+    """Independent O_EXCL child admission prevents duplicate manual worker launch."""
+    _check_claim(workspace, run_id)
+    claim, _directory, _terminal, _failed = _paths(workspace, run_id)
+    start_marker = claim.with_name(claim.name.replace(".claim.json", ".started.json"))
+    _write_once(start_marker, {
+        "schema": "c3r-g1-crossed-process-worker-start-v0.1",
+        "run_id": run_id,
+        "state": "child_started_once_never_replay",
+        "scientific_acceptance": False,
+    })
+
+
 def _spawn(workspace: Path, run_id: str) -> subprocess.Popen[bytes]:
     """Keep potentially sensitive parent env vars out of the child process."""
     env = {
@@ -209,7 +223,7 @@ def main(argv: list[str] | None = None) -> int:
         if args.worker_run_id is not None:
             if args.run_id or args.inspect:
                 raise ValueError("one-shot worker cannot accept batch operations")
-            _check_claim(args.workspace, args.worker_run_id)
+            _start_worker_once(args.workspace, args.worker_run_id)
             _execute_internal_run(args.workspace, args.worker_run_id)
             return 0
         if not args.run_id:
