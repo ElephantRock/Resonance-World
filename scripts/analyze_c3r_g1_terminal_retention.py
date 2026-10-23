@@ -74,13 +74,15 @@ def analyze(triples: tuple[tuple[Path, Path, Path], ...]) -> dict[str, object]:
             raise ValueError("source reservation and logical denominator invalid")
         wave_out = {}
         wave_rows = {}
-        for wave, evidence in zip(WAVES, (first, second)):
+        for wave, evidence in zip(WAVES, (first, second), strict=True):
             if (evidence.get("schema") != SCHEMA
                     or evidence.get("phase") != wave
                     or evidence.get("scientific_acceptance") is not False
                     or evidence.get("prescribed_holdout_slots") != 24
                     or evidence.get("separate_interpreter_required") is not True
-                    or evidence.get("equal_capacity_and_independent_uniform_control_capsules") is not True
+                    or evidence.get(
+                        "equal_capacity_and_independent_uniform_control_capsules"
+                    ) is not True
                     or evidence.get("learned_capsule_unmodified_between_waves") is not True
                     or evidence.get("source_transcript_reinserted_in_prompt") is not False
                     or evidence.get("eligible_contexts") != src["eligible_contexts"]):
