@@ -109,7 +109,9 @@ class CrossedLocalEvaluator:
             raise ValueError("crossed evaluator already finished prescribed attempts")
         index = len(self._records)
         if index == 16 and not self._custody_accepted:
-            raise ValueError("holdout prohibited before source lock or custody")
+            if self._internal_checkpoint_dir is not None:
+                raise ValueError("holdout prohibited before source lock")
+            raise ValueError("holdout prohibited before signed source custody acknowledgement")
         if index == 16 and self._internal_checkpoint_dir is not None:
             self._check_internal_source_lock()
         if (status not in ("accepted", "invalid_format", "provider_error", "not_sent")
