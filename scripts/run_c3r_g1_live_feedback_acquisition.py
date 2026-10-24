@@ -86,30 +86,44 @@ def prompt_for(kind, view, observations):
 
 
 def ask(prompt, key, journal, label):
-    """One provider request, pre-reserved and fsynced; no retry and no raw text logging."""
-    journal.reserve(label)
-    started = time.monotonic()
-    answer, status, usage = None, "provider_error", None
-    port = None
-    try:
-        port = ZaiStandardModelPort(
-            api_key=key, model_id=MODEL, ledger=PhysicalSendLedger(1),
-            enabled=True, route="coding", reasoning_effort="high",
-            max_tokens=4096, timeout_seconds=150,
-        )
-        completed = port.complete_prompt(prompt)
-        if completed.model_id != MODEL or completed.finish_reason != "stop":
-            status, usage = "non_stop", completed.completion_tokens_reported
-        else:
-            answer, status, usage = completed.output.strip(), "accepted", completed.completion_tokens_reported
-    except Exception as exc:
-        # Do not persist raw exceptions, request/response text, or provider credentials.
-        status = "provider_error_" + type(exc).__name__[:35]
-    elapsed = time.monotonic() - started
-    code = (port.ledger.records[-1].http_status
-            if port is not None and port.ledger.records else None)
-    journal.complete(label, status, usage, elapsed, code)
-    return answer, status, usage, elapsed
+    """Exactly one execution per successful call; retry only explicit HTTP 429.
+
+    Every physical retry is independently reserved and fsynced. No retry on
+    transport ambiguity, timeout, HTTP 5xx, or an accepted response.
+    """
+    for retry in range(3):
+        attempt_label = f"{label}:attempt:{retry}"
+        journal.reserve(attempt_label)
+        started = time.monotonic()
+        answer, status, usage = None, "provider_error", None
+        port = None
+        try:
+            port = ZaiStandardModelPort(
+                api_key=key, model_id=MODEL, ledger=PhysicalSendLedger(1),
+                enabled=True, route="coding", reasoning_effort="high",
+                max_tokens=4096, timeout_seconds=150,
+            )
+            completed = port.complete_prompt(prompt)
+            if completed.model_id != MODEL or completed.finish_reason != "stop":
+                status, usage = "non_stop", completed.completion_tokens_reported
+            else:
+                answer, status, usage = completed.output.strip(), "accepted", completed.completion_tokens_reported
+        except Exception as exc:
+            status = "provider_error_" + type(exc).__name__[:35]
+        elapsed = time.monotonic() - started
+        code = (port.ledger.records[-1].http_status
+                if port is not None and port.ledger.records else None)
+        journal.complete(attempt_label, status, usage, elapsed, code)
+        if code == 429 and retry < 2:
+            # Definitely rejected requests; do not retry uncertain/timeouts.
+            delay = (60, 120)[retry]
+            journal.record({"event": "provider_backoff", "slot": label,
+                            "retry": retry + 1, "http_status": code,
+                            "delay_seconds": delay})
+            time.sleep(delay)
+            continue
+        return answer, status, usage, elapsed
+    raise AssertionError("unreachable retry limit")
 
 
 def one_arm(context, arm, key, journal):
