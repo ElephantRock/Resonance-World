@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import importlib.util
 import json
-import re
 import sys
 from pathlib import Path
 
@@ -42,8 +41,7 @@ def _correct_policy(prompt: str) -> str:
     matches = [
         code for code in m.CODES
         if all(
-            m._manifest is not None
-            and _execute_for_test(family, sample["input"], code)
+            _execute_for_test(family, sample["input"], code)
             == sample["correct_final_output"] for sample in samples
         )
     ]
