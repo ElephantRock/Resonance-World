@@ -10,18 +10,19 @@ permissions:
   contents: read
 
 concurrency:
-  group: c3r-g1-acquisition-20261024-once
+  group: c3r-g1-acquisition-20261024-v2-once
   cancel-in-progress: false
 
 jobs:
   live-acquisition:
     strategy:
       fail-fast: false
-      max-parallel: 6
+      max-parallel: 10
       matrix:
         cohort: ["01", "02", "03", "04", "05", "06"]
+        position: [0, 1, 2, 3]
     runs-on: ubuntu-latest
-    timeout-minutes: 60
+    timeout-minutes: 90
     env:
       C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
     steps:
@@ -31,23 +32,50 @@ jobs:
           python-version: "3.12"
       - name: Install repository package
         run: python -m pip install -e .
-      - name: Verify credential before any send
+      - name: Offline syntax and integrity check
+        shell: bash
+        run: |
+          python -m py_compile scripts/run_c3r_g1_live_feedback_acquisition.py
+          PYTHONPATH=scripts python - <<'PY'
+          import json
+          import random
+          import tempfile
+          from pathlib import Path
+          from run_c3r_g1_live_feedback_acquisition import public_view, RedactedJournal, _task
+          for family in ("arithmetic", "text"):
+              view = public_view(family, _task(random.SystemRandom(), family))
+              assert len(view["thresholds"]) == 32
+              assert len(set(view["thresholds"])) == 32
+          with tempfile.TemporaryDirectory() as d:
+              file = Path(d) / "journal.jsonl"
+              j = RedactedJournal(file)
+              j.reserve("selftest")
+              j.complete("selftest", "accepted", 2, 0.1)
+              j.close()
+              rows = [json.loads(s) for s in file.read_text().splitlines()]
+              assert [r["event"] for r in rows] == ["request_reserved", "request_completed"]
+              assert "raw_response" not in file.read_text()
+          print("Offline checks passed")
+          PY
+      - name: Verify credential and one-use campaign
         shell: bash
         run: |
           test -n "$C3R_ZAI_API_KEY" || { echo "Missing ZAI API key; zero sends."; exit 1; }
-      - name: Actual GLM-5.3 feedback acquisition with 3 arms and new holdouts
+          test "${{ github.run_attempt }}" = "1" || { echo "Workflow re-run blocked to avoid duplicate sends."; exit 2; }
+      - name: Actual GLM-5.3 feedback acquisition (one context and three arms)
         shell: bash
         run: |
           umask 077
           mkdir -p output/c3r_g1
-          python scripts/run_c3r_g1_live_feedback_acquisition.py \
+          python -u scripts/run_c3r_g1_live_feedback_acquisition.py \
             --cohort "${{ matrix.cohort }}" \
-            --out "output/c3r_g1/acquisition-${{ matrix.cohort }}.json"
-      - name: Preserve redacted outcome data
+            --position "${{ matrix.position }}" \
+            --out "output/c3r_g1/acquisition-${{ matrix.cohort }}-${{ matrix.position }}.jsonl"
+      - name: Preserve durable, redacted attempt-level evidence even on timeout
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c3r-g1-live-acquisition-${{ matrix.cohort }}-20261024
-          path: output/c3r_g1/acquisition-${{ matrix.cohort }}.json
+          name: c3r-g1-live-acquisition-v2-${{ matrix.cohort }}-${{ matrix.position }}
+          path: output/c3r_g1/acquisition-${{ matrix.cohort }}-${{ matrix.position }}.jsonl
           retention-days: 21
           if-no-files-found: warn
