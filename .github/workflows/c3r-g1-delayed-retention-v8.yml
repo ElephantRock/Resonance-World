@@ -1,0 +1,130 @@
+name: C3R G1 Delayed Encrypted Policy Retention v8
+on:
+  push:
+    branches: [research/c3r-g1-live-acquisition-20261024]
+    paths:
+      - ".github/workflows/c3r-g1-delayed-retention-v8.yml"
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c3r-g1-delayed-retention-v8
+  cancel-in-progress: false
+
+jobs:
+  offline-validation:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e . cryptography
+      - name: Compile and test sealed capsule without provider
+        shell: bash
+        run: |
+          python -m py_compile scripts/run_c3r_g1_delayed_persistence_v8.py scripts/c3r_g1_capsule_replay_child_v7.py
+          python scripts/run_c3r_g1_delayed_persistence_v8.py selftest
+          PYTHONPATH=scripts python - <<'PY'
+          import json, tempfile
+          from pathlib import Path
+          from unittest.mock import patch
+          import run_c3r_g1_delayed_persistence_v8 as study
+          with tempfile.TemporaryDirectory() as root:
+              folder = Path(root)
+              with patch.object(study, "ask", return_value=("AAAAA", "accepted", 12, 0.1)):
+                  study.source("01", 0, folder, "synthetic-test-secret")
+              saved = study.sealed_read(folder/"capsule.aes", "synthetic-test-secret")
+              assert set(saved["policies"]) == set(study.ARMS)
+              assert len(saved["holdouts"]) == 2
+              assert len({json.dumps(x,sort_keys=True) for x in saved["holdouts"]})==2
+              events = [json.loads(x) for x in (folder/"source.jsonl").read_text().splitlines()]
+              assert len([x for x in events if x["event"]=="source_arm"])==3
+              assert len([x for x in events if x["event"]=="source_complete"])==1
+              assert "private_program" not in (folder/"source.jsonl").read_text()
+              assert "AAAAA" not in (folder/"source.jsonl").read_text()
+          print("Source sealed handoff checks passed, zero model sends.")
+          PY
+
+  acquire:
+    needs: offline-validation
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        cohort: ["01", "02", "03", "04", "05", "06"]
+        position: [0, 1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      C3R_ZAI_API_KEY: \${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e . cryptography
+      - name: Verify provider credential and prohibit rerun
+        shell: bash
+        run: |
+          test -n "$C3R_ZAI_API_KEY" || { echo "Missing provider secret."; exit 1; }
+          test "\${{ github.run_attempt }}" = "1" || exit 2
+      - name: Acquire feedback-derived policies and seal private capsules
+        shell: bash
+        run: |
+          umask 077
+          python -u scripts/run_c3r_g1_delayed_persistence_v8.py source \
+            --cohort "\${{ matrix.cohort }}" --position "\${{ matrix.position }}" \
+            --folder "output/v8-\${{ matrix.cohort }}-\${{ matrix.position }}"
+      - name: Preserve redacted source evidence and encrypted capsule
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c3r-g1-v8-source-\${{ matrix.cohort }}-\${{ matrix.position }}
+          path: output/v8-\${{ matrix.cohort }}-\${{ matrix.position }}/
+          retention-days: 30
+          if-no-files-found: warn
+
+  delayed-retention:
+    needs: [offline-validation, acquire]
+    if: \${{ always() && needs.offline-validation.result == 'success' }}
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        cohort: ["01", "02", "03", "04", "05", "06"]
+        position: [0, 1, 2, 3]
+    runs-on: ubuntu-latest
+    timeout-minutes: 150
+    env:
+      C3R_ZAI_API_KEY: \${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install -e . cryptography
+      - name: Recover encrypted policy artifact from earlier job
+        uses: actions/download-artifact@v4
+        with:
+          name: c3r-g1-v8-source-\${{ matrix.cohort }}-\${{ matrix.position }}
+          path: output/v8-\${{ matrix.cohort }}-\${{ matrix.position }}
+      - name: Decrypt only on new runner after minimum real delay and replay new tasks
+        shell: bash
+        run: |
+          umask 077
+          test "\${{ github.run_attempt }}" = "1" || exit 2
+          python -u scripts/run_c3r_g1_delayed_persistence_v8.py replay \
+            --cohort "\${{ matrix.cohort }}" --position "\${{ matrix.position }}" \
+            --folder "output/v8-\${{ matrix.cohort }}-\${{ matrix.position }}"
+      - name: Preserve delayed judgments, not private capsules
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: c3r-g1-v8-retention-\${{ matrix.cohort }}-\${{ matrix.position }}
+          path: output/v8-\${{ matrix.cohort }}-\${{ matrix.position }}/retention.jsonl
+          retention-days: 30
+          if-no-files-found: warn
