@@ -36,7 +36,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c3r-g1-live-provider-preflight-v3
+          name: c3r-g1-live-provider-preflight-v4
           path: output/c3r_g1/provider-preflight.jsonl
           retention-days: 21
           if-no-files-found: warn
@@ -44,13 +44,13 @@ jobs:
   live-acquisition:
     needs: provider-check
     strategy:
-      fail-fast: false
-      max-parallel: 10
+      fail-fast: true
+      max-parallel: 1
       matrix:
         cohort: ["01", "02", "03", "04", "05", "06"]
         position: [0, 1, 2, 3]
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 120
     env:
       C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
     steps:
@@ -103,7 +103,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c3r-g1-live-acquisition-v2-${{ matrix.cohort }}-${{ matrix.position }}
+          name: c3r-g1-live-acquisition-v4-${{ matrix.cohort }}-${{ matrix.position }}
           path: output/c3r_g1/acquisition-${{ matrix.cohort }}-${{ matrix.position }}.jsonl
           retention-days: 21
           if-no-files-found: warn
