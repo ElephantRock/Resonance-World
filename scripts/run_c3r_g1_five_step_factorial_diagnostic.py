@@ -9,8 +9,8 @@ source-induction DIAGNOSTIC, not agent-retention evidence.
 from __future__ import annotations
 
 import argparse
-import json
 import hashlib
+import json
 import os
 import re
 import statistics
