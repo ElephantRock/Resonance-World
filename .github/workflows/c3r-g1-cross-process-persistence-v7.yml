@@ -27,7 +27,7 @@ jobs:
         shell: bash
         run: |
           python -m py_compile scripts/run_c3r_g1_live_persistence_v7.py scripts/c3r_g1_capsule_replay_child_v7.py
-          PYTHONPATH=scripts python - <<'PY'
+          C3R_ZAI_API_KEY=offline-fixture PYTHONPATH=scripts python - <<'PY'
           import json
           import random
           import os
