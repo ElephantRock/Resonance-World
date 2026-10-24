@@ -11,7 +11,7 @@ permissions:
 
 concurrency:
   group: c3r-g1-delayed-retention-v8
-  cancel-in-progress: false
+  cancel-in-progress: true
 
 jobs:
   offline-validation:
