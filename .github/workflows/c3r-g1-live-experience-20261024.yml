@@ -10,14 +10,14 @@ permissions:
   contents: read
 
 concurrency:
-  group: c3r-g1-acquisition-20261024-v2-once
-  cancel-in-progress: true
+  group: c3r-g1-acquisition-20261024-v6-once
+  cancel-in-progress: false
 
 jobs:
   live-acquisition:
     strategy:
-      fail-fast: true
-      max-parallel: 1
+      fail-fast: false
+      max-parallel: 2
       matrix:
         cohort: ["01", "02", "03", "04", "05", "06"]
         position: [0, 1, 2, 3]
@@ -55,6 +55,35 @@ jobs:
               rows = [json.loads(s) for s in file.read_text().splitlines()]
               assert [r["event"] for r in rows] == ["request_reserved", "request_completed"]
               assert "raw_response" not in file.read_text()
+          import run_c3r_g1_live_feedback_acquisition as study
+          for family in ("arithmetic", "text"):
+              rng = random.SystemRandom()
+              src = study._task(rng, family)
+              hold = study._task(rng, family)
+              target = study.CODES[11]
+              # These responses are local stubs, not scientific results.
+              calls = []
+              original = study.ask
+              def fake(prompt, key, journal, label, max_tokens=8192):
+                  calls.append(label)
+                  if label.endswith(":capsule"):
+                      return target, "accepted", 12, 0.01
+                  if label.endswith(":holdout"):
+                      return study._execute(family, hold, target), "accepted", 12, 0.01
+                  return "ge-16", "accepted", 12, 0.01
+              study.ask = fake
+              try:
+                  for arm, expected in (
+                      ("active_feedback", 5),
+                      ("fixed_feedback", 0),
+                      ("no_feedback", 0),
+                  ):
+                      calls.clear()
+                      result = study.one_arm((family, src, hold, target), arm, "synthetic", None)
+                      assert result["source_correct"] and result["holdout_correct"], (family, arm)
+                      assert sum(":probe:" in c for c in calls) == expected
+              finally:
+                  study.ask = original
           print("Offline checks passed")
           PY
       - name: Verify credential and one-use campaign
@@ -75,7 +104,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c3r-g1-live-acquisition-v5-${{ matrix.cohort }}-${{ matrix.position }}
+          name: c3r-g1-live-acquisition-v6-${{ matrix.cohort }}-${{ matrix.position }}
           path: output/c3r_g1/acquisition-${{ matrix.cohort }}-${{ matrix.position }}.jsonl
           retention-days: 21
           if-no-files-found: warn
