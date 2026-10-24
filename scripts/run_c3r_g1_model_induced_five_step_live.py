@@ -14,7 +14,6 @@ multi-day retention. Default CLI makes zero provider calls.
 from __future__ import annotations
 
 import argparse
-import hashlib
 import json
 import os
 import random
@@ -27,9 +26,6 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from itertools import product
 from pathlib import Path
 
-from resonance_world.c3r_g1_model_boundary import ModelChoiceCompletion
-from resonance_world.c3r_g1_zai_transport import PhysicalSendLedger, ZaiStandardModelPort
-
 from run_c3r_g1_three_step_procedure_live import (
     SlotJournal,
     _digest,
@@ -37,6 +33,9 @@ from run_c3r_g1_three_step_procedure_live import (
     _run_dir,
     _write_once,
 )
+
+from resonance_world.c3r_g1_model_boundary import ModelChoiceCompletion
+from resonance_world.c3r_g1_zai_transport import PhysicalSendLedger, ZaiStandardModelPort
 
 MODEL = "glm-5.3"
 EFFORT = "low"
