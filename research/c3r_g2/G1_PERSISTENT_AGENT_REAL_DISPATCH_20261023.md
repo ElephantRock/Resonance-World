@@ -1,0 +1,13 @@
+# AUTHORIZED ONE-SHOT REAL PERSISTENT AGENT EXPERIENCE TRANSFER — 2026-10-23
+
+The project owner requests continued real paid experiments without a spending ceiling, no outside auditor or approvals, and minimal operational bottlenecks. This marker triggers exactly once the workflow .github/workflows/c3r-g1-persistent-agent-real-once.yml on the existing research branch.
+
+**Prospective protocol, CI passed before this marker:** research/c3r_g2/G1_PERSISTENT_AGENT_REAL_PROSPECTIVE_20261023.md. New source and test scripts are scripts/run_c3r_g1_persistent_experience_live.py and tests/test_c3r_g1_persistent_experience_live.py, with 902 passing tests / 4 skipped in CI before sending real calls.
+
+**Three independent IDs:** g1-agent-memory-20261023-01, -02, -03. Each samples genuinely NEW public task operands and context IDs; balances hidden labels 2A/2B per family; uses 16 real GLM-5.3 low-effort source actions to compile an agent-side one-bit context policy in an owner-private local file. The FIRST Python process then exits. The SECOND Python interpreter reads the frozen policy store and attempts 24 newly sampled holdout task queries, under learned, fresh and independent placebo/neutral arms. No source transcript or grades are provided to holdout model prompts.
+
+**Transport:** GLM-5.3 Coding endpoint, thinking.type=enabled, reasoning_effort=low, up to 3 simultaneous calls in each run and only 2 runs in parallel, 120-second timeout per physical call, 8192 maximum output tokens (reasoning included), no retries and exclusive fsynced reservations. 120 total prescribed logical attempts in this campaign, with fewer physical sends only if source failure prevents some unit holdouts. All missing/invalid responses remain explicitly present in the denominators.
+
+**Research boundary:** learned policy is compiled by an explicitly programmed deterministic agent-side reducer from its graded actions. A successful result establishes **external agent memory persistence and retrieval across process/session restart**, not weight updates, model-internal learning or institution-level regeneration. Fresh is a predeclared A fallback; Neutral receives a placebo one-bit capsule independent of target. These are exploratory comparisons, not powered confirmatory causal evidence.
+
+**Artifact policy:** upload only aggregated redacted source/holdout summary JSON, never private target manifest, source feedback or experience capsules. Do not rerun the workflow or resend ambiguously dispatched attempts. After observed results close, retire the one-shot launcher. scientific_acceptance remains false; PR #310 remains Draft and the Pattern Register is unchanged.
