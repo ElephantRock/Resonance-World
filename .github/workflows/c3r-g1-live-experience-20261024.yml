@@ -14,35 +14,7 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
-  provider-check:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    env:
-      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - name: Install repository package
-        run: python -m pip install -e .
-      - name: One real provider request, fail before fanout on HTTP rejection
-        shell: bash
-        run: |
-          umask 077
-          mkdir -p output/c3r_g1
-          python -u scripts/run_c3r_g1_live_feedback_acquisition.py --preflight --out output/c3r_g1/provider-preflight.jsonl
-      - name: Preserve provider HTTP diagnosis
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: c3r-g1-live-provider-preflight-v4
-          path: output/c3r_g1/provider-preflight.jsonl
-          retention-days: 21
-          if-no-files-found: warn
-
   live-acquisition:
-    needs: provider-check
     strategy:
       fail-fast: true
       max-parallel: 1
@@ -103,7 +75,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: c3r-g1-live-acquisition-v4-${{ matrix.cohort }}-${{ matrix.position }}
+          name: c3r-g1-live-acquisition-v5-${{ matrix.cohort }}-${{ matrix.position }}
           path: output/c3r_g1/acquisition-${{ matrix.cohort }}-${{ matrix.position }}.jsonl
           retention-days: 21
           if-no-files-found: warn
