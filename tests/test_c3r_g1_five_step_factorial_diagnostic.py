@@ -33,13 +33,14 @@ def _workspace(tmp_path: Path) -> Path:
 
 
 def _correct_policy(prompt: str) -> str:
-    m = _load()
+    from run_c3r_g1_model_induced_five_step_live import CODES
+
     samples = json.loads(
         prompt.split("Correct training examples: ", 1)[1].splitlines()[0]
     )
     family = "arithmetic" if "a" in samples[0]["input"] else "text"
     matches = [
-        code for code in m.CODES
+        code for code in CODES
         if all(
             _execute_for_test(family, sample["input"], code)
             == sample["correct_final_output"] for sample in samples
