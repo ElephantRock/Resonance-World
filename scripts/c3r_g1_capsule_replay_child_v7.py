@@ -12,7 +12,7 @@ import os
 import sys
 from pathlib import Path
 
-from run_c3r_g1_live_feedback_acquisition import RedactedJournal, ask
+from run_c3r_g1_live_persistence_v7 import RedactedJournal, ask
 from run_c3r_g1_model_induced_five_step_live import _execute, _grammar
 
 def replay(capsule_file: Path, wave: int, result_file: Path, audit_file: Path):
