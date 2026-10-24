@@ -26,7 +26,7 @@ CODES = tuple("".join(p) for p in itertools.product("AB", repeat=5))
 FIXED = (5, 10, 16, 21, 26)
 ARMS = ("active_feedback", "fixed_feedback", "no_feedback")
 STEPS = 5
-SCHEMA = "c3r-g1-live-feedback-acquisition-v0.2"
+SCHEMA = "c3r-g1-live-feedback-acquisition-v0.3"
 
 
 
@@ -66,26 +66,32 @@ def public_view(family, task):
     results = [_execute(family, task, c) for c in CODES]
     if len(set(results)) != len(CODES):
         raise ValueError("ambiguous test inputs")
-    ranked = sorted(results, key=int if family == "arithmetic" else str)
+    sorted_rows = sorted(zip(results, CODES), key=lambda row: int(row[0]) if family == "arithmetic" else row[0])
+    ranked = [result for result, _ in sorted_rows]
+    # All candidate programs and outputs are publicly computable; none is the
+    # hidden program label. Supplying the deterministic table avoids pointless
+    # repeated simulation of 32 programs inside the model.
     return {"family": family, "task": task, "operation_grammar": _grammar(family),
-            "thresholds": ranked, "legal_probes": [f"ge-{i:02d}" for i in range(1, 32)],
-            "feedback_rule": "ge-N is true when the private final output is >= thresholds[N]; comparison numeric for arithmetic, lexicographic for text."}
+            "thresholds": ranked,
+            "ranked_candidates": [[code, result] for result, code in sorted_rows],
+            "legal_probes": [f"ge-{i:02d}" for i in range(1, 32)],
+            "feedback_rule": "ge-N is true iff the secret output rank is >= N, using zero-based thresholds. Each answer exposes at most one bit."}
 
 
 def prompt_for(kind, view, observations):
     if kind == "probe":
-        instructions = ("Select exactly ONE legal threshold probe, e.g. ge-16. "
-                        "You have five total probes and should maximize what you learn "
-                        "from the feedback. Return only ge-NN.")
+        instructions = ("Choose a threshold that approximately HALVES the remaining possible ranks. "
+                        "Use prior true/false answers to narrow the hidden rank (0..31). "
+                        "Return exactly ge-NN, N=01..31, without explanation.")
     else:
-        instructions = ("Infer the hidden five-choice A/B program using ONLY the "
-                        "public task and observed binary feedback. Return EXACTLY "
-                        "five A/B letters, e.g. ABBAA. No explanation.")
+        instructions = ("Use observed threshold answers to identify which row of ranked_candidates "
+                        "can be the hidden program. The public candidate list is not a secret "
+                        "answer. Return ONLY its five-letter A/B policy, e.g. ABBAA.")
     return json.dumps({"kind": kind, "instructions": instructions, "public_world": view,
                        "observations": observations}, sort_keys=True, separators=(",", ":"))
 
 
-def ask(prompt, key, journal, label):
+def ask(prompt, key, journal, label, max_tokens=8192):
     """Exactly one execution per successful call; retry only explicit HTTP 429.
 
     Every physical retry is independently reserved and fsynced. No retry on
@@ -101,7 +107,7 @@ def ask(prompt, key, journal, label):
             port = ZaiStandardModelPort(
                 api_key=key, model_id=MODEL, ledger=PhysicalSendLedger(1),
                 enabled=True, route="coding", reasoning_effort="high",
-                max_tokens=4096, timeout_seconds=150,
+                max_tokens=max_tokens, timeout_seconds=240,
             )
             completed = port.complete_prompt(prompt)
             if completed.model_id != MODEL or completed.finish_reason != "stop":
@@ -138,26 +144,35 @@ def one_arm(context, arm, key, journal):
     valid_sends = 0
     latency = 0.0
     for i in range(STEPS):
-        proposal, state, usage, elapsed = ask(prompt_for("probe", view, observed), key, journal, f"{arm}:probe:{i}")
-        latency += elapsed
-        token_total += usage or 0
-        valid_sends += state == "accepted"
-        if state.startswith("provider_error"):
-            raise RuntimeError("provider rejected request; ending this experimental unit")
+        # The controls must not spend calls soliciting choices they discard.
+        # Fixed feedback is a predefined threshold schedule; no-feedback sees
+        # no graded observations. Active alone solicits model-chosen probes.
+        if arm == "no_feedback":
+            observed.append({"step": i, "status": "no_observation"})
+            statuses.append("withheld")
+            continue
         if arm == "fixed_feedback":
             idx = FIXED[i]
-        elif state == "accepted" and re.fullmatch(r"ge-(?:0[1-9]|[12][0-9]|3[01])", proposal or ""):
-            idx = int(proposal[-2:])
         else:
-            statuses.append("invalid_probe" if state == "accepted" else state)
-            observed.append({"step": i, "status": "no_observation"})
-            continue
-        feedback = (actual_rank >= idx) if arm != "no_feedback" else None
+            proposal, state, usage, elapsed = ask(
+                prompt_for("probe", view, observed), key, journal,
+                f"{arm}:probe:{i}", max_tokens=8192)
+            latency += elapsed
+            token_total += usage or 0
+            valid_sends += state == "accepted"
+            if state.startswith("provider_error"):
+                raise RuntimeError("provider rejected active probe")
+            if state == "accepted" and re.fullmatch(r"ge-(?:0[1-9]|[12][0-9]|3[01])", proposal or ""):
+                idx = int(proposal[-2:])
+            else:
+                statuses.append("invalid_probe" if state == "accepted" else state)
+                observed.append({"step": i, "status": "no_observation"})
+                continue
+        feedback = actual_rank >= idx
         observed.append({"step": i, "probe_id": f"ge-{idx:02d}",
-                         "status": "observed" if feedback is not None else "withheld",
-                         "feedback": feedback})
-        statuses.append("observed" if feedback is not None else "withheld")
-    proposal, state, usage, elapsed = ask(prompt_for("capsule", view, observed), key, journal, f"{arm}:capsule")
+                         "status": "observed", "feedback": feedback})
+        statuses.append("observed")
+    proposal, state, usage, elapsed = ask(prompt_for("capsule", view, observed), key, journal, f"{arm}:capsule", max_tokens=16384)
     latency += elapsed
     token_total += usage or 0
     valid_sends += state == "accepted"
@@ -173,7 +188,7 @@ def one_arm(context, arm, key, journal):
                        + "Procedure: " + proposal + "\n"
                        + "New input: " + json.dumps(holdout_task, sort_keys=True))
         actual_holdout = _execute(family, holdout_task, private_code)
-        hold_ans, hold_state, hold_usage, hold_latency = ask(hold_prompt, key, journal, f"{arm}:holdout")
+        hold_ans, hold_state, hold_usage, hold_latency = ask(hold_prompt, key, journal, f"{arm}:holdout", max_tokens=8192)
         token_total += hold_usage or 0
         valid_sends += hold_state == "accepted"
         latency += hold_latency
@@ -187,8 +202,9 @@ def one_arm(context, arm, key, journal):
             "probe_status_counts": dict(collections.Counter(statuses)),
             "source_status": state, "source_valid": correct_format,
             "source_correct": source_correct, "holdout_status": hold_state,
-            "holdout_correct": hold_correct, "logical_slots": 7,
-            "planned_calls_reached": 6 + int(correct_format),
+            "holdout_correct": hold_correct,
+            "logical_slots": (7 if arm == "active_feedback" else 2),
+            "planned_calls_reached": (6 if arm == "active_feedback" else 1) + int(correct_format),
             "successful_model_responses": valid_sends,
             "reported_completion_tokens": token_total,
             "elapsed_seconds": round(latency, 3)}
@@ -229,11 +245,30 @@ def main():
         context_id = f"{args.cohort}-{pos:02d}"
         journal.record({"event": "context_started", "schema": SCHEMA,
                         "context_id": context_id, "family": family, "model": MODEL,
-                        "reasoning_effort": "high", "max_tokens": 4096,
-                        "planned_slots": 21, "scientific_acceptance": False})
+                        "reasoning_effort": "high", "max_tokens_probe": 8192,
+                        "max_tokens_capsule": 16384, "max_tokens_holdout": 8192,
+                        "planned_slots": 11, "scientific_acceptance": False})
         rows = []
+        terminated = False
         for arm in ARMS:
-            result = one_arm(context, arm, key, journal)
+            if terminated:
+                result = {"arm": arm, "family": family, "source_valid": False,
+                          "source_correct": False, "holdout_correct": False,
+                          "holdout_status": "not_attempted_after_provider_error",
+                          "source_status": "not_attempted_after_provider_error",
+                          "analyzable": False}
+            else:
+                try:
+                    result = one_arm(context, arm, key, journal)
+                    result["analyzable"] = True
+                except RuntimeError:
+                    # Preserve the aborted unit and do not hide loss of a
+                    # treatment arm. No posthoc denominator exclusions.
+                    result = {"arm": arm, "family": family, "source_valid": False,
+                              "source_correct": False, "holdout_correct": False,
+                              "holdout_status": "provider_error",
+                              "source_status": "provider_error", "analyzable": False}
+                    terminated = True
             result["context_id"] = context_id
             rows.append(result)
             journal.record({"event": "arm_result", **result})
@@ -243,6 +278,7 @@ def main():
                    "request_reservations": journal.reserved_attempts,
                    "request_completions": journal.completed_attempts,
                    "physical_sends_verified": False,
+                   "complete_arms": sum(r["analyzable"] for r in rows),
                    "by_arm": {row["arm"]: {
                        "source_valid": row["source_valid"],
                        "source_correct": row["source_correct"],
