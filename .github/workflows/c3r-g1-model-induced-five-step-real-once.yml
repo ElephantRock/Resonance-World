@@ -1,0 +1,92 @@
+name: G1 GLM Model-Induced Five-Step Two-Retention Real Pilot
+
+# Unique frozen marker triggers three distinct experimental cohorts.
+# No re-runs, no provider retries and no external approvals.
+on:
+  push:
+    branches:
+      - research/c3r-g2-causal-foundation
+    paths:
+      - research/c3r_g2/G1_MODEL_INDUCED_FIVE_STEP_REAL_DISPATCH_20261024.md
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c3r-g1-five-step-model-authored-real-20261024
+  cancel-in-progress: false
+
+jobs:
+  model-induced-memory:
+    if: github.repository == 'ElephantRock/Resonance-World'
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        cohort: ['01', '02', '03']
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+      PYTHONDONTWRITEBYTECODE: '1'
+      COHORT: ${{ matrix.cohort }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Install internal model transport
+        run: |
+          python -m pip install -e .
+          python -m pip install 'cryptography>=42'
+      - name: Offline preflight and credential presence (zero sends)
+        shell: bash
+        run: |
+          test -n "$C3R_ZAI_API_KEY" || { echo "Provider credential missing; zero sends"; exit 2; }
+          for phase in source retention1 retention2; do
+            python scripts/run_c3r_g1_model_induced_five_step_live.py \
+              --phase "$phase" --run-id "g1-model-induced-five-20261024-$COHORT" \
+              >/dev/null
+          done
+      - name: Phase 1 - GLM writes a novel five-step policy from corrected examples
+        shell: bash
+        run: |
+          umask 077
+          mkdir -m 700 -p "$RUNNER_TEMP/g1-model-induced-$COHORT" output/c3r_g2
+          python scripts/run_c3r_g1_model_induced_five_step_live.py \
+            --live --phase source \
+            --run-id "g1-model-induced-five-20261024-$COHORT" \
+            --workspace "$RUNNER_TEMP/g1-model-induced-$COHORT" \
+            --workers 3 --timeout-seconds 120 --max-tokens 4096 \
+            > "output/c3r_g2/g1-model-induced-$COHORT-source.json"
+      - name: Phase 2 - process restart executes first new tasks against controls
+        shell: bash
+        run: |
+          umask 077
+          python scripts/run_c3r_g1_model_induced_five_step_live.py \
+            --live --phase retention1 \
+            --run-id "g1-model-induced-five-20261024-$COHORT" \
+            --workspace "$RUNNER_TEMP/g1-model-induced-$COHORT" \
+            --workers 3 --timeout-seconds 120 --max-tokens 4096 \
+            > "output/c3r_g2/g1-model-induced-$COHORT-retention1.json"
+      - name: Phase 3 - separate process reuses unchanged source policy on fresh input
+        shell: bash
+        run: |
+          umask 077
+          python scripts/run_c3r_g1_model_induced_five_step_live.py \
+            --live --phase retention2 \
+            --run-id "g1-model-induced-five-20261024-$COHORT" \
+            --workspace "$RUNNER_TEMP/g1-model-induced-$COHORT" \
+            --workers 3 --timeout-seconds 120 --max-tokens 4096 \
+            > "output/c3r_g2/g1-model-induced-$COHORT-retention2.json"
+      - name: Retain only redacted outcome summaries, not source corpus or codes
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g1-model-induced-five-${{ matrix.cohort }}-20261024
+          path: |
+            output/c3r_g2/g1-model-induced-${{ matrix.cohort }}-source.json
+            output/c3r_g2/g1-model-induced-${{ matrix.cohort }}-retention1.json
+            output/c3r_g2/g1-model-induced-${{ matrix.cohort }}-retention2.json
+          retention-days: 14
+          if-no-files-found: ignore
