@@ -49,10 +49,11 @@ class RedactedJournal:
         self.reserved_attempts += 1
         self.record({"event": "request_reserved", "slot": label, "ordinal": self.reserved_attempts})
 
-    def complete(self, label, status, usage, elapsed):
+    def complete(self, label, status, usage, elapsed, http_status=None):
         self.completed_attempts += 1
         self.record({"event": "request_completed", "slot": label, "status": status,
                      "reported_completion_tokens": usage if type(usage) is int else None,
+                     "http_status": http_status,
                      "elapsed_seconds": round(elapsed, 3)})
 
     def close(self):
@@ -89,6 +90,7 @@ def ask(prompt, key, journal, label):
     journal.reserve(label)
     started = time.monotonic()
     answer, status, usage = None, "provider_error", None
+    port = None
     try:
         port = ZaiStandardModelPort(
             api_key=key, model_id=MODEL, ledger=PhysicalSendLedger(1),
@@ -104,7 +106,9 @@ def ask(prompt, key, journal, label):
         # Do not persist raw exceptions, request/response text, or provider credentials.
         status = "provider_error_" + type(exc).__name__[:35]
     elapsed = time.monotonic() - started
-    journal.complete(label, status, usage, elapsed)
+    code = (port.ledger.records[-1].http_status
+            if port is not None and port.ledger.records else None)
+    journal.complete(label, status, usage, elapsed, code)
     return answer, status, usage, elapsed
 
 
@@ -124,6 +128,8 @@ def one_arm(context, arm, key, journal):
         latency += elapsed
         token_total += usage or 0
         valid_sends += state == "accepted"
+        if state.startswith("provider_error"):
+            raise RuntimeError("provider rejected request; ending this experimental unit")
         if arm == "fixed_feedback":
             idx = FIXED[i]
         elif state == "accepted" and re.fullmatch(r"ge-(?:0[1-9]|[12][0-9]|3[01])", proposal or ""):
@@ -141,6 +147,8 @@ def one_arm(context, arm, key, journal):
     latency += elapsed
     token_total += usage or 0
     valid_sends += state == "accepted"
+    if state.startswith("provider_error"):
+        raise RuntimeError("provider rejected capsule; ending this experimental unit")
     correct_format = bool(state == "accepted" and re.fullmatch(r"[AB]{5}", proposal or ""))
     source_correct = bool(correct_format and proposal == private_code)
     # Holdout uses a new model completion with NO source task/examples/transcript.
@@ -155,6 +163,8 @@ def one_arm(context, arm, key, journal):
         token_total += hold_usage or 0
         valid_sends += hold_state == "accepted"
         latency += hold_latency
+        if hold_state.startswith("provider_error"):
+            raise RuntimeError("provider rejected holdout; ending this experimental unit")
         hold_correct = bool(hold_state == "accepted" and hold_ans == actual_holdout)
     else:
         hold_state = "not_sent_invalid_capsule"
@@ -172,8 +182,9 @@ def one_arm(context, arm, key, journal):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--cohort", choices=[f"{i:02d}" for i in range(1, 7)], required=True)
-    ap.add_argument("--position", type=int, choices=range(4), required=True)
+    ap.add_argument("--cohort", choices=[f"{i:02d}" for i in range(1, 7)])
+    ap.add_argument("--position", type=int, choices=range(4))
+    ap.add_argument("--preflight", action="store_true")
     ap.add_argument("--out", type=Path, required=True)
     args = ap.parse_args()
     if os.getenv("GITHUB_RUN_ATTEMPT", "1") != "1":
@@ -183,6 +194,16 @@ def main():
         raise SystemExit("credential missing: zero sends")
     journal = RedactedJournal(args.out)
     try:
+        if args.preflight:
+            view = public_view("arithmetic", _task(random.SystemRandom(), "arithmetic"))
+            _, state, _, _ = ask(prompt_for("probe", view, []), key, journal, "provider_preflight")
+            journal.record({"event": "provider_preflight_result", "status": state})
+            print(json.dumps({"provider_preflight": state}), flush=True)
+            if state != "accepted":
+                raise SystemExit("provider preflight failed; no experimental units dispatched")
+            return
+        if args.cohort is None or args.position is None:
+            raise SystemExit("cohort and position required for acquisition")
         pos = args.position
         family = "arithmetic" if pos < 2 else "text"
         rng = random.SystemRandom()
