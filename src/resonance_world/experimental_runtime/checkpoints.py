@@ -27,8 +27,20 @@ class Checkpoint:
     state: WorldState
 
     @classmethod
-    def build(cls, *, branch_id: str, name: str, state: WorldState) -> Checkpoint:
-        """Build a self-consistent checkpoint for ``state``."""
+    def build(
+        cls,
+        *,
+        branch_id: str,
+        name: str,
+        state: WorldState,
+        state_digest: str | None = None,
+    ) -> Checkpoint:
+        """Build a self-consistent checkpoint for ``state``.
+
+        ``state_digest`` should be the store's keyed state commitment so
+        the persisted snapshot cannot be brute-forced from its digest.
+        When omitted (in-memory use only) a bare digest is computed.
+        """
 
         if not branch_id:
             raise ValueError("branch_id is required")
@@ -39,7 +51,7 @@ class Checkpoint:
             name=name,
             tick=state.tick,
             event_count=state.event_count,
-            state_sha256=full_state_sha256(state),
+            state_sha256=state_digest if state_digest is not None else full_state_sha256(state),
             public_state_sha256=public_state_sha256(state),
             state=state,
         )

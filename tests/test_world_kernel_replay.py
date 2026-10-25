@@ -14,11 +14,14 @@ from resonance_world.experimental_runtime.scenario import (
 )
 from resonance_world.experimental_runtime.store import KernelStore
 
+# Fixed commitment key so file-backed stores can be reopened for tamper tests.
+TEST_KEY = bytes(range(16, 48))
+
 
 def captured_world(
     store_path: str | None = None,
 ) -> tuple[KernelStore, WorldKernel, ScriptedPolicy]:
-    store = KernelStore(store_path)
+    store = KernelStore(store_path, commitment_key=TEST_KEY)
     kernel = start_kernel(store)
     policy = ScriptedPolicy()
     drive(kernel, ticks=40, policy=policy)
@@ -61,14 +64,14 @@ def test_replay_detects_event_payload_tampering(tmp_path) -> None:
     connection.commit()
     connection.close()
 
-    reopened = KernelStore(store_path)
+    reopened = KernelStore(store_path, commitment_key=TEST_KEY)
     with pytest.raises(ValueError, match="digest mismatch"):
         replay_branch(reopened, "main", build_machine())
 
 
 def test_replay_detects_sealed_payload_tampering(tmp_path) -> None:
     store_path = tmp_path / "world.sqlite3"
-    store = KernelStore(store_path)
+    store = KernelStore(store_path, commitment_key=TEST_KEY)
     kernel = start_kernel(store)
     drive(kernel, ticks=100, policy=ScriptedPolicy())
     store.close()
@@ -85,7 +88,7 @@ def test_replay_detects_sealed_payload_tampering(tmp_path) -> None:
     connection.commit()
     connection.close()
 
-    reopened = KernelStore(store_path)
+    reopened = KernelStore(store_path, commitment_key=TEST_KEY)
     with pytest.raises(ValueError, match="digest mismatch"):
         replay_branch(reopened, "main", build_machine())
 
@@ -100,7 +103,7 @@ def test_replay_detects_event_record_field_tampering(tmp_path) -> None:
     connection.commit()
     connection.close()
 
-    reopened = KernelStore(store_path)
+    reopened = KernelStore(store_path, commitment_key=TEST_KEY)
     with pytest.raises(ValueError, match="content digest"):
         replay_branch(reopened, "main", build_machine())
 

@@ -13,27 +13,26 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import Any
 
-from resonance_world.adapters import sha256_json
-
 from .events import WorldEvent
 from .machine import StateMachine
-from .state import WorldState, full_state_sha256, public_state_sha256
+from .state import WorldState, public_state_sha256
 from .store import KernelStore
 
 
-def _sealed_for(event: WorldEvent, sealed: dict[int, Any]) -> Any:
-    """Return the sealed payload for a private event, digest-verified.
+def _sealed_for(event: WorldEvent, sealed: dict[int, Any], store: KernelStore) -> Any:
+    """Return the sealed payload for a private event, commitment-verified.
 
-    The event record is the root of trust: its ``payload_sha256`` commits
-    to content the public log does not reveal. A sealed payload is only
-    admissible when it matches that commitment, so consistent tampering
-    with the sealed table alone cannot slip through replay.
+    The event record is the root of trust: its ``payload_sha256`` holds
+    the store's keyed commitment to content the public log does not
+    reveal. A sealed payload is only admissible when it matches that
+    commitment, so consistent tampering with the sealed table alone
+    cannot slip through replay.
     """
 
     if event.visibility != "private":
         return None
     payload = sealed.get(event.seq)
-    if payload is None or sha256_json(payload) != event.payload_sha256:
+    if payload is None or store.commit_payload(payload) != event.payload_sha256:
         raise ValueError(
             f"sealed payload for event {event.seq} fails its committed digest on event record"
         )
@@ -85,8 +84,7 @@ def _replay(
     sealed = store.sealed_payloads(branch_id)
     decisions = 0
     for event in events:
-        payload = _sealed_for(event, sealed)
-        state = machine.apply(state, event, payload)
+        state = machine.apply(state, event, _sealed_for(event, sealed, store))
         if event.source == "agent":
             decisions += 1
     return state, len(events), decisions
@@ -111,7 +109,7 @@ def replay_branch(store: KernelStore, branch_id: str, machine: StateMachine) -> 
     verifications: list[CheckpointVerification] = []
     decisions = 0
     for event in events:
-        payload = _sealed_for(event, sealed)
+        payload = _sealed_for(event, sealed, store)
         state = machine.apply(state, event, payload)
         if event.source == "agent":
             decisions += 1
@@ -122,7 +120,7 @@ def replay_branch(store: KernelStore, branch_id: str, machine: StateMachine) -> 
                     name=checkpoint.name,
                     event_count=checkpoint.event_count,
                     expected_state_sha256=checkpoint.state_sha256,
-                    actual_state_sha256=full_state_sha256(state),
+                    actual_state_sha256=store.commit_state(state),
                 )
             )
 
@@ -135,7 +133,7 @@ def replay_branch(store: KernelStore, branch_id: str, machine: StateMachine) -> 
     return ReplayResult(
         branch_id=branch_id,
         event_count=len(events),
-        final_state_sha256=full_state_sha256(state),
+        final_state_sha256=store.commit_state(state),
         final_public_state_sha256=public_state_sha256(state),
         checkpoint_verifications=tuple(
             sorted(verifications, key=lambda item: item.event_count)

@@ -86,7 +86,7 @@ class WorldKernel:
             store.register_branch(
                 BranchRecord(
                     branch_id=branch_id,
-                    genesis_state_sha256=full_state_sha256(state),
+                    genesis_state_sha256=store.commit_state(state),
                 ),
                 genesis_state=state,
             )
@@ -165,8 +165,15 @@ class WorldKernel:
         return len(self._events)
 
     def state_hash(self) -> str:
-        """Return the authoritative full-state hash (private state included)."""
+        """Return the authoritative full-state commitment.
 
+        With a persistence store this is a keyed commitment, so a
+        published digest cannot be brute-forced to recover low-entropy
+        private state; without one it is a bare digest over local state.
+        """
+
+        if self._store is not None:
+            return self._store.commit_state(self._state)
         return full_state_sha256(self._state)
 
     def public_state_hash(self) -> str:
@@ -283,6 +290,18 @@ class WorldKernel:
             self._clock = WorldClock(boundary)
         return self._state
 
+    def _payload_commitment(self, payload: Mapping[str, Any]) -> str:
+        """Return the commitment for a sealed payload.
+
+        Store-backed kernels use a keyed HMAC commitment so the public
+        log cannot be brute-forced for low-entropy secrets. In-memory
+        kernels have no custody boundary and use a bare digest.
+        """
+
+        if self._store is not None:
+            return self._store.commit_payload(payload)
+        return sha256_json(payload)
+
     def _record(
         self,
         *,
@@ -322,7 +341,7 @@ class WorldKernel:
                 source=source,
                 visibility=visibility,
                 payload=None,
-                payload_sha256=sha256_json(payload),
+                payload_sha256=self._payload_commitment(payload),
                 depends_on=deps,
             )
         else:
@@ -455,7 +474,12 @@ class WorldKernel:
 
         if self._store is None:
             raise ValueError("checkpointing requires a persistence store")
-        checkpoint = Checkpoint.build(branch_id=self._branch_id, name=name, state=self._state)
+        checkpoint = Checkpoint.build(
+            branch_id=self._branch_id,
+            name=name,
+            state=self._state,
+            state_digest=self._store.commit_state(self._state),
+        )
         self._store.save_checkpoint(checkpoint)
         return checkpoint
 
@@ -468,11 +492,11 @@ class WorldKernel:
         self._store.register_branch(
             BranchRecord(
                 branch_id=child_branch_id,
-                genesis_state_sha256=full_state_sha256(child_state),
+                genesis_state_sha256=self._store.commit_state(child_state),
                 parent_branch_id=self._branch_id,
                 fork_tick=self._state.tick,
                 fork_event_count=self._state.event_count,
-                parent_state_sha256=full_state_sha256(self._state),
+                parent_state_sha256=self._store.commit_state(self._state),
             ),
             genesis_state=child_state,
         )
@@ -490,7 +514,6 @@ class WorldKernel:
                 "parent_branch_id": self._branch_id,
                 "parent_tick": self._state.tick,
                 "parent_event_count": self._state.event_count,
-                "parent_state_sha256": full_state_sha256(self._state),
             },
         )
         return child

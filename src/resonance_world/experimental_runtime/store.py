@@ -19,7 +19,9 @@ Integrity rules:
 from __future__ import annotations
 
 import hashlib
+import hmac
 import json
+import secrets
 import sqlite3
 from collections.abc import Callable
 from dataclasses import dataclass
@@ -31,9 +33,30 @@ from resonance_world.adapters import canonical_json_bytes, sha256_json
 
 from .checkpoints import Checkpoint
 from .events import WorldEvent, event_digest
-from .state import WorldState, full_state_bytes, full_state_sha256, public_state_sha256
+from .state import WorldState, full_state_bytes, public_state_sha256
 
-SCHEMA_VERSION = "world-kernel-store-v1"
+SCHEMA_VERSION = "world-kernel-store-v2"
+COMMITMENT_SCHEME = "hmac-sha256-v1"
+
+
+def commitment_digest(key: bytes, payload: Any) -> str:
+    """Return a keyed commitment for a JSON payload.
+
+    Bare SHA-256 lets an attacker verify guesses about low-entropy
+    content directly from the published digest. A keyed HMAC commitment
+    is only checkable by holders of the key, which must live outside
+    the world file when confidentiality matters.
+    """
+
+    return commitment_digest_bytes(key, canonical_json_bytes(payload))
+
+
+def commitment_digest_bytes(key: bytes, data: bytes) -> str:
+    """Return a keyed commitment for raw bytes."""
+
+    if not isinstance(key, bytes) or len(key) < 16 or len(key) > 64:
+        raise ValueError("commitment key must be 16 to 64 bytes")
+    return hmac.new(key, data, hashlib.sha256).hexdigest()
 
 
 @dataclass(frozen=True, slots=True)
@@ -61,10 +84,6 @@ def _state_from_blob(blob: bytes) -> WorldState:
         public=raw["public"],
         private=raw["private"],
     )
-
-
-def _blob_sha256(blob: bytes) -> str:
-    return hashlib.sha256(bytes(blob)).hexdigest()
 
 
 def _event_from_row(row: sqlite3.Row) -> WorldEvent:
@@ -103,19 +122,89 @@ def _event_from_row(row: sqlite3.Row) -> WorldEvent:
 
 
 class KernelStore:
-    """Append-only SQLite persistence for one kernel world file."""
+    """Append-only SQLite persistence for one kernel world file.
+
+    Confidentiality model: private payloads are sealed out of the public
+    event log, and every digest that covers confidential content (sealed
+    payload commitments, checkpoint and genesis state digests) is a keyed
+    HMAC commitment under ``commitment_key``. The key is generated at
+    store creation unless supplied. With ``persist_commitment_key=False``
+    (the default) the key lives only in this process and must be
+    custodied externally; with ``True`` it is stored in ``meta`` for
+    convenience, which protects the log only against readers who do not
+    have the world file.
+    """
 
     def __init__(
         self,
         path: str | Path | None = None,
         *,
         wall_clock: Callable[[], str] | None = None,
+        commitment_key: bytes | None = None,
+        persist_commitment_key: bool = False,
     ) -> None:
         self._conn = sqlite3.connect(str(path) if path is not None else ":memory:")
         self._conn.row_factory = sqlite3.Row
         self._conn.execute("PRAGMA foreign_keys=ON")
         self._wall_clock = wall_clock if wall_clock is not None else _default_wall_clock
         self._create_schema()
+        self._reject_legacy_version()
+        self._adopt_commitment_key(commitment_key, persist_commitment_key)
+
+    def _reject_legacy_version(self) -> None:
+        row = self._conn.execute(
+            "SELECT value FROM meta WHERE key = 'schema_version'"
+        ).fetchone()
+        if row is not None and row["value"] != SCHEMA_VERSION:
+            raise ValueError(
+                f"world file uses store schema {row['value']!r}; this kernel "
+                f"requires {SCHEMA_VERSION!r} (digest commitments changed)"
+            )
+
+    def _adopt_commitment_key(
+        self, supplied: bytes | None, persist: bool
+    ) -> None:
+        row = self._conn.execute(
+            "SELECT value FROM meta WHERE key = 'commitment_key'"
+        ).fetchone()
+        stored = bytes.fromhex(row["value"]) if row is not None else None
+        if supplied is not None and stored is not None and supplied != stored:
+            raise ValueError(
+                "supplied commitment key does not match the key stored in this world file"
+            )
+        key = supplied if supplied is not None else stored
+        if key is None:
+            key = secrets.token_bytes(32)
+        if not isinstance(key, bytes) or not 16 <= len(key) <= 64:
+            raise ValueError("commitment key must be 16 to 64 bytes")
+        self._commitment_key = key
+        self._conn.execute(
+            "INSERT OR IGNORE INTO meta(key, value) VALUES ('commitment_scheme', ?)",
+            (COMMITMENT_SCHEME,),
+        )
+        if persist:
+            self._conn.execute(
+                "INSERT INTO meta(key, value) VALUES ('commitment_key', ?) "
+                "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+                (key.hex(),),
+            )
+        self._conn.commit()
+
+    @property
+    def commitment_key(self) -> bytes:
+        """Return the commitment key for external custody by the operator."""
+
+        return self._commitment_key
+
+    def commit_payload(self, payload: Any) -> str:
+        """Return the keyed commitment for a sealed payload."""
+
+        return commitment_digest(self._commitment_key, payload)
+
+    def commit_state(self, state: WorldState) -> str:
+        """Return the keyed commitment for a complete state snapshot."""
+
+        return commitment_digest_bytes(self._commitment_key, full_state_bytes(state))
 
     def _create_schema(self) -> None:
         self._conn.executescript(
@@ -181,7 +270,7 @@ class KernelStore:
         """Register a branch with its genesis state snapshot."""
 
         genesis_blob = full_state_bytes(genesis_state)
-        if _blob_sha256(genesis_blob) != record.genesis_state_sha256:
+        if self.commit_state(genesis_state) != record.genesis_state_sha256:
             raise ValueError("genesis_state_sha256 does not match the genesis state")
         try:
             self._conn.execute(
@@ -245,7 +334,7 @@ class KernelStore:
         if row is None:
             raise ValueError(f"unknown branch {branch_id!r}")
         state = _state_from_blob(row["genesis_state_blob"])
-        if full_state_sha256(state) != row["genesis_state_sha256"]:
+        if self.commit_state(state) != row["genesis_state_sha256"]:
             raise ValueError(f"genesis state digest mismatch for branch {branch_id!r}")
         return state
 
@@ -264,7 +353,7 @@ class KernelStore:
         if event.visibility == "private":
             if sealed_payload is None:
                 raise ValueError("private events require their sealed payload")
-            if sha256_json(sealed_payload) != event.payload_sha256:
+            if self.commit_payload(sealed_payload) != event.payload_sha256:
                 raise ValueError("sealed payload does not match the committed digest")
         recorded_at = self._wall_clock()
         try:
@@ -351,7 +440,7 @@ class KernelStore:
         if row is None:
             raise ValueError(f"no sealed payload recorded for {branch_id}#{seq}")
         payload = json.loads(row["payload"])
-        if sha256_json(payload) != row["payload_sha256"]:
+        if self.commit_payload(payload) != row["payload_sha256"]:
             raise ValueError(f"sealed payload digest mismatch at {branch_id}#{seq}")
         return payload
 
@@ -366,7 +455,7 @@ class KernelStore:
         payloads: dict[int, Any] = {}
         for row in rows:
             payload = json.loads(row["payload"])
-            if sha256_json(payload) != row["payload_sha256"]:
+            if self.commit_payload(payload) != row["payload_sha256"]:
                 raise ValueError(f"sealed payload digest mismatch at {branch_id}#{row['seq']}")
             payloads[int(row["seq"])] = payload
         return payloads
@@ -377,7 +466,7 @@ class KernelStore:
         """Persist one verified checkpoint snapshot."""
 
         blob = full_state_bytes(checkpoint.state)
-        if _blob_sha256(blob) != checkpoint.state_sha256:
+        if self.commit_state(checkpoint.state) != checkpoint.state_sha256:
             raise ValueError("checkpoint state_sha256 does not match its state")
         if public_state_sha256(checkpoint.state) != checkpoint.public_state_sha256:
             raise ValueError("checkpoint public_state_sha256 does not match its state")
@@ -419,10 +508,12 @@ class KernelStore:
         ).fetchone()
         if row is None:
             raise ValueError(f"no checkpoint {name!r} on branch {branch_id!r}")
-        if _blob_sha256(row["state_blob"]) != row["state_sha256"]:
+        # Raw-blob integrity first (rejects non-JSON tampering before parsing),
+        # then canonical-form proof that the parsed state matches the digest.
+        if commitment_digest_bytes(self._commitment_key, row["state_blob"]) != row["state_sha256"]:
             raise ValueError(f"checkpoint {name!r} failed its stored-digest verification")
         state = _state_from_blob(row["state_blob"])
-        if full_state_sha256(state) != row["state_sha256"]:
+        if self.commit_state(state) != row["state_sha256"]:
             raise ValueError(f"checkpoint {name!r} state does not match its digest")
         if public_state_sha256(state) != row["public_state_sha256"]:
             raise ValueError(f"checkpoint {name!r} public projection does not match its digest")

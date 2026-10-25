@@ -24,7 +24,7 @@ from .events import WorldEvent
 from .kernel import WorldKernel
 from .machine import StateMachine
 from .replay import ReplayResult, replay_branch
-from .state import WorldState
+from .state import WorldState, full_state_bytes
 from .store import KernelStore
 from .views import DecisionRequest
 
@@ -258,7 +258,7 @@ def _verify_checkpoint_transparency(length: int) -> tuple[bool, int]:
     straight = start_kernel(straight_store, branch_id="straight")
     straight_policy = ScriptedPolicy()
     drive(straight, ticks=length, policy=straight_policy)
-    uninterrupted_hash = straight.state_hash()
+    uninterrupted_state = full_state_bytes(straight.state)
 
     split_store = KernelStore()
     split = start_kernel(split_store, branch_id="split")
@@ -270,7 +270,9 @@ def _verify_checkpoint_transparency(length: int) -> tuple[bool, int]:
     )
     restored_tick = resumed.tick
     drive(resumed, ticks=100, policy=split_policy)
-    return resumed.state_hash() == uninterrupted_hash, restored_tick
+    # Keyed state commitments differ across stores by design, so equality
+    # is asserted over canonical state bytes, not over commitments.
+    return full_state_bytes(resumed.state) == uninterrupted_state, restored_tick
 
 
 def run_acceptance(*, ticks: int = 1000, store_path: str | None = None) -> AcceptanceReport:
