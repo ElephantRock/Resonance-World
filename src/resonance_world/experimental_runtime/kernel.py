@@ -281,16 +281,24 @@ class WorldKernel:
         if ticks <= 0:
             raise ValueError("ticks must be positive")
         for _ in range(ticks):
-            for item in self._scheduler.drain():
-                self._record(
-                    kind=item.kind,
-                    tick=self._state.tick,
-                    source=item.source,
-                    visibility=item.visibility,
-                    payload=item.payload,
-                    payload_sha256=item.payload_sha256,
-                    depends_on=item.depends_on,
-                )
+            while self._scheduler.pending():
+                item = self._scheduler.pop_next()
+                try:
+                    self._record(
+                        kind=item.kind,
+                        tick=self._state.tick,
+                        source=item.source,
+                        visibility=item.visibility,
+                        payload=item.payload,
+                        payload_sha256=item.payload_sha256,
+                        depends_on=item.depends_on,
+                    )
+                except Exception:
+                    # The draft was not recorded: return it to the head of
+                    # the queue so a retry neither loses it nor duplicates
+                    # the drafts already recorded.
+                    self._scheduler.requeue_front(item)
+                    raise
             boundary = self._state.tick + 1
             self._record(
                 kind=_TICK_KIND,

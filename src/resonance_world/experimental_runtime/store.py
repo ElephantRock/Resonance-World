@@ -395,10 +395,15 @@ class KernelStore:
                         recorded_at,
                     ),
                 )
-        except sqlite3.IntegrityError as error:
+        except sqlite3.Error as error:
+            # Roll back the whole transaction: a failure after the event
+            # INSERT (for example a conflicting sealed row) must not leave
+            # a partial write pending on the connection for a later
+            # commit to silently complete.
+            self._conn.rollback()
             raise ValueError(
                 f"event {event.seq} cannot be appended to branch {branch_id!r}: "
-                "the log is append-only"
+                "the write was rolled back and nothing was recorded"
             ) from error
         self._conn.commit()
 

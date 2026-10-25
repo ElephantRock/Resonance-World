@@ -225,6 +225,67 @@ def test_log_stays_verifiable_after_recovered_storage_failure() -> None:
     assert result.all_checkpoints_matched or not result.checkpoint_verifications
 
 
+def test_partial_sqlite_failure_rolls_back_the_whole_append() -> None:
+    """P0: a failure on the sealed INSERT must not leave the event row."""
+
+    store = KernelStore()
+    kernel = start_kernel(store)
+    drive(kernel, ticks=4, policy=ScriptedPolicy())
+    next_seq = store.event_count("main")
+    before = store.event_count("main")
+
+    # Pre-seed a conflicting sealed row for exactly the next sequence, so
+    # the event INSERT succeeds and the sealed INSERT fails.
+    store._conn.execute(
+        "INSERT INTO sealed_payloads (branch_id, seq, payload, payload_sha256, recorded_at) "
+        "VALUES ('main', ?, '{}', 'conflict', 'test')",
+        (next_seq,),
+    )
+    store._conn.commit()
+
+    kernel.schedule(
+        "assessment",
+        {"epoch": 99, "stress": 3},
+        source="external",
+        visibility="private",
+    )
+    with pytest.raises(ValueError, match="rolled back"):
+        kernel.advance()
+
+    assert store.event_count("main") == before  # no orphan event row committed
+    row = store._conn.execute(
+        "SELECT payload FROM sealed_payloads WHERE branch_id = 'main' AND seq = ?",
+        (next_seq,),
+    ).fetchone()
+    assert row[0] == "{}"  # pre-existing sealed row untouched
+
+    # The connection is clean: a public append at that seq succeeds.
+    repaired = kernel.emit("world_effect", {"tick": kernel.tick})
+    assert repaired.seq == next_seq
+    assert store.event_count("main") == before + 1
+
+
+def test_advance_failure_keeps_queued_events_for_retry() -> None:
+    """P0: a mid-drain storage failure must not discard queued drafts."""
+
+    store = _FailingStore()
+    kernel = start_kernel(store)
+    for index in range(3):
+        kernel.schedule("world_effect", {"index": index})
+
+    store.fail_next = True
+    with pytest.raises(sqlite3.OperationalError, match="injected"):
+        kernel.advance()
+
+    assert kernel._scheduler.pending() == 3  # failed draft requeued, none lost
+    assert store.failures == 1
+
+    kernel.advance()  # retry completes the same three drafts, once each
+    effects = [event for event in kernel.events() if event.kind == "world_effect"]
+    assert [event.payload["index"] for event in effects] == [0, 1, 2]
+    assert kernel._scheduler.pending() == 0
+
+
 # ---------------------------------------------------------------------------
 # P0-1: confidentiality of sealed payloads and state digests
 # ---------------------------------------------------------------------------

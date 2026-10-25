@@ -150,5 +150,5 @@ def test_event_log_is_append_only() -> None:
     count = store.event_count("main")
     assert count > 0
     duplicate = store.iter_events("main")[-1]
-    with pytest.raises(ValueError, match="append-only"):
+    with pytest.raises(ValueError, match="rolled back"):
         store.append_event("main", duplicate)

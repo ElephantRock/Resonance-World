@@ -81,6 +81,30 @@ class EventScheduler:
         self._queue = []
         return ordered
 
+    def pop_next(self) -> ScheduledEvent:
+        """Pop the next draft in deterministic dispatch order.
+
+        Unlike :meth:`drain`, this keeps unprocessed drafts queued, so a
+        dispatch failure between pops loses nothing.
+        """
+
+        if not self._queue:
+            raise IndexError("scheduler queue is empty")
+        best = min(
+            range(len(self._queue)),
+            key=lambda index: (self._queue[index].priority, self._queue[index].order_index),
+        )
+        return self._queue.pop(best)
+
+    def requeue_front(self, item: ScheduledEvent) -> None:
+        """Return a popped draft to the head of the queue for retry.
+
+        The original ``order_index`` is preserved, so the requeued draft
+        is dispatched first and the deterministic order is unchanged.
+        """
+
+        self._queue.insert(0, item)
+
     def pending(self) -> int:
         """Return the number of queued drafts."""
 
