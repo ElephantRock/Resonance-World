@@ -73,6 +73,7 @@ from .qualification import (
     PhysicalSendCapExceeded,
     QualificationPlan,
     SendMeter,
+    build_authorization_candidate,
     build_qualification_plan,
     preflight_failure_classes,
 )
@@ -106,6 +107,7 @@ __all__ = [
     "SendMeter",
     "arm_call_contracts",
     "budget_summary",
+    "build_authorization_candidate",
     "build_freeze_manifest",
     "build_machine",
     "build_policy",

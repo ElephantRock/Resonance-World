@@ -29,15 +29,16 @@ from dataclasses import dataclass, field
 
 from .call_contract import ENDPOINT_FAMILY, MODEL, PROVIDER, RUNTIME_SPEC
 from .contract import G1V9Contract, default_contract
+from .send_ledger import PhysicalSendCapExceeded  # re-exported
+from .zai_transport import (
+    SCIENCE_ANCHOR_DIGEST,
+    QualificationAuthorizationRecord,
+)
 
 QUALIFICATION_SCHEMA = "g1-v9-qualification-plan-v1"
 
 #: The small, explicit cap proposed for the connectivity probe.
 PROPOSED_QUALIFICATION_SEND_CAP = 8
-
-
-class PhysicalSendCapExceeded(RuntimeError):
-    """Raised when a send is refused because the cap is exhausted."""
 
 
 @dataclass(frozen=True, slots=True)
@@ -191,5 +192,45 @@ def build_qualification_plan(
             "commit, provider, model, and the small send cap",
             "arm D is computational and never generates provider sends",
             "the full-world 420-send budget is NOT proposed here",
+        ),
+    )
+
+
+def build_authorization_candidate(
+    *,
+    code_commit: str,
+    endpoint_url: str,
+    max_output_tokens: int = 512,
+    timeout_seconds: float = 30.0,
+    contract: G1V9Contract | None = None,
+) -> QualificationAuthorizationRecord:
+    """Build the UNAUTHORIZED candidate authorization record (dry).
+
+    The candidate is bound to the frozen science anchor and carries the
+    pinned operational values, but ``authorized=False`` and ``status=
+    candidate-awaiting-independent-authorization``: it cannot enable the
+    transport. Only an independent human authorization record with
+    ``authorized=True`` can.
+    """
+
+    contract = contract or default_contract()
+    return QualificationAuthorizationRecord(
+        schema="g1-v9-qualification-authorization-v1",
+        status="candidate-awaiting-independent-authorization",
+        science_anchor_digest=SCIENCE_ANCHOR_DIGEST,
+        code_commit=code_commit,
+        provider=PROVIDER,
+        model=MODEL,
+        endpoint_family=ENDPOINT_FAMILY,
+        endpoint_url=endpoint_url,
+        send_cap=PROPOSED_QUALIFICATION_SEND_CAP,
+        max_output_tokens=max_output_tokens,
+        timeout_seconds=timeout_seconds,
+        authorized=False,
+        authorized_by="",
+        authorized_at="",
+        notes=(
+            "candidate record: dry; enabling the transport requires an "
+            "independent authorization with authorized=true"
         ),
     )
