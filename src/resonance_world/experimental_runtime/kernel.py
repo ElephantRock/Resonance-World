@@ -337,13 +337,18 @@ class WorldKernel:
                 depends_on=deps,
             )
 
-        next_state = self._machine.apply(self._state, event, sealed_payload)
-        self._state = next_state
+        # Transition is prepared first: reducer failure must leave the
+        # kernel untouched. Persistence comes second: storage failure must
+        # also leave the kernel untouched, so the live state can never run
+        # ahead of the durable log.
+        candidate = self._machine.apply(self._state, event, sealed_payload)
+        if self._store is not None:
+            self._store.append_event(self._branch_id, event, sealed_payload=sealed_payload)
+        # Commit point: nothing above mutates kernel state; nothing below fails.
+        self._state = candidate
         self._events.append(event)
         if sealed_payload is not None:
             self._sealed[seq] = sealed_payload
-        if self._store is not None:
-            self._store.append_event(self._branch_id, event, sealed_payload=sealed_payload)
         return event
 
     # -- model decision boundary -------------------------------------------

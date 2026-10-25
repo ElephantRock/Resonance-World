@@ -6,6 +6,8 @@ Each test class maps to one review finding. These tests fail on commit
 
 from __future__ import annotations
 
+import sqlite3
+
 import pytest
 
 from resonance_world.experimental_runtime.kernel import WorldKernel
@@ -86,3 +88,88 @@ def test_answered_requests_survive_resume() -> None:
     resumed.record_decision(stale, {"action": "maintain"}, model_id="test-model")
     with pytest.raises(ValueError, match="already answered"):
         resumed.record_decision(stale, {"action": "harvest"}, model_id="test-model")
+
+
+# ---------------------------------------------------------------------------
+# P0-4: atomicity of world transition and storage
+# ---------------------------------------------------------------------------
+
+
+class _FailingStore(KernelStore):
+    """A store whose next append can be made to fail on demand."""
+
+    def __init__(self) -> None:
+        super().__init__()
+        self.fail_next = False
+        self.failures = 0
+
+    def append_event(self, branch_id, event, *, sealed_payload=None):  # type: ignore[override]
+        if self.fail_next:
+            self.fail_next = False
+            self.failures += 1
+            import sqlite3
+
+            raise sqlite3.OperationalError("injected storage failure")
+        return super().append_event(branch_id, event, sealed_payload=sealed_payload)
+
+
+def test_world_does_not_advance_when_storage_fails() -> None:
+    """P0-4: a failed append must leave the live engine at the logged state."""
+
+    store = _FailingStore()
+    kernel = start_kernel(store)
+    first = kernel.emit("world_effect", {"tick": 0})
+    hash_after_first = kernel.state_hash()
+    count_after_first = kernel.event_count
+
+    store.fail_next = True
+    with pytest.raises(sqlite3.OperationalError, match="injected"):
+        kernel.emit("world_effect", {"tick": 0})
+
+    assert kernel.state_hash() == hash_after_first
+    assert kernel.event_count == count_after_first
+    assert len(kernel.events()) == count_after_first
+
+    # The failed sequence number is not consumed: the next event takes it.
+    second = kernel.emit("world_effect", {"tick": 0})
+    assert second.seq == first.seq + 1
+    assert kernel.event_count == count_after_first + 1
+
+
+def test_sealed_state_is_not_committed_when_storage_fails() -> None:
+    store = _FailingStore()
+    kernel = start_kernel(store)
+    drive(kernel, ticks=4, policy=ScriptedPolicy())
+    sealed_before = dict(kernel._sealed)
+    state_hash = kernel.state_hash()
+    store_count = store.event_count("main")
+
+    store.fail_next = True
+    kernel.schedule(
+        "assessment",
+        {"epoch": 99, "stress": 9},
+        source="external",
+        visibility="private",
+    )
+    with pytest.raises(sqlite3.OperationalError, match="injected"):
+        kernel.advance()
+
+    assert kernel.state_hash() == state_hash
+    assert kernel._sealed == sealed_before
+    assert store.event_count("main") == store_count
+
+
+def test_log_stays_verifiable_after_recovered_storage_failure() -> None:
+    from resonance_world.experimental_runtime.replay import replay_branch
+
+    store = _FailingStore()
+    kernel = start_kernel(store)
+    drive(kernel, ticks=6, policy=ScriptedPolicy())
+    store.fail_next = True
+    with pytest.raises(sqlite3.OperationalError, match="injected"):
+        kernel.emit("world_effect", {"tick": kernel.tick})
+    drive(kernel, ticks=2, policy=ScriptedPolicy())
+
+    result = replay_branch(store, "main", build_machine())
+    assert result.final_state_sha256 == kernel.state_hash()
+    assert result.all_checkpoints_matched or not result.checkpoint_verifications
