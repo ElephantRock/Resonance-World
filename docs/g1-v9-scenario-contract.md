@@ -1,85 +1,78 @@
-# G1 v9 — World-Time Adaptation: Scenario Contract (draft, pre-freeze)
+# G1 v9 — Scenario Contract (hardened design; freeze candidate)
 
-Status: **protocol draft for the integration gate.** This document is the
-human-readable companion to the machine-checkable contract in
-`src/resonance_world/experimental_runtime/g1_v9/contract.py`. It is **not** a
-preregistration for scientific claims and **does not authorize any provider
-execution**. The protocol and budget must be reviewed and frozen separately
-before any GLM-5.3 call is allowed.
+Status: **freeze candidate.** This document is the human-readable
+companion to `g1_v9/contract.py` and `g1_v9/evaluator.py`. It is **not**
+a scientific claim and **does not authorize any provider execution**.
+The freeze anchor is the machine-verifiable manifest
+(`g1_v9/freeze.py`), which pins this document by content hash.
 
 ## Research question (for the later scientific gate)
 
-When a model-mediated agent accumulates experience under world rule P0 and the
-hidden rule switches to P1 at a known tick, does accumulated experience
-produce measurable adaptation compared with memory-ablated, frozen-policy,
-and canonical-baseline controls - with the whole world remaining exactly
-replayable from recorded events?
+When a model-mediated agent accumulates per-context experience under
+hidden rule epoch 0 and the evaluator switches the hidden tables at a
+known tick (flipping exactly half of the contexts), does retained
+experience produce measurable post-switch adaptation compared with a
+memory-ablated paired agent, a frozen-policy agent, and a canonical
+baseline - with the whole world exactly replayable from recorded
+events?
 
-## World mechanics
+## World mechanics (hardened design)
 
-- One agent per experimental branch; each decision picks one of two orderings
-  (`AB` or `BA`) for the current epoch.
-- The hidden rule of an epoch is the ordering the environment rewards. Rule
-  content is **sealed**: it enters the world only as a private `rule_epoch`
-  event whose payload is committed with a keyed HMAC commitment and stored in
-  the sealed ledger. The public log never sees the ordering value.
-- Epoch 0 (ticks 0..499) runs under P0; epoch 1 (ticks 500..999) runs under
-  P1. The **switch tick is public**; the rule content is secret. Epoch
-  boundaries and rule sealings are identical across arms.
-- Decision feedback (success/failure of the chosen ordering) is public and is
-  the agent's only lawful information channel: agents observe outcomes, never
-  evaluator truth.
-- Ablation (arm B only) is an explicit public `memory_ablation` experimental
-  transaction recorded in the branch at the switch tick. Shared history,
-  evaluator rules, and hidden targets are byte-identical across arms; only
-  the agent's private experience memory is cleared in arm B.
+- **Shared acquisition:** one acquisition branch runs ticks 0..499 with
+  a single adaptive learner. Arms A and B fork from its recorded head
+  at the treatment tick, so their pre-treatment history is the same
+  branch - identity is structural, not assumed from matching schedules.
+- **Multi-context decisions:** four task contexts, presented publicly
+  in seeded shuffled blocks (balanced presentation). Each decision
+  names the presented context and one of two orderings; the reducer
+  rejects any decision whose context differs from the presented one.
+- **Hidden truth is evaluator-held:** per-epoch, per-context rewarded
+  orderings are derived by the evaluator from operator-held seed
+  material and enter the world only as sealed private `rule_epoch`
+  events (keyed HMAC commitments). No ordering constant is importable.
+- **Balanced switch:** at the switch the evaluator flips exactly half
+  of the contexts and keeps the other half - no-change controls
+  against switch-prior memorization.
+- **Memory custody:** every save/ablation of the paired agents'
+  experience memory is attested by a public `memory_snapshot` event
+  (keyed commitment) co-recorded with a sealed `memory_state` payload,
+  so agent state survives resume from the world's own ledger.
+- **Ablation is an in-branch transaction:** arm B records
+  `memory_ablation` plus an `ablated` memory snapshot at the fork;
+  arm A keeps the live memory. Shared history, evaluator rules, and
+  hidden targets are byte-identical across arms.
 
 ## Arms
 
-| Arm | Branch id | Policy | Treatment |
+| Branch | Fork point | Policy | Treatment |
 |---|---|---|---|
-| A adaptive | `arm-a-adaptive` | experience-memory policy, learns throughout | none |
-| B memory-ablated | `arm-b-ablated` | same as A until the switch | ablation transaction + experience memory cleared at tick 500 |
-| C frozen | `arm-c-frozen` | stops learning at tick 400 (P0 snapshot semantics) | frozen after snapshot |
-| D canonical | `arm-d-canonical` | fixed alternation, ignores feedback | baseline |
+| `acquisition` | genesis | adaptive learner | shared history; ticks 0..499 |
+| `arm-a-adaptive` | tick 500 (acquisition head) | live memory continues | none |
+| `arm-b-ablated` | tick 500 (acquisition head) | memory cleared at the fork | `memory_ablation` + `ablated` snapshot |
+| `arm-c-frozen` | tick 400 (freeze snapshot) | sealed snapshot restored; never learns | frozen memory |
+| `arm-d-canonical` | genesis | per-context alternation, feedback-ignored | independent baseline |
 
-For the **integration gate** all four policies are offline scripted stand-ins
-implementing the kernel `ModelDecisionPort` contract. No model, SDK, or
-credential exists on this code path.
+## Timeline
+
+- ticks 0..399: shared acquisition (also common to arm C).
+- tick 400: freeze snapshot (memory save + arm C fork).
+- ticks 400..499: acquisition continues (common to A and B).
+- tick 500: rule switch sealed (balanced); A/B paired fork; arm B
+  ablation transaction.
+- ticks 501..1000: paired measurement for A and B; C and D run their
+  own tails over the same switched rules.
 
 ## Measurements
 
-Per arm, from public counters only:
-
-- `pre_accuracy` = successes / attempts over ticks < 500
-- `post_accuracy` = successes / attempts over ticks >= 500
-- `adaptation_delta` = post_accuracy - pre_accuracy
-
-Per acceptance run (structural, non-scientific):
-
-- every branch replays with an identical state commitment and all checkpoints
-  matched; replay performs zero policy calls
-- all non-decision events are byte-identical across arms (shared schedule,
-  shared sealed-rule commitments under the same store key)
-- the ablation transaction exists exactly in arm B
-- no public event or public state key exposes rule content
-- two independent runs produce identical reports (determinism)
+Per arm, from public counters only: `pre_accuracy`, `post_accuracy`,
+`adaptation_delta` (post - pre). Per acceptance run (structural):
+replay identity for every branch, shared-schedule identity between A
+and B, exclusive ablation, custody-chain verification, absence of rule
+leakage, zero policy calls during replay, and cross-run determinism.
 
 ## Claim ceiling for this gate
 
-The integration gate establishes **apparatus only**: that the contract, arms,
-and replay machinery behave as specified without a model. It establishes
-nothing about model learning, adaptation, or regeneration. Scientific claims
-require the frozen protocol, budget, and authorized GLM-5.3 execution in a
-later gate.
-
-## Freeze and budget gates (unchanged)
-
-1. This contract is reviewed, then frozen with a contract digest in an issue.
-2. The model phase requires explicit human authorization naming the exact
-   candidate commit, the provider/model, and a maximum physical-send budget
-   with per-run attempt-1 semantics, per the repository operating charter.
-3. Commitment keys are custodied outside any published evidence file; the
-   store supports external keys (`commitment_key=`, `persist_commitment_key=False`).
-4. `rules_version` and external dependencies are pinned through the machine
-   fingerprint; replay under different rules is rejected by construction.
+The integration gate establishes **apparatus only**. Scripted-arm
+numbers demonstrate mechanics, not model behavior. Scientific claims
+require the freeze manifest, the frozen budget, and authorized GLM-5.3
+execution in a later gate.

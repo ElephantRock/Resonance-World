@@ -77,11 +77,19 @@ no prompt text, and no public event carries the rewarded ordering.
 
 - This integration gate: **0 provider sends** (enforced by the
   contract: `max_provider_sends_this_gate == 0`).
-- Decision arithmetic per independent world (design estimate, not an
-  authorization): 100 shared acquisition decisions + 100 arm A + 100
-  arm B + 120 arm C (forked at 400) + 200 arm D = **620 model
-  decisions per world**. 24 independent worlds correspond to roughly
-  **14,880 decisions** before any qualification or analysis queries.
+- **Decision slots versus model sends.** Each independent world has
+  620 decision slots: 100 shared acquisition + 100 arm A + 100 arm B +
+  120 arm C + 200 arm D. Arm D is the canonical **computational**
+  baseline and never calls the provider. With one model call per
+  decision slot, no reasoning/tool extras, and no retries, the
+  model-send floor is **420 sends per world** (acquisition + A + B +
+  C) and **10,080 sends for 24 worlds**. The 14,880 figure is the
+  total decision-slot count for 24 worlds. Neither number is an
+  authorization to send.
+- Model backing per arm (pinned in the call contract): acquisition,
+  A, B, C model-backed at exactly one send per slot; D computational;
+  no reasoning/memory/tool calls and no retries or replacements
+  unless a later freeze pins them explicitly.
 - **Statistical unit:** the independent world is the unit of analysis;
   repeated decisions inside one world are not independent samples.
 - **Separation:** a small, cost-capped qualification run is decoupled
@@ -89,7 +97,8 @@ no prompt text, and no public event carries the rewarded ordering.
   ceiling.
 - Scientific gate **[TO FREEZE]**: world count, qualification-world
   count, per-phase hard maximum physical-send ceilings, run-attempt-1
-  semantics, no replacement of failed calls, provider/model identity.
+  semantics, no replacement of failed calls, provider/model identity
+  with the runtime version.
 
 ## 9. Post-freeze change rule
 
@@ -97,3 +106,14 @@ After the freeze digest is recorded, any change to the contract
 fields, the evaluator derivation, the memory custody chain, or the
 arm topology is a new prospective item requiring a new freeze record;
 it never modifies frozen history.
+
+## 10. Freeze authority
+
+The freeze anchor is the **Freeze Manifest** (`g1_v9/freeze.py`), not
+`contract.digest()` alone. The manifest records the contract digest,
+the code commit it describes, the machine fingerprint, content hashes
+of every pinned source and governance file, the call-budget split
+(decision slots versus model sends), the pinned statistical fields,
+and the blinded-input definition. The manifest contains no evaluator
+seed material and no commitment keys; those remain in operator
+custody, stored separately from any published evidence.

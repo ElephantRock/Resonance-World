@@ -11,12 +11,19 @@ budget (see docs/g1-v9-freeze-file.md).
 
 from __future__ import annotations
 
+from ..replay import replay_branch
 from .acceptance import (
     ArmReport,
     G1V9AcceptanceReport,
     run_g1_v9_acceptance,
 )
 from .arms import ARMS, build_policy
+from .call_contract import (
+    MODEL,
+    PROVIDER,
+    arm_call_contracts,
+    budget_summary,
+)
 from .contract import (
     ACQUISITION_BRANCH,
     ARM_A_BRANCH,
@@ -34,6 +41,12 @@ from .evaluator import (
     derive_epoch_table,
     derive_evaluator_seed,
 )
+from .freeze import (
+    MANIFEST_STATUS,
+    build_freeze_manifest,
+    manifest_digest,
+    verify_pinned_files,
+)
 from .memory import (
     MEMORY_SNAPSHOT_KIND,
     MEMORY_STATE_KIND,
@@ -41,6 +54,12 @@ from .memory import (
     latest_memory_state,
     record_memory_event,
     verify_memory_attestation,
+)
+from .power import (
+    PlanningAssumptions,
+    minimum_detectable_delta,
+    power,
+    sensitivity_table,
 )
 from .scenario import build_machine, present_context, seal_epoch, start_arm
 
@@ -52,13 +71,20 @@ __all__ = [
     "ARM_C_BRANCH",
     "ARM_D_BRANCH",
     "CONTRACT_SCHEMA",
+    "MANIFEST_STATUS",
     "MEMORY_SNAPSHOT_KIND",
     "MEMORY_STATE_KIND",
+    "MODEL",
+    "PROVIDER",
+    "PlanningAssumptions",
     "RULES_VERSION",
     "SCENARIO_ID",
     "ArmReport",
     "G1V9AcceptanceReport",
     "G1V9Contract",
+    "arm_call_contracts",
+    "budget_summary",
+    "build_freeze_manifest",
     "build_machine",
     "build_policy",
     "canonical_memory",
@@ -67,11 +93,16 @@ __all__ = [
     "derive_epoch_table",
     "derive_evaluator_seed",
     "latest_memory_state",
+    "manifest_digest",
+    "minimum_detectable_delta",
+    "power",
     "present_context",
     "record_memory_event",
     "replay_branch",
     "run_g1_v9_acceptance",
+    "sensitivity_table",
     "seal_epoch",
     "start_arm",
     "verify_memory_attestation",
+    "verify_pinned_files",
 ]
