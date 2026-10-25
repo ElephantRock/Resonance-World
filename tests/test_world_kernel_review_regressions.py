@@ -6,6 +6,7 @@ Each test class maps to one review finding. These tests fail on commit
 
 from __future__ import annotations
 
+import json
 import sqlite3
 
 import pytest
@@ -18,6 +19,9 @@ from resonance_world.experimental_runtime.scenario import (
     start_kernel,
 )
 from resonance_world.experimental_runtime.store import KernelStore
+
+# Fixed commitment key for file-backed stores that must survive reopening.
+TEST_KEY = bytes(range(16, 48))
 
 
 def test_duplicate_decision_is_rejected_after_being_recorded() -> None:
@@ -288,3 +292,142 @@ def test_legacy_store_files_are_rejected(tmp_path) -> None:
 
     with pytest.raises(ValueError, match="schema"):
         KS(world_path)
+
+
+# ---------------------------------------------------------------------------
+# P0-2: external anchoring defeats fully recomputed rewrites
+# ---------------------------------------------------------------------------
+
+
+def _recompute_all_internal_digests(connection, branch_id: str) -> None:
+    """Simulate a malicious local rewrite: rewrite an event payload and
+    recompute every internal digest so the log is self-consistent."""
+
+    from resonance_world.adapters import canonical_json_bytes, sha256_json
+
+    from resonance_world.experimental_runtime.events import event_digest
+
+    row = connection.execute(
+        "SELECT seq, tick, kind, source, visibility, depends_on, payload_sha256 "
+        "FROM events WHERE branch_id = ? AND visibility = 'public' LIMIT 1",
+        (branch_id,),
+    ).fetchone()
+    new_payload = '{"rewritten": true}'
+    depends_on = tuple(json.loads(row[5]))
+    record_digest = event_digest(
+        seq=row[0],
+        tick=row[1],
+        kind=row[2],
+        source=row[3],
+        visibility=row[4],
+        payload_sha256=sha256_json(json.loads(new_payload)),
+        depends_on=depends_on,
+    )
+    connection.execute(
+        "UPDATE events SET payload = ?, payload_sha256 = ?, event_sha256 = ? "
+        "WHERE branch_id = ? AND seq = ?",
+        (
+            new_payload,
+            sha256_json(json.loads(new_payload)),
+            record_digest,
+            branch_id,
+            row[0],
+        ),
+    )
+    connection.commit()
+
+
+def test_anchor_detects_fully_recomputed_rewrite(tmp_path) -> None:
+    from resonance_world.experimental_runtime.anchoring import verify_log_anchor
+
+    world_path = tmp_path / "world.sqlite3"
+    store = KernelStore(world_path, commitment_key=TEST_KEY)
+    kernel = start_kernel(store)
+    drive(kernel, ticks=6, policy=ScriptedPolicy())
+    anchor = kernel.log_anchor()
+    assert anchor["event_count"] == store.event_count("main")
+    store.close()
+
+    connection = sqlite3.connect(str(world_path))
+    _recompute_all_internal_digests(connection, "main")
+    connection.close()
+
+    reopened = KernelStore(world_path, commitment_key=TEST_KEY)
+    # Internal consistency passes: every stored digest verifies.
+    rewritten_events = reopened.iter_events("main")
+    # ...but the externally held anchor exposes the rewrite.
+    assert verify_log_anchor(rewritten_events, anchor) is False
+    assert reopened.log_anchor("main") != anchor
+
+
+def test_anchor_is_stable_and_scope_bound() -> None:
+    from resonance_world.experimental_runtime.anchoring import verify_log_anchor
+
+    store = KernelStore()
+    kernel = start_kernel(store)
+    drive(kernel, ticks=4, policy=ScriptedPolicy())
+    anchor = kernel.log_anchor()
+
+    same = WorldKernel.resume(store=store, branch_id="main", machine=build_machine())
+    assert verify_log_anchor(same.events(), anchor) is True
+    assert verify_log_anchor(same.events()[:-1], anchor) is False
+
+
+# ---------------------------------------------------------------------------
+# P1: transition-machine identity and checkpoint cross-proof
+# ---------------------------------------------------------------------------
+
+
+def _reducer_a(state, event, sealed):
+    return state
+
+
+def _reducer_b(state, event, sealed):
+    return state
+
+
+def test_resume_rejects_a_different_reducer_registry(tmp_path) -> None:
+    from resonance_world.experimental_runtime.machine import StateMachine
+
+    store = KernelStore()
+    kernel = start_kernel(store)
+    drive(kernel, ticks=5, policy=ScriptedPolicy())
+
+    other = StateMachine()
+    for kind in build_machine().kinds():
+        other.register(kind, _reducer_a)
+    with pytest.raises(ValueError, match="fingerprint"):
+        WorldKernel.resume(store=store, branch_id="main", machine=other)
+
+    from resonance_world.experimental_runtime.replay import replay_branch
+
+    with pytest.raises(ValueError, match="fingerprint"):
+        replay_branch(store, "main", other)
+
+
+def test_resume_proves_checkpoint_matches_the_log(tmp_path) -> None:
+    import dataclasses
+
+    from resonance_world.experimental_runtime.checkpoints import Checkpoint
+
+    store = KernelStore()
+    kernel = start_kernel(store)
+    drive(kernel, ticks=5, policy=ScriptedPolicy())
+    head_count = kernel.event_count
+    earlier_state = dataclasses.replace(kernel.state, tick=2, event_count=2)
+    forged = Checkpoint.build(
+        branch_id="main",
+        name="forged",
+        state=earlier_state,
+        state_digest=store.commit_state(earlier_state),
+    )
+    # Count is forged to the head so the head-only guard passes; the store's
+    # own digest verification passes because the snapshot is internally
+    # consistent. The log cross-proof must still reject it.
+    object.__setattr__(forged, "event_count", head_count)
+    store.save_checkpoint(forged)
+
+    with pytest.raises(ValueError, match="does not match the state rebuilt"):
+        WorldKernel.resume(
+            store=store, branch_id="main", machine=build_machine(), checkpoint_name="forged"
+        )

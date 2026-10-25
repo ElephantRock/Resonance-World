@@ -128,5 +128,5 @@ def test_replay_requires_the_same_reducer_registry() -> None:
     store, _kernel, _policy = captured_world()
     empty = StateMachine()
     empty.register("tick", lambda state, event, sealed: state)
-    with pytest.raises(ValueError, match="no reducer registered"):
+    with pytest.raises(ValueError, match="fingerprint"):
         replay_branch(store, "main", empty)

@@ -14,6 +14,8 @@ import dataclasses
 from collections.abc import Callable
 from typing import Any
 
+from resonance_world.adapters import sha256_json
+
 from .events import WorldEvent
 from .state import WorldState
 
@@ -41,6 +43,26 @@ class StateMachine:
         """Return the registered event kinds in sorted order."""
 
         return tuple(sorted(self._reducers))
+
+    def fingerprint(self) -> str:
+        """Return a stable identity for this reducer registry.
+
+        The fingerprint covers the registered kinds and the module and
+        qualified name of every reducer, so renaming or swapping a
+        reducer implementation changes the identity even when the event
+        kinds stay the same. Branches record it at creation; resume and
+        replay refuse to rebuild history under a different machine.
+
+        Note: anonymous functions all report ``<lambda>`` and therefore
+        produce meaningless fingerprints; reducers must be named
+        functions or classes for the fingerprint to be meaningful.
+        """
+
+        reducers = {
+            kind: f"{reducer.__module__}.{reducer.__qualname__}"
+            for kind, reducer in sorted(self._reducers.items())
+        }
+        return sha256_json({"reducers": reducers, "schema": "rw-machine-fingerprint-v1"})
 
     def apply(
         self,

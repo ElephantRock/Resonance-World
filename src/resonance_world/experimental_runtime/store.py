@@ -549,6 +549,35 @@ class KernelStore:
             by_count[checkpoint.event_count] = checkpoint
         return by_count
 
+    def set_machine_fingerprint(self, branch_id: str, fingerprint: str) -> None:
+        """Record the reducer-registry identity a branch was built with."""
+
+        self.get_branch(branch_id)
+        self._conn.execute(
+            "INSERT INTO meta(key, value) VALUES (?, ?) "
+            "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
+            (f"machine_fingerprint:{branch_id}", fingerprint),
+        )
+        self._conn.commit()
+
+    def machine_fingerprint(self, branch_id: str) -> str:
+        """Return the reducer-registry identity recorded for ``branch_id``."""
+
+        row = self._conn.execute(
+            "SELECT value FROM meta WHERE key = ?",
+            (f"machine_fingerprint:{branch_id}",),
+        ).fetchone()
+        if row is None:
+            raise ValueError(f"branch {branch_id!r} has no recorded machine fingerprint")
+        return str(row["value"])
+
+    def log_anchor(self, branch_id: str) -> dict[str, Any]:
+        """Build the externally-custodied anchor for the current log head."""
+
+        from .anchoring import build_log_anchor
+
+        return build_log_anchor(branch_id, self.iter_events(branch_id))
+
     def close(self) -> None:
         """Close the underlying connection."""
 

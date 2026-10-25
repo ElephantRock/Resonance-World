@@ -100,6 +100,11 @@ def replay_state(store: KernelStore, branch_id: str, machine: StateMachine) -> W
 def replay_branch(store: KernelStore, branch_id: str, machine: StateMachine) -> ReplayResult:
     """Replay ``branch_id`` and verify every checkpoint digest along the way."""
 
+    if store.machine_fingerprint(branch_id) != machine.fingerprint():
+        raise ValueError(
+            f"state machine does not match the fingerprint recorded for {branch_id!r}; "
+            "refusing to rebuild history under different world rules"
+        )
     checkpoints = store.checkpoints_by_event_count(branch_id)
     by_watermark = {cp.event_count: cp for cp in checkpoints.values()}
     state = store.genesis_state(branch_id)

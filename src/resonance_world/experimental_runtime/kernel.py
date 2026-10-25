@@ -18,12 +18,13 @@ from typing import Any
 
 from resonance_world.adapters import sha256_json
 
+from .anchoring import build_log_anchor
 from .checkpoints import Checkpoint
 from .events import EVENT_VISIBILITIES, WorldEvent
 from .machine import StateMachine
 from .replay import replay_state
 from .scheduler import EventScheduler
-from .state import WorldState, full_state_sha256, public_state_sha256
+from .state import WorldState, full_state_bytes, full_state_sha256, public_state_sha256
 from .store import BranchRecord, KernelStore
 from .views import DecisionRequest, ModelDecisionPort, Observation
 from .world_time import WorldClock
@@ -90,6 +91,7 @@ class WorldKernel:
                 ),
                 genesis_state=state,
             )
+            store.set_machine_fingerprint(branch_id, machine.fingerprint())
         return cls(
             scenario_id=scenario_id,
             machine=machine,
@@ -122,9 +124,19 @@ class WorldKernel:
                     f"checkpoint {checkpoint_name!r} is not at the head of {branch_id!r}; "
                     "fork from it instead"
                 )
+            rebuilt = replay_state(store, branch_id, machine)
+            if full_state_bytes(rebuilt) != full_state_bytes(checkpoint.state):
+                raise ValueError(
+                    f"checkpoint {checkpoint_name!r} does not match the state rebuilt "
+                    "from the branch log"
+                )
             state = checkpoint.state
         else:
             state = replay_state(store, branch_id, machine)
+        if store.machine_fingerprint(branch_id) != machine.fingerprint():
+            raise ValueError(
+                f"state machine does not match the fingerprint recorded for {branch_id!r}"
+            )
         kernel = cls(
             scenario_id=state.scenario_id,
             machine=machine,
@@ -483,6 +495,16 @@ class WorldKernel:
         self._store.save_checkpoint(checkpoint)
         return checkpoint
 
+    def log_anchor(self) -> dict[str, Any]:
+        """Build the external anchor for the current log head.
+
+        The returned record must be custodied outside this world file
+        (governance record, issue comment, or signed note); it is what
+        makes a fully recomputed internal log detectable.
+        """
+
+        return build_log_anchor(self._branch_id, self._events)
+
     def fork(self, child_branch_id: str) -> WorldKernel:
         """Fork the current head into a new isolated branch."""
 
@@ -500,6 +522,7 @@ class WorldKernel:
             ),
             genesis_state=child_state,
         )
+        self._store.set_machine_fingerprint(child_branch_id, self._machine.fingerprint())
         child = WorldKernel(
             scenario_id=self._scenario_id,
             machine=self._machine,
