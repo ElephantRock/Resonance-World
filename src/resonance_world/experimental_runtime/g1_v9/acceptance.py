@@ -153,8 +153,14 @@ def _run_path(
     seal_switch: bool,
     seed: bytes,
     table0: dict[str, str],
+    memory_custody: bool = False,
 ) -> None:
-    """Advance one branch from its head through the measurement tail."""
+    """Advance one branch from its head through the measurement tail.
+
+    When ``memory_custody`` is set (the paired arms), the policy's memory
+    is attested into the world at every restore point, so an interrupted
+    run can be resumed from the log with the exact recorded memory.
+    """
 
     for current in range(kernel.tick, contract.acquisition_ticks + contract.measurement_ticks):
         if seal_switch and current == contract.acquisition_ticks:
@@ -175,6 +181,16 @@ def _run_path(
             branch_checkpoint(kernel.tick, contract)
         )
         if checkpoint:
+            if memory_custody:
+                # Attest the memory BEFORE the checkpoint so the snapshot
+                # watermark covers the attested state exactly.
+                record_memory_event(
+                    kernel=kernel,
+                    tick=kernel.tick,
+                    kind="save",
+                    memory=canonical_memory(policy.snapshot()),
+                    memory_id=f"memory@{kernel.tick}",
+                )
             kernel.checkpoint(f"cp-{kernel.tick}")
 
 
@@ -311,6 +327,7 @@ def run_g1_v9_acceptance(
         seal_switch=False,
         seed=seed,
         table0=table0,
+        memory_custody=True,
     )
     _run_path(
         arm_b,
@@ -320,6 +337,7 @@ def run_g1_v9_acceptance(
         seal_switch=False,
         seed=seed,
         table0=table0,
+        memory_custody=True,
     )
     _run_path(
         arm_c,
@@ -430,7 +448,12 @@ def run_g1_v9_acceptance(
 
 
 def _ablation_custody(store: KernelStore, contract: G1V9Contract) -> bool:
-    """Verify the ablation attestation chain from the world alone."""
+    """Verify the ablation attestation chain from the world alone.
+
+    The check targets the snapshot co-recorded with the ablation
+    transaction (not later saves: the arm legitimately keeps acting and
+    attesting further memory states after the treatment).
+    """
 
     events = store.iter_events(ARM_B_BRANCH)
     if sum(1 for event in events if event.kind == "memory_ablation") != 1:
@@ -444,10 +467,16 @@ def _ablation_custody(store: KernelStore, contract: G1V9Contract) -> bool:
     ]
     if len(ablated_snapshots) != 1:
         return False
-    latest = latest_memory_state(store, ARM_B_BRANCH)
-    if latest is None:
+    attestation = ablated_snapshots[0]
+    sealed_seq = attestation.seq - 1
+    sealed_event = next((event for event in events if event.seq == sealed_seq), None)
+    if sealed_event is None or sealed_event.kind != "memory_state":
         return False
-    cleared = canonical_memory(latest)
+    try:
+        memory = store.sealed_payload(ARM_B_BRANCH, sealed_seq)
+    except ValueError:
+        return False
+    cleared = canonical_memory(memory)
     if cleared.get("chosen") or cleared.get("outcomes") or cleared.get("successes"):
         return False
-    return store.commit_payload(cleared) == ablated_snapshots[0].payload["memory_commitment"]
+    return store.commit_payload(cleared) == attestation.payload["memory_commitment"]

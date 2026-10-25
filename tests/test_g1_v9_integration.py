@@ -23,6 +23,7 @@ from resonance_world.experimental_runtime.g1_v9 import (
     derive_epoch_table,
     derive_evaluator_seed,
     run_g1_v9_acceptance,
+    start_arm,
     verify_memory_attestation,
 )
 from resonance_world.experimental_runtime.replay import replay_branch
@@ -217,6 +218,217 @@ def test_contract_pins_zero_provider_sends() -> None:
     contract = default_contract()
     with pytest.raises(ValueError, match="zero provider sends"):
         replace(contract, max_provider_sends_this_gate=8)
+
+
+# ---------------------------------------------------------------------------
+# Review round 4: functional fixes
+# ---------------------------------------------------------------------------
+
+
+def _seeded_probe_branch(store, branch_id: str):
+    """Create a probe branch with the epoch-0 rule sealed."""
+
+    from resonance_world.experimental_runtime.g1_v9 import seal_epoch
+
+    contract = default_contract()
+    kernel = start_arm(store, contract, branch_id)
+    seal_epoch(
+        kernel,
+        epoch=0,
+        seed=derive_evaluator_seed(EVALUATOR_MATERIAL),
+        contract=contract,
+    )
+    return kernel, contract
+
+
+def test_frozen_policy_actually_stops_learning() -> None:
+    """P0: arm C must not update its learning statistics after restoration."""
+
+    from resonance_world.experimental_runtime.g1_v9.arms import (
+        ContextMemoryPolicy,
+        FrozenPolicy,
+    )
+
+    live = ContextMemoryPolicy()
+    store = KernelStore(commitment_key=ACCEPTANCE_KEY)
+    kernel, contract = _seeded_probe_branch(store, "freeze-probe")
+
+    from resonance_world.experimental_runtime.g1_v9.scenario import present_context
+
+    for _ in range(10):
+        present_context(kernel, "ctx-0")
+        kernel.decide_via(live)
+        kernel.advance()
+
+    frozen = FrozenPolicy(live.snapshot())
+    pre_outcomes = list(frozen.snapshot()["outcomes"])
+    pre_successes = dict(frozen.snapshot()["successes"])
+
+    for _ in range(6):
+        present_context(kernel, "ctx-0")
+        kernel.decide_via(frozen)
+        kernel.advance()
+
+    post = frozen.snapshot()
+    assert frozen.frozen_at == 0
+    assert post["outcomes"] == pre_outcomes  # no learning updates
+    assert post["successes"] == pre_successes
+    assert len(post["chosen"]) > len(pre_outcomes)  # it keeps acting
+
+
+def test_agent_decision_must_match_presented_context() -> None:
+    """P0: out-of-task decisions are rejected, not evaluated silently."""
+
+    from resonance_world.experimental_runtime.g1_v9.arms import ContextMemoryPolicy
+    from resonance_world.experimental_runtime.g1_v9.scenario import present_context
+
+    store = KernelStore(commitment_key=ACCEPTANCE_KEY)
+    kernel, contract = _seeded_probe_branch(store, "binding-probe")
+    policy = ContextMemoryPolicy()
+
+    present_context(kernel, "ctx-0")
+    request = kernel.request_decision()
+    decision = policy.decide(request)
+    decision["context"] = "ctx-1"  # forge a different task context
+
+    with pytest.raises(ValueError, match="presented task context"):
+        kernel.record_decision(request, decision, model_id=policy.model_id)
+
+
+def test_context_rotation_is_balanced_per_stage() -> None:
+    """P1: every context appears equally often in every decision stage."""
+
+    from resonance_world.experimental_runtime.g1_v9.evaluator import context_schedule
+
+    contract = default_contract()
+    seed = derive_evaluator_seed(EVALUATOR_MATERIAL)
+    stage = contract.decisions_on_path(contract.acquisition_ticks)  # 100
+    schedule = context_schedule(
+        seed,
+        contract.acquisition_ticks + contract.measurement_ticks,
+        contract.context_count,
+        contract.decision_cadence,
+    )
+    assert len(schedule) == contract.decisions_on_path(
+        contract.acquisition_ticks + contract.measurement_ticks
+    )
+
+    per_stage = contract.context_count  # each balanced block covers all contexts
+    block_size = stage // per_stage if stage % per_stage == 0 else 1
+    del block_size
+
+    for stage_start in range(0, stage, contract.context_count):
+        block = schedule[stage_start : stage_start + contract.context_count]
+        assert sorted(block) == sorted({f"ctx-{i}" for i in range(contract.context_count)})
+
+
+def test_interrupted_run_matches_uninterrupted_run() -> None:
+    """P0: resume from a checkpoint restores the exact agent and world state."""
+
+    from resonance_world.experimental_runtime.g1_v9 import (
+        canonical_memory,
+        context_schedule,
+        latest_memory_state,
+        record_memory_event,
+        seal_epoch,
+    )
+    from resonance_world.experimental_runtime.g1_v9.arms import ContextMemoryPolicy
+    from resonance_world.experimental_runtime.g1_v9.scenario import present_context
+    from resonance_world.experimental_runtime.kernel import WorldKernel
+    from resonance_world.experimental_runtime.replay import replay_branch
+
+    contract = default_contract()
+    machine = build_machine(contract)
+    seed = derive_evaluator_seed(EVALUATOR_MATERIAL)
+
+    # Derive the shared epoch-0 table and the balanced context rotation.
+    probe = start_arm(
+        KernelStore(commitment_key=ACCEPTANCE_KEY), contract, "probe"
+    )
+    sealed_table = seal_epoch(probe, epoch=0, seed=seed, contract=contract)
+    contexts = context_schedule(
+        seed,
+        contract.acquisition_ticks + contract.measurement_ticks,
+        contract.context_count,
+        contract.decision_cadence,
+    )
+    restore_tick = contract.acquisition_checkpoints[-1]  # 500
+
+    def drive(kernel, policy, *, from_tick: int, to_tick: int) -> None:
+        for current in range(from_tick, to_tick):
+            if current == contract.acquisition_ticks:
+                seal_epoch(
+                    kernel,
+                    epoch=1,
+                    seed=seed,
+                    contract=contract,
+                    previous_table=sealed_table,
+                )
+            context = contexts[current // contract.decision_cadence]
+            if current % contract.decision_cadence == 0:
+                present_context(kernel, context)
+                kernel.decide_via(policy)
+            kernel.schedule("world_pulse", {"tick": current})
+            kernel.advance()
+            if kernel.tick in contract.measurement_checkpoints:
+                kernel.checkpoint(f"cp-{kernel.tick}")
+                record_memory_event(
+                    kernel=kernel,
+                    tick=kernel.tick,
+                    kind="save",
+                    memory=canonical_memory(policy.snapshot()),
+                    memory_id=f"memory@{kernel.tick}",
+                )
+
+    # Uninterrupted reference run.
+    store_ref = KernelStore(commitment_key=ACCEPTANCE_KEY)
+    ref = start_arm(store_ref, contract, "ref")
+    seal_epoch(ref, epoch=0, seed=seed, contract=contract)
+    ref_policy = ContextMemoryPolicy()
+    drive(ref, ref_policy, from_tick=0, to_tick=1000)
+    uninterrupted_choices = list(ref_policy.chosen)
+
+    # Interrupted run: stop at the tick-500 checkpoint, resume, continue.
+    store_int = KernelStore(commitment_key=ACCEPTANCE_KEY)
+    part = start_arm(store_int, contract, "ref")
+    seal_epoch(part, epoch=0, seed=seed, contract=contract)
+    part_policy = ContextMemoryPolicy()
+    drive(part, part_policy, from_tick=0, to_tick=restore_tick)
+    # Pause point: attest the memory first, then checkpoint, so the
+    # snapshot watermark covers the attested agent state exactly.
+    record_memory_event(
+        kernel=part,
+        tick=restore_tick,
+        kind="save",
+        memory=canonical_memory(part_policy.snapshot()),
+        memory_id=f"memory@{restore_tick}",
+    )
+    part.checkpoint(f"cp-{restore_tick}")
+
+    resumed = WorldKernel.resume(
+        store=store_int,
+        branch_id="ref",
+        machine=machine,
+        checkpoint_name=f"cp-{restore_tick}",
+    )
+    restored_memory = latest_memory_state(store_int, "ref")
+    assert restored_memory is not None
+    resumed_policy = ContextMemoryPolicy()
+    resumed_policy.restore(restored_memory)
+    resumed_policy._last_seen = int(resumed.state.public["successes"])
+
+    drive(resumed, resumed_policy, from_tick=restore_tick, to_tick=1000)
+
+    # The interrupted run records two extra custody events (save at the
+    # pause point), so full-state digests differ by watermark; the world
+    # CONTENT - tick, public and private compartments - must be identical.
+    def content(state):
+        return (state.tick, dict(state.public), dict(state.private))
+
+    assert content(resumed.state) == content(ref.state)
+    assert resumed_policy.chosen == uninterrupted_choices
+    result = replay_branch(store_int, "ref", machine)
+    assert result.final_state_sha256 == resumed.state_hash()
 
 
 def test_replay_performs_no_policy_calls() -> None:

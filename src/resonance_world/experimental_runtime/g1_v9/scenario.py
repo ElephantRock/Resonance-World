@@ -116,6 +116,14 @@ def _reduce_agent_decision(state: WorldState, event: WorldEvent, sealed: Any) ->
     context = decision.get("context")
     if not isinstance(context, str) or not context:
         raise ValueError("agent decision must name its task context")
+    # The evaluated context is the one the environment presented at the
+    # decision tick - never a label chosen by the decision payload.
+    presented = state.public.get("current_context", "")
+    if context != presented:
+        raise ValueError(
+            "agent decision does not match the presented task context "
+            f"({context!r} != {presented!r})"
+        )
 
     hidden_table_json = state.private.get("hidden_table_json", "")
     if not hidden_table_json:

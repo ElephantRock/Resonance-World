@@ -153,7 +153,11 @@ class FrozenPolicy(ContextMemoryPolicy):
     def __init__(self, snapshot: Mapping[str, Any]) -> None:
         super().__init__()
         self.restore(snapshot)
-        self.frozen_at = snapshot.get("frozen_at")
+        # Freeze is explicit and unconditional at construction: feedback
+        # seen later resyncs the success counter but never updates this
+        # arm's outcome history, learned successes, or choices' learning
+        # statistics. The arm keeps acting from the restored memory.
+        self.frozen_at = 0
 
 
 class CanonicalPolicy:

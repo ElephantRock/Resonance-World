@@ -77,11 +77,19 @@ no prompt text, and no public event carries the rewarded ordering.
 
 - This integration gate: **0 provider sends** (enforced by the
   contract: `max_provider_sends_this_gate == 0`).
-- Scientific gate **[TO FREEZE]**: planned provider call budget =
-  decisions per arm x arms (+ qualification overhead), a hard maximum
-  physical-send ceiling, run-attempt-1 semantics, and no replacement
-  of failed calls; pinned here at the freeze gate together with the
-  provider/model identity.
+- Decision arithmetic per independent world (design estimate, not an
+  authorization): 100 shared acquisition decisions + 100 arm A + 100
+  arm B + 120 arm C (forked at 400) + 200 arm D = **620 model
+  decisions per world**. 24 independent worlds correspond to roughly
+  **14,880 decisions** before any qualification or analysis queries.
+- **Statistical unit:** the independent world is the unit of analysis;
+  repeated decisions inside one world are not independent samples.
+- **Separation:** a small, cost-capped qualification run is decoupled
+  from the confirmatory multi-world run; each has its own pinned
+  ceiling.
+- Scientific gate **[TO FREEZE]**: world count, qualification-world
+  count, per-phase hard maximum physical-send ceilings, run-attempt-1
+  semantics, no replacement of failed calls, provider/model identity.
 
 ## 9. Post-freeze change rule
 

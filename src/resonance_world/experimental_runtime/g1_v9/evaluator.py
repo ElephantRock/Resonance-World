@@ -34,19 +34,25 @@ def derive_evaluator_seed(seed_material: bytes) -> bytes:
 def context_schedule(seed: bytes, ticks: int, context_count: int, cadence: int) -> list[str]:
     """Return the public context presented at each prescribed decision.
 
-    Contexts rotate deterministically, seeded by the evaluator, so every
-    context appears equally often and no decision order leaks the hidden
-    truth.
+    The rotation is **balanced**: contexts are drawn in seeded shuffled
+    blocks of ``context_count``, so every context appears exactly once per
+    block (equal presentation opportunities per stage), while the order
+    inside each block stays evaluator-seeded and unpredictable.
     """
 
     count = ticks // cadence
-    schedule = []
-    for index in range(count):
-        digest = hmac.new(
-            seed, f"context:{index}".encode(), hashlib.sha256
-        ).digest()
-        schedule.append(f"ctx-{digest[0] % context_count}")
-    return schedule
+    schedule: list[str] = []
+    block = 0
+    while len(schedule) < count:
+        ranked = sorted(
+            range(context_count),
+            key=lambda context: hmac.new(
+                seed, f"context:{block}:{context}".encode(), hashlib.sha256
+            ).digest(),
+        )
+        schedule.extend(f"ctx-{context}" for context in ranked)
+        block += 1
+    return schedule[:count]
 
 
 def derive_epoch_table(
