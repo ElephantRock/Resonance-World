@@ -1,0 +1,20 @@
+{
+  "digest": "d13038c654bc16c46b92f1aa2b202b7cb9255727461a4bb311326d3e68e10970",
+  "record": {
+    "authorized": false,
+    "authorized_at": "",
+    "authorized_by": "",
+    "code_commit": "a4b53cad04a34408a75970bb95b87b231e3667b3",
+    "endpoint_family": "zai-coding-plan-chat-completions",
+    "endpoint_url": "https://api.z.ai/api/coding/paas/v4/chat/completions",
+    "max_output_tokens": 512,
+    "model": "glm-5.3",
+    "notes": "candidate record: dry; enabling the transport requires an independent authorization with authorized=true",
+    "provider": "zai",
+    "schema": "g1-v9-qualification-authorization-v1",
+    "science_anchor_digest": "c843f5042589559becb7510871d13d91f7a1337a43f051b76be25d5fdb8f27b8",
+    "send_cap": 8,
+    "status": "candidate-awaiting-independent-authorization",
+    "timeout_seconds": 30.0
+  }
+}
