@@ -84,8 +84,11 @@ def _replay(
     sealed = store.sealed_payloads(branch_id)
     decisions = 0
     for event in events:
-        state = machine.apply(state, event, _sealed_for(event, sealed, store))
-        if event.source == "agent":
+        # Replay must hand reducers the same frozen representation live
+        # execution uses: identical payload types, identical behaviour.
+        frozen = event.frozen()
+        state = machine.apply(state, frozen, _sealed_for(event, sealed, store))
+        if frozen.source == "agent":
             decisions += 1
     return state, len(events), decisions
 
@@ -114,9 +117,11 @@ def replay_branch(store: KernelStore, branch_id: str, machine: StateMachine) -> 
     verifications: list[CheckpointVerification] = []
     decisions = 0
     for event in events:
+        # Same frozen representation as live execution: see _replay.
+        frozen = event.frozen()
         payload = _sealed_for(event, sealed, store)
-        state = machine.apply(state, event, payload)
-        if event.source == "agent":
+        state = machine.apply(state, frozen, payload)
+        if frozen.source == "agent":
             decisions += 1
         checkpoint = by_watermark.get(state.event_count)
         if checkpoint is not None:

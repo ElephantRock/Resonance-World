@@ -118,6 +118,12 @@ class WorldKernel:
         would break append-only causality.
         """
 
+        # Fail fast on identity: never perform rebuild work under world
+        # rules other than the ones the branch was recorded with.
+        if store.machine_fingerprint(branch_id) != machine.fingerprint():
+            raise ValueError(
+                f"state machine does not match the fingerprint recorded for {branch_id!r}"
+            )
         if checkpoint_name is not None:
             checkpoint = store.load_checkpoint(branch_id, checkpoint_name)
             if checkpoint.event_count != store.event_count(branch_id):
@@ -134,10 +140,6 @@ class WorldKernel:
             state = checkpoint.state
         else:
             state = replay_state(store, branch_id, machine)
-        if store.machine_fingerprint(branch_id) != machine.fingerprint():
-            raise ValueError(
-                f"state machine does not match the fingerprint recorded for {branch_id!r}"
-            )
         kernel = cls(
             scenario_id=state.scenario_id,
             machine=machine,

@@ -331,6 +331,122 @@ def test_frozen_event_round_trips_replay_unchanged() -> None:
 
 
 # ---------------------------------------------------------------------------
+# Round 3, item 1: fingerprint covers every execution constant
+# ---------------------------------------------------------------------------
+
+
+def test_fingerprint_distinguishes_constants_when_bytecode_is_identical() -> None:
+    """Round 3 P1: identical co_code with different co_consts must differ."""
+
+    from resonance_world.experimental_runtime.machine import StateMachine
+
+    namespace_a = {"__name__": "rw_const_test"}
+    namespace_b = {"__name__": "rw_const_test"}
+    exec(
+        "def world_rule(state, event, sealed):\n"
+        "    checked = event.tick + 1\n"
+        "    return state\n",
+        namespace_a,
+    )
+    exec(
+        "def world_rule(state, event, sealed):\n"
+        "    checked = event.tick + 2\n"
+        "    return state\n",
+        namespace_b,
+    )
+    fn_a = namespace_a["world_rule"]
+    fn_b = namespace_b["world_rule"]
+
+    # Reproduction preconditions from the review: same bytecode, different
+    # constants, no retrievable source.
+    assert fn_a.__code__.co_code == fn_b.__code__.co_code
+    assert fn_a.__code__.co_consts != fn_b.__code__.co_consts
+
+    machine_a = StateMachine()
+    machine_b = StateMachine()
+    machine_a.register("tick", fn_a)
+    machine_b.register("tick", fn_b)
+    assert machine_a.fingerprint() != machine_b.fingerprint()
+
+    # And the guard holds end to end: a branch recorded under machine_a
+    # cannot be resumed or replayed under machine_b.
+    store = KernelStore()
+    kernel = WorldKernel.create(
+        "consts-test", machine_a, store=store, branch_id="consts-test"
+    )
+    kernel.advance(2)
+    with pytest.raises(ValueError, match="fingerprint"):
+        WorldKernel.resume(store=store, branch_id="consts-test", machine=machine_b)
+    with pytest.raises(ValueError, match="fingerprint"):
+        from resonance_world.experimental_runtime.replay import replay_branch
+
+        replay_branch(store, "consts-test", machine_b)
+
+
+def test_fingerprint_covers_rules_version_and_external_dependencies() -> None:
+    from resonance_world.experimental_runtime.machine import StateMachine
+
+    def _build(rules_version: str, dependencies: dict[str, str] | None = None) -> StateMachine:
+        machine = StateMachine(rules_version=rules_version, external_dependencies=dependencies)
+        machine.register("tick", _reducer_a)
+        return machine
+
+    baseline = _build("g1-v9-rules-v1", {"provider": "zai"})
+    assert _build("g1-v9-rules-v1", {"provider": "zai"}).fingerprint() == baseline.fingerprint()
+    assert _build("g1-v9-rules-v2", {"provider": "zai"}).fingerprint() != baseline.fingerprint()
+    assert _build("g1-v9-rules-v1", {"provider": "other"}).fingerprint() != baseline.fingerprint()
+    assert _build("g1-v9-rules-v1").fingerprint() != baseline.fingerprint()
+
+    with pytest.raises(ValueError, match="rules_version"):
+        StateMachine(rules_version="")
+
+
+# ---------------------------------------------------------------------------
+# Round 3, item 2: payload representation unified across live and replay
+# ---------------------------------------------------------------------------
+
+
+def test_replay_sees_the_same_frozen_payload_types_as_live() -> None:
+    """Round 3 P1: a list payload must reach reducers as a tuple in both paths."""
+
+    import dataclasses
+
+    from resonance_world.experimental_runtime.events import WorldEvent
+    from resonance_world.experimental_runtime.kernel import WorldKernel
+    from resonance_world.experimental_runtime.replay import replay_state
+    from resonance_world.experimental_runtime.state import WorldState
+
+    def listy_reducer(state: WorldState, event: WorldEvent, sealed: object) -> WorldState:
+        public = dict(state.public)
+        public["items_type"] = type(event.payload["items"]).__name__
+        return dataclasses.replace(state, public=public)
+
+    machine = build_machine()
+    machine.register("listy", listy_reducer)
+
+    store = KernelStore()
+    kernel = WorldKernel.create(
+        "listy-test",
+        machine,
+        store=store,
+        branch_id="listy-test",
+        initial_public={"items_type": ""},
+        initial_private={},
+    )
+    kernel.emit("listy", {"items": [1, 2, 3]})
+
+    # Live execution sees the frozen (tuple) representation.
+    assert kernel.state.public["items_type"] == "tuple"
+
+    replayed = replay_state(store, "listy-test", machine)
+    # Replay must see exactly the same representation and hash.
+    assert replayed.public["items_type"] == "tuple"
+    from resonance_world.experimental_runtime.state import full_state_bytes
+
+    assert full_state_bytes(replayed) == full_state_bytes(kernel.state)
+
+
+# ---------------------------------------------------------------------------
 # P0-1: confidentiality of sealed payloads and state digests
 # ---------------------------------------------------------------------------
 

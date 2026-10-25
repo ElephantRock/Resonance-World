@@ -13,7 +13,7 @@ from __future__ import annotations
 import dataclasses
 import hashlib
 import inspect
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 from typing import Any
 
 from resonance_world.adapters import sha256_json
@@ -24,20 +24,48 @@ from .state import WorldState
 Reducer = Callable[[WorldState, WorldEvent, Any], WorldState]
 
 
+def _code_identity(code: Any) -> dict[str, Any]:
+    """Return a canonical identity of one code object, constants included.
+
+    ``co_code`` alone is not sufficient: two functions whose bytecode is
+    identical can differ in ``co_consts`` (for example ``+ 1`` versus
+    ``+ 2``). The identity therefore covers the bytecode, every constant
+    (recursing into nested code objects), and the name tables.
+    """
+
+    constants: list[dict[str, Any]] = []
+    for const in code.co_consts:
+        nested_code = getattr(const, "co_code", None)
+        if nested_code is not None:
+            constants.append({"kind": "code", "identity": _code_identity(const)})
+            continue
+        try:
+            digest: str | None = hashlib.sha256(repr(const).encode("utf-8")).hexdigest()
+        except Exception:
+            digest = None
+        constants.append({"kind": type(const).__name__, "repr_sha256": digest})
+    return {
+        "code_sha256": hashlib.sha256(code.co_code).hexdigest(),
+        "constants": constants,
+        "names": list(code.co_names),
+        "varnames": list(code.co_varnames),
+    }
+
+
 def _reducer_identity(fn: Reducer) -> dict[str, Any]:
     """Return the executable-content identity of one reducer.
 
-    The identity binds the module and qualified name to the actually
-    executed bytes (the code object) and, when source is available, to
-    the source text. Two reducers with the same name but different
-    bodies therefore have different identities.
+    The identity binds the module and qualified name to the full code
+    identity (bytecode, constants, names) and, when source is available,
+    to the source text. Two reducers with the same name but different
+    bodies - or bodies differing only in an execution constant - have
+    different identities.
     """
 
     code = getattr(fn, "__code__", None)
-    if code is not None:
-        code_sha256 = hashlib.sha256(code.co_code).hexdigest()
-    else:
-        code_sha256 = hashlib.sha256(repr(fn).encode("utf-8")).hexdigest()
+    code_identity = _code_identity(code) if code is not None else None
+    if code_identity is None:
+        code_identity = {"repr_sha256": hashlib.sha256(repr(fn).encode("utf-8")).hexdigest()}
     try:
         source_sha256: str | None = hashlib.sha256(
             inspect.getsource(fn).encode("utf-8")
@@ -47,7 +75,7 @@ def _reducer_identity(fn: Reducer) -> dict[str, Any]:
     return {
         "module": getattr(fn, "__module__", None),
         "qualname": getattr(fn, "__qualname__", repr(fn)),
-        "code_sha256": code_sha256,
+        "code": code_identity,
         "source_sha256": source_sha256,
     }
 
@@ -55,8 +83,34 @@ def _reducer_identity(fn: Reducer) -> dict[str, Any]:
 class StateMachine:
     """Deterministic, kind-dispatched reducer registry."""
 
-    def __init__(self) -> None:
+    def __init__(
+        self,
+        *,
+        rules_version: str = "unversioned",
+        external_dependencies: Mapping[str, str] | None = None,
+    ) -> None:
+        """Create the registry with optional rule provenance.
+
+        ``rules_version`` and ``external_dependencies`` participate in
+        the machine fingerprint, so a branch recorded under a pinned
+        rules version cannot be replayed under a different one.
+        """
+
+        if not rules_version:
+            raise ValueError("rules_version must be a non-empty string")
+        dependencies = dict(external_dependencies or {})
+        for name, version in dependencies.items():
+            if not isinstance(name, str) or not name:
+                raise ValueError("external dependency names must be non-empty strings")
+            if not isinstance(version, str) or not version:
+                raise ValueError("external dependency versions must be non-empty strings")
         self._reducers: dict[str, Reducer] = {}
+        self._rules_version = rules_version
+        self._external_dependencies = tuple(sorted(dependencies.items()))
+
+    @property
+    def rules_version(self) -> str:
+        return self._rules_version
 
     def register(self, kind: str, reducer: Reducer) -> None:
         """Register the reducer for one event kind."""
@@ -78,18 +132,30 @@ class StateMachine:
         """Return a content-bound identity for this reducer registry.
 
         The fingerprint covers the registered kinds and, for every
-        reducer, its module, qualified name, executed code bytes, and
-        source text when available. Renaming, swapping, or editing a
-        reducer body changes the identity even when the event kinds stay
-        the same. Branches record it at creation; resume and replay
-        refuse to rebuild history under a different machine.
+        reducer, its module, qualified name, full code identity
+        (bytecode, constants including nested code objects, names), and
+        source text when available, plus the pinned ``rules_version``
+        and declared external dependencies. Editing a reducer body,
+        changing an execution constant, or changing the rules version
+        changes the identity. Branches record it at creation; resume and
+        replay refuse to rebuild history under a different machine.
         """
 
         reducers = {
             kind: _reducer_identity(reducer)
             for kind, reducer in sorted(self._reducers.items())
         }
-        return sha256_json({"reducers": reducers, "schema": "rw-machine-fingerprint-v2"})
+        return sha256_json(
+            {
+                "external_dependencies": [
+                    {"name": name, "version": version}
+                    for name, version in self._external_dependencies
+                ],
+                "reducers": reducers,
+                "rules_version": self._rules_version,
+                "schema": "rw-machine-fingerprint-v3",
+            }
+        )
 
     def apply(
         self,

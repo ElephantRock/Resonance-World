@@ -583,6 +583,7 @@ class KernelStore:
     def machine_fingerprint(self, branch_id: str) -> str:
         """Return the reducer-registry identity recorded for ``branch_id``."""
 
+        self.get_branch(branch_id)
         row = self._conn.execute(
             "SELECT value FROM meta WHERE key = ?",
             (f"machine_fingerprint:{branch_id}",),
