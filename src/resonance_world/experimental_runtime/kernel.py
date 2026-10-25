@@ -134,6 +134,7 @@ class WorldKernel:
         )
         kernel._events = list(store.iter_events(branch_id))
         kernel._sealed = store.sealed_payloads(branch_id)
+        kernel._answered_requests = _answered_request_ids(kernel._events)
         _require_machine_covers(machine, kernel._events)
         return kernel
 
@@ -411,10 +412,16 @@ class WorldKernel:
             raise ValueError("decision request belongs to a different branch")
         if request.request_id in self._answered_requests:
             raise ValueError("decision request already answered")
+        if request.tick != self._state.tick:
+            raise ValueError("decision request is stale: the world has advanced past it")
+        if request.observation_seq != self._last_observation_seq:
+            raise ValueError(
+                "decision request does not match the latest recorded observation"
+            )
         if not model_id:
             raise ValueError("model_id provenance is required")
         decision_payload = _validated_decision(decision)
-        return self._record(
+        event = self._record(
             kind="agent_decision",
             tick=self._state.tick,
             source="agent",
@@ -426,6 +433,8 @@ class WorldKernel:
             },
             depends_on=(request.observation_seq,),
         )
+        self._answered_requests.add(request.request_id)
+        return event
 
     def decide_via(self, port: ModelDecisionPort) -> WorldEvent:
         """Request a decision from ``port`` and record it as external input."""
@@ -493,6 +502,19 @@ def _validated_decision(decision: Mapping[str, Any]) -> dict[str, int | str]:
     if not validated:
         raise ValueError("decision must not be empty")
     return validated
+
+
+def _answered_request_ids(events: list[WorldEvent]) -> set[str]:
+    """Rebuild the answered-decision set from the recorded log."""
+
+    answered: set[str] = set()
+    for event in events:
+        if event.kind != "agent_decision" or event.payload is None:
+            continue
+        request_id = event.payload.get("request_id")
+        if isinstance(request_id, str):
+            answered.add(request_id)
+    return answered
 
 
 def _require_machine_covers(machine: StateMachine, events: list[WorldEvent]) -> None:
