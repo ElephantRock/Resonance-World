@@ -59,7 +59,7 @@ class WorldKernel:
         self._events: list[WorldEvent] = []
         self._sealed: dict[int, Any] = {}
         self._scheduler = EventScheduler()
-        self._answered_requests: set[str] = set()
+        self._answered_observations: set[int] = set()
         self._last_observation_seq = -1
 
     # -- construction -----------------------------------------------------
@@ -147,7 +147,7 @@ class WorldKernel:
         )
         kernel._events = list(store.iter_events(branch_id))
         kernel._sealed = store.sealed_payloads(branch_id)
-        kernel._answered_requests = _answered_request_ids(kernel._events)
+        kernel._answered_observations = _answered_observation_seqs(kernel._events)
         _require_machine_covers(machine, kernel._events)
         return kernel
 
@@ -303,6 +303,22 @@ class WorldKernel:
             self._clock = WorldClock(boundary)
         return self._state
 
+    def _canonical_request_id(self, observation_seq: int, tick: int) -> str:
+        """Derive the request identity from trusted branch state.
+
+        Identities are never trusted from the caller: this derivation is
+        the only source of a valid request id, and consumption is bound
+        to the observation event sequence, not to a caller-supplied id.
+        """
+
+        return sha256_json(
+            {
+                "branch_id": self._branch_id,
+                "observation_seq": observation_seq,
+                "tick": tick,
+            }
+        )
+
     def _payload_commitment(self, payload: Mapping[str, Any]) -> str:
         """Return the commitment for a sealed payload.
 
@@ -418,14 +434,8 @@ class WorldKernel:
             },
         )
         self._last_observation_seq = event.seq
-        request_id = sha256_json(
-            {
-                "branch_id": self._branch_id,
-                "observation_seq": event.seq,
-                "tick": observation.tick,
-            }
-        )
-        if request_id in self._answered_requests:
+        request_id = self._canonical_request_id(event.seq, observation.tick)
+        if event.seq in self._answered_observations:
             raise ValueError("decision request already answered")
         return DecisionRequest(
             request_id=request_id,
@@ -451,14 +461,27 @@ class WorldKernel:
 
         if request.branch_id != self._branch_id:
             raise ValueError("decision request belongs to a different branch")
-        if request.request_id in self._answered_requests:
-            raise ValueError("decision request already answered")
         if request.tick != self._state.tick:
             raise ValueError("decision request is stale: the world has advanced past it")
         if request.observation_seq != self._last_observation_seq:
             raise ValueError(
                 "decision request does not match the latest recorded observation"
             )
+        if (
+            request.observation_seq >= len(self._events)
+            or self._events[request.observation_seq].kind != "observation"
+        ):
+            raise ValueError(
+                "decision request does not reference a recorded observation event"
+            )
+        # The request identity is re-derived from trusted branch state, so a
+        # fabricated id cannot bypass the one-answer guarantee, and the
+        # observation event itself is consumed exactly once.
+        derived = self._canonical_request_id(request.observation_seq, request.tick)
+        if request.request_id != derived:
+            raise ValueError("decision request identity does not match its observation")
+        if request.observation_seq in self._answered_observations:
+            raise ValueError("decision request already answered")
         if not model_id:
             raise ValueError("model_id provenance is required")
         decision_payload = _validated_decision(decision)
@@ -474,7 +497,7 @@ class WorldKernel:
             },
             depends_on=(request.observation_seq,),
         )
-        self._answered_requests.add(request.request_id)
+        self._answered_observations.add(request.observation_seq)
         return event
 
     def decide_via(self, port: ModelDecisionPort) -> WorldEvent:
@@ -566,16 +589,18 @@ def _validated_decision(decision: Mapping[str, Any]) -> dict[str, int | str]:
     return validated
 
 
-def _answered_request_ids(events: list[WorldEvent]) -> set[str]:
-    """Rebuild the answered-decision set from the recorded log."""
+def _answered_observation_seqs(events: list[WorldEvent]) -> set[int]:
+    """Rebuild the consumed-observation set from the recorded log.
 
-    answered: set[str] = set()
+    Each ``agent_decision`` event causally depends on exactly one
+    observation event, so the log itself is the record of which
+    observations were already answered.
+    """
+
+    answered: set[int] = set()
     for event in events:
-        if event.kind != "agent_decision" or event.payload is None:
-            continue
-        request_id = event.payload.get("request_id")
-        if isinstance(request_id, str):
-            answered.add(request_id)
+        if event.kind == "agent_decision":
+            answered.update(event.depends_on)
     return answered
 
 

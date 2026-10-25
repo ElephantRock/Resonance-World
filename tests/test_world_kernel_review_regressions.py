@@ -83,15 +83,61 @@ def test_answered_requests_survive_resume() -> None:
     resumed = WorldKernel.resume(
         store=store, branch_id="main", machine=build_machine(), checkpoint_name="head"
     )
-    answered = resumed._answered_requests
+    answered = resumed._answered_observations
     assert len(answered) == 2  # ticks 4 and 9 carry decisions
 
     stale = resumed.request_decision()
     # A reconstructed kernel must not accept the pre-resume answered set as new.
-    assert stale.request_id not in answered
+    assert stale.observation_seq not in answered
     resumed.record_decision(stale, {"action": "maintain"}, model_id="test-model")
     with pytest.raises(ValueError, match="already answered"):
         resumed.record_decision(stale, {"action": "harvest"}, model_id="test-model")
+
+
+def test_forged_request_id_is_rejected() -> None:
+    """P0: a fabricated id must not bypass the one-answer guarantee."""
+
+    from resonance_world.experimental_runtime.views import DecisionRequest
+
+    store = KernelStore()
+    kernel = start_kernel(store)
+    request = kernel.request_decision()
+    kernel.record_decision(request, {"action": "harvest"}, model_id="test-model")
+
+    forged = DecisionRequest(
+        request_id="forged-" + "0" * 32,
+        branch_id=request.branch_id,
+        tick=request.tick,
+        observation_seq=request.observation_seq,
+        observation=request.observation,
+    )
+    with pytest.raises(ValueError, match="identity does not match"):
+        kernel.record_decision(forged, {"action": "maintain"}, model_id="test-model")
+
+    decisions = [event for event in kernel.events() if event.kind == "agent_decision"]
+    assert len(decisions) == 1
+
+
+def test_same_observation_cannot_be_answered_twice_under_a_new_identity() -> None:
+    from resonance_world.experimental_runtime.views import DecisionRequest
+
+    store = KernelStore()
+    kernel = start_kernel(store)
+    request = kernel.request_decision()
+    kernel.record_decision(request, {"action": "harvest"}, model_id="test-model")
+
+    # A second, honestly derived request for the same observation (correct
+    # canonical id, same observation_seq and tick) must still be rejected:
+    # the observation event itself is consumed exactly once.
+    replayed = DecisionRequest(
+        request_id=request.request_id,
+        branch_id="main",
+        tick=request.tick,
+        observation_seq=request.observation_seq,
+        observation=request.observation,
+    )
+    with pytest.raises(ValueError, match="already answered"):
+        kernel.record_decision(replayed, {"action": "maintain"}, model_id="test-model")
 
 
 # ---------------------------------------------------------------------------
