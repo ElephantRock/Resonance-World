@@ -282,3 +282,133 @@ def test_statistical_plan_pins_test_ci_and_success_criteria(manifest) -> None:
     assert plan["practical_threshold_status"] == "proposed-pending-freeze"
     assert "not replaced" in plan["incomplete_worlds"]
     assert "18" in plan["incomplete_worlds"]
+
+
+# ---------------------------------------------------------------------------
+# Freeze-review round: strict frozen-unauthorized emission
+# ---------------------------------------------------------------------------
+
+
+def test_strict_frozen_mode_fails_closed_on_incomplete_manifests(manifest) -> None:
+    """P0: a minimal manifest must never pass the final freeze check."""
+
+    from resonance_world.experimental_runtime.g1_v9 import (
+        FROZEN_UNAUTHORIZED_STATUS,
+        verify_freeze_anchor,
+    )
+    from resonance_world.experimental_runtime.g1_v9.freeze import FreezeManifest
+
+    incomplete = {
+        "schema": "g1-v9-freeze-manifest-v1",
+        "status": FROZEN_UNAUTHORIZED_STATUS,
+        "code_commit": CODE_COMMIT,
+        "scenario_file_hashes": [],  # empty list must be rejected
+        "provider": {"provider_authorized": True},  # must be rejected
+        "call_budget": {"max_provider_sends_this_gate": 50},  # must be rejected
+    }
+    parsed = FreezeManifest(incomplete)
+    ok, failures = verify_freeze_anchor(
+        parsed,
+        REPO_ROOT,
+        expected_commit=CODE_COMMIT,
+        strict_frozen=True,
+    )
+    assert ok is False
+    joined = "; ".join(failures)
+    assert "missing mandatory freeze field" in joined
+    assert "empty" in joined
+    assert "provider_authorized must be false" in joined
+    assert "send cap must be zero" in joined
+
+
+def test_strict_frozen_mode_accepts_a_valid_final_emission() -> None:
+    """P0: a complete frozen-unauthorized emission verifies end to end."""
+
+    from resonance_world.experimental_runtime.g1_v9 import (
+        FROZEN_UNAUTHORIZED_STATUS,
+        verify_freeze_anchor,
+    )
+    from resonance_world.experimental_runtime.g1_v9.freeze import FreezeManifest
+
+    head = _git_head(REPO_ROOT)
+    built = build_freeze_manifest(
+        repo_root=REPO_ROOT,
+        code_commit=head,
+        status=FROZEN_UNAUTHORIZED_STATUS,
+    )
+    artifact = json.loads(built.to_json())
+    ok, failures = verify_freeze_anchor(
+        FreezeManifest(artifact["manifest"]),
+        REPO_ROOT,
+        expected_commit=head,
+        strict_frozen=True,
+        outer_digest=artifact["digest"],
+        require_status=FROZEN_UNAUTHORIZED_STATUS,
+        expected_machine_fingerprint=artifact["manifest"]["machine_fingerprint"],
+        expected_contract_digest=artifact["manifest"]["contract_digest"],
+    )
+    assert ok, failures
+
+
+def test_frozen_unauthorized_artifact_is_strictly_valid() -> None:
+    """The final emission must pass the strict frozen verification."""
+
+    artifact = (
+        REPO_ROOT / "research" / "g1_v9" / "freeze-manifest-frozen-unauthorized.json"
+    )
+    if not artifact.exists():
+        pytest.skip("final frozen-unauthorized artifact not yet emitted")
+    from resonance_world.experimental_runtime.g1_v9 import (
+        FROZEN_UNAUTHORIZED_STATUS,
+        verify_freeze_anchor,
+    )
+    from resonance_world.experimental_runtime.g1_v9.freeze import FreezeManifest
+
+    data = json.loads(artifact.read_text(encoding="utf-8"))
+    parsed = FreezeManifest(data["manifest"])
+    assert manifest_digest(parsed) == data["digest"]
+    assert data["manifest"]["status"] == FROZEN_UNAUTHORIZED_STATUS
+    assert data["manifest"]["provider"]["provider_authorized"] is False
+    ok, failures = verify_freeze_anchor(
+        parsed,
+        REPO_ROOT,
+        expected_commit=data["manifest"]["code_commit"],
+        strict_frozen=True,
+        outer_digest=data["digest"],
+        require_status=FROZEN_UNAUTHORIZED_STATUS,
+    )
+    assert ok, failures
+
+
+def test_governance_entry_carries_attester_and_utc_time() -> None:
+    """P1: governance entries carry the attester and a UTC timestamp."""
+
+    from datetime import datetime
+
+    from resonance_world.experimental_runtime.g1_v9 import (
+        governance_entry,
+        validate_governance_entry,
+    )
+
+    entry = governance_entry(
+        manifest=build_freeze_manifest(repo_root=REPO_ROOT, code_commit=CODE_COMMIT),
+        action="frozen-unauthorized",
+        recorded_by="operator",
+    )
+    failures = validate_governance_entry(entry)
+    assert failures == []
+    datetime.fromisoformat(entry["recorded_at"])
+    assert entry["recorded_by"] == "operator"
+
+    with pytest.raises(ValueError, match="recorded_by"):
+        governance_entry(
+            manifest=build_freeze_manifest(repo_root=REPO_ROOT, code_commit=CODE_COMMIT),
+            action="frozen-unauthorized",
+            recorded_by="   ",
+        )
+    with pytest.raises(ValueError, match="governance action"):
+        governance_entry(
+            manifest=build_freeze_manifest(repo_root=REPO_ROOT, code_commit=CODE_COMMIT),
+            action="self-promoted",
+            recorded_by="operator",
+        )

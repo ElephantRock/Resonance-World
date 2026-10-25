@@ -42,11 +42,13 @@ from .evaluator import (
     derive_evaluator_seed,
 )
 from .freeze import (
+    FROZEN_UNAUTHORIZED_STATUS,
     MANIFEST_STATUS,
     FreezeManifest,
     build_freeze_manifest,
     governance_entry,
     manifest_digest,
+    validate_governance_entry,
     verify_freeze_anchor,
     verify_pinned_files,
 )
@@ -75,6 +77,7 @@ __all__ = [
     "ARM_C_BRANCH",
     "ARM_D_BRANCH",
     "CONTRACT_SCHEMA",
+    "FROZEN_UNAUTHORIZED_STATUS",
     "FreezeManifest",
     "MANIFEST_STATUS",
     "MEMORY_SNAPSHOT_KIND",
@@ -110,6 +113,7 @@ __all__ = [
     "sensitivity_table",
     "seal_epoch",
     "start_arm",
+    "validate_governance_entry",
     "verify_freeze_anchor",
     "verify_memory_attestation",
     "verify_pinned_files",

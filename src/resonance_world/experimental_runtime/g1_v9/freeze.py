@@ -20,6 +20,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
@@ -39,6 +40,24 @@ from .scenario import build_machine
 
 MANIFEST_SCHEMA = "g1-v9-freeze-manifest-v1"
 MANIFEST_STATUS = "candidate-pre-freeze"
+FROZEN_UNAUTHORIZED_STATUS = "frozen-unauthorized"
+
+#: Mandatory top-level fields of a freeze manifest (strict mode).
+REQUIRED_MANIFEST_KEYS = (
+    "schema",
+    "status",
+    "code_commit",
+    "contract_digest",
+    "rules_version",
+    "machine_fingerprint",
+    "scenario_file_hashes",
+    "call_budget",
+    "statistical_plan",
+    "provider",
+    "blinded_inputs",
+    "operational_contract",
+    "holds",
+)
 
 #: Files whose content hashes pin the frozen scenario definition.
 PINNED_FILES = (
@@ -112,16 +131,20 @@ def build_freeze_manifest(
     contract: G1V9Contract | None = None,
     worlds: int = WORLDS_PLANNED,
     practical_threshold_pp: int = PRACTICAL_THRESHOLD_PP,
+    status: str = MANIFEST_STATUS,
 ) -> FreezeManifest:
     """Build the freeze manifest for the current pinned files.
 
     ``code_commit`` must name the commit whose content the file hashes
-    pin. The machine fingerprint is computed from the scenario machine
-    bound to the contract. Provider authorization is always false in
-    this builder; a frozen, authorized manifest is produced only by a
-    separate explicit human authorization step.
+    pin. ``status`` is ``candidate-pre-freeze`` by default; the final
+    emission passes ``frozen-unauthorized`` (see
+    ``FROZEN_UNAUTHORIZED_STATUS``). Provider authorization is always
+    false in this builder; a frozen, authorized manifest is produced
+    only by a separate explicit human authorization step.
     """
 
+    if status not in (MANIFEST_STATUS, FROZEN_UNAUTHORIZED_STATUS):
+        raise ValueError(f"unknown manifest status {status!r}")
     contract = contract or default_contract()
     machine: StateMachine = build_machine(contract)
     fingerprint = machine_fingerprint or machine.fingerprint()
@@ -157,7 +180,7 @@ def build_freeze_manifest(
 
     manifest = {
         "schema": MANIFEST_SCHEMA,
-        "status": MANIFEST_STATUS,
+        "status": status,
         "code_commit": code_commit,
         "contract_digest": contract.digest(),
         "rules_version": contract.rules_version,
@@ -278,20 +301,70 @@ def verify_freeze_anchor(
     require_status: str | None = None,
     expected_machine_fingerprint: str | None = None,
     expected_contract_digest: str | None = None,
+    strict_frozen: bool = False,
+    outer_digest: str | None = None,
 ) -> tuple[bool, list[str]]:
     """Strictly verify a freeze anchor against a named Git commit.
 
-    The anchor is admissible only when: the recorded commit is a full
-    40-hex SHA equal to ``expected_commit`` (placeholders such as
-    ``WORKING-TREE-CANDIDATE`` are rejected); the required freeze status
-    holds; the machine fingerprint and contract digest match the
-    expected values; and every pinned file's content hash equals the
-    hash of that file's blob in the named commit (verified via
-    ``git show`` - the working tree is never trusted).
+    With ``strict_frozen=True`` the verification becomes fail-closed for
+    the final ``frozen-unauthorized`` emission: mandatory fields must all
+    be present, the pinned file list must equal ``PINNED_FILES`` exactly
+    (complete, no duplicates), schema/status/provider-authorization/send
+    cap are pinned, and ``outer_digest`` (the ``digest`` field of the
+    emitted ``{"digest", "manifest"}`` artifact) must equal the manifest
+    content digest when provided.
     """
 
     failures: list[str] = []
     manifest_dict = manifest.manifest
+
+    if strict_frozen:
+        for key in REQUIRED_MANIFEST_KEYS:
+            if key not in manifest_dict:
+                failures.append(f"missing mandatory freeze field: {key}")
+        if manifest_dict.get("schema") != MANIFEST_SCHEMA:
+            failures.append(
+                f"schema is {manifest_dict.get('schema')!r}, expected {MANIFEST_SCHEMA!r}"
+            )
+        if manifest_dict.get("status") != FROZEN_UNAUTHORIZED_STATUS:
+            failures.append(
+                f"status is {manifest_dict.get('status')!r}, "
+                f"expected {FROZEN_UNAUTHORIZED_STATUS!r}"
+            )
+        hashes = manifest_dict.get("scenario_file_hashes")
+        if not isinstance(hashes, list) or not hashes:
+            failures.append("scenario_file_hashes is empty or missing")
+        else:
+            pinned_paths = [
+                entry["path"]
+                for entry in hashes
+                if isinstance(entry, dict) and "path" in entry
+            ]
+            if len(pinned_paths) != len(hashes):
+                failures.append("scenario_file_hashes contains malformed entries")
+            if len(set(pinned_paths)) != len(pinned_paths):
+                failures.append("scenario_file_hashes contains duplicate paths")
+            expected_paths = sorted(PINNED_FILES)
+            if sorted(pinned_paths) != expected_paths:
+                failures.append(
+                    "scenario_file_hashes does not equal the pinned file set"
+                )
+        provider = manifest_dict.get("provider")
+        if not isinstance(provider, dict):
+            failures.append("provider section missing")
+        else:
+            if provider.get("provider_authorized") is not False:
+                failures.append("provider_authorized must be false")
+        budget = manifest_dict.get("call_budget")
+        if not isinstance(budget, dict):
+            failures.append("call_budget section missing")
+        elif budget.get("max_provider_sends_this_gate") != 0:
+            failures.append("provider send cap must be zero")
+        if outer_digest is not None:
+            if outer_digest != manifest.digest():
+                failures.append(
+                    "outer artifact digest does not match the manifest content digest"
+                )
 
     if not _is_full_sha(manifest_dict.get("code_commit")):
         failures.append("code_commit is not a full 40-hex commit SHA")
@@ -334,9 +407,44 @@ def verify_freeze_anchor(
     return (not failures, failures)
 
 
-def governance_entry(manifest: FreezeManifest, *, action: str) -> dict[str, str]:
-    """Build one append-only governance-log entry for a manifest."""
+GOVERNANCE_ACTIONS = frozenset(
+    {
+        "candidate-emitted",
+        "frozen-unauthorized",
+        "authorized",
+        "executed",
+        "closed",
+    }
+)
 
+
+def governance_entry(
+    manifest: FreezeManifest,
+    *,
+    action: str,
+    recorded_by: str,
+    recorded_at: str | None = None,
+) -> dict[str, str]:
+    """Build one append-only governance-log entry for a manifest.
+
+    ``recorded_by`` is the attesting identity (required); ``recorded_at``
+    defaults to the current UTC time and must be an ISO-8601 timestamp
+    when supplied. The entry is written to the independent governance
+    log - never only into the manifest file itself.
+    """
+
+    if action not in GOVERNANCE_ACTIONS:
+        raise ValueError(f"unknown governance action {action!r}")
+    if not isinstance(recorded_by, str) or not recorded_by.strip():
+        raise ValueError("recorded_by is required")
+    if recorded_at is None:
+        from datetime import UTC, datetime
+
+        recorded_at = datetime.now(UTC).isoformat()
+    try:
+        datetime.fromisoformat(recorded_at)
+    except ValueError as error:
+        raise ValueError("recorded_at must be an ISO-8601 timestamp") from error
     return {
         "action": action,
         "manifest_digest": manifest.digest(),
@@ -344,4 +452,40 @@ def governance_entry(manifest: FreezeManifest, *, action: str) -> dict[str, str]
         "status": manifest.manifest["status"],
         "contract_digest": manifest.manifest["contract_digest"],
         "rules_version": manifest.manifest["rules_version"],
+        "recorded_at": recorded_at,
+        "recorded_by": recorded_by,
     }
+
+
+def validate_governance_entry(entry: dict[str, str]) -> list[str]:
+    """Return the list of schema violations of one governance entry."""
+
+    failures: list[str] = []
+    required = (
+        "action",
+        "manifest_digest",
+        "code_commit",
+        "status",
+        "contract_digest",
+        "rules_version",
+        "recorded_at",
+        "recorded_by",
+    )
+    for key in required:
+        value = entry.get(key)
+        if not isinstance(value, str) or not value.strip():
+            failures.append(f"missing or empty field: {key}")
+    if entry.get("action") not in GOVERNANCE_ACTIONS:
+        failures.append("unknown governance action")
+    manifest_digest_value = entry.get("manifest_digest", "")
+    if len(manifest_digest_value) != 64 or any(
+        char not in "0123456789abcdef" for char in manifest_digest_value
+    ):
+        failures.append("manifest_digest must be a full 64-hex digest")
+    if not _is_full_sha(entry.get("code_commit", "")):
+        failures.append("code_commit must be a full 40-hex commit SHA")
+    try:
+        datetime.fromisoformat(entry.get("recorded_at", ""))
+    except (ValueError, TypeError):
+        failures.append("recorded_at must be an ISO-8601 timestamp")
+    return failures
