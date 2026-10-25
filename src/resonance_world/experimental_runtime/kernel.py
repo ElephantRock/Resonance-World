@@ -164,6 +164,12 @@ class WorldKernel:
         return self._branch_id
 
     @property
+    def store(self) -> KernelStore | None:
+        """Return the persistence store, when the branch is persisted."""
+
+        return self._store
+
+    @property
     def tick(self) -> int:
         return self._state.tick
 
