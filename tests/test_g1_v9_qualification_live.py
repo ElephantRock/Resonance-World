@@ -1,6 +1,6 @@
 """Live-transport qualification tests: fail-closed metering, no network.
 
-Every test injects a fake ``http_post`` — no real network call exists
+Every test injects a fake ``http_post`` Ã¢â‚¬â€ no real network call exists
 on any path. The tests prove the reviewer's round-4 requirements:
 
 - the four preflight failure classes (auth, timeout, malformed, cap)
@@ -39,6 +39,7 @@ from resonance_world.experimental_runtime.g1_v9.zai_transport import (
 
 CODE_COMMIT = "374249adee81b9909646f54bc544d19cda1dd007"
 ENDPOINT = "https://api.z.ai/api/coding/paas/v4/chat/completions"
+AUTHORIZATION_ID = "a" * 64
 
 
 def authorized_record(**overrides) -> QualificationAuthorizationRecord:
@@ -47,6 +48,7 @@ def authorized_record(**overrides) -> QualificationAuthorizationRecord:
         status="authorized",
         science_anchor_digest=SCIENCE_ANCHOR_DIGEST,
         code_commit=CODE_COMMIT,
+        authorization_id=AUTHORIZATION_ID,
         provider="zai",
         model="glm-5.3",
         endpoint_family="zai-coding-plan-chat-completions",
@@ -90,12 +92,17 @@ class FakeHttp:
 
 def make_transport(tmp_path, record=None, fake_http=None):
     record = record if record is not None else authorized_record()
-    ledger = PersistentSendLedger(tmp_path / "send-ledger.jsonl", send_cap=record.send_cap)
+    ledger = PersistentSendLedger(
+        tmp_path / "send-ledger.jsonl",
+        send_cap=record.send_cap,
+        authorization_id=record.authorization_id,
+    )
     credential = lambda: "test-key-not-a-secret"  # noqa: E731
     transport = ZaiQualificationTransport(
         record=record,
         ledger=ledger,
         credential_provider=credential,
+        operational_commit=CODE_COMMIT,
         http_post=fake_http,
     )
     return ledger, transport
@@ -112,19 +119,22 @@ def test_default_transport_is_disabled() -> None:
 def test_transport_cannot_be_constructed_from_a_candidate_record(tmp_path) -> None:
     """The unauthorized candidate record can never enable the transport."""
 
-    candidate = build_authorization_candidate(
-        code_commit=CODE_COMMIT, endpoint_url=ENDPOINT
-    )
+    candidate = build_authorization_candidate(code_commit=CODE_COMMIT, endpoint_url=ENDPOINT)
     assert candidate.authorized is False
     failures = candidate.validation_failures()
     assert any("authorized must be true" in failure for failure in failures)
 
-    ledger = PersistentSendLedger(tmp_path / "l.jsonl", send_cap=8)
+    ledger = PersistentSendLedger(
+        tmp_path / "l.jsonl",
+        send_cap=8,
+        authorization_id=AUTHORIZATION_ID,
+    )
     with pytest.raises(TransportNotAuthorized, match="authorized must be true"):
         ZaiQualificationTransport(
             record=candidate,
             ledger=ledger,
             credential_provider=lambda: "key",
+            operational_commit=CODE_COMMIT,
         )
     assert ledger.attempts() == 0
 
@@ -133,19 +143,33 @@ def test_transport_rejects_a_wrong_science_anchor(tmp_path) -> None:
     wrong_anchor = authorized_record(
         science_anchor_digest="b" * 64,
     )
-    ledger = PersistentSendLedger(tmp_path / "l.jsonl", send_cap=8)
+    ledger = PersistentSendLedger(
+        tmp_path / "l.jsonl",
+        send_cap=8,
+        authorization_id=AUTHORIZATION_ID,
+    )
     with pytest.raises(TransportNotAuthorized, match="science anchor"):
         ZaiQualificationTransport(
-            record=wrong_anchor, ledger=ledger, credential_provider=lambda: "key"
+            record=wrong_anchor,
+            ledger=ledger,
+            credential_provider=lambda: "key",
+            operational_commit=CODE_COMMIT,
         )
 
 
 def test_transport_rejects_a_cap_other_than_eight(tmp_path) -> None:
     wrong_cap = authorized_record(send_cap=420)
-    ledger = PersistentSendLedger(tmp_path / "l.jsonl", send_cap=8)
+    ledger = PersistentSendLedger(
+        tmp_path / "l.jsonl",
+        send_cap=8,
+        authorization_id=AUTHORIZATION_ID,
+    )
     with pytest.raises(TransportNotAuthorized, match="exactly 8"):
         ZaiQualificationTransport(
-            record=wrong_cap, ledger=ledger, credential_provider=lambda: "key"
+            record=wrong_cap,
+            ledger=ledger,
+            credential_provider=lambda: "key",
+            operational_commit=CODE_COMMIT,
         )
 
 
@@ -225,11 +249,12 @@ def test_ninth_attempt_is_refused_fail_closed(tmp_path) -> None:
 def test_ledger_rebuild_refuses_after_restart(tmp_path) -> None:
     store_path = tmp_path / "send-ledger.jsonl"
     record = authorized_record()
-    ledger = PersistentSendLedger(store_path, send_cap=8)
+    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
     transport = ZaiQualificationTransport(
         record=record,
         ledger=ledger,
         credential_provider=lambda: "key",
+        operational_commit=CODE_COMMIT,
         http_post=lambda url, key, body, timeout: (
             200,
             '{"choices":[{"message":{"content":"ok"}}]}',
@@ -240,9 +265,14 @@ def test_ledger_rebuild_refuses_after_restart(tmp_path) -> None:
     assert ledger.attempts() == 8
 
     # Process restart: a brand-new ledger/transport over the same file.
-    restarted_ledger = PersistentSendLedger(store_path, send_cap=8)
+    restarted_ledger = PersistentSendLedger(
+        store_path, send_cap=8, authorization_id=AUTHORIZATION_ID
+    )
     restarted_transport = ZaiQualificationTransport(
-        record=record, ledger=restarted_ledger, credential_provider=lambda: "key",
+        record=record,
+        ledger=restarted_ledger,
+        credential_provider=lambda: "key",
+        operational_commit=CODE_COMMIT,
         http_post=lambda url, key, body, timeout: (200, '{"choices":[]}'),
     )
     assert restarted_ledger.attempts() == 8
@@ -253,12 +283,12 @@ def test_ledger_rebuild_refuses_after_restart(tmp_path) -> None:
 
 def test_crashed_final_write_is_conservatively_consumed(tmp_path) -> None:
     store_path = tmp_path / "send-ledger.jsonl"
-    ledger = PersistentSendLedger(store_path, send_cap=8)
+    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
     ledger.record_attempt("crash-probe", "deadbeef")
     with store_path.open("a", encoding="utf-8") as handle:
         handle.write('{"seq": 2, "action": "suc')  # crash mid-write
 
-    reloaded = PersistentSendLedger(store_path, send_cap=8)
+    reloaded = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
     assert reloaded.truncated_tail is True
     # The truncated write is conservatively consumed against the cap.
     assert reloaded.attempts() == 2
@@ -267,15 +297,17 @@ def test_crashed_final_write_is_conservatively_consumed(tmp_path) -> None:
 
 def test_ledger_rejects_a_broken_chain(tmp_path) -> None:
     store_path = tmp_path / "send-ledger.jsonl"
-    ledger = PersistentSendLedger(store_path, send_cap=8)
+    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
     ledger.record_attempt("probe", "x")
     good_lines = store_path.read_text(encoding="utf-8").splitlines()
-    tampered = json.loads(good_lines[0])
-    tampered["label"] = "rewritten-history"
+    # Tamper the first CONTENT entry's label, keeping the header and the
+    # stored hash: history rewrite must be detected by the content digest.
+    attempt = json.loads(good_lines[1])
+    attempt["label"] = "rewritten-history"
     store_path.write_text(
-        json.dumps(tampered, sort_keys=True, separators=(",", ":")) + "\n",
+        good_lines[0] + "\n" + json.dumps(attempt, sort_keys=True, separators=(",", ":")) + "\n",
         encoding="utf-8",
     )
 
     with pytest.raises(LedgerCorrupted):
-        PersistentSendLedger(store_path, send_cap=8)
+        PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)

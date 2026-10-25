@@ -36,6 +36,11 @@ from .send_ledger import PersistentSendLedger
 SCIENCE_ANCHOR_DIGEST = (
     "c843f5042589559becb7510871d13d91f7a1337a43f051b76be25d5fdb8f27b8"
 )
+#: The exact pinned provider endpoint. Any other URL - including a
+#: redirect target - is refused before the credential leaves.
+PINNED_ENDPOINT_URL = "https://api.z.ai/api/coding/paas/v4/chat/completions"
+#: The only identities that may issue a live authorization.
+AUTHORIZED_ISSUERS = frozenset({"operator"})
 
 
 class TransportNotAuthorized(RuntimeError):
@@ -48,6 +53,19 @@ class TransportDisabled(RuntimeError):
 
 class QualificationTransportError(RuntimeError):
     """Transport failure with a recorded outcome; never retried."""
+
+
+class _RefuseRedirect(urllib.request.HTTPRedirectHandler):
+    """A redirect handler that refuses every redirect.
+
+    A redirect could carry the Authorization header to a different host,
+    so redirects are treated as a hard transport failure instead.
+    """
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise QualificationTransportError(
+            f"provider redirect refused (HTTP {code} -> {newurl})"
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -64,6 +82,7 @@ class QualificationAuthorizationRecord:
     status: str
     science_anchor_digest: str
     code_commit: str
+    authorization_id: str
     provider: str
     model: str
     endpoint_family: str
@@ -93,12 +112,18 @@ class QualificationAuthorizationRecord:
             or any(c not in "0123456789abcdef" for c in commit)
         ):
             failures.append("code_commit must be a full 40-hex commit SHA")
+        auth_id = self.authorization_id
+        if len(auth_id) != 64 or any(c not in "0123456789abcdef" for c in auth_id):
+            failures.append("authorization_id must be a full 64-hex digest")
         if self.provider != "zai":
             failures.append("provider must be 'zai'")
-        if not self.model.startswith("glm-"):
-            failures.append("model must be a GLM model")
-        if not self.endpoint_url.startswith("https://"):
-            failures.append("endpoint_url must be https")
+        if self.model != "glm-5.3":
+            failures.append("model must be exactly 'glm-5.3'")
+        if self.endpoint_url != PINNED_ENDPOINT_URL:
+            failures.append(
+                "endpoint_url must be exactly the pinned Z.AI endpoint "
+                "(credential redirect to another host is refused)"
+            )
         if self.send_cap != 8:
             failures.append("qualification send cap must be exactly 8")
         if self.max_output_tokens <= 0:
@@ -107,8 +132,11 @@ class QualificationAuthorizationRecord:
             failures.append("timeout_seconds must lie in (0, 120]")
         if self.authorized is not True:
             failures.append("authorized must be true to enable the transport")
-        if not self.authorized_by.strip():
-            failures.append("authorized_by is required")
+        if self.authorized_by not in AUTHORIZED_ISSUERS:
+            failures.append(
+                f"authorized_by must be one of the pinned issuers "
+                f"{sorted(AUTHORIZED_ISSUERS)}"
+            )
         try:
             from datetime import datetime
 
@@ -148,6 +176,7 @@ class ZaiQualificationTransport:
         record: QualificationAuthorizationRecord,
         ledger: PersistentSendLedger,
         credential_provider: Callable[[], str],
+        operational_commit: str,
         http_post: Callable[[str, str, dict[str, Any], float], tuple[int, str]] | None = None,
     ) -> None:
         failures = record.validation_failures()
@@ -155,6 +184,17 @@ class ZaiQualificationTransport:
             failures.append("record is not bound to the frozen science anchor")
         if ledger.send_cap != record.send_cap:
             failures.append("ledger cap does not match the authorized send cap")
+        if ledger.authorization_id != record.authorization_id:
+            failures.append(
+                "ledger is bound to a different authorization id than the record"
+            )
+        # The running software must be the operational commit the
+        # authorization names - a forged or stale record is refused even
+        # if its shape is perfect.
+        if record.code_commit != operational_commit:
+            failures.append(
+                "record code_commit does not match the running operational commit"
+            )
         if failures:
             raise TransportNotAuthorized("; ".join(failures))
         self._record = record
@@ -169,6 +209,10 @@ class ZaiQualificationTransport:
     def _urllib_post(
         self, url: str, api_key: str, body: dict[str, Any], timeout_seconds: float
     ) -> tuple[int, str]:
+        # Redirects are refused: a redirect could carry the Authorization
+        # header to a different host. The response URL must also equal the
+        # requested URL exactly.
+        opener = urllib.request.build_opener(_RefuseRedirect)
         request = urllib.request.Request(
             url,
             data=json.dumps(body).encode("utf-8"),
@@ -179,7 +223,12 @@ class ZaiQualificationTransport:
             method="POST",
         )
         try:
-            with urllib.request.urlopen(request, timeout=timeout_seconds) as response:
+            with opener.open(request, timeout=timeout_seconds) as response:
+                final_url = response.geturl()
+                if final_url != url:
+                    raise QualificationTransportError(
+                        "provider redirected to a different URL; refusing"
+                    )
                 return int(response.status), response.read().decode("utf-8")
         except urllib.error.HTTPError as error:
             return int(error.code), error.read().decode("utf-8", errors="replace")
@@ -206,11 +255,18 @@ class ZaiQualificationTransport:
             )
         except TimeoutError:
             self._ledger.record_outcome(label, payload_sha, "timeout")
-            raise QualificationTransportError("provider send timed out (consumed)") from None
+            raise QualificationTransportError(
+                "provider send timed out (consumed)"
+            ) from None
         except Exception as error:
             self._ledger.record_outcome(label, payload_sha, "unknown-outcome")
+            # Hygiene: only the error CLASS is surfaced. The original
+            # message could contain credentials or provider internals and
+            # is deliberately not embedded here or in the ledger.
             raise QualificationTransportError(
-                f"provider send failed with an unknown outcome (consumed): {error}"
+                f"provider send failed with an unknown outcome "
+                f"(consumed; error class withheld: "
+                f"{type(error).__name__})"
             ) from error
 
         if status in (401, 403):

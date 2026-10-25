@@ -25,6 +25,7 @@ authorization names the code commit, provider, model, and cap.
 
 from __future__ import annotations
 
+import hashlib
 from dataclasses import dataclass, field
 
 from .call_contract import ENDPOINT_FAMILY, MODEL, PROVIDER, RUNTIME_SPEC
@@ -207,18 +208,24 @@ def build_authorization_candidate(
     """Build the UNAUTHORIZED candidate authorization record (dry).
 
     The candidate is bound to the frozen science anchor and carries the
-    pinned operational values, but ``authorized=False`` and ``status=
+    pinned operational values, plus a unique ``authorization_id``
+    derived from the science anchor and the operational commit. It is
+    emitted with ``authorized=False`` and ``status=
     candidate-awaiting-independent-authorization``: it cannot enable the
     transport. Only an independent human authorization record with
     ``authorized=True`` can.
     """
 
     contract = contract or default_contract()
+    authorization_id = hashlib.sha256(
+        f"{SCIENCE_ANCHOR_DIGEST}:{code_commit}".encode()
+    ).hexdigest()
     return QualificationAuthorizationRecord(
         schema="g1-v9-qualification-authorization-v1",
         status="candidate-awaiting-independent-authorization",
         science_anchor_digest=SCIENCE_ANCHOR_DIGEST,
         code_commit=code_commit,
+        authorization_id=authorization_id,
         provider=PROVIDER,
         model=MODEL,
         endpoint_family=ENDPOINT_FAMILY,
@@ -231,6 +238,7 @@ def build_authorization_candidate(
         authorized_at="",
         notes=(
             "candidate record: dry; enabling the transport requires an "
-            "independent authorization with authorized=true"
+            "independent authorization with authorized=true naming this "
+            "authorization_id"
         ),
     )
