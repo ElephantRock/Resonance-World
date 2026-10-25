@@ -14,6 +14,7 @@ from __future__ import annotations
 
 from collections.abc import Mapping
 from dataclasses import dataclass
+from types import MappingProxyType
 from typing import Any
 
 from resonance_world.adapters import canonical_json_bytes, sha256_json
@@ -172,6 +173,37 @@ class WorldEvent:
             depends_on=self.depends_on,
             event_sha256=self.event_sha256,
         )
+
+    def frozen(self) -> WorldEvent:
+        """Return an equivalent event whose payload is read-only.
+
+        Payload mappings are wrapped recursively in read-only proxies and
+        lists become tuples, so recorded history cannot be modified
+        through a returned reference. The content digests are carried
+        over unchanged.
+        """
+
+        if self.payload is None:
+            return self
+        return WorldEvent(
+            seq=self.seq,
+            tick=self.tick,
+            kind=self.kind,
+            source=self.source,
+            visibility=self.visibility,
+            payload=_frozen_value(self.payload),
+            payload_sha256=self.payload_sha256,
+            depends_on=self.depends_on,
+            event_sha256=self.event_sha256,
+        )
+
+
+def _frozen_value(value: Any) -> Any:
+    if isinstance(value, Mapping):
+        return MappingProxyType({key: _frozen_value(item) for key, item in value.items()})
+    if isinstance(value, list):
+        return tuple(_frozen_value(item) for item in value)
+    return value
 
 
 def encoded_payload_bytes(payload: Mapping[str, Any]) -> bytes:

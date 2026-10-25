@@ -11,6 +11,8 @@ live execution on exactly the same transition path.
 from __future__ import annotations
 
 import dataclasses
+import hashlib
+import inspect
 from collections.abc import Callable
 from typing import Any
 
@@ -20,6 +22,34 @@ from .events import WorldEvent
 from .state import WorldState
 
 Reducer = Callable[[WorldState, WorldEvent, Any], WorldState]
+
+
+def _reducer_identity(fn: Reducer) -> dict[str, Any]:
+    """Return the executable-content identity of one reducer.
+
+    The identity binds the module and qualified name to the actually
+    executed bytes (the code object) and, when source is available, to
+    the source text. Two reducers with the same name but different
+    bodies therefore have different identities.
+    """
+
+    code = getattr(fn, "__code__", None)
+    if code is not None:
+        code_sha256 = hashlib.sha256(code.co_code).hexdigest()
+    else:
+        code_sha256 = hashlib.sha256(repr(fn).encode("utf-8")).hexdigest()
+    try:
+        source_sha256: str | None = hashlib.sha256(
+            inspect.getsource(fn).encode("utf-8")
+        ).hexdigest()
+    except (OSError, TypeError):
+        source_sha256 = None
+    return {
+        "module": getattr(fn, "__module__", None),
+        "qualname": getattr(fn, "__qualname__", repr(fn)),
+        "code_sha256": code_sha256,
+        "source_sha256": source_sha256,
+    }
 
 
 class StateMachine:
@@ -45,24 +75,21 @@ class StateMachine:
         return tuple(sorted(self._reducers))
 
     def fingerprint(self) -> str:
-        """Return a stable identity for this reducer registry.
+        """Return a content-bound identity for this reducer registry.
 
-        The fingerprint covers the registered kinds and the module and
-        qualified name of every reducer, so renaming or swapping a
-        reducer implementation changes the identity even when the event
-        kinds stay the same. Branches record it at creation; resume and
-        replay refuse to rebuild history under a different machine.
-
-        Note: anonymous functions all report ``<lambda>`` and therefore
-        produce meaningless fingerprints; reducers must be named
-        functions or classes for the fingerprint to be meaningful.
+        The fingerprint covers the registered kinds and, for every
+        reducer, its module, qualified name, executed code bytes, and
+        source text when available. Renaming, swapping, or editing a
+        reducer body changes the identity even when the event kinds stay
+        the same. Branches record it at creation; resume and replay
+        refuse to rebuild history under a different machine.
         """
 
         reducers = {
-            kind: f"{reducer.__module__}.{reducer.__qualname__}"
+            kind: _reducer_identity(reducer)
             for kind, reducer in sorted(self._reducers.items())
         }
-        return sha256_json({"reducers": reducers, "schema": "rw-machine-fingerprint-v1"})
+        return sha256_json({"reducers": reducers, "schema": "rw-machine-fingerprint-v2"})
 
     def apply(
         self,

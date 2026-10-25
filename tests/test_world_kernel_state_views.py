@@ -52,12 +52,21 @@ def test_observation_exposes_no_private_evaluator_state() -> None:
 
 
 def test_public_event_log_never_carries_sealed_payloads() -> None:
+    from collections.abc import Mapping
+
+    def plain(value):
+        if isinstance(value, Mapping):
+            return {key: plain(item) for key, item in value.items()}
+        if isinstance(value, (list, tuple)):
+            return [plain(item) for item in value]
+        return value
+
     store = KernelStore()
     kernel = start_kernel(store)
     drive(kernel, ticks=100, policy=ScriptedPolicy())
 
     public_json = json.dumps(
-        [event.payload for event in kernel.public_events()], sort_keys=True
+        [plain(event.payload) for event in kernel.public_events()], sort_keys=True
     )
     assert "stress" not in public_json
     assert "hidden_threshold" not in public_json

@@ -145,7 +145,7 @@ class WorldKernel:
             store=store,
             branch_id=branch_id,
         )
-        kernel._events = list(store.iter_events(branch_id))
+        kernel._events = [event.frozen() for event in store.iter_events(branch_id)]
         kernel._sealed = store.sealed_payloads(branch_id)
         kernel._answered_observations = _answered_observation_seqs(kernel._events)
         _require_machine_covers(machine, kernel._events)
@@ -400,16 +400,19 @@ class WorldKernel:
         # Transition is prepared first: reducer failure must leave the
         # kernel untouched. Persistence comes second: storage failure must
         # also leave the kernel untouched, so the live state can never run
-        # ahead of the durable log.
-        candidate = self._machine.apply(self._state, event, sealed_payload)
+        # ahead of the durable log. Reducers and every returned reference
+        # see the frozen event (read-only payload); only the store write
+        # uses the raw, JSON-serializable event.
+        frozen = event.frozen()
+        candidate = self._machine.apply(self._state, frozen, sealed_payload)
         if self._store is not None:
             self._store.append_event(self._branch_id, event, sealed_payload=sealed_payload)
         # Commit point: nothing above mutates kernel state; nothing below fails.
         self._state = candidate
-        self._events.append(event)
+        self._events.append(frozen)
         if sealed_payload is not None:
             self._sealed[seq] = sealed_payload
-        return event
+        return frozen
 
     # -- model decision boundary -------------------------------------------
 
@@ -540,10 +543,23 @@ class WorldKernel:
 
         The returned record must be custodied outside this world file
         (governance record, issue comment, or signed note); it is what
-        makes a fully recomputed internal log detectable.
+        makes a fully recomputed internal log detectable. When the
+        branch is persisted, the anchor also binds the scenario identity
+        and the genesis commitment so no other branch or world can be
+        substituted for it.
         """
 
-        return build_log_anchor(self._branch_id, self._events)
+        genesis = (
+            self._store.get_branch(self._branch_id).genesis_state_sha256
+            if self._store is not None
+            else None
+        )
+        return build_log_anchor(
+            self._branch_id,
+            self._events,
+            scenario_id=self._scenario_id,
+            genesis_state_sha256=genesis,
+        )
 
     def fork(self, child_branch_id: str) -> WorldKernel:
         """Fork the current head into a new isolated branch."""

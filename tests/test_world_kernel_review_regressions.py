@@ -287,6 +287,50 @@ def test_advance_failure_keeps_queued_events_for_retry() -> None:
 
 
 # ---------------------------------------------------------------------------
+# P1: event payload immutability through returned references
+# ---------------------------------------------------------------------------
+
+
+def test_recorded_event_payload_is_read_only_at_every_depth() -> None:
+    store = KernelStore()
+    kernel = start_kernel(store)
+    drive(kernel, ticks=5, policy=ScriptedPolicy())
+
+    decision = next(event for event in kernel.events() if event.kind == "agent_decision")
+    with pytest.raises(TypeError):
+        decision.payload["injected"] = True
+    with pytest.raises(TypeError):
+        decision.payload["decision"]["action"] = "forged"
+
+    effects = next(event for event in kernel.events() if event.kind == "world_effect")
+    with pytest.raises(TypeError):
+        effects.payload["injected"] = True
+
+
+def test_observation_events_are_read_only_through_the_view() -> None:
+    store = KernelStore()
+    kernel = start_kernel(store)
+    drive(kernel, ticks=2, policy=ScriptedPolicy())
+
+    request = kernel.request_decision()
+    target = request.observation.new_events[-1]
+    with pytest.raises(TypeError):
+        target.payload["injected"] = True
+
+
+def test_frozen_event_round_trips_replay_unchanged() -> None:
+    from resonance_world.experimental_runtime.replay import replay_branch
+
+    store = KernelStore()
+    kernel = start_kernel(store)
+    drive(kernel, ticks=10, policy=ScriptedPolicy())
+
+    result = replay_branch(store, "main", build_machine())
+    assert result.final_state_sha256 == kernel.state_hash()
+    assert result.recorded_agent_decisions == 2
+
+
+# ---------------------------------------------------------------------------
 # P0-1: confidentiality of sealed payloads and state digests
 # ---------------------------------------------------------------------------
 
@@ -462,7 +506,7 @@ def test_anchor_detects_fully_recomputed_rewrite(tmp_path) -> None:
     # Internal consistency passes: every stored digest verifies.
     rewritten_events = reopened.iter_events("main")
     # ...but the externally held anchor exposes the rewrite.
-    assert verify_log_anchor(rewritten_events, anchor) is False
+    assert verify_log_anchor(rewritten_events, anchor, branch_id="main") is False
     assert reopened.log_anchor("main") != anchor
 
 
@@ -475,8 +519,82 @@ def test_anchor_is_stable_and_scope_bound() -> None:
     anchor = kernel.log_anchor()
 
     same = WorldKernel.resume(store=store, branch_id="main", machine=build_machine())
-    assert verify_log_anchor(same.events(), anchor) is True
-    assert verify_log_anchor(same.events()[:-1], anchor) is False
+    assert verify_log_anchor(same.events(), anchor, branch_id="main") is True
+    assert verify_log_anchor(same.events()[:-1], anchor, branch_id="main") is False
+
+
+def test_anchor_rejects_cross_branch_and_identity_substitution() -> None:
+    """P1: a log from another branch or world must fail anchor verification."""
+
+    from resonance_world.experimental_runtime.anchoring import verify_log_anchor
+
+    store = KernelStore()
+    parent = start_kernel(store)
+    drive(parent, ticks=4, policy=ScriptedPolicy())
+    child = parent.fork("branch-1")
+    drive(child, ticks=2, policy=ScriptedPolicy())
+
+    parent_anchor = parent.log_anchor()
+    # The child log can never satisfy an anchor bound to the parent branch,
+    # scenario identity, and genesis commitment.
+    assert verify_log_anchor(child.events(), parent_anchor, branch_id="branch-1") is False
+    assert verify_log_anchor(child.events(), parent_anchor, branch_id="main") is False
+    assert (
+        verify_log_anchor(
+            parent.events(),
+            parent_anchor,
+            branch_id="main",
+            scenario_id=parent.scenario_id,
+            genesis_state_sha256=store.get_branch("main").genesis_state_sha256,
+        )
+        is True
+    )
+
+
+def test_machine_fingerprint_covers_reducer_code_not_just_names() -> None:
+    """P1: a changed reducer body must change the fingerprint."""
+
+    from resonance_world.experimental_runtime.machine import StateMachine
+
+    namespace_a = {"__name__": "rw_fp_test"}
+    namespace_b = {"__name__": "rw_fp_test"}
+    exec("def world_rule(state, event, sealed):\n    return state\n", namespace_a)
+    exec(
+        "def world_rule(state, event, sealed):\n"
+        "    return None\n"
+        "    return state\n",
+        namespace_b,
+    )
+    machine_a = StateMachine()
+    machine_b = StateMachine()
+    machine_a.register("tick", namespace_a["world_rule"])
+    machine_b.register("tick", namespace_b["world_rule"])
+
+    # Same module and qualname, different executed content.
+    assert machine_a.fingerprint() != machine_b.fingerprint()
+
+    # Deterministic across rebuilds of the same registry.
+    machine_a_again = StateMachine()
+    machine_a_again.register("tick", namespace_a["world_rule"])
+    assert machine_a.fingerprint() == machine_a_again.fingerprint()
+
+
+def test_recorded_machine_fingerprint_cannot_be_repointed(tmp_path) -> None:
+    from resonance_world.experimental_runtime.machine import StateMachine
+
+    store = KernelStore(tmp_path / "world.sqlite3", commitment_key=TEST_KEY)
+    kernel = start_kernel(store)
+    recorded = store.machine_fingerprint("main")
+
+    other = StateMachine()
+    other.register("tick", _reducer_a)
+    with pytest.raises(ValueError, match="cannot be updated"):
+        store.set_machine_fingerprint("main", other.fingerprint())
+
+    # The original identity is intact and still verifies.
+    assert store.machine_fingerprint("main") == recorded
+    resumed = WorldKernel.resume(store=store, branch_id="main", machine=build_machine())
+    assert resumed.event_count == kernel.event_count
 
 
 # ---------------------------------------------------------------------------

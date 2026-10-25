@@ -555,15 +555,30 @@ class KernelStore:
         return by_count
 
     def set_machine_fingerprint(self, branch_id: str, fingerprint: str) -> None:
-        """Record the reducer-registry identity a branch was built with."""
+        """Record the reducer-registry identity a branch was built with.
+
+        The recording is insert-only: once a branch carries a machine
+        identity it can never be silently re-pointed at different world
+        rules.
+        """
 
         self.get_branch(branch_id)
-        self._conn.execute(
-            "INSERT INTO meta(key, value) VALUES (?, ?) "
-            "ON CONFLICT(key) DO UPDATE SET value = excluded.value",
-            (f"machine_fingerprint:{branch_id}", fingerprint),
-        )
-        self._conn.commit()
+        key = f"machine_fingerprint:{branch_id}"
+        existing = self._conn.execute(
+            "SELECT value FROM meta WHERE key = ?",
+            (key,),
+        ).fetchone()
+        if existing is None:
+            self._conn.execute(
+                "INSERT INTO meta(key, value) VALUES (?, ?)",
+                (key, fingerprint),
+            )
+            self._conn.commit()
+        elif existing["value"] != fingerprint:
+            raise ValueError(
+                f"branch {branch_id!r} already has a recorded machine fingerprint; "
+                "it cannot be updated to different world rules"
+            )
 
     def machine_fingerprint(self, branch_id: str) -> str:
         """Return the reducer-registry identity recorded for ``branch_id``."""
@@ -581,7 +596,14 @@ class KernelStore:
 
         from .anchoring import build_log_anchor
 
-        return build_log_anchor(branch_id, self.iter_events(branch_id))
+        branch = self.get_branch(branch_id)
+        scenario_id = self.genesis_state(branch_id).scenario_id
+        return build_log_anchor(
+            branch_id,
+            self.iter_events(branch_id),
+            scenario_id=scenario_id,
+            genesis_state_sha256=branch.genesis_state_sha256,
+        )
 
     def close(self) -> None:
         """Close the underlying connection."""
