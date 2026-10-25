@@ -179,3 +179,106 @@ def test_candidate_manifest_artifact_is_self_consistent() -> None:
     assert manifest["call_budget"]["max_provider_sends_this_gate"] == 0
     assert ACCEPTANCE_KEY_HEX not in artifact.read_text(encoding="utf-8")
     assert EVALUATOR_HEX not in artifact.read_text(encoding="utf-8")
+
+
+# ---------------------------------------------------------------------------
+# Review round 5: strict anchor verification and intra-world correlation
+# ---------------------------------------------------------------------------
+
+
+def _git_head(repo_root: Path) -> str:
+    import subprocess
+
+    return (
+        subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=repo_root,
+            capture_output=True,
+            check=True,
+        )
+        .stdout.decode()
+        .strip()
+    )
+
+
+def test_anchor_verifier_rejects_placeholder_commit() -> None:
+    """Placeholders like WORKING-TREE-CANDIDATE are never valid anchors."""
+
+    from resonance_world.experimental_runtime.g1_v9 import verify_freeze_anchor
+
+    placeholder = build_freeze_manifest(
+        repo_root=REPO_ROOT, code_commit="WORKING-TREE-CANDIDATE"
+    )
+    ok, failures = verify_freeze_anchor(
+        placeholder, REPO_ROOT, expected_commit="WORKING-TREE-CANDIDATE"
+    )
+    assert ok is False
+    assert any("40-hex" in failure for failure in failures)
+
+
+def test_anchor_verifier_accepts_pinned_head_manifest() -> None:
+    from resonance_world.experimental_runtime.g1_v9 import verify_freeze_anchor
+
+    head = _git_head(REPO_ROOT)
+    pinned = build_freeze_manifest(repo_root=REPO_ROOT, code_commit=head)
+    ok, failures = verify_freeze_anchor(
+        pinned,
+        REPO_ROOT,
+        expected_commit=head,
+        require_status="candidate-pre-freeze",
+    )
+    assert ok, failures
+
+
+def test_anchor_verifier_rejects_commit_content_mismatch(manifest) -> None:
+    """A manifest whose hashes claim a different commit must fail."""
+
+    from resonance_world.experimental_runtime.g1_v9 import verify_freeze_anchor
+    from resonance_world.experimental_runtime.g1_v9.freeze import FreezeManifest
+
+    tampered = dict(manifest.manifest)
+    tampered["code_commit"] = CODE_COMMIT
+    # Keep the working-tree file hashes while claiming the review commit:
+    # the git-show comparison must catch the mismatch.
+    parsed = FreezeManifest(tampered)
+    ok, failures = verify_freeze_anchor(parsed, REPO_ROOT, expected_commit=CODE_COMMIT)
+    assert ok is False
+    assert failures
+
+
+def test_intra_world_correlation_reproduces_review_table() -> None:
+    """P0: the rho sensitivity grid matches the reviewer's arithmetic."""
+
+    from resonance_world.experimental_runtime.g1_v9 import (
+        intra_world_correlation_table,
+    )
+
+    assumptions = PlanningAssumptions(
+        worlds=24,
+        decisions_per_arm_post=100,
+        mean_accuracy=0.5,
+        world_heterogeneity_sd=0.10,
+    )
+    rows = intra_world_correlation_table(assumptions)
+    expected = {
+        0.0: (100.0, 0.070),
+        0.05: (16.81, 0.114),
+        0.10: (9.1743, 0.145),
+        0.20: (4.8077, 0.193),
+    }
+    for row in rows:
+        rho = row["decision_correlation_rho"]
+        effective, mde = expected[rho]
+        assert row["effective_decisions_per_arm"] == pytest.approx(effective, abs=0.05)
+        assert row["mde_80"] == pytest.approx(mde, abs=0.002)
+
+
+def test_statistical_plan_pins_test_ci_and_success_criteria(manifest) -> None:
+    plan = manifest.manifest["statistical_plan"]
+    assert "paired t-test" in plan["statistical_test"]
+    assert "95% t-based" in plan["confidence_interval"]
+    assert plan["statistical_success"] == "lower bound of the 95% CI > 0"
+    assert "0.20" in plan["practical_success"]
+    assert plan["practical_threshold_status"] == "proposed-pending-freeze"
+    assert "not replaced" in plan["incomplete_worlds"]
+    assert "18" in plan["incomplete_worlds"]

@@ -40,11 +40,15 @@ evaluator rules, and equal information.
 
 ## 4. Randomization plan
 
-**[TO FREEZE]** The evaluator seed is operator-held material, derived
-via `derive_evaluator_seed`, and sealed at genesis per branch. The
-context rotation, epoch-0 table, and the balanced flip set at the
-switch are all seed-derived and identical across arms. The seed is
-disclosed to auditors only after outcome locking.
+**[TO FREEZE: seed values]** Each world uses an **independent
+evaluation seed** derived from operator-held material via
+`derive_evaluator_seed`, held by the evaluator until outcome locking
+and never sealed at genesis. What IS sealed at genesis per branch are
+the **derived rule tables** - the raw seed is not, and that is the
+correct confidentiality boundary. The context rotation, epoch-0
+tables, and the balanced flip set at the switch are all
+seed-derived and identical across paired arms. Seeds are disclosed to
+auditors only after outcome locking.
 
 ## 5. Blinded evaluation inputs
 
@@ -56,9 +60,25 @@ no prompt text, and no public event carries the rewarded ordering.
 
 ## 6. Estimands and decision metrics
 
-- Primary estimand **[TO FREEZE]**: paired post-switch accuracy
-  difference A - B over contexts and decisions, with a preregistered
-  confidence-interval method and minimum analyzable decisions.
+- Primary estimand: paired post-switch accuracy difference A - B, one
+  difference per independent world.
+- Primary test **(pinned candidate)**: two-sided paired t-test over
+  the per-world differences at alpha = 0.05, with a 95% t-based
+  confidence interval on the mean difference.
+- Statistical success: the lower bound of the 95% CI > 0.
+- Practical-success criterion **(independent, candidate)**: the lower
+  bound of the 95% CI > 0.20 (20 percentage points). The 20pp value
+  is a proposed practical threshold pinned before execution; it is
+  not derived from scripted-policy results. Both claims (positive
+  effect; at-least-practical effect) are reported separately.
+- Incomplete worlds: worlds with failed/expired sends are apparatus
+  failures and are **not replaced**; the analysis runs on analyzable
+  worlds with a minimum analyzable floor of 18 worlds
+  (proposed-pending-freeze); apparatus failures are recorded
+  separately from mechanism results.
+- Planning caveat: power and MDE are reported over an intra-world
+  decision-correlation (rho) sensitivity grid; MDE values are
+  scenario-specific, not guarantees.
 - Secondary: A vs C (persistence without use), A vs D (schedule
   anchoring), pre/post within-arm deltas.
 - Retention diagnostic: pre-switch accuracy trajectory on the shared

@@ -192,9 +192,44 @@ def build_freeze_manifest(
             "worlds_planned": worlds,
             "practical_threshold_pp": practical_threshold_pp,
             "practical_threshold_status": "proposed-pending-freeze",
+            "statistical_test": "two-sided paired t-test over the per-world "
+            "post-switch accuracy differences",
+            "confidence_interval": "95% t-based confidence interval on the "
+            "per-world paired differences",
+            "statistical_success": "lower bound of the 95% CI > 0",
+            "practical_success": "lower bound of the 95% CI > "
+            f"{practical_threshold_pp / 100:.2f} (independent criterion; "
+            "both claims reported separately)",
+            "incomplete_worlds": "worlds with failed/expired sends are "
+            "apparatus failures; not replaced; analysis runs on analyzable "
+            "worlds with a minimum analyzable worlds floor of 18 "
+            "(proposed-pending-freeze); apparatus failures recorded "
+            "separately",
+            "decision_correlation": "planning power/MDE is reported over an "
+            "intra-world decision-correlation (rho) sensitivity grid via "
+            "power.intra_world_correlation_table; MDE values are "
+            "scenario-specific under declared rho assumptions, not "
+            "guarantees",
+        },
+        "operational_contract": {
+            "identity_version": "pinned at authorization",
+            "input_limits": "pinned at authorization",
+            "output_limits": "pinned at authorization",
+            "timeout_and_failure_rules": "pinned at authorization",
+            "physical_send_meter": (
+                "call_contract.py is accounting and policy, not a runtime "
+                "meter; an enforcing send meter is implemented before any "
+                "authorized execution"
+            ),
         },
         "blinded_inputs": {
-            "evaluator_seed": "operator-held material; never in the manifest or evidence",
+            "evaluator_seed": (
+                "per-world independent evaluation seeds derived from "
+                "operator-held material; raw seeds held by the evaluator "
+                "until outcome lock; never in the manifest or evidence. "
+                "Only the DERIVED rule tables are sealed at genesis - the "
+                "raw seed is not"
+            ),
             "commitment_key": "operator-held HMAC key; never in published evidence",
             "hidden_tables": "sealed ledger only, keyed commitments in public events",
         },
@@ -225,3 +260,88 @@ def verify_pinned_files(
         if hashlib.sha256(content).hexdigest() != entry["sha256"]:
             mismatched.append(entry["path"])
     return (not mismatched, mismatched)
+
+
+def _is_full_sha(value: Any) -> bool:
+    return (
+        isinstance(value, str)
+        and len(value) == 40
+        and all(char in "0123456789abcdef" for char in value)
+    )
+
+
+def verify_freeze_anchor(
+    manifest: FreezeManifest,
+    repo_root: Path,
+    *,
+    expected_commit: str,
+    require_status: str | None = None,
+    expected_machine_fingerprint: str | None = None,
+    expected_contract_digest: str | None = None,
+) -> tuple[bool, list[str]]:
+    """Strictly verify a freeze anchor against a named Git commit.
+
+    The anchor is admissible only when: the recorded commit is a full
+    40-hex SHA equal to ``expected_commit`` (placeholders such as
+    ``WORKING-TREE-CANDIDATE`` are rejected); the required freeze status
+    holds; the machine fingerprint and contract digest match the
+    expected values; and every pinned file's content hash equals the
+    hash of that file's blob in the named commit (verified via
+    ``git show`` - the working tree is never trusted).
+    """
+
+    failures: list[str] = []
+    manifest_dict = manifest.manifest
+
+    if not _is_full_sha(manifest_dict.get("code_commit")):
+        failures.append("code_commit is not a full 40-hex commit SHA")
+    elif manifest_dict["code_commit"] != expected_commit:
+        failures.append("code_commit does not match the expected commit")
+    if not _is_full_sha(expected_commit):
+        failures.append("expected_commit is not a full 40-hex commit SHA")
+
+    if require_status is not None and manifest_dict.get("status") != require_status:
+        failures.append(f"status is {manifest_dict.get('status')!r}, expected {require_status!r}")
+
+    if (
+        expected_machine_fingerprint is not None
+        and manifest_dict.get("machine_fingerprint") != expected_machine_fingerprint
+    ):
+        failures.append("machine fingerprint does not match the expected value")
+    if (
+        expected_contract_digest is not None
+        and manifest_dict.get("contract_digest") != expected_contract_digest
+    ):
+        failures.append("contract digest does not match the expected value")
+
+    import subprocess
+
+    for entry in manifest_dict.get("scenario_file_hashes", []):
+        path = entry["path"]
+        try:
+            blob = subprocess.run(
+                ["git", "show", f"{expected_commit}:{path}"],
+                cwd=repo_root,
+                capture_output=True,
+                check=True,
+            ).stdout
+        except (subprocess.CalledProcessError, OSError) as error:
+            failures.append(f"cannot read {path} from {expected_commit}: {error}")
+            continue
+        if hashlib.sha256(blob).hexdigest() != entry["sha256"]:
+            failures.append(f"pinned hash mismatch for {path} at {expected_commit}")
+
+    return (not failures, failures)
+
+
+def governance_entry(manifest: FreezeManifest, *, action: str) -> dict[str, str]:
+    """Build one append-only governance-log entry for a manifest."""
+
+    return {
+        "action": action,
+        "manifest_digest": manifest.digest(),
+        "code_commit": manifest.manifest["code_commit"],
+        "status": manifest.manifest["status"],
+        "contract_digest": manifest.manifest["contract_digest"],
+        "rules_version": manifest.manifest["rules_version"],
+    }

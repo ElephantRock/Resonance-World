@@ -19,6 +19,14 @@ decisions per arm):
 
 Power for a two-sided test at ``alpha`` is
 ``P(|Z| > z_{1-alpha/2})`` under the alternative ``E[D] = true_delta``.
+
+Intra-world decision correlation: decisions inside one world follow an
+adapting policy over repeated contexts, so they may be positively
+correlated. Planning therefore applies a design effect
+``DEFF = 1 + (m - 1) * rho`` to the binomial component, with an
+assumed intra-world correlation ``rho``; the effective per-arm
+decision count is ``m / DEFF``. MDE values are scenario-specific
+under declared rho assumptions - they are not general guarantees.
 """
 
 from __future__ import annotations
@@ -37,6 +45,7 @@ class PlanningAssumptions:
     decisions_per_arm_post: int
     mean_accuracy: float = 0.5
     world_heterogeneity_sd: float = 0.10
+    decision_correlation_rho: float = 0.0
     alpha: float = 0.05
 
     def __post_init__(self) -> None:
@@ -48,15 +57,24 @@ class PlanningAssumptions:
             value = getattr(self, name)
             if value < 0 or value > 1:
                 raise ValueError(f"{name} must lie in [0, 1]")
+        if self.decision_correlation_rho < 0 or self.decision_correlation_rho >= 1:
+            raise ValueError("decision_correlation_rho must lie in [0, 1)")
         if not 0 < self.alpha < 1:
             raise ValueError("alpha must lie in (0, 1)")
+
+    @property
+    def effective_decisions_per_arm(self) -> float:
+        """Decisions per arm after the intra-world design effect."""
+
+        deff = 1 + (self.decisions_per_arm_post - 1) * self.decision_correlation_rho
+        return self.decisions_per_arm_post / deff
 
     @property
     def sigma_w(self) -> float:
         """Within-world binomial noise of the paired difference."""
 
         p = self.mean_accuracy
-        return math.sqrt(2 * p * (1 - p) / self.decisions_per_arm_post)
+        return math.sqrt(2 * p * (1 - p) / self.effective_decisions_per_arm)
 
     @property
     def sigma_d(self) -> float:
@@ -129,4 +147,32 @@ def sensitivity_table(
         for delta in deltas:
             row[f"power@{delta:.2f}"] = round(power(scenario, delta), 6)
         rows.append(row)
+    return rows
+
+
+def intra_world_correlation_table(
+    assumptions: PlanningAssumptions,
+    *,
+    rho_levels: tuple[float, ...] = (0.0, 0.05, 0.10, 0.20),
+) -> list[dict[str, float]]:
+    """Sensitivity of the MDE to intra-world decision correlation.
+
+    Each row reports the assumed rho, the resulting effective per-arm
+    decision count, and the 80%-power MDE under the base heterogeneity.
+    These are scenario values under declared assumptions - not an
+    empirical estimate of the correlation, and not a general guarantee.
+    """
+
+    rows = []
+    for rho in rho_levels:
+        scenario = dataclasses.replace(assumptions, decision_correlation_rho=rho)
+        rows.append(
+            {
+                "decision_correlation_rho": rho,
+                "effective_decisions_per_arm": round(
+                    scenario.effective_decisions_per_arm, 4
+                ),
+                "mde_80": round(minimum_detectable_delta(scenario, 0.8), 6),
+            }
+        )
     return rows

@@ -43,8 +43,11 @@ from .evaluator import (
 )
 from .freeze import (
     MANIFEST_STATUS,
+    FreezeManifest,
     build_freeze_manifest,
+    governance_entry,
     manifest_digest,
+    verify_freeze_anchor,
     verify_pinned_files,
 )
 from .memory import (
@@ -57,6 +60,7 @@ from .memory import (
 )
 from .power import (
     PlanningAssumptions,
+    intra_world_correlation_table,
     minimum_detectable_delta,
     power,
     sensitivity_table,
@@ -71,6 +75,7 @@ __all__ = [
     "ARM_C_BRANCH",
     "ARM_D_BRANCH",
     "CONTRACT_SCHEMA",
+    "FreezeManifest",
     "MANIFEST_STATUS",
     "MEMORY_SNAPSHOT_KIND",
     "MEMORY_STATE_KIND",
@@ -92,6 +97,8 @@ __all__ = [
     "default_contract",
     "derive_epoch_table",
     "derive_evaluator_seed",
+    "governance_entry",
+    "intra_world_correlation_table",
     "latest_memory_state",
     "manifest_digest",
     "minimum_detectable_delta",
@@ -103,6 +110,7 @@ __all__ = [
     "sensitivity_table",
     "seal_epoch",
     "start_arm",
+    "verify_freeze_anchor",
     "verify_memory_attestation",
     "verify_pinned_files",
 ]
