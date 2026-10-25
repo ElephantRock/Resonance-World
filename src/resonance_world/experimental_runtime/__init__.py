@@ -10,6 +10,7 @@ strictly separated from private evaluator state.
 
 from __future__ import annotations
 
+from .anchoring import ANCHOR_SCHEMA, build_log_anchor, log_chain_head, verify_log_anchor
 from .checkpoints import Checkpoint
 from .events import EVENT_SOURCES, EVENT_VISIBILITIES, WorldEvent
 from .kernel import WorldKernel
@@ -30,6 +31,7 @@ from .world_time import WorldClock
 WORLD_KERNEL_VERSION = "0.1"
 
 __all__ = [
+    "ANCHOR_SCHEMA",
     "EVENT_SOURCES",
     "EVENT_VISIBILITIES",
     "SCHEMA_VERSION",
@@ -50,10 +52,13 @@ __all__ = [
     "WorldEvent",
     "WorldKernel",
     "WorldState",
+    "build_log_anchor",
     "full_state_bytes",
     "full_state_sha256",
+    "log_chain_head",
     "public_state_bytes",
     "public_state_sha256",
     "replay_branch",
     "replay_state",
+    "verify_log_anchor",
 ]

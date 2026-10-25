@@ -30,7 +30,10 @@ def log_chain_head(events: tuple[WorldEvent, ...] | list[WorldEvent]) -> str:
     return head
 
 
-def build_log_anchor(branch_id: str, events: tuple[WorldEvent, ...] | list[WorldEvent]) -> dict[str, Any]:
+def build_log_anchor(
+    branch_id: str,
+    events: tuple[WorldEvent, ...] | list[WorldEvent],
+) -> dict[str, Any]:
     """Build the anchor record an operator must custody externally."""
 
     return {

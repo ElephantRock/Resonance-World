@@ -12,6 +12,7 @@ in this package sleeps or reads the wall clock for state purposes.
 
 from __future__ import annotations
 
+import copy
 import dataclasses
 from collections.abc import Mapping
 from typing import Any
@@ -341,6 +342,10 @@ class WorldKernel:
             if dependency_event.tick > tick:
                 raise ValueError("causal dependency lies in the future")
 
+        # Detach the payload from caller-owned structures: recorded history
+        # must never alias mutable input.
+        payload = copy.deepcopy(payload)
+
         sealed_payload: Any = None
         if visibility == "private":
             if payload is None:
@@ -486,6 +491,10 @@ class WorldKernel:
 
         if self._store is None:
             raise ValueError("checkpointing requires a persistence store")
+        if self._scheduler.pending():
+            raise ValueError(
+                "cannot checkpoint with pending scheduled events; advance first"
+            )
         checkpoint = Checkpoint.build(
             branch_id=self._branch_id,
             name=name,
@@ -510,6 +519,8 @@ class WorldKernel:
 
         if self._store is None:
             raise ValueError("forking requires a persistence store")
+        if self._scheduler.pending():
+            raise ValueError("cannot fork with pending scheduled events; advance first")
         child_state = dataclasses.replace(self._state, event_count=0)
         self._store.register_branch(
             BranchRecord(

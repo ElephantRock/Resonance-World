@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 from collections.abc import Mapping
 from dataclasses import dataclass, field
+from types import MappingProxyType
 
 from resonance_world.adapters import canonical_json_bytes
 
@@ -95,5 +96,8 @@ class WorldState:
             or self.event_count < 0
         ):
             raise ValueError("event_count must be a non-negative integer")
-        _validated(self.public)
-        _validated(self.private)
+        # Deep immutability: the compartments are exposed as read-only
+        # mappings, so accidental mutation outside a reducer fails loudly
+        # instead of silently diverging from the event log.
+        object.__setattr__(self, "public", MappingProxyType(dict(_validated(self.public))))
+        object.__setattr__(self, "private", MappingProxyType(dict(_validated(self.private))))

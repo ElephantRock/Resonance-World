@@ -303,8 +303,7 @@ def _recompute_all_internal_digests(connection, branch_id: str) -> None:
     """Simulate a malicious local rewrite: rewrite an event payload and
     recompute every internal digest so the log is self-consistent."""
 
-    from resonance_world.adapters import canonical_json_bytes, sha256_json
-
+    from resonance_world.adapters import sha256_json
     from resonance_world.experimental_runtime.events import event_digest
 
     row = connection.execute(
@@ -431,3 +430,52 @@ def test_resume_proves_checkpoint_matches_the_log(tmp_path) -> None:
         WorldKernel.resume(
             store=store, branch_id="main", machine=build_machine(), checkpoint_name="forged"
         )
+
+
+# ---------------------------------------------------------------------------
+# P1: pending scheduler queue, deep immutability, payload isolation
+# ---------------------------------------------------------------------------
+
+
+def test_checkpoint_and_fork_reject_pending_scheduled_events() -> None:
+    store = KernelStore()
+    kernel = start_kernel(store)
+    kernel.schedule("world_effect", {"tick": 0})
+
+    with pytest.raises(ValueError, match="pending scheduled events"):
+        kernel.checkpoint("mid")
+    with pytest.raises(ValueError, match="pending scheduled events"):
+        kernel.fork("child")
+
+    kernel.advance()
+    kernel.checkpoint("after-advance")
+    kernel.fork("child")
+
+
+def test_state_compartments_are_deeply_immutable() -> None:
+    store = KernelStore()
+    kernel = start_kernel(store)
+    drive(kernel, ticks=2, policy=ScriptedPolicy())
+
+    with pytest.raises(TypeError):
+        kernel.state.public["stock"] = 999
+    with pytest.raises(TypeError):
+        kernel.state.private["hidden_threshold"] = 0
+
+    # Reducers still build fresh state through replace; hashing is unchanged.
+    before = kernel.state_hash()
+    drive(kernel, ticks=1, policy=ScriptedPolicy())
+    assert kernel.state_hash() != before
+
+
+def test_recorded_payloads_do_not_alias_caller_state() -> None:
+    store = KernelStore()
+    kernel = start_kernel(store)
+
+    payload = {"tick": 0, "note": "original"}
+    event = kernel.emit("world_effect", payload)
+    payload["note"] = "mutated-after-record"
+
+    assert event.payload is not None
+    assert event.payload["note"] == "original"
+    assert kernel.events()[event.seq].payload["note"] == "original"
