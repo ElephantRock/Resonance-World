@@ -95,6 +95,13 @@ ANALYSIS_METHOD = (
 PRACTICAL_THRESHOLD_PP = 20
 WORLDS_PLANNED = 24
 
+#: Pinned FINAL by governance annex A (PR #312 review): the practical
+#: effect threshold. Changing it requires a new freeze record.
+PRACTICAL_THRESHOLD_PP_FINAL = 20
+#: Pinned FINAL by governance annex A (PR #312 review): the minimum
+#: number of analyzable worlds. Changing it requires a new freeze record.
+MINIMUM_ANALYZABLE_WORLDS_FINAL = 18
+
 
 class FreezeManifest:
     """The complete, digestable freeze record (candidate or frozen)."""
@@ -310,15 +317,31 @@ def verify_freeze_anchor(
     the final ``frozen-unauthorized`` emission: mandatory fields must all
     be present, the pinned file list must equal ``PINNED_FILES`` exactly
     (complete, no duplicates), schema/status/provider-authorization/send
-    cap are pinned, and ``outer_digest`` (the ``digest`` field of the
-    emitted ``{"digest", "manifest"}`` artifact) must equal the manifest
-    content digest when provided.
+    cap are pinned, and ``outer_digest``, ``expected_machine_fingerprint``,
+    and ``expected_contract_digest`` are **mandatory** - the pre-
+    authorization audit interface never verifies an anchor without them.
     """
 
     failures: list[str] = []
     manifest_dict = manifest.manifest
 
     if strict_frozen:
+        # Pre-authorization audit interface: these three expectations are
+        # mandatory in strict mode, so an anchor can never be "verified"
+        # without independently supplied comparison values.
+        if outer_digest is None:
+            failures.append(
+                "strict_frozen verification requires outer_digest (the "
+                "emitted artifact's digest field)"
+            )
+        if expected_machine_fingerprint is None:
+            failures.append(
+                "strict_frozen verification requires expected_machine_fingerprint"
+            )
+        if expected_contract_digest is None:
+            failures.append(
+                "strict_frozen verification requires expected_contract_digest"
+            )
         for key in REQUIRED_MANIFEST_KEYS:
             if key not in manifest_dict:
                 failures.append(f"missing mandatory freeze field: {key}")

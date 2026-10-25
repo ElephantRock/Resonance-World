@@ -369,6 +369,10 @@ def test_frozen_unauthorized_artifact_is_strictly_valid() -> None:
     assert manifest_digest(parsed) == data["digest"]
     assert data["manifest"]["status"] == FROZEN_UNAUTHORIZED_STATUS
     assert data["manifest"]["provider"]["provider_authorized"] is False
+    # Expected comparison values are derived independently from the
+    # contract and machine - never read back from the artifact.
+    contract = default_contract()
+    expected_fingerprint = build_machine(contract).fingerprint()
     ok, failures = verify_freeze_anchor(
         parsed,
         REPO_ROOT,
@@ -376,6 +380,8 @@ def test_frozen_unauthorized_artifact_is_strictly_valid() -> None:
         strict_frozen=True,
         outer_digest=data["digest"],
         require_status=FROZEN_UNAUTHORIZED_STATUS,
+        expected_machine_fingerprint=expected_fingerprint,
+        expected_contract_digest=contract.digest(),
     )
     assert ok, failures
 

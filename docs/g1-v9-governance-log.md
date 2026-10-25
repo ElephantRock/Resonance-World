@@ -49,3 +49,21 @@ the follow-up commit). Strict anchor verification passed against code
 commit `9919c9b` via git-show blob comparison; provider authorization
 remains false and the send cap remains zero. Also anchored externally
 as a timestamped comment on PR #312.
+
+## Annex A — Protocol values pinned final (PR #312 freeze review)
+
+Decided by the independent reviewer in the freeze acceptance of
+manifest `c843f5042589559becb7510871d13d91f7a1337a43f051b76be25d5fdb8f
+27b8`:
+
+1. **Practical-effect threshold: 20 percentage points — FINAL.** The
+   manifest field `practical_threshold_status:
+   proposed-pending-freeze` is superseded by this annex; the threshold
+   is no longer merely proposed.
+2. **Minimum analyzable worlds: 18 — FINAL.** The corresponding
+   proposed status in the freeze documentation is superseded.
+
+Both values now govern the G1 v9 scientific gate. **Changing either
+one requires a new freeze record with a new manifest digest** under
+the post-freeze change rule; the emitted manifest `c843f504…` is not
+modified in place.

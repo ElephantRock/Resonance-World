@@ -67,6 +67,15 @@ from .power import (
     power,
     sensitivity_table,
 )
+from .qualification import (
+    PROPOSED_QUALIFICATION_SEND_CAP,
+    DryRunTransport,
+    PhysicalSendCapExceeded,
+    QualificationPlan,
+    SendMeter,
+    build_qualification_plan,
+    preflight_failure_classes,
+)
 from .scenario import build_machine, present_context, seal_epoch, start_arm
 
 __all__ = [
@@ -85,16 +94,22 @@ __all__ = [
     "MODEL",
     "PROVIDER",
     "PlanningAssumptions",
+    "PROPOSED_QUALIFICATION_SEND_CAP",
+    "PhysicalSendCapExceeded",
+    "QualificationPlan",
     "RULES_VERSION",
     "SCENARIO_ID",
     "ArmReport",
+    "DryRunTransport",
     "G1V9AcceptanceReport",
     "G1V9Contract",
+    "SendMeter",
     "arm_call_contracts",
     "budget_summary",
     "build_freeze_manifest",
     "build_machine",
     "build_policy",
+    "build_qualification_plan",
     "canonical_memory",
     "context_schedule",
     "default_contract",
@@ -106,6 +121,7 @@ __all__ = [
     "manifest_digest",
     "minimum_detectable_delta",
     "power",
+    "preflight_failure_classes",
     "present_context",
     "record_memory_event",
     "replay_branch",
