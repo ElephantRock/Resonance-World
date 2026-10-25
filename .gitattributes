@@ -1,0 +1,4 @@
+* text=auto eol=lf
+*.png -text
+*.gz -text
+*.sqlite3 -text
