@@ -1,4 +1,4 @@
-name: C3R G1 Interactive Fidelity 20261026
+﻿name: C3R G1 Interactive Fidelity 20261026
 on:
   push:
     branches:
@@ -86,6 +86,8 @@ jobs:
         with:
           name: fidelity-manifest-c1
           path: ${{ runner.temp }}/fidelity-workspace/
+      - name: Restore private permissions (0700)
+        run: chmod 700 "$RUNNER_TEMP/novel-workspace"
       - name: C2 interactive induction (group ${{ matrix.group }}, <=6 sends)
         env:
           PYTHONPATH: "src:scripts"
@@ -129,6 +131,8 @@ jobs:
         with:
           name: fidelity-manifest-c1
           path: ${{ runner.temp }}/fidelity-workspace/
+      - name: Restore private permissions (0700)
+        run: chmod 700 "$RUNNER_TEMP/novel-workspace"
       - name: C3 execution fidelity (wave ${{ matrix.wave }}, 8 sends)
         env:
           PYTHONPATH: "src:scripts"
@@ -171,6 +175,8 @@ jobs:
         with:
           name: fidelity-manifest-c1
           path: ${{ runner.temp }}/fidelity-workspace/
+      - name: Restore private permissions (0700)
+        run: chmod 700 "$RUNNER_TEMP/novel-workspace"
       - name: C4 raw re-induction (wave ${{ matrix.wave }}, 8 sends)
         env:
           PYTHONPATH: "src:scripts"
