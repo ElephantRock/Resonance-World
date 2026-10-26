@@ -1,22 +1,30 @@
 """Live-transport qualification tests: fail-closed metering, no network.
 
-Every test injects a fake ``http_post`` Ã¢â‚¬â€ no real network call exists
-on any path. The tests prove the reviewer's round-4 requirements:
+Every test injects a fake ``http_post`` - no real network call exists
+on any path. The tests prove the reviewer's round-4 and round-5
+requirements:
 
 - the four preflight failure classes (auth, timeout, malformed, cap)
   are actually injected and each consumes exactly one attempt with no
   retry;
 - the persistent ledger survives process restart and refuses the
   ninth attempt;
-- a crashed final ledger write is conservatively consumed;
-- the transport cannot even be constructed without an authorized
-  record bound to the frozen science anchor, and the disabled default
-  refuses all sends.
+- a crashed final ledger write is conservatively consumed, and two
+  consecutive crashes accumulate consumption without shrinking it;
+- the transport cannot be constructed without an authorized record
+  whose HMAC verifies under the operator-held key and whose
+  ``code_commit`` matches the running operational commit resolved from
+  the repository - and the disabled default refuses all sends;
+- two concurrent processes race for the final slot: exactly one wins;
+- redirects are refused and provider-error text is withheld.
 """
 
 from __future__ import annotations
 
 import json
+import os
+import subprocess
+import sys as _sys
 from pathlib import Path
 
 import pytest
@@ -38,18 +46,37 @@ from resonance_world.experimental_runtime.g1_v9.zai_transport import (
     disabled_transport,
 )
 
-CODE_COMMIT = "374249adee81b9909646f54bc544d19cda1dd007"
+OPERATOR_KEY = b"operator-held-qualification-key"
+REPO_ROOT = Path(__file__).resolve().parents[1]
 ENDPOINT = "https://api.z.ai/api/coding/paas/v4/chat/completions"
 AUTHORIZATION_ID = "a" * 64
-REPO_ROOT = Path(__file__).resolve().parents[1]
+
+
+def _git_head() -> str:
+    return (
+        subprocess.run(
+            ["git", "rev-parse", "HEAD"],
+            cwd=REPO_ROOT,
+            capture_output=True,
+            check=True,
+        )
+        .stdout.decode()
+        .strip()
+    )
 
 
 def authorized_record(**overrides) -> QualificationAuthorizationRecord:
+    """Build a valid authorized record signed under OPERATOR_KEY and
+    bound to the running operational commit."""
+
+    import hashlib
+    import hmac
+
     values = dict(
         schema="g1-v9-qualification-authorization-v1",
         status="authorized",
         science_anchor_digest=SCIENCE_ANCHOR_DIGEST,
-        code_commit=CODE_COMMIT,
+        code_commit=_git_head(),
         authorization_id=AUTHORIZATION_ID,
         provider="zai",
         model="glm-5.3",
@@ -61,9 +88,19 @@ def authorized_record(**overrides) -> QualificationAuthorizationRecord:
         authorized=True,
         authorized_by="operator",
         authorized_at="2026-10-25T12:00:00+00:00",
+        authorization_hmac="",
         notes=(),
     )
     values.update(overrides)
+    if not values["authorization_hmac"]:
+        # Auto-sign under the operator key unless a (possibly forged)
+        # signature was injected explicitly by the test.
+        without_hmac = {key: value for key, value in values.items() if key != "authorization_hmac"}
+        values["authorization_hmac"] = hmac.new(
+            OPERATOR_KEY,
+            json.dumps(without_hmac, sort_keys=True, separators=(",", ":")).encode("utf-8"),
+            hashlib.sha256,
+        ).hexdigest()
     return QualificationAuthorizationRecord(**values)
 
 
@@ -104,7 +141,8 @@ def make_transport(tmp_path, record=None, fake_http=None):
         record=record,
         ledger=ledger,
         credential_provider=credential,
-        operational_commit=CODE_COMMIT,
+        repo_root=REPO_ROOT,
+        authorization_key_provider=lambda: OPERATOR_KEY,
         http_post=fake_http,
     )
     return ledger, transport
@@ -118,10 +156,15 @@ def test_default_transport_is_disabled() -> None:
         disabled_transport().send("anything", {})
 
 
+# -- authorization source trust ------------------------------------------
+
+
 def test_transport_cannot_be_constructed_from_a_candidate_record(tmp_path) -> None:
     """The unauthorized candidate record can never enable the transport."""
 
-    candidate = build_authorization_candidate(code_commit=CODE_COMMIT, endpoint_url=ENDPOINT)
+    candidate = build_authorization_candidate(
+        code_commit=_git_head(), endpoint_url=ENDPOINT
+    )
     assert candidate.authorized is False
     failures = candidate.validation_failures()
     assert any("authorized must be true" in failure for failure in failures)
@@ -136,42 +179,93 @@ def test_transport_cannot_be_constructed_from_a_candidate_record(tmp_path) -> No
             record=candidate,
             ledger=ledger,
             credential_provider=lambda: "key",
-            operational_commit=CODE_COMMIT,
+            repo_root=REPO_ROOT,
+            authorization_key_provider=lambda: OPERATOR_KEY,
         )
     assert ledger.attempts() == 0
 
 
-def test_transport_rejects_a_wrong_science_anchor(tmp_path) -> None:
-    wrong_anchor = authorized_record(
-        science_anchor_digest="b" * 64,
-    )
+def test_forged_authorized_record_is_rejected(tmp_path) -> None:
+    """P0: an authorized=True record with a forged (unsigned) HMAC is
+    rejected cryptographically, not just shape-checked."""
+
+    record = authorized_record(authorization_hmac="f" * 64)  # forged signature
     ledger = PersistentSendLedger(
-        tmp_path / "l.jsonl",
-        send_cap=8,
-        authorization_id=AUTHORIZATION_ID,
+        tmp_path / "l.jsonl", send_cap=8, authorization_id=AUTHORIZATION_ID
+    )
+    with pytest.raises(TransportNotAuthorized, match="signature does not verify"):
+        ZaiQualificationTransport(
+            record=record,
+            ledger=ledger,
+            credential_provider=lambda: "key",
+            repo_root=REPO_ROOT,
+            authorization_key_provider=lambda: OPERATOR_KEY,
+        )
+
+
+def test_record_signed_under_a_different_key_is_rejected(tmp_path) -> None:
+    """Re-signing under an attacker key yields a perfect-shape record that
+    still fails verification under the operator key."""
+
+    import dataclasses
+    import hashlib
+    import hmac as hmac_module
+    from dataclasses import replace
+
+    attacker_key = b"attacker-key-not-the-operators"
+    base = authorized_record()
+    canonical = {
+        key_: value
+        for key_, value in dataclasses.asdict(base).items()
+        if key_ != "authorization_hmac"
+    }
+    forged_hmac = hmac_module.new(
+        attacker_key,
+        json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    record = replace(base, authorization_hmac=forged_hmac)
+
+    ledger = PersistentSendLedger(
+        tmp_path / "l2.jsonl", send_cap=8, authorization_id=AUTHORIZATION_ID
+    )
+    with pytest.raises(TransportNotAuthorized, match="signature does not verify"):
+        ZaiQualificationTransport(
+            record=record,
+            ledger=ledger,
+            credential_provider=lambda: "key",
+            repo_root=REPO_ROOT,
+            authorization_key_provider=lambda: OPERATOR_KEY,
+        )
+
+
+def test_transport_rejects_a_wrong_science_anchor(tmp_path) -> None:
+    wrong_anchor = authorized_record(science_anchor_digest="b" * 64)
+    ledger = PersistentSendLedger(
+        tmp_path / "l.jsonl", send_cap=8, authorization_id=AUTHORIZATION_ID
     )
     with pytest.raises(TransportNotAuthorized, match="science anchor"):
         ZaiQualificationTransport(
             record=wrong_anchor,
             ledger=ledger,
             credential_provider=lambda: "key",
-            operational_commit=CODE_COMMIT,
+            repo_root=REPO_ROOT,
+            authorization_key_provider=lambda: OPERATOR_KEY,
         )
 
 
 def test_transport_rejects_a_cap_other_than_eight(tmp_path) -> None:
     wrong_cap = authorized_record(send_cap=420)
     ledger = PersistentSendLedger(
-        tmp_path / "l.jsonl",
-        send_cap=8,
-        authorization_id=AUTHORIZATION_ID,
+        tmp_path / "l.jsonl", send_cap=8, authorization_id=AUTHORIZATION_ID
     )
     with pytest.raises(TransportNotAuthorized, match="exactly 8"):
         ZaiQualificationTransport(
             record=wrong_cap,
             ledger=ledger,
             credential_provider=lambda: "key",
-            operational_commit=CODE_COMMIT,
+            repo_root=REPO_ROOT,
+            authorization_key_provider=lambda: OPERATOR_KEY,
         )
 
 
@@ -251,12 +345,13 @@ def test_ninth_attempt_is_refused_fail_closed(tmp_path) -> None:
 def test_ledger_rebuild_refuses_after_restart(tmp_path) -> None:
     store_path = tmp_path / "send-ledger.jsonl"
     record = authorized_record()
-    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=record.authorization_id)
     transport = ZaiQualificationTransport(
         record=record,
         ledger=ledger,
         credential_provider=lambda: "key",
-        operational_commit=CODE_COMMIT,
+        repo_root=REPO_ROOT,
+        authorization_key_provider=lambda: OPERATOR_KEY,
         http_post=lambda url, key, body, timeout: (
             200,
             '{"choices":[{"message":{"content":"ok"}}]}',
@@ -268,13 +363,14 @@ def test_ledger_rebuild_refuses_after_restart(tmp_path) -> None:
 
     # Process restart: a brand-new ledger/transport over the same file.
     restarted_ledger = PersistentSendLedger(
-        store_path, send_cap=8, authorization_id=AUTHORIZATION_ID
+        store_path, send_cap=8, authorization_id=record.authorization_id
     )
     restarted_transport = ZaiQualificationTransport(
         record=record,
         ledger=restarted_ledger,
         credential_provider=lambda: "key",
-        operational_commit=CODE_COMMIT,
+        repo_root=REPO_ROOT,
+        authorization_key_provider=lambda: OPERATOR_KEY,
         http_post=lambda url, key, body, timeout: (200, '{"choices":[]}'),
     )
     assert restarted_ledger.attempts() == 8
@@ -337,9 +433,6 @@ except PhysicalSendCapExceeded:
 def test_two_processes_race_for_the_final_slot(tmp_path) -> None:
     """P0: two concurrent processes race for one slot; exactly one wins."""
 
-    import os
-    import subprocess
-    import sys as _sys
 
     store_path = tmp_path / "send-ledger.jsonl"
     PersistentSendLedger(store_path, send_cap=1, authorization_id=AUTHORIZATION_ID)

@@ -3,33 +3,38 @@
 This is the only module permitted to perform physical provider sends for
 the qualification probe, and it is **disabled by default**:
 
-- construction requires a complete, valid, `authorized=True`
-  :class:`QualificationAuthorizationRecord` bound to the published
-  scientific freeze anchor (`c843f504...`) — anything else raises
-  :class:`TransportNotAuthorized` and nothing is constructed;
+- construction requires a signed, `authorized=True`
+  :class:`QualificationAuthorizationRecord` whose HMAC verifies under
+  the operator-held ``authorization_key_provider`` and whose
+  ``code_commit`` matches the **running operational commit resolved
+  from the repository itself** — a forged record, a stale commit, or a
+  caller-supplied mismatch cannot enable the transport;
 - every physical send first consumes an attempt in the persistent
   ledger (fail-closed at the cap, timeouts counted as consumed), and
   the outcome is recorded afterwards; there are no retries and no
   replacements;
-- the HTTP call itself is isolated in ``_http_post`` (stdlib urllib,
-  hard timeout, one attempt) so tests can inject failures without any
-  network.
-
-The credential never enters this module's state, logs, or errors: it is
-fetched from a caller-supplied ``credential_provider`` callable at send
-time only.
+- redirects are refused (they could carry the Authorization header to
+  another host) and the final response URL must equal the requested
+  pinned endpoint;
+- the credential never enters module state, logs, or errors: it is
+  fetched from a caller-supplied ``credential_provider`` callable at
+  send time only.
 """
 
 from __future__ import annotations
 
+import hashlib
+import hmac
 import json
+import subprocess
 import urllib.error
 import urllib.request
 from collections.abc import Callable
 from dataclasses import dataclass
+from pathlib import Path
 from typing import Any
 
-from resonance_world.adapters import sha256_json
+from resonance_world.adapters import canonical_json_bytes, sha256_json
 
 from .send_ledger import PersistentSendLedger
 
@@ -75,7 +80,7 @@ class QualificationAuthorizationRecord:
     ``authorized`` is false in every candidate emission; only an
     independent human authorization can produce a record with
     ``authorized=True``, and the transport constructor requires exactly
-    that.
+    that, bound to the running operational commit.
     """
 
     schema: str
@@ -93,6 +98,7 @@ class QualificationAuthorizationRecord:
     authorized: bool
     authorized_by: str
     authorized_at: str
+    authorization_hmac: str = ""
     notes: tuple[str, ...] = ()
 
     def validation_failures(self) -> list[str]:
@@ -107,10 +113,7 @@ class QualificationAuthorizationRecord:
         if anchor != SCIENCE_ANCHOR_DIGEST:
             failures.append("science anchor does not match the frozen manifest")
         commit = self.code_commit
-        if (
-            len(commit) != 40
-            or any(c not in "0123456789abcdef" for c in commit)
-        ):
+        if len(commit) != 40 or any(c not in "0123456789abcdef" for c in commit):
             failures.append("code_commit must be a full 40-hex commit SHA")
         auth_id = self.authorization_id
         if len(auth_id) != 64 or any(c not in "0123456789abcdef" for c in auth_id):
@@ -137,6 +140,13 @@ class QualificationAuthorizationRecord:
                 f"authorized_by must be one of the pinned issuers "
                 f"{sorted(AUTHORIZED_ISSUERS)}"
             )
+        if self.authorized and (
+            len(self.authorization_hmac) != 64
+            or any(c not in "0123456789abcdef" for c in self.authorization_hmac)
+        ):
+            failures.append(
+                "authorized records require a 64-hex authorization_hmac"
+            )
         try:
             from datetime import datetime
 
@@ -144,6 +154,32 @@ class QualificationAuthorizationRecord:
         except (ValueError, TypeError):
             failures.append("authorized_at must be an ISO-8601 timestamp")
         return failures
+
+    def canonical_authorization_bytes(
+        self, authorization_key: bytes
+    ) -> tuple[bytes, str]:
+        """Return (canonical bytes, expected HMAC hex) under ``key``.
+
+        The canonical record covers every field except the HMAC itself,
+        serialized deterministically.
+        """
+
+        import dataclasses
+
+        record_without_hmac = {
+            key_: value
+            for key_, value in dataclasses.asdict(self).items()
+            if key_ != "authorization_hmac"
+        }
+        expected = hmac.new(
+            authorization_key,
+            canonical_json_bytes(record_without_hmac),
+            hashlib.sha256,
+        ).hexdigest()
+        return (
+            canonical_json_bytes(record_without_hmac),
+            expected,
+        )
 
 
 @dataclass(frozen=True, slots=True)
@@ -162,13 +198,20 @@ def disabled_transport() -> DisabledTransport:
     return DisabledTransport()
 
 
-class ZaiQualificationTransport:
-    """The real, meter-enforced transport for the 8-send qualification.
+def resolve_running_commit(repo_root: Path) -> str:
+    """Resolve the running operational commit from the repository itself."""
 
-    Construction requires an authorized record that matches the frozen
-    science anchor and a persistent ledger whose cap equals the record's
-    send cap. Any mismatch raises and nothing is constructed.
-    """
+    result = subprocess.run(
+        ["git", "rev-parse", "HEAD"],
+        cwd=repo_root,
+        capture_output=True,
+        check=True,
+    )
+    return result.stdout.decode().strip()
+
+
+class ZaiQualificationTransport:
+    """One isolated, meter-enforced live-qualification transport."""
 
     def __init__(
         self,
@@ -176,7 +219,8 @@ class ZaiQualificationTransport:
         record: QualificationAuthorizationRecord,
         ledger: PersistentSendLedger,
         credential_provider: Callable[[], str],
-        operational_commit: str,
+        repo_root: Path,
+        authorization_key_provider: Callable[[], bytes],
         http_post: Callable[[str, str, dict[str, Any], float], tuple[int, str]] | None = None,
     ) -> None:
         failures = record.validation_failures()
@@ -188,13 +232,31 @@ class ZaiQualificationTransport:
             failures.append(
                 "ledger is bound to a different authorization id than the record"
             )
-        # The running software must be the operational commit the
-        # authorization names - a forged or stale record is refused even
-        # if its shape is perfect.
-        if record.code_commit != operational_commit:
+
+        # The running operational commit is resolved from the repository
+        # itself, before any credential is fetched - a record naming a
+        # different commit is refused regardless of its other content.
+        running_commit = resolve_running_commit(repo_root)
+        if record.code_commit != running_commit:
             failures.append(
-                "record code_commit does not match the running operational commit"
+                "record code_commit does not match the running operational "
+                f"commit ({running_commit})"
             )
+
+        # Cryptographic issuer proof: the HMAC must verify under the
+        # operator-held key, so a forged authorized record cannot enable
+        # the transport even when constructed programmatically.
+        if record.authorized:
+            if authorization_key_provider is None:
+                failures.append(
+                    "an authorized record requires authorization_key_provider"
+                )
+            else:
+                key = authorization_key_provider()
+                _, expected_hmac = record.canonical_authorization_bytes(key)
+                if record.authorization_hmac != expected_hmac:
+                    failures.append("authorization signature does not verify")
+
         if failures:
             raise TransportNotAuthorized("; ".join(failures))
         self._record = record
@@ -265,9 +327,8 @@ class ZaiQualificationTransport:
             # is deliberately not embedded here or in the ledger.
             raise QualificationTransportError(
                 f"provider send failed with an unknown outcome "
-                f"(consumed; error class withheld: "
-                f"{type(error).__name__})"
-            ) from error
+                f"(consumed; error class withheld: {type(error).__name__})"
+            ) from None
 
         if status in (401, 403):
             self._ledger.record_outcome(label, payload_sha, "auth-failure")
