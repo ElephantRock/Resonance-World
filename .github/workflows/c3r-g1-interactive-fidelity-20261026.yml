@@ -1,4 +1,4 @@
-﻿name: C3R G1 Interactive Fidelity 20261026
+name: C3R G1 Interactive Fidelity 20261026
 on:
   push:
     branches:
@@ -59,8 +59,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fidelity-manifest-c1
-          path: |
-            ${{ runner.temp }}/fidelity-workspace/
+          path: ${{ runner.temp }}/fidelity-workspace/
           if-no-files-found: error
           retention-days: 90
 
@@ -81,13 +80,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Restore private workspace (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/fidelity-workspace"
+          chmod 700 "$RUNNER_TEMP/fidelity-workspace"
       - name: Download manifest custody
         uses: actions/download-artifact@v4
         with:
           name: fidelity-manifest-c1
           path: ${{ runner.temp }}/fidelity-workspace/
-      - name: Restore private permissions (0700)
-        run: chmod 700 "$RUNNER_TEMP/novel-workspace"
+      - name: Re-assert private permissions (0700)
+        run: chmod 700 "$RUNNER_TEMP/fidelity-workspace"
       - name: C2 interactive induction (group ${{ matrix.group }}, <=6 sends)
         env:
           PYTHONPATH: "src:scripts"
@@ -104,8 +107,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fidelity-c2-group-${{ matrix.group }}
-          path: |
-            ${{ runner.temp }}/fidelity-workspace/**/c2-summary-group-*.json
+          path: ${{ runner.temp }}/fidelity-workspace/
           if-no-files-found: error
           retention-days: 90
 
@@ -126,13 +128,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Restore private workspace (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/fidelity-workspace"
+          chmod 700 "$RUNNER_TEMP/fidelity-workspace"
       - name: Download manifest custody
         uses: actions/download-artifact@v4
         with:
           name: fidelity-manifest-c1
           path: ${{ runner.temp }}/fidelity-workspace/
-      - name: Restore private permissions (0700)
-        run: chmod 700 "$RUNNER_TEMP/novel-workspace"
+      - name: Re-assert private permissions (0700)
+        run: chmod 700 "$RUNNER_TEMP/fidelity-workspace"
       - name: C3 execution fidelity (wave ${{ matrix.wave }}, 8 sends)
         env:
           PYTHONPATH: "src:scripts"
@@ -148,8 +154,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fidelity-c3-${{ matrix.wave }}
-          path: |
-            ${{ runner.temp }}/fidelity-workspace/**/C3-${{ matrix.wave }}-summary.json
+          path: ${{ runner.temp }}/fidelity-workspace/
           if-no-files-found: error
           retention-days: 90
 
@@ -170,13 +175,17 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Restore private workspace (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/fidelity-workspace"
+          chmod 700 "$RUNNER_TEMP/fidelity-workspace"
       - name: Download manifest custody
         uses: actions/download-artifact@v4
         with:
           name: fidelity-manifest-c1
           path: ${{ runner.temp }}/fidelity-workspace/
-      - name: Restore private permissions (0700)
-        run: chmod 700 "$RUNNER_TEMP/novel-workspace"
+      - name: Re-assert private permissions (0700)
+        run: chmod 700 "$RUNNER_TEMP/fidelity-workspace"
       - name: C4 raw re-induction (wave ${{ matrix.wave }}, 8 sends)
         env:
           PYTHONPATH: "src:scripts"
@@ -192,7 +201,6 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: fidelity-c4-${{ matrix.wave }}
-          path: |
-            ${{ runner.temp }}/fidelity-workspace/**/C4-${{ matrix.wave }}-summary.json
+          path: ${{ runner.temp }}/fidelity-workspace/
           if-no-files-found: error
           retention-days: 90
