@@ -221,6 +221,7 @@ class ZaiQualificationTransport:
         credential_provider: Callable[[], str],
         repo_root: Path,
         authorization_key_provider: Callable[[], bytes],
+        ledger_base_dir: Path,
         http_post: Callable[[str, str, dict[str, Any], float], tuple[int, str]] | None = None,
     ) -> None:
         failures = record.validation_failures()
@@ -231,6 +232,21 @@ class ZaiQualificationTransport:
         if ledger.authorization_id != record.authorization_id:
             failures.append(
                 "ledger is bound to a different authorization id than the record"
+            )
+
+        # One balance per authorization: the ledger file must sit at the
+        # canonical path derived from the authorization id inside the
+        # pinned custody directory - a second file with the same id
+        # cannot start a fresh balance.
+        from .send_ledger import qualification_ledger_path
+
+        expected_path = qualification_ledger_path(
+            ledger_base_dir, record.authorization_id
+        )
+        if ledger.path.resolve() != expected_path.resolve():
+            failures.append(
+                "ledger path is not the canonical custody path for this "
+                "authorization id"
             )
 
         # The running operational commit is resolved from the repository

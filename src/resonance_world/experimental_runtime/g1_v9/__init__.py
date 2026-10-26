@@ -78,6 +78,7 @@ from .qualification import (
     preflight_failure_classes,
 )
 from .scenario import build_machine, present_context, seal_epoch, start_arm
+from .send_ledger import qualification_ledger_path
 
 __all__ = [
     "ACQUISITION_BRANCH",
@@ -125,6 +126,7 @@ __all__ = [
     "power",
     "preflight_failure_classes",
     "present_context",
+    "qualification_ledger_path",
     "record_memory_event",
     "replay_branch",
     "run_g1_v9_acceptance",

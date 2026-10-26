@@ -2,21 +2,7 @@
 
 Every test injects a fake ``http_post`` - no real network call exists
 on any path. The tests prove the reviewer's round-4 and round-5
-requirements:
-
-- the four preflight failure classes (auth, timeout, malformed, cap)
-  are actually injected and each consumes exactly one attempt with no
-  retry;
-- the persistent ledger survives process restart and refuses the
-  ninth attempt;
-- a crashed final ledger write is conservatively consumed, and two
-  consecutive crashes accumulate consumption without shrinking it;
-- the transport cannot be constructed without an authorized record
-  whose HMAC verifies under the operator-held key and whose
-  ``code_commit`` matches the running operational commit resolved from
-  the repository - and the disabled default refuses all sends;
-- two concurrent processes race for the final slot: exactly one wins;
-- redirects are refused and provider-error text is withheld.
+requirements plus the round-6 canonical-custody-path enforcement.
 """
 
 from __future__ import annotations
@@ -32,6 +18,7 @@ import pytest
 from resonance_world.experimental_runtime.g1_v9 import (
     PhysicalSendCapExceeded,
     build_authorization_candidate,
+    qualification_ledger_path,
 )
 from resonance_world.experimental_runtime.g1_v9.send_ledger import (
     LedgerCorrupted,
@@ -93,9 +80,12 @@ def authorized_record(**overrides) -> QualificationAuthorizationRecord:
     )
     values.update(overrides)
     if not values["authorization_hmac"]:
-        # Auto-sign under the operator key unless a (possibly forged)
-        # signature was injected explicitly by the test.
-        without_hmac = {key: value for key, value in values.items() if key != "authorization_hmac"}
+        # Auto-sign under the operator key (HMAC, matching the transport's
+        # canonical_authorization_bytes verification path) unless a
+        # forged signature was injected explicitly by the test.
+        without_hmac = {
+            key: value for key, value in values.items() if key != "authorization_hmac"
+        }
         values["authorization_hmac"] = hmac.new(
             OPERATOR_KEY,
             json.dumps(without_hmac, sort_keys=True, separators=(",", ":")).encode("utf-8"),
@@ -132,7 +122,7 @@ class FakeHttp:
 def make_transport(tmp_path, record=None, fake_http=None):
     record = record if record is not None else authorized_record()
     ledger = PersistentSendLedger(
-        tmp_path / "send-ledger.jsonl",
+        qualification_ledger_path(tmp_path, record.authorization_id),
         send_cap=record.send_cap,
         authorization_id=record.authorization_id,
     )
@@ -142,6 +132,7 @@ def make_transport(tmp_path, record=None, fake_http=None):
         ledger=ledger,
         credential_provider=credential,
         repo_root=REPO_ROOT,
+        ledger_base_dir=tmp_path,
         authorization_key_provider=lambda: OPERATOR_KEY,
         http_post=fake_http,
     )
@@ -180,6 +171,7 @@ def test_transport_cannot_be_constructed_from_a_candidate_record(tmp_path) -> No
             ledger=ledger,
             credential_provider=lambda: "key",
             repo_root=REPO_ROOT,
+            ledger_base_dir=tmp_path,
             authorization_key_provider=lambda: OPERATOR_KEY,
         )
     assert ledger.attempts() == 0
@@ -199,6 +191,7 @@ def test_forged_authorized_record_is_rejected(tmp_path) -> None:
             ledger=ledger,
             credential_provider=lambda: "key",
             repo_root=REPO_ROOT,
+            ledger_base_dir=tmp_path,
             authorization_key_provider=lambda: OPERATOR_KEY,
         )
 
@@ -210,7 +203,6 @@ def test_record_signed_under_a_different_key_is_rejected(tmp_path) -> None:
     import dataclasses
     import hashlib
     import hmac as hmac_module
-    from dataclasses import replace
 
     attacker_key = b"attacker-key-not-the-operators"
     base = authorized_record()
@@ -224,7 +216,7 @@ def test_record_signed_under_a_different_key_is_rejected(tmp_path) -> None:
         json.dumps(canonical, sort_keys=True, separators=(",", ":")).encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    record = replace(base, authorization_hmac=forged_hmac)
+    record = dataclasses.replace(base, authorization_hmac=forged_hmac)
 
     ledger = PersistentSendLedger(
         tmp_path / "l2.jsonl", send_cap=8, authorization_id=AUTHORIZATION_ID
@@ -235,6 +227,7 @@ def test_record_signed_under_a_different_key_is_rejected(tmp_path) -> None:
             ledger=ledger,
             credential_provider=lambda: "key",
             repo_root=REPO_ROOT,
+            ledger_base_dir=tmp_path,
             authorization_key_provider=lambda: OPERATOR_KEY,
         )
 
@@ -250,6 +243,7 @@ def test_transport_rejects_a_wrong_science_anchor(tmp_path) -> None:
             ledger=ledger,
             credential_provider=lambda: "key",
             repo_root=REPO_ROOT,
+            ledger_base_dir=tmp_path,
             authorization_key_provider=lambda: OPERATOR_KEY,
         )
 
@@ -265,6 +259,7 @@ def test_transport_rejects_a_cap_other_than_eight(tmp_path) -> None:
             ledger=ledger,
             credential_provider=lambda: "key",
             repo_root=REPO_ROOT,
+            ledger_base_dir=tmp_path,
             authorization_key_provider=lambda: OPERATOR_KEY,
         )
 
@@ -343,14 +338,18 @@ def test_ninth_attempt_is_refused_fail_closed(tmp_path) -> None:
 
 
 def test_ledger_rebuild_refuses_after_restart(tmp_path) -> None:
-    store_path = tmp_path / "send-ledger.jsonl"
     record = authorized_record()
-    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=record.authorization_id)
+    ledger = PersistentSendLedger(
+        qualification_ledger_path(tmp_path, record.authorization_id),
+        send_cap=8,
+        authorization_id=record.authorization_id,
+    )
     transport = ZaiQualificationTransport(
         record=record,
         ledger=ledger,
         credential_provider=lambda: "key",
         repo_root=REPO_ROOT,
+        ledger_base_dir=tmp_path,
         authorization_key_provider=lambda: OPERATOR_KEY,
         http_post=lambda url, key, body, timeout: (
             200,
@@ -363,13 +362,16 @@ def test_ledger_rebuild_refuses_after_restart(tmp_path) -> None:
 
     # Process restart: a brand-new ledger/transport over the same file.
     restarted_ledger = PersistentSendLedger(
-        store_path, send_cap=8, authorization_id=record.authorization_id
+        qualification_ledger_path(tmp_path, record.authorization_id),
+        send_cap=8,
+        authorization_id=record.authorization_id,
     )
     restarted_transport = ZaiQualificationTransport(
         record=record,
         ledger=restarted_ledger,
         credential_provider=lambda: "key",
         repo_root=REPO_ROOT,
+        ledger_base_dir=tmp_path,
         authorization_key_provider=lambda: OPERATOR_KEY,
         http_post=lambda url, key, body, timeout: (200, '{"choices":[]}'),
     )
@@ -380,13 +382,16 @@ def test_ledger_rebuild_refuses_after_restart(tmp_path) -> None:
 
 
 def test_crashed_final_write_is_conservatively_consumed(tmp_path) -> None:
-    store_path = tmp_path / "send-ledger.jsonl"
-    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    record = authorized_record()
+    store_path = qualification_ledger_path(tmp_path, record.authorization_id)
+    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=record.authorization_id)
     ledger.record_attempt("crash-probe", "deadbeef")
     with store_path.open("a", encoding="utf-8") as handle:
         handle.write('{"seq": 2, "action": "suc')  # crash mid-write
 
-    reloaded = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    reloaded = PersistentSendLedger(
+        store_path, send_cap=8, authorization_id=record.authorization_id
+    )
     assert reloaded.truncated_tail is True
     # The truncated write is conservatively consumed against the cap.
     assert reloaded.attempts() == 2
@@ -394,8 +399,9 @@ def test_crashed_final_write_is_conservatively_consumed(tmp_path) -> None:
 
 
 def test_ledger_rejects_a_broken_chain(tmp_path) -> None:
-    store_path = tmp_path / "send-ledger.jsonl"
-    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    record = authorized_record()
+    store_path = qualification_ledger_path(tmp_path, record.authorization_id)
+    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=record.authorization_id)
     ledger.record_attempt("probe", "x")
     good_lines = store_path.read_text(encoding="utf-8").splitlines()
     # Tamper the first CONTENT entry's label, keeping the header and the
@@ -408,7 +414,7 @@ def test_ledger_rejects_a_broken_chain(tmp_path) -> None:
     )
 
     with pytest.raises(LedgerCorrupted):
-        PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+        PersistentSendLedger(store_path, send_cap=8, authorization_id=record.authorization_id)
 
 
 # ---------------------------------------------------------------------------
@@ -434,8 +440,9 @@ def test_two_processes_race_for_the_final_slot(tmp_path) -> None:
     """P0: two concurrent processes race for one slot; exactly one wins."""
 
 
-    store_path = tmp_path / "send-ledger.jsonl"
-    PersistentSendLedger(store_path, send_cap=1, authorization_id=AUTHORIZATION_ID)
+    record = authorized_record()
+    store_path = qualification_ledger_path(tmp_path, record.authorization_id)
+    PersistentSendLedger(store_path, send_cap=1, authorization_id=record.authorization_id)
     env = {**os.environ, "PYTHONPATH": str(REPO_ROOT / "src")}
     procs = [
         subprocess.Popen(
@@ -444,7 +451,7 @@ def test_two_processes_race_for_the_final_slot(tmp_path) -> None:
                 "-c",
                 _CHILD_CONSUME,
                 str(store_path),
-                AUTHORIZATION_ID,
+                record.authorization_id,
             ],
             env=env,
         )
@@ -454,34 +461,41 @@ def test_two_processes_race_for_the_final_slot(tmp_path) -> None:
     winners = sum(1 for code in codes if code == 0)
     assert winners == 1, codes
 
-    final = PersistentSendLedger(store_path, send_cap=1, authorization_id=AUTHORIZATION_ID)
+    final = PersistentSendLedger(store_path, send_cap=1, authorization_id=record.authorization_id)
     assert final.attempts() == 1
 
 
 def test_double_truncation_accumulates_consumption_never_shrinks(tmp_path) -> None:
     """P0: two consecutive crashed writes keep consumption accumulating."""
 
-    store_path = tmp_path / "send-ledger.jsonl"
-    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    record = authorized_record()
+    store_path = qualification_ledger_path(tmp_path, record.authorization_id)
+    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=record.authorization_id)
     ledger.record_attempt("first", "p1")
     with store_path.open("a", encoding="utf-8") as handle:
         handle.write('{"seq": 2, "action": "suc')  # first crash
 
-    reloaded = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    reloaded = PersistentSendLedger(
+        store_path, send_cap=8, authorization_id=record.authorization_id
+    )
     assert reloaded.truncated_tail is True
     consumed_after_first = reloaded.attempts()
 
     with store_path.open("a", encoding="utf-8") as handle:
         handle.write('{"seq": 9, "action": "har')  # second crash
 
-    reloaded2 = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    reloaded2 = PersistentSendLedger(
+        store_path, send_cap=8, authorization_id=record.authorization_id
+    )
     consumed_after_second = reloaded2.attempts()
     assert consumed_after_second >= consumed_after_first
 
     # Third and fourth opens: valid chain, balance never grows.
     balances = []
     for _ in range(2):
-        again = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+        again = PersistentSendLedger(
+            store_path, send_cap=8, authorization_id=record.authorization_id
+        )
         assert again.truncated_tail is True
         balances.append(again.attempts())
     assert balances[0] == balances[1] == consumed_after_second
@@ -494,12 +508,7 @@ def test_redirect_is_refused_by_the_transport_handler() -> None:
 
     with pytest.raises(Exception, match="redirect refused"):
         _RefuseRedirect().redirect_request(
-            req=None,
-            fp=None,
-            code=302,
-            msg="moved",
-            headers={},
-            newurl="https://evil.example/x",
+            req=None, fp=None, code=302, msg="moved", headers={}, newurl="https://evil.example/x",
         )
 
 

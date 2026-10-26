@@ -287,10 +287,20 @@ class PersistentSendLedger:
             handle.flush()
             os.fsync(handle.fileno())
 
+        os.replace(temp_path, self._path)
+
         if self.crash_point == "repair:after-replace":
             raise LedgerCrashInjected("interrupted after atomic replace")
 
-        os.replace(temp_path, self._path)
+        # Best-effort directory fsync so the rename survives a power loss.
+        try:
+            dir_fd = os.open(str(self._path.parent), os.O_RDONLY)
+            try:
+                os.fsync(dir_fd)
+            finally:
+                os.close(dir_fd)
+        except OSError:
+            pass
         self._entries = good_entries + [repair]
         # Cumulative: prior crash-repairs inside the good prefix are kept.
         self._repair_consumed = self._count_consumed(self._entries)
