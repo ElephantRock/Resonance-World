@@ -3,22 +3,13 @@ on:
   push:
     branches:
       - research/c3r-g1-novel-grammar-generalization-20261026
-  workflow_dispatch:
-    inputs:
-      session:
-        description: "induce | wave1 | wave2"
-        required: true
-        default: "induce"
-      arm:
-        description: "learned | raw | fresh | neutral (waves only)"
-        required: false
-        default: ""
+  workflow_dispatch: {}
 
 permissions:
   contents: read
 
 concurrency:
-  group: c3r-g1-novel-grammar-${{ github.event.inputs.session || 'offline' }}-${{ github.event.inputs.arm || 'all' }}
+  group: c3r-g1-novel-grammar-${{ github.ref }}
   cancel-in-progress: false
 
 jobs:
@@ -39,7 +30,7 @@ jobs:
           python -m pytest tests/test_c3r_g1_novel_grammar_generalization.py -q
 
   live-induce:
-    if: github.event_name == 'workflow_dispatch' && github.event.inputs.session == 'induce'
+    if: ${{ github.event_name == 'workflow_dispatch' }}
     needs: offline-tests
     runs-on: ubuntu-latest
     timeout-minutes: 60
@@ -50,6 +41,9 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
+      - name: Private workspace (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/novel-workspace"
       - name: Induction session (8 sends, High/4096)
         env:
           PYTHONPATH: "src:scripts"
@@ -60,18 +54,18 @@ jobs:
             --run-id "novel-${{ github.run_id }}" \
             --session induce \
             --workers 2
-      - uses: actions/upload-artifact@v4
+      - name: Upload induction custody
+        uses: actions/upload-artifact@v4
         with:
-          name: novel-induction-${{ github.run_id }}
+          name: novel-capsules
           path: |
-            ${{ runner.temp }}/novel-workspace/**/manifest.json
-            ${{ runner.temp }}/novel-workspace/**/capsules.json
-            ${{ runner.temp }}/novel-workspace/**/induction-summary.json
+            ${{ runner.temp }}/novel-workspace/
           if-no-files-found: error
+          retention-days: 90
 
-  live-wave:
-    if: github.event_name == 'workflow_dispatch' && (github.event.inputs.session == 'wave1' || github.event.inputs.session == 'wave2')
-    needs: offline-tests
+  live-wave1:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, live-induce]
     runs-on: ubuntu-latest
     timeout-minutes: 60
     strategy:
@@ -86,7 +80,15 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
-      - name: Wave session (8 sends per arm, High/4096)
+      - name: Private workspace (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/novel-workspace"
+      - name: Download induction custody
+        uses: actions/download-artifact@v4
+        with:
+          name: novel-capsules
+          path: ${{ runner.temp }}/novel-workspace/
+      - name: Wave 1 session (8 sends per arm, High/4096)
         env:
           PYTHONPATH: "src:scripts"
         run: |
@@ -94,12 +96,59 @@ jobs:
           python scripts/run_c3r_g1_novel_grammar_generalization_live.py \
             --workspace "$RUNNER_TEMP/novel-workspace" \
             --run-id "novel-${{ github.run_id }}" \
-            --session "${{ github.event.inputs.session }}" \
+            --session wave1 \
             --arm "${{ matrix.arm }}" \
             --workers 2
-      - uses: actions/upload-artifact@v4
+      - name: Upload wave1 custody
+        uses: actions/upload-artifact@v4
         with:
-          name: novel-${{ github.event.inputs.session }}-${{ matrix.arm }}-${{ github.run_id }}
+          name: novel-wave1-${{ matrix.arm }}
           path: |
             ${{ runner.temp }}/novel-workspace/**/*summary.json
           if-no-files-found: error
+          retention-days: 90
+
+  live-wave2:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, live-wave1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        arm: ["learned", "raw", "fresh", "neutral"]
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Private workspace (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/novel-workspace"
+      - name: Download induction custody
+        uses: actions/download-artifact@v4
+        with:
+          name: novel-capsules
+          path: ${{ runner.temp }}/novel-workspace/
+      - name: Wave 2 session (fresh holdout tasks, 8 sends per arm)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_novel_grammar_generalization_live.py \
+            --workspace "$RUNNER_TEMP/novel-workspace" \
+            --run-id "novel-${{ github.run_id }}" \
+            --session wave2 \
+            --arm "${{ matrix.arm }}" \
+            --workers 2
+      - name: Upload wave2 custody
+        uses: actions/upload-artifact@v4
+        with:
+          name: novel-wave2-${{ matrix.arm }}
+          path: |
+            ${{ runner.temp }}/novel-workspace/**/*summary.json
+          if-no-files-found: error
+          retention-days: 90
