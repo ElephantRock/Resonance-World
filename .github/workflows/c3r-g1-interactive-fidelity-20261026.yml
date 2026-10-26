@@ -1,0 +1,192 @@
+name: C3R G1 Interactive Fidelity 20261026
+on:
+  push:
+    branches:
+      - research/c3r-g1-novel-grammar-generalization-20261026
+      - research/c3r-g1-interactive-fidelity-20261026
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c3r-g1-interactive-fidelity-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Offline families and discipline tests
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e . && python -m pip install pytest
+          python -m py_compile scripts/run_c3r_g1_interactive_fidelity_live.py
+          python -m pytest tests/test_c3r_g1_interactive_fidelity.py -q
+
+  acquire-c1:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: offline-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Private workspace (0700)
+        run: mkdir -p -m 700 "$RUNNER_TEMP/fidelity-workspace"
+      - name: C1 static induction (8 sends, High/4096)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_interactive_fidelity_live.py \
+            --workspace "$RUNNER_TEMP/fidelity-workspace" \
+            --run-id "fidelity-${{ github.run_id }}" \
+            --session c1 \
+            --feedback-rounds 3 \
+            --workers 2
+      - name: Upload manifest and C1 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: fidelity-manifest-c1
+          path: |
+            ${{ runner.temp }}/fidelity-workspace/
+          if-no-files-found: error
+          retention-days: 90
+
+  acquire-c2:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, acquire-c1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        group: [0, 1, 2, 3]
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download manifest custody
+        uses: actions/download-artifact@v4
+        with:
+          name: fidelity-manifest-c1
+          path: ${{ runner.temp }}/fidelity-workspace/
+      - name: C2 interactive induction (group ${{ matrix.group }}, <=6 sends)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_interactive_fidelity_live.py \
+            --workspace "$RUNNER_TEMP/fidelity-workspace" \
+            --run-id "fidelity-${{ github.run_id }}" \
+            --session c2 \
+            --group ${{ matrix.group }} \
+            --feedback-rounds 3 \
+            --workers 2
+      - name: Upload C2 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: fidelity-c2-group-${{ matrix.group }}
+          path: |
+            ${{ runner.temp }}/fidelity-workspace/**/c2-summary-group-*.json
+          if-no-files-found: error
+          retention-days: 90
+
+  execute-c3:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, acquire-c1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        wave: ["wave1", "wave2"]
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download manifest custody
+        uses: actions/download-artifact@v4
+        with:
+          name: fidelity-manifest-c1
+          path: ${{ runner.temp }}/fidelity-workspace/
+      - name: C3 execution fidelity (wave ${{ matrix.wave }}, 8 sends)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_interactive_fidelity_live.py \
+            --workspace "$RUNNER_TEMP/fidelity-workspace" \
+            --run-id "fidelity-${{ github.run_id }}" \
+            --session c3 \
+            --wave ${{ matrix.wave }} \
+            --workers 2
+      - name: Upload C3 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: fidelity-c3-${{ matrix.wave }}
+          path: |
+            ${{ runner.temp }}/fidelity-workspace/**/C3-${{ matrix.wave }}-summary.json
+          if-no-files-found: error
+          retention-days: 90
+
+  execute-c4:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, acquire-c1]
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    strategy:
+      fail-fast: false
+      max-parallel: 1
+      matrix:
+        wave: ["wave1", "wave2"]
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Download manifest custody
+        uses: actions/download-artifact@v4
+        with:
+          name: fidelity-manifest-c1
+          path: ${{ runner.temp }}/fidelity-workspace/
+      - name: C4 raw re-induction (wave ${{ matrix.wave }}, 8 sends)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_interactive_fidelity_live.py \
+            --workspace "$RUNNER_TEMP/fidelity-workspace" \
+            --run-id "fidelity-${{ github.run_id }}" \
+            --session c4 \
+            --wave ${{ matrix.wave }} \
+            --workers 2
+      - name: Upload C4 evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: fidelity-c4-${{ matrix.wave }}
+          path: |
+            ${{ runner.temp }}/fidelity-workspace/**/C4-${{ matrix.wave }}-summary.json
+          if-no-files-found: error
+          retention-days: 90
