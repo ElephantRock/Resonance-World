@@ -15,17 +15,20 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-import itertools
 import json
 import os
 import random
 import re
-import string
 import threading
 import time
 from collections.abc import Callable
 from pathlib import Path
 
+from c3r_g1_novel_grammar_families import (
+    _execute,
+    _grammar,
+    _task,
+)
 from run_c3r_g1_three_step_procedure_live import (
     _read,
     _run_dir,
@@ -53,76 +56,7 @@ _CODE_RE = re.compile(r"[AB]{5}")
 # -- novel family 1: digits -------------------------------------------------
 
 
-def _execute(family: str, task: dict[str, object], code: str) -> str:
-    if not _CODE_RE.fullmatch(code):
-        raise ValueError("invalid five-step procedure")
-    if family == "digits":
-        digits = list(str(task["value"]))
-        if code[0] == "A":
-            digits[1], digits[2] = digits[2], digits[1]
-        digits = digits[:2] if code[1] == "A" else digits[-2:]
-        digits = [str((int(d) + 1) % 10) if code[2] == "A" else str((int(d) + 9) % 10)
-                  for d in digits]
-        digits = sorted(digits, reverse=(code[3] == "A"))
-        body = "".join(digits)
-        return (str(len(body)) + body) if code[4] == "A" else (body + str(len(body)))
-    if family == "rotate":
-        value = str(task["value"])
-        n = len(value)
-        shift = 2 if code[0] == "A" else n - 2
-        value = value[shift % n:] + value[: shift % n]
-        if code[1] == "A":
-            value = "-".join(value[i:i + 2] for i in range(0, len(value), 2))
-        else:
-            value = "_".join(
-                value[i:i + 3] for i in range(0, len(value), 3)
-            ) if len(value) > 3 else value
-        value = value[:7] if code[2] == "A" else value[-7:]
-        chars = list(value)
-        if code[3] == "A":
-            for i in range(0, len(chars) - 1, 2):
-                chars[i], chars[i + 1] = chars[i + 1], chars[i]
-            value = "".join(chars)
-        return ("9" + value) if code[4] == "B" else (value + "9")
-    raise ValueError("unknown novel procedure family")
 
-
-def _task(rng: random.SystemRandom, family: str) -> dict[str, object]:
-    if family == "rotate":
-        for _ in range(500):
-            value = "".join(rng.choices(string.ascii_lowercase, k=6))
-            codes = ["".join(bits) for bits in itertools.product("AB", repeat=5)]
-            outputs = {_execute(family, {"value": value}, code) for code in codes}
-            if len(outputs) == 32:
-                return {"value": value}
-        raise ValueError("unable to sample unambiguous rotate task")
-    for _ in range(500):
-        value = "".join(rng.choices("0123456789", k=4))
-        codes = ["".join(bits) for bits in itertools.product("AB", repeat=5)]
-        outputs = {_execute(family, {"value": value}, code) for code in codes}
-        if len(outputs) == 32:
-            return {"value": value}
-    raise ValueError("unable to sample unambiguous digits task")
-
-
-def _grammar(family: str) -> str:
-    if family == "digits":
-        return (
-            "The input is a 4-digit decimal string. "
-            "Step1 A: swap the two middle digits B: leave unchanged; "
-            "Step2 A: keep only the first two digits B: keep only the last two; "
-            "Step3 A: replace each digit d with (d+1) mod 10 B: with (d+9) mod 10; "
-            "Step4 A: arrange digits descending B: ascending; "
-            "Step5 A: prefix the digit count B: append the digit count."
-        )
-    return (
-        "The input is a 6-letter lowercase string. "
-        "Step1 A: rotate left by 2 B: rotate right by 2; "
-        "Step2 A: insert '-' after every second character B: insert '_' after "
-        "every third character; Step3 A: keep the first 7 characters B: keep "
-        "the last 7 characters; Step4 A: swap every adjacent character pair "
-        "B: leave unchanged; Step5 A: append '9' B: prepend '5'."
-    )
 
 
 # -- manifest ----------------------------------------------------------------

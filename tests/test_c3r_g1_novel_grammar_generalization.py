@@ -14,20 +14,17 @@ from pathlib import Path
 
 import pytest
 
-from scripts.run_c3r_g1_novel_grammar_generalization_live import (
-    _exec_prompt,
+from scripts.c3r_g1_novel_grammar_families import (
     _execute,
     _grammar,
+    _task,
+)
+from scripts.run_c3r_g1_novel_grammar_generalization_live import (
+    _exec_prompt,
     _holdout_correct,
     _induce_prompt,
     _manifest,
     _SlotGuard,
-    _task,
-)
-
-pytestmark = pytest.mark.skipif(
-    os.name == "nt",
-    reason="the C3R-G1 harness module is Linux-only (O_NOFOLLOW, POSIX cwd)",
 )
 
 
@@ -55,7 +52,7 @@ def test_novel_grammars_do_not_reuse_prior_family_vocabulary() -> None:
         assert "prefix lowercase q" not in grammar  # text family op
         assert "uppercase B:lowercase" not in grammar
     assert "add a" not in digits and "subtract c" not in digits
-    assert "rotate left by 2" in rotate
+    assert "rotate the string left by 2" in rotate
 
 
 def test_manifest_units_and_programs() -> None:
@@ -134,6 +131,11 @@ def test_holdout_correct_separates_true_from_wrong(tmp_path: Path) -> None:
 
 
 def test_slot_guard_write_once_discipline(tmp_path: Path) -> None:
+    """Linux/CI only: the private-run _write_once path is POSIX by design."""
+
+    if os.name == "nt":
+        pytest.skip("POSIX-only private workspace primitives")
+
     guard = _SlotGuard(tmp_path, "run-novel-005", "wave1", 8)
     guard.reserve(0, "prompt-0")
     guard.reserve(1, "prompt-1")
