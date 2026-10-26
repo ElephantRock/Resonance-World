@@ -31,6 +31,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Offline grammar and discipline tests
+        env:
+          PYTHONPATH: "src:scripts"
         run: |
           python -m pip install -e . && python -m pip install pytest
           python -m py_compile scripts/run_c3r_g1_novel_grammar_generalization_live.py
@@ -49,6 +51,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Induction session (8 sends, High/4096)
+        env:
+          PYTHONPATH: "src:scripts"
         run: |
           python -m pip install -e .
           python scripts/run_c3r_g1_novel_grammar_generalization_live.py \
@@ -83,6 +87,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Wave session (8 sends per arm, High/4096)
+        env:
+          PYTHONPATH: "src:scripts"
         run: |
           python -m pip install -e .
           python scripts/run_c3r_g1_novel_grammar_generalization_live.py \
