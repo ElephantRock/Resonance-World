@@ -13,6 +13,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          # Freeze-anchor tests verify pinned file hashes against their
+          # recorded code commit via `git show`, which requires full
+          # history on shallow PR checkouts.
+          fetch-depth: 0
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"

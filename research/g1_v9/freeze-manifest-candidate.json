@@ -1,0 +1,129 @@
+{
+  "digest": "bfd24e5919869cddfa356252c9289fd6b6e33ec48fca0aa59fe6697fe6b077cd",
+  "manifest": {
+    "blinded_inputs": {
+      "commitment_key": "operator-held HMAC key; never in published evidence",
+      "evaluator_seed": "operator-held material; never in the manifest or evidence",
+      "hidden_tables": "sealed ledger only, keyed commitments in public events"
+    },
+    "call_budget": {
+      "calls_per_decision": 1,
+      "computational_slots_per_world": 200,
+      "decision_slots_per_world": 620,
+      "max_provider_sends_this_gate": 0,
+      "model_sends_per_world": 420,
+      "note": "decision slots are computational; a model send happens only for model-backed arms at exactly one send per slot",
+      "per_arm": {
+        "acquisition": {
+          "calls_per_decision": 1,
+          "decision_slots": 100,
+          "model_backed": true,
+          "model_sends_per_world": 100
+        },
+        "arm-a-adaptive": {
+          "calls_per_decision": 1,
+          "decision_slots": 100,
+          "model_backed": true,
+          "model_sends_per_world": 100
+        },
+        "arm-b-ablated": {
+          "calls_per_decision": 1,
+          "decision_slots": 100,
+          "model_backed": true,
+          "model_sends_per_world": 100
+        },
+        "arm-c-frozen": {
+          "calls_per_decision": 1,
+          "decision_slots": 120,
+          "model_backed": true,
+          "model_sends_per_world": 120
+        },
+        "arm-d-canonical": {
+          "calls_per_decision": 1,
+          "decision_slots": 200,
+          "model_backed": false,
+          "model_sends_per_world": 0
+        }
+      },
+      "retries_or_replacements_allowed": false
+    },
+    "code_commit": "WORKING-TREE-CANDIDATE",
+    "contract_digest": "4f865ef204c2cedc71710b1549706e4970f53c595da48b40c62f4349b190a10a",
+    "holds": [
+      "historical W/H/D results are not rewritten",
+      "no outcome-based retuning after results are seen",
+      "negative results are preserved as first-class records"
+    ],
+    "machine_fingerprint": "152c805066b4f070d14eed3c22ee363b437ab24be68361476ee2a512f80c8385",
+    "provider": {
+      "authorization_reference": null,
+      "endpoint_family": "zai-coding-plan-chat-completions",
+      "model": "glm-5.3",
+      "provider": "zai",
+      "provider_authorized": false,
+      "runtime_spec": "hermes-agent 0.8.0; openai-sdk 2.21.0; httpx 0.28.1 (pinned at authorization)"
+    },
+    "rules_version": "g1-v9-rules-v2",
+    "scenario_file_hashes": [
+      {
+        "path": "docs/g1-v9-freeze-file.md",
+        "sha256": "546d6ba748f27c472f1ddf0495c105e57016962cf9e66a1353cdac855faabd80"
+      },
+      {
+        "path": "docs/g1-v9-scenario-contract.md",
+        "sha256": "1a1da8330e1787602df678301ecea994fb72ba725e4282b41504b38f14d3b722"
+      },
+      {
+        "path": "src/resonance_world/experimental_runtime/g1_v9/__init__.py",
+        "sha256": "64a15bd433130f5b61c7627619e9edbfc8abc3dbd313fb95ecd3b920daa028fc"
+      },
+      {
+        "path": "src/resonance_world/experimental_runtime/g1_v9/acceptance.py",
+        "sha256": "887d4d7b5c0399eb7ca62ea84b6507f92e2785f5b586fbd5d0739def5680e595"
+      },
+      {
+        "path": "src/resonance_world/experimental_runtime/g1_v9/arms.py",
+        "sha256": "7497c8b60cb95af7a682f0874dbc962de62610f5729746e56952cf4da1ebdf45"
+      },
+      {
+        "path": "src/resonance_world/experimental_runtime/g1_v9/call_contract.py",
+        "sha256": "1456c8a574364d21ed3482c81c62283ac2f0edcbedfca8025a2f7f5402827aec"
+      },
+      {
+        "path": "src/resonance_world/experimental_runtime/g1_v9/contract.py",
+        "sha256": "a7f2e408700e1e32f6d85701660c31d1a4d3cfa430cd59c6b189a0913db701a3"
+      },
+      {
+        "path": "src/resonance_world/experimental_runtime/g1_v9/evaluator.py",
+        "sha256": "34ea293abeff2194afee31b840e181e77fb484738f8f396bf7ca437aba208ca5"
+      },
+      {
+        "path": "src/resonance_world/experimental_runtime/g1_v9/freeze.py",
+        "sha256": "5aeba25bac400d77ad9e07c54a9050d5be3fc65b43c0dce9544f4fa3f5269570"
+      },
+      {
+        "path": "src/resonance_world/experimental_runtime/g1_v9/memory.py",
+        "sha256": "b3e639e1c90e8dc8c18ab067189f57dc8f8992590e9a0852fe939c3764e5df2b"
+      },
+      {
+        "path": "src/resonance_world/experimental_runtime/g1_v9/power.py",
+        "sha256": "1b66b3ce69fd9d09ead5f53d778326c79db7086a177d6d34cc13d143b9d07d2f"
+      },
+      {
+        "path": "src/resonance_world/experimental_runtime/g1_v9/scenario.py",
+        "sha256": "88db9a5f81ee1cb3fa8ff7d395985eed3744728786fe864417bf32b4b146c874"
+      }
+    ],
+    "schema": "g1-v9-freeze-manifest-v1",
+    "statistical_plan": {
+      "analysis_method": "mean of the per-world paired differences with a two-sided 95% confidence interval over worlds; preregistered paired test; the independent world is the unit of analysis",
+      "hypothesis": "Across independent worlds, a model-mediated agent whose per-context experience memory persists across a counterbalanced hidden-rule switch achieves higher post-switch accuracy than the paired agent whose memory is ablated at the switch, under identical shared acquisition history, sealed evaluator rules, and equal information.",
+      "practical_threshold_pp": 20,
+      "practical_threshold_status": "proposed-pending-freeze",
+      "primary_estimand": "paired post-switch accuracy difference post_accuracy(arm A) - post_accuracy(arm B), one difference per independent world",
+      "unit_of_analysis": "independent world",
+      "worlds_planned": 24
+    },
+    "status": "candidate-pre-freeze"
+  }
+}
