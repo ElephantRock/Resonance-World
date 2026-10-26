@@ -367,3 +367,105 @@ class ZaiQualificationTransport:
 
         self._ledger.record_outcome(label, payload_sha, "succeeded")
         return {"label": label, "content": content, "status": status}
+
+# -- Direct research probe: no second administrative authorization -------
+#
+# The project owner's research/spend approval is external to this module.
+# Calling this explicit live transport is the operational opt-in. HMAC,
+# issuer records and git-commit attestations are NOT required. The hard
+# eight-attempt durable cap and fixed Z.AI endpoint remain enforced.
+
+
+@dataclass(frozen=True, slots=True)
+class _DirectProbeConfig:
+    model: str = "glm-5.3"
+    endpoint_url: str = PINNED_ENDPOINT_URL
+    send_cap: int = 8
+    max_output_tokens: int = 512
+    timeout_seconds: float = 30.0
+
+
+class DirectZaiQualificationTransport(ZaiQualificationTransport):
+    """Run the owner's approved connectivity probe with no HMAC ceremony.
+
+    The explicit constructor call opts into live sends. All attempts are
+    durably reserved before HTTP, including unknown outcomes. Recreating
+    this transport against the same custody directory never resets the cap.
+    """
+
+    def __init__(
+        self,
+        *,
+        ledger_base_dir: str | Path,
+        credential_provider: Callable[[], str],
+        http_post: Callable[[str, str, dict[str, Any], float], tuple[int, str]] | None = None,
+    ) -> None:
+        from .send_ledger import PersistentSendLedger, qualification_ledger_path
+
+        custody = Path(ledger_base_dir)
+        if not custody.is_absolute():
+            raise ValueError("live probe custody directory must be absolute")
+        custody.mkdir(mode=0o700, parents=True, exist_ok=True)
+
+        # Independent of the mutable Git commit; stable for this single
+        # probe campaign. Never select a new ID to replenish spent attempts.
+        probe_id = hashlib.sha256(
+            f"{SCIENCE_ANCHOR_DIGEST}:zai:glm-5.3:qualification-probe-v1".encode()
+        ).hexdigest()
+        self._ledger = PersistentSendLedger(
+            qualification_ledger_path(custody, probe_id),
+            send_cap=8,
+            authorization_id=probe_id,
+        )
+        self._record = _DirectProbeConfig()
+        self._credential_provider = credential_provider
+        self._http_post = http_post if http_post is not None else self._urllib_post
+
+
+def start_direct_probe(
+    *,
+    ledger_base_dir: str | Path,
+    credential_provider: Callable[[], str],
+    http_post: Callable[[str, str, dict[str, Any], float], tuple[int, str]] | None = None,
+) -> DirectZaiQualificationTransport:
+    """Open the eight-attempt live probe; no signature or Git pin required."""
+
+    return DirectZaiQualificationTransport(
+        ledger_base_dir=ledger_base_dir,
+        credential_provider=credential_provider,
+        http_post=http_post,
+    )
+
+
+def _main() -> int:
+    """One metered connectivity send per invocation; no implicit retries."""
+
+    import argparse
+    import os
+
+    parser = argparse.ArgumentParser(description="G1 v9 direct Z.AI probe")
+    parser.add_argument("--custody-dir", type=Path, required=True)
+    args = parser.parse_args()
+    if not os.environ.get("ZAI_API_KEY"):
+        parser.error("ZAI_API_KEY must be provided through the environment")
+    transport = start_direct_probe(
+        ledger_base_dir=args.custody_dir,
+        credential_provider=lambda: os.environ["ZAI_API_KEY"],
+    )
+    try:
+        result = transport.send("connectivity", "Reply with exactly OK.")
+    except (QualificationTransportError, RuntimeError) as error:
+        print(f"Probe stopped: {error}; remaining={transport.remaining}")
+        return 1
+    print(
+        json.dumps(
+            {"status": result["status"], "content": result["content"],
+             "remaining": transport.remaining},
+            ensure_ascii=False,
+        )
+    )
+    return 0
+
+
+if __name__ == "__main__":
+    raise SystemExit(_main())
