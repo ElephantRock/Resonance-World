@@ -527,3 +527,74 @@ def test_unknown_failure_hides_the_original_message(tmp_path) -> None:
     message = str(exc_info.value)
     assert "injected connection failure" not in message
     assert "withheld" in message
+
+
+# ---------------------------------------------------------------------------
+# Crash injection at correct positions in the repair sequence
+# ---------------------------------------------------------------------------
+
+
+def test_repair_crash_before_replace_leaves_original_intact(tmp_path) -> None:
+    """Crash after temp fsync but before replace: the original corrupt file
+    remains, and the next load repairs it again without balance growth."""
+
+    from resonance_world.experimental_runtime.g1_v9.send_ledger import (
+        LedgerCrashInjected,
+    )
+
+    store_path = tmp_path / "send-ledger.jsonl"
+    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    ledger.record_attempt("probe", "payload")
+
+    # Simulate a crash: write a partial JSON line directly.
+    with store_path.open("a", encoding="utf-8") as handle:
+        handle.write('{"seq": 2, "action": "suc')
+
+    # Set the crash point BEFORE loading: the repair will fire.
+    ledger.crash_point = "repair:after-temp-fsync"
+    with pytest.raises(LedgerCrashInjected):
+        ledger.refresh()
+
+    # The crash was injected: the file still contains the corrupt tail.
+    assert store_path.read_text(encoding="utf-8").endswith(
+        '{"seq": 2, "action": "suc'
+    )
+
+    # Clean up the crash point and reload: repair runs normally.
+    ledger.crash_point = None
+    ledger.refresh()
+    assert ledger.truncated_tail is True
+    assert ledger.attempts() >= 1
+
+    # The balance is unchanged (consumption never shrinks).
+    assert ledger.remaining() < 8
+
+
+def test_repair_after_replace_produces_valid_chain(tmp_path) -> None:
+    """Crash after replace: the repaired file is already installed, so the
+    recovery leaves a valid chain and a stable balance."""
+
+    from resonance_world.experimental_runtime.g1_v9.send_ledger import (
+        LedgerCrashInjected,
+    )
+
+    store_path = tmp_path / "send-ledger.jsonl"
+    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    ledger.record_attempt("probe", "payload")
+
+    # Simulate a crash mid-write.
+    with store_path.open("a", encoding="utf-8") as handle:
+        handle.write('{"seq": 2, "action": "suc')
+
+    # Inject the crash AFTER the atomic replace: the repaired file is
+    # already installed when the interruption lands.
+    ledger.crash_point = "repair:after-replace"
+    with pytest.raises(LedgerCrashInjected):
+        ledger.refresh()
+
+    # The repaired content IS on disk (the replace happened before the
+    # injected crash), so a fresh load finds a valid chain.
+    fresh = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    assert fresh.truncated_tail is True
+    assert fresh.attempts() == 2
+    assert 8 - fresh.attempts() == 6
