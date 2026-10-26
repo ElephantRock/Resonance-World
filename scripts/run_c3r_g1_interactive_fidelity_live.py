@@ -240,7 +240,8 @@ def run_c1(workspace: Path, run_id: str, api_key: str, workers: int,
     rows = []
 
     def one(index: int, unit: dict[str, object]):
-        response = _call(index, _induce_prompt(unit), (port_factory or _port_factory(api_key)), guard)
+        factory = port_factory or _port_factory(api_key)
+        response = _call(index, _induce_prompt(unit), factory, guard)
         capsule = response["answer"] if response["status"] == "accepted" else None
         return {
             "index": index,
