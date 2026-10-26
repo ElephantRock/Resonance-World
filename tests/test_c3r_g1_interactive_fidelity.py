@@ -126,6 +126,47 @@ def test_revise_prompt_reports_own_outputs_and_passfail() -> None:
         assert _execute(unit["family"], task, unit["private_program"]) not in prompt
 
 
+def test_invalid_round_does_not_vacuously_end_interaction(tmp_path: Path) -> None:
+    """Regression: an invalid round-1 answer produced an empty outcome list
+    and `all([])` was True - aborting the interaction after one malformed
+    round. The loop must keep the interaction alive instead."""
+
+    if os.name == "nt":
+        pytest.skip("POSIX-only _run_dir validator")
+    from scripts.run_c3r_g1_interactive_fidelity_live import run_c2_group
+
+    run_id = "fidelity-invalid-round"
+    workspace = tmp_path / "workspace"
+    workspace.mkdir(mode=0o700)
+    os.chmod(workspace, 0o700)
+
+    answers = ["not-a-valid-capsule", "ABAAB"]  # malformed, then valid
+    calls = {"n": 0}
+
+    def factory():
+        from resonance_world.c3r_g1_model_boundary import ModelChoiceCompletion
+
+        class FakePort:
+            model_id = "glm-5.3"
+
+            def complete_prompt(self, prompt: str):
+                answer = answers[min(calls["n"], len(answers) - 1)]
+                calls["n"] += 1
+                return ModelChoiceCompletion(
+                    output=answer, model_id="glm-5.3", finish_reason="stop"
+                )
+
+        return FakePort()
+
+    summary = run_c2_group(
+        tmp_path, "fidelity-invalid-round", 0, "key", workers=1,
+        feedback_rounds=3, port_factory=factory,
+    )
+    row = summary["rows"][0]
+    assert row["rounds_used"] >= 2  # malformed round did not end the loop
+    assert row["capsule"] == "ABAAB"
+
+
 def test_execution_prompt_contains_supplied_capsule() -> None:
     unit = _unit()
     prompt = _execute_prompt(unit, "ABBAB", "wave1")

@@ -310,9 +310,18 @@ def run_c2_group(workspace: Path, run_id: str, group: int, api_key: str,
                 "proposal": proposal,
                 "outcomes": outcomes,
             })
-            if all(item["correct"] for item in outcomes):
+            # Only a fully-correct evaluation ends the interaction; an
+            # invalid/malformed round must NOT vacuously terminate it.
+            if outcomes and all(item["correct"] for item in outcomes):
                 break
-            prompt = _revise_prompt(unit, proposal or "(invalid answer)", outcomes)
+            if proposal is None:
+                prompt = (
+                    "Your previous answer was not a valid five-letter "
+                    "procedure. Answer with exactly five letters, each A or B, "
+                    "and nothing else."
+                )
+            else:
+                prompt = _revise_prompt(unit, proposal, outcomes)
         final_correct = capsule == unit["private_program"] if capsule else None
         return {
             "unit_id": unit["unit_id"],
