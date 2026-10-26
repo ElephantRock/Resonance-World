@@ -1,0 +1,79 @@
+{
+  "ab_comparison": {
+    "A_minus_B": 0.01,
+    "A_post": 0.97,
+    "B_post": 0.96,
+    "C_post": 0.5,
+    "D_post": 0.51
+  },
+  "all_replays_matched": true,
+  "arms": {
+    "A": {
+      "adaptation_delta": -0.02,
+      "branch": "arm-a-adaptive",
+      "decisions": 200,
+      "fallbacks": 31,
+      "malformed": 0,
+      "own_decisions": 100,
+      "port_calls": 100,
+      "post_accuracy": 0.97,
+      "pre_accuracy": 0.99,
+      "replay_matched": true,
+      "ticks": 1000,
+      "transport_errors": 31
+    },
+    "B": {
+      "adaptation_delta": -0.03,
+      "branch": "arm-b-ablated",
+      "decisions": 200,
+      "fallbacks": 7,
+      "malformed": 0,
+      "own_decisions": 100,
+      "port_calls": 100,
+      "post_accuracy": 0.96,
+      "pre_accuracy": 0.99,
+      "replay_matched": true,
+      "ticks": 1000,
+      "transport_errors": 7
+    },
+    "C": {
+      "adaptation_delta": -0.49,
+      "branch": "arm-c-frozen",
+      "decisions": 200,
+      "fallbacks": 14,
+      "malformed": 0,
+      "own_decisions": 120,
+      "port_calls": 120,
+      "post_accuracy": 0.5,
+      "pre_accuracy": 0.99,
+      "replay_matched": true,
+      "ticks": 1000,
+      "transport_errors": 14
+    },
+    "D": {
+      "adaptation_delta": 0.0,
+      "branch": "arm-d-canonical",
+      "decisions": 200,
+      "fallbacks": 0,
+      "malformed": 0,
+      "own_decisions": 200,
+      "port_calls": 200,
+      "post_accuracy": 0.51,
+      "pre_accuracy": 0.51,
+      "replay_matched": true,
+      "ticks": 1000,
+      "transport_errors": 0
+    }
+  },
+  "budget_exhausted_early": false,
+  "contract_digest": "4f865ef204c2cedc71710b1549706e4970f53c595da48b40c62f4349b190a10a",
+  "fallback_decisions": 52,
+  "leak_scan_clean": true,
+  "malformed_answers": 0,
+  "notes": [],
+  "pilot_campaign_id": "1a0feb37a7dc28c992952fa62000647805e0339706230584501e36a9bab20156",
+  "sends_consumed": 420,
+  "sends_remaining": 0,
+  "transport_errors": 52,
+  "world_valid_for_analysis": true
+}
