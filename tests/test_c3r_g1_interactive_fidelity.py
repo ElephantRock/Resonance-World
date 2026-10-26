@@ -155,7 +155,8 @@ def test_session_flows_c1_c2_execute(tmp_path: Path) -> None:
 
     run_id = "fidelity-flow-001"
     workspace = tmp_path / "workspace"
-    workspace.mkdir()
+    workspace.mkdir(mode=0o700)
+    os.chmod(workspace, 0o700)
 
     class FakePort:
         model_id = "glm-5.3"
