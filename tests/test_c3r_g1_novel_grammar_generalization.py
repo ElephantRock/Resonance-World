@@ -7,29 +7,28 @@ correctness evaluation, and write-once slot discipline. No network.
 
 from __future__ import annotations
 
+import itertools
 import os
 import random
 from pathlib import Path
 
 import pytest
 
-pytestmark = pytest.mark.skipif(
-    os.name == "nt",
-    reason="the C3R-G1 harness module is Linux-only (O_NOFOLLOW, POSIX cwd)",
-)
-
 from scripts.run_c3r_g1_novel_grammar_generalization_live import (
-    _SlotGuard,
-    _execute,
     _exec_prompt,
+    _execute,
     _grammar,
     _holdout_correct,
     _induce_prompt,
     _manifest,
+    _SlotGuard,
     _task,
 )
 
-import itertools
+pytestmark = pytest.mark.skipif(
+    os.name == "nt",
+    reason="the C3R-G1 harness module is Linux-only (O_NOFOLLOW, POSIX cwd)",
+)
 
 
 def test_novel_families_deterministic_and_unambiguous() -> None:
@@ -44,7 +43,7 @@ def test_novel_families_deterministic_and_unambiguous() -> None:
             assert len(set(outputs)) == 32, (family, task)
             assert all(
                 _execute(family, task, code) == output
-                for code, output in zip(codes, outputs)
+                for code, output in zip(codes, outputs, strict=False)
             )
 
 
@@ -115,7 +114,6 @@ def test_exec_prompt_arm_variants(tmp_path: Path) -> None:
 
 
 def test_holdout_correct_separates_true_from_wrong(tmp_path: Path) -> None:
-    rng = random.Random(777)
     manifest = _manifest("run-novel-004")
     for unit in manifest["units"]:
         truth = _execute(

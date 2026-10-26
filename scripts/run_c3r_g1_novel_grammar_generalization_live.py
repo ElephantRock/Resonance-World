@@ -17,6 +17,7 @@ import argparse
 import hashlib
 import itertools
 import json
+import os
 import random
 import re
 import string
@@ -26,8 +27,6 @@ from collections.abc import Callable
 from pathlib import Path
 
 from run_c3r_g1_three_step_procedure_live import (
-    SlotJournal,
-    _digest,
     _read,
     _run_dir,
     _write_once,
@@ -305,7 +304,9 @@ def _port_factory(key: str):
 # -- sessions ------------------------------------------------------------------
 
 
-def run_induction(workspace: Path, run_id: str, api_key: str, workers: int = 2) -> dict[str, object]:
+def run_induction(
+    workspace: Path, run_id: str, api_key: str, workers: int = 2
+) -> dict[str, object]:
     root = _run_dir(workspace, run_id)
     root.mkdir(mode=0o700, exist_ok=False)
     manifest = _manifest(run_id)

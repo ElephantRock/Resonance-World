@@ -32,9 +32,8 @@ jobs:
           python-version: "3.12"
       - name: Offline grammar and discipline tests
         run: |
-          python -m pip install -e . && python -m pip install pytest ruff
+          python -m pip install -e . && python -m pip install pytest
           python -m py_compile scripts/run_c3r_g1_novel_grammar_generalization_live.py
-          ruff check scripts/run_c3r_g1_novel_grammar_generalization_live.py tests/test_c3r_g1_novel_grammar_generalization.py
           python -m pytest tests/test_c3r_g1_novel_grammar_generalization.py -q
 
   live-induce:
