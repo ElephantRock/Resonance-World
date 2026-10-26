@@ -88,6 +88,7 @@ class QualificationAuthorizationRecord:
     science_anchor_digest: str
     code_commit: str
     authorization_id: str
+    ledger_base_dir: str
     provider: str
     model: str
     endpoint_family: str
@@ -235,13 +236,13 @@ class ZaiQualificationTransport:
             )
 
         # One balance per authorization: the ledger file must sit at the
-        # canonical path derived from the authorization id inside the
-        # pinned custody directory - a second file with the same id
-        # cannot start a fresh balance.
+        # canonical path derived from the record's pinned ledger_base_dir
+        # and authorization id - a second file with the same id cannot
+        # start a fresh balance.
         from .send_ledger import qualification_ledger_path
 
         expected_path = qualification_ledger_path(
-            ledger_base_dir, record.authorization_id
+            record.ledger_base_dir, record.authorization_id
         )
         if ledger.path.resolve() != expected_path.resolve():
             failures.append(

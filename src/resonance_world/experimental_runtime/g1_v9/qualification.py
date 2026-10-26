@@ -226,6 +226,7 @@ def build_authorization_candidate(
         science_anchor_digest=SCIENCE_ANCHOR_DIGEST,
         code_commit=code_commit,
         authorization_id=authorization_id,
+        ledger_base_dir=".",
         provider=PROVIDER,
         model=MODEL,
         endpoint_family=ENDPOINT_FAMILY,

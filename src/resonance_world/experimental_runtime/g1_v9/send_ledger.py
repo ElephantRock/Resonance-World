@@ -271,9 +271,6 @@ class PersistentSendLedger:
         repair["prev"] = last_good_hash
         repair["hash"] = _entry_digest(repair)
 
-        if self.crash_point == "repair:after-temp-fsync":
-            raise LedgerCrashInjected("interrupted after temp fsync")
-
         temp_path = self._path.with_suffix(self._path.suffix + ".repair-tmp")
         with temp_path.open("w", encoding="utf-8") as handle:
             handle.write(self._header_line() + "\n")
@@ -286,6 +283,9 @@ class PersistentSendLedger:
             )
             handle.flush()
             os.fsync(handle.fileno())
+
+        if self.crash_point == "repair:after-temp-fsync":
+            raise LedgerCrashInjected("interrupted after temp fsync")
 
         os.replace(temp_path, self._path)
 

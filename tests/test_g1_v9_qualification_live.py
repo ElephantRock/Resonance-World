@@ -52,7 +52,9 @@ def _git_head() -> str:
     )
 
 
-def authorized_record(**overrides) -> QualificationAuthorizationRecord:
+def authorized_record(
+    ledger_base_dir: str | None = None, **overrides
+) -> QualificationAuthorizationRecord:
     """Build a valid authorized record signed under OPERATOR_KEY and
     bound to the running operational commit."""
 
@@ -65,6 +67,7 @@ def authorized_record(**overrides) -> QualificationAuthorizationRecord:
         science_anchor_digest=SCIENCE_ANCHOR_DIGEST,
         code_commit=_git_head(),
         authorization_id=AUTHORIZATION_ID,
+        ledger_base_dir=ledger_base_dir or str(REPO_ROOT / "custody"),
         provider="zai",
         model="glm-5.3",
         endpoint_family="zai-coding-plan-chat-completions",
@@ -120,7 +123,9 @@ class FakeHttp:
 
 
 def make_transport(tmp_path, record=None, fake_http=None):
-    record = record if record is not None else authorized_record()
+    record = record if record is not None else authorized_record(
+        ledger_base_dir=str(tmp_path)
+    )
     ledger = PersistentSendLedger(
         qualification_ledger_path(tmp_path, record.authorization_id),
         send_cap=record.send_cap,
@@ -132,7 +137,7 @@ def make_transport(tmp_path, record=None, fake_http=None):
         ledger=ledger,
         credential_provider=credential,
         repo_root=REPO_ROOT,
-        ledger_base_dir=tmp_path,
+        ledger_base_dir=Path(tmp_path),
         authorization_key_provider=lambda: OPERATOR_KEY,
         http_post=fake_http,
     )
@@ -338,7 +343,7 @@ def test_ninth_attempt_is_refused_fail_closed(tmp_path) -> None:
 
 
 def test_ledger_rebuild_refuses_after_restart(tmp_path) -> None:
-    record = authorized_record()
+    record = authorized_record(ledger_base_dir=str(tmp_path))
     ledger = PersistentSendLedger(
         qualification_ledger_path(tmp_path, record.authorization_id),
         send_cap=8,
