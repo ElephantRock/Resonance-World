@@ -1,19 +1,30 @@
-# G1 novel grammar generalization — RESULT (2026-10-26) — REV1 (redacted + accounting corrections)
+# G1 novel grammar generalization — RESULT (2026-10-26) — REV2 (redacted; send accounting corrected; C2 re-characterized)
 
-**REV1 corrections (2026-10-26, per project-owner review; the pre-execution
+**REV2 corrections (2026-10-26, per project-owner review; the pre-execution
 preregistration and all sends are unchanged):**
-1. **Redaction:** REV0's induction table published the hidden programs and
-   induced capsules. REV1 redacts them. Git history retains the original
-   values; **these 8 units are burned as secrets for any future test** and
-   must not be reused.
-2. **Raw-arm accounting:** REV0 reported "11 scored + 4 excluded". The exact
-   accounting is **11 evaluated (all correct) + 5 unscored invalid_format
-   responses = 16/16 prescribed**, all preserved with attribution below. The
-   "100%" applies to evaluable responses only; **11/16 = 68.75% of planned
-   raw sends produced a valid evaluable answer**.
+1. **Redaction (carried from REV1):** REV0's induction table published the
+   hidden programs and induced capsules. REV1/REV2 redact them. Git history
+   retains the original values; **these 8 units are burned as secrets for any
+   future test** and must not be reused. The committed `c1-summary.json` has
+   also been redacted (capsule values combined with `policy_correct` revealed
+   5 true programs).
+2. **Raw-arm accounting (carried from REV1):** 11 evaluated (all correct) +
+   5 unscored invalid_format = 16/16 prescribed; "100%" applies to evaluable
+   responses only (11/16 = 68.75% of planned raw sends produced a valid
+   evaluable answer).
+3. **Send accounting CORRECTED:** the authoritative per-session `sends`
+   values in `evidence_interactive_fidelity/SEND_RECONCILIATION.md` sum to
+   **52** (C1 8 + C2 12 + C3 16 + C4 16), under the preregistered cap of 64.
+   REV0/REV1's "72 sends / C2: 17" is withdrawn as a drafting error; no run
+   violated the cap and no sends were hidden.
+4. **C2 re-characterized:** the revise prompt omitted the grammar and the
+   corrected examples, and a vacuous-break defect ended two malformed rounds
+   after one send each. C2's 2/8 is therefore **apparatus-impaired**, not
+   conclusive evidence against feedback-based learning.
 
-Status: run `40357785223` — all 10 jobs succeeded. 72/72 prescribed sends.
-Exploratory pilot; `scientific_acceptance=false`.
+Status: run `40357785223` — all 10 jobs succeeded. **52/64 cap consumed**
+(52 physical sends = one per decision slot). Exploratory pilot;
+`scientific_acceptance=false`.
 
 ## 1) Source induction on NOVEL grammars — the bottleneck
 
