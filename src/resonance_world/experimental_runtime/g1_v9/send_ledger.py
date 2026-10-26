@@ -5,20 +5,21 @@ Durable accounting for the 8-attempt qualification cap:
 - every send attempt is appended to a JSONL ledger **before** the HTTP
   call, so a timeout or crash counts against the cap (an attempt with
   an unknown outcome is consumed, never retried automatically);
-- entries are hash-chained (each entry records the hash of the previous
-  entry), so any edit or deletion of recorded history is detectable on
-  reload;
-- a truncated final line (crash mid-write) is repaired under the lock:
-  the file is rewritten back to the verified good prefix and one
-  conservative ``unknown-outcome`` consumed attempt is appended,
-  leaving a valid chain that survives any number of subsequent reopens;
+- entries are hash-chained, so any edit or deletion of recorded history
+  is detectable on reload;
+- a truncated final line (crash mid-write) is repaired conservatively:
+  the file is rebuilt from the verified good prefix through a temporary
+  file and an **atomic rename**, and one ``unknown-outcome`` consumed
+  attempt is appended. Repeated crashes accumulate consumption - the
+  consumed balance never shrinks;
 - **cross-process exclusion**: every mutation happens while holding an
   exclusive lock file (O_CREAT|O_EXCL), and the on-disk state is
   re-read **under the lock** before the cap decision - two concurrent
   processes can never both consume a final slot;
 - the ledger is **bound to one authorization id**: a file written for
-  a different authorization (or cap) is rejected at load time, so a
-  restart cannot restore or re-scope a balance.
+  a different authorization (or cap) is rejected at load time, and the
+  canonical ledger path is derived from that id so a second file
+  cannot start a fresh balance.
 
 The ledger records attempts and outcomes only: no credentials, no
 response bodies, no endpoint URLs.
@@ -58,6 +59,10 @@ class LedgerLocked(RuntimeError):
     """Raised when another process holds the ledger lock too long."""
 
 
+class LedgerCrashInjected(RuntimeError):
+    """Test-only interruption raised at a named repair stage."""
+
+
 class PhysicalSendCapExceeded(RuntimeError):
     """Raised when a send is refused because the cap is exhausted."""
 
@@ -73,12 +78,25 @@ def _now() -> str:
     return datetime.now(UTC).isoformat()
 
 
-def _is_full_sha40(value: Any) -> bool:
+def _is_authorization_id(value: Any) -> bool:
     return (
         isinstance(value, str)
-        and len(value) == 40
+        and len(value) == 64
         and all(char in "0123456789abcdef" for char in value)
     )
+
+
+def qualification_ledger_path(
+    base_dir: str | Path, authorization_id: str
+) -> Path:
+    """Return the ONE canonical ledger path for an authorization id.
+
+    A balance for an authorization lives in exactly this file; creating
+    a differently named file cannot start a second balance for the same
+    authorization because the transport requires the canonical path.
+    """
+
+    return Path(base_dir) / f"send-ledger-{authorization_id}.jsonl"
 
 
 class _ExclusiveLock:
@@ -88,7 +106,7 @@ class _ExclusiveLock:
         self._path = lock_path
         self._fd: int | None = None
 
-    def __enter__(self) -> "_ExclusiveLock":  # noqa: UP037 - forward ref
+    def __enter__(self) -> _ExclusiveLock:
         deadline = time.monotonic() + _LOCK_TIMEOUT_SECONDS
         while True:
             try:
@@ -97,11 +115,11 @@ class _ExclusiveLock:
                 )
                 os.write(self._fd, str(os.getpid()).encode())
                 return self
-            except FileExistsError as error:
+            except FileExistsError:
                 if time.monotonic() >= deadline:
                     raise LedgerLocked(
                         f"ledger lock held by another process: {self._path}"
-                    ) from error
+                    ) from None
                 time.sleep(0.02)
 
     def __exit__(self, *exc) -> None:
@@ -114,18 +132,16 @@ class _ExclusiveLock:
             pass
 
 
-def _is_authorization_id(value: Any) -> bool:
-    return (
-        isinstance(value, str)
-        and len(value) == 64
-        and all(char in "0123456789abcdef" for char in value)
-    )
-
-
 class PersistentSendLedger:
     """Append-only, hash-chained, cross-process, cap-enforcing ledger."""
 
-    def __init__(self, path: str | Path, *, send_cap: int, authorization_id: str) -> None:
+    def __init__(
+        self,
+        path: str | Path,
+        *,
+        send_cap: int,
+        authorization_id: str,
+    ) -> None:
         if isinstance(send_cap, bool) or not isinstance(send_cap, int) or send_cap <= 0:
             raise ValueError("send_cap must be a positive integer")
         if not _is_authorization_id(authorization_id):
@@ -139,23 +155,10 @@ class PersistentSendLedger:
         self._authorization_id = authorization_id
         self._entries: list[dict[str, Any]] = []
         self._repair_consumed = 0
+        #: Test-only interruption injection for the repair sequence.
+        self.crash_point: str | None = None
         self._load()
         self._ensure_header()
-
-    def _ensure_header(self) -> None:
-        """Create the authorization header when the ledger is brand new."""
-
-        with self._locked():
-            needs_header = (
-                not self._path.exists() or self._path.stat().st_size == 0
-            )
-            if not needs_header:
-                return
-            with self._path.open("w", encoding="utf-8") as handle:
-                handle.write(self._header_line() + "\n")
-                handle.flush()
-                os.fsync(handle.fileno())
-            self._load_locked()
 
     # -- locking ----------------------------------------------------------
 
@@ -172,6 +175,21 @@ class PersistentSendLedger:
         if not self._path.exists():
             return
         with self._locked():
+            self._load_locked()
+
+    def _ensure_header(self) -> None:
+        """Create the authorization header when the ledger is brand new."""
+
+        with self._locked():
+            needs_header = (
+                not self._path.exists() or self._path.stat().st_size == 0
+            )
+            if not needs_header:
+                return
+            with self._path.open("w", encoding="utf-8") as handle:
+                handle.write(self._header_line() + "\n")
+                handle.flush()
+                os.fsync(handle.fileno())
             self._load_locked()
 
     def _load_locked(self) -> None:
@@ -192,30 +210,38 @@ class PersistentSendLedger:
             raise LedgerCorrupted("ledger send cap differs from the bound cap")
 
         previous_hash = header.get("genesis", _GENESIS_PREV)
-        for index, line in enumerate(lines[1:], start=2):
+        consumed = 0
+        content_lines = lines[1:]
+        for position, line in enumerate(content_lines, start=1):
             try:
                 entry = json.loads(line)
             except json.JSONDecodeError as error:
-                if index == len(lines):
-                    # Crash mid-write on the final line: the entries before
-                    # it are already verified - repair conservatively.
+                if position == len(content_lines):
+                    # Crash mid-write on the final line: everything before
+                    # it is already verified - repair conservatively.
                     self._repair_truncated_tail_locked(
                         list(self._entries), previous_hash, line
                     )
                     return
                 raise LedgerCorrupted(
-                    f"ledger line {index} is corrupt and not a final write"
+                    f"ledger line {position + 1} is corrupt and not a final "
+                    "write"
                 ) from error
             if entry.get("prev") != previous_hash:
-                raise LedgerCorrupted(f"ledger hash-chain broken at line {index}")
+                raise LedgerCorrupted(
+                    f"ledger hash-chain broken at entry {position + 1}"
+                )
             if entry.get("hash") != _entry_digest(entry):
-                raise LedgerCorrupted(f"ledger entry digest mismatch at line {index}")
+                raise LedgerCorrupted(
+                    f"ledger entry digest mismatch at entry {position + 1}"
+                )
             if entry.get("action") == _ACTION_UNKNOWN_OUTCOME and entry.get(
                 "consumes_attempt"
             ):
-                self._repair_consumed += 1
+                consumed += 1
             previous_hash = entry["hash"]
             self._entries.append(entry)
+        self._repair_consumed = consumed
 
     def _repair_truncated_tail_locked(
         self,
@@ -223,22 +249,20 @@ class PersistentSendLedger:
         previous_hash: str,
         corrupt_line: str,
     ) -> None:
-        """Rewrite the file back to the verified good prefix and append one
-        conservative ``unknown-outcome`` consumed attempt. The repair is
-        permanent: the next open finds a valid chain with no balance
-        growth, and no partial JSON survives.
-
-        ``good_entries`` is the already-verified prefix parsed by the
-        caller; ``previous_hash`` is the chain position before the first
-        good entry (genesis for an empty prefix)."""
+        """Rebuild the ledger from the verified good prefix plus one
+        conservative ``unknown-outcome`` consumed attempt, written to a
+        temporary file and installed with an **atomic rename** so an
+        interrupted repair can never shrink the consumed balance. The
+        repair is idempotent: if interrupted before the rename, the
+        original file remains and the next load repairs it again."""
 
         corrupt_digest = hashlib.sha256(corrupt_line.encode("utf-8")).hexdigest()
         last_good_hash = (
-            good_entries[-1]["hash"] if good_entries else previous_hash
+            good_entries[-1]["hash"] if good_entries else _GENESIS_PREV
         )
         repair = {
             "seq": len(good_entries) + 1,
-            "action": _ACTION_UNKNOWN_OUTCOME,
+            "action": "unknown-outcome",
             "consumes_attempt": True,
             "label": "truncated-final-write",
             "payload_sha256": corrupt_digest,
@@ -247,7 +271,11 @@ class PersistentSendLedger:
         repair["prev"] = last_good_hash
         repair["hash"] = _entry_digest(repair)
 
-        with self._path.open("w", encoding="utf-8") as handle:
+        if self.crash_point == "repair:after-temp-fsync":
+            raise LedgerCrashInjected("interrupted after temp fsync")
+
+        temp_path = self._path.with_suffix(self._path.suffix + ".repair-tmp")
+        with temp_path.open("w", encoding="utf-8") as handle:
             handle.write(self._header_line() + "\n")
             for entry in good_entries:
                 handle.write(
@@ -258,8 +286,14 @@ class PersistentSendLedger:
             )
             handle.flush()
             os.fsync(handle.fileno())
+
+        if self.crash_point == "repair:after-replace":
+            raise LedgerCrashInjected("interrupted after atomic replace")
+
+        os.replace(temp_path, self._path)
         self._entries = good_entries + [repair]
-        self._repair_consumed = 1
+        # Cumulative: prior crash-repairs inside the good prefix are kept.
+        self._repair_consumed = self._count_consumed(self._entries)
 
     def _header_line(self) -> str:
         return json.dumps(
@@ -286,6 +320,10 @@ class PersistentSendLedger:
         return self._authorization_id
 
     @property
+    def path(self) -> Path:
+        return self._path
+
+    @property
     def send_cap(self) -> int:
         return self._send_cap
 
@@ -293,12 +331,23 @@ class PersistentSendLedger:
     def truncated_tail(self) -> bool:
         return self._repair_consumed > 0
 
+    @staticmethod
+    def _count_consumed(entries: list[dict[str, Any]]) -> int:
+        """Count unknown-outcome entries that consume an attempt slot."""
+
+        return sum(
+            1
+            for entry in entries
+            if entry.get("action") == "unknown-outcome"
+            and entry.get("consumes_attempt")
+        )
+
     def attempts(self) -> int:
         """Consumed attempts: recorded attempts + crash-repair consumption."""
 
         return (
-            sum(1 for entry in self._entries if entry["action"] == _ACTION_ATTEMPT)
-            + self._repair_consumed
+            sum(1 for entry in self._entries if entry["action"] == "attempt")
+            + self._count_consumed(self._entries)
         )
 
     def remaining(self) -> int:
@@ -307,7 +356,14 @@ class PersistentSendLedger:
     def outcomes(self) -> dict[str, int]:
         counts: dict[str, int] = {}
         for entry in self._entries:
-            if entry["action"] in _ACTIONS_WITH_OUTCOME:
+            if entry["action"] in (
+                "succeeded",
+                "auth-failure",
+                "timeout",
+                "malformed-response",
+                "http-error",
+                "unknown-outcome",
+            ):
                 counts[entry["action"]] = counts.get(entry["action"], 0) + 1
         return counts
 
@@ -331,7 +387,7 @@ class PersistentSendLedger:
             self._append_locked(
                 {
                     "seq": len(self._entries) + 1,
-                    "action": _ACTION_ATTEMPT,
+                    "action": "attempt",
                     "label": label,
                     "payload_sha256": payload_sha256,
                     "ts": _now(),
@@ -341,7 +397,14 @@ class PersistentSendLedger:
     def record_outcome(
         self, label: str, payload_sha256: str, outcome: str
     ) -> None:
-        if outcome not in _ACTIONS_WITH_OUTCOME:
+        if outcome not in (
+            "succeeded",
+            "auth-failure",
+            "timeout",
+            "malformed-response",
+            "http-error",
+            "unknown-outcome",
+        ):
             raise ValueError(f"unknown outcome {outcome!r}")
         with self._locked():
             self._load_locked()

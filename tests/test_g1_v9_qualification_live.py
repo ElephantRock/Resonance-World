@@ -17,6 +17,7 @@ on any path. The tests prove the reviewer's round-4 requirements:
 from __future__ import annotations
 
 import json
+from pathlib import Path
 
 import pytest
 
@@ -40,6 +41,7 @@ from resonance_world.experimental_runtime.g1_v9.zai_transport import (
 CODE_COMMIT = "374249adee81b9909646f54bc544d19cda1dd007"
 ENDPOINT = "https://api.z.ai/api/coding/paas/v4/chat/completions"
 AUTHORIZATION_ID = "a" * 64
+REPO_ROOT = Path(__file__).resolve().parents[1]
 
 
 def authorized_record(**overrides) -> QualificationAuthorizationRecord:
@@ -311,3 +313,110 @@ def test_ledger_rejects_a_broken_chain(tmp_path) -> None:
 
     with pytest.raises(LedgerCorrupted):
         PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+
+
+# ---------------------------------------------------------------------------
+# Review round 5: real concurrency, repeated crashes, redirect & hygiene
+# ---------------------------------------------------------------------------
+
+_CHILD_CONSUME = """
+import sys
+from resonance_world.experimental_runtime.g1_v9.send_ledger import (
+    PersistentSendLedger, PhysicalSendCapExceeded,
+)
+ledger = PersistentSendLedger(sys.argv[1], send_cap=1,
+                              authorization_id=sys.argv[2])
+try:
+    ledger.record_attempt("child", "payload")
+    sys.exit(0)
+except PhysicalSendCapExceeded:
+    sys.exit(3)
+"""
+
+
+def test_two_processes_race_for_the_final_slot(tmp_path) -> None:
+    """P0: two concurrent processes race for one slot; exactly one wins."""
+
+    import os
+    import subprocess
+    import sys as _sys
+
+    store_path = tmp_path / "send-ledger.jsonl"
+    PersistentSendLedger(store_path, send_cap=1, authorization_id=AUTHORIZATION_ID)
+    env = {**os.environ, "PYTHONPATH": str(REPO_ROOT / "src")}
+    procs = [
+        subprocess.Popen(
+            [
+                _sys.executable,
+                "-c",
+                _CHILD_CONSUME,
+                str(store_path),
+                AUTHORIZATION_ID,
+            ],
+            env=env,
+        )
+        for _ in range(2)
+    ]
+    codes = [proc.wait() for proc in procs]
+    winners = sum(1 for code in codes if code == 0)
+    assert winners == 1, codes
+
+    final = PersistentSendLedger(store_path, send_cap=1, authorization_id=AUTHORIZATION_ID)
+    assert final.attempts() == 1
+
+
+def test_double_truncation_accumulates_consumption_never_shrinks(tmp_path) -> None:
+    """P0: two consecutive crashed writes keep consumption accumulating."""
+
+    store_path = tmp_path / "send-ledger.jsonl"
+    ledger = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    ledger.record_attempt("first", "p1")
+    with store_path.open("a", encoding="utf-8") as handle:
+        handle.write('{"seq": 2, "action": "suc')  # first crash
+
+    reloaded = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    assert reloaded.truncated_tail is True
+    consumed_after_first = reloaded.attempts()
+
+    with store_path.open("a", encoding="utf-8") as handle:
+        handle.write('{"seq": 9, "action": "har')  # second crash
+
+    reloaded2 = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+    consumed_after_second = reloaded2.attempts()
+    assert consumed_after_second >= consumed_after_first
+
+    # Third and fourth opens: valid chain, balance never grows.
+    balances = []
+    for _ in range(2):
+        again = PersistentSendLedger(store_path, send_cap=8, authorization_id=AUTHORIZATION_ID)
+        assert again.truncated_tail is True
+        balances.append(again.attempts())
+    assert balances[0] == balances[1] == consumed_after_second
+
+
+def test_redirect_is_refused_by_the_transport_handler() -> None:
+    from resonance_world.experimental_runtime.g1_v9.zai_transport import (
+        _RefuseRedirect,
+    )
+
+    with pytest.raises(Exception, match="redirect refused"):
+        _RefuseRedirect().redirect_request(
+            req=None,
+            fp=None,
+            code=302,
+            msg="moved",
+            headers={},
+            newurl="https://evil.example/x",
+        )
+
+
+def test_unknown_failure_hides_the_original_message(tmp_path) -> None:
+    ledger, transport = make_transport(
+        tmp_path, fake_http=FakeHttp(["connection-error"])
+    )
+    with pytest.raises(Exception) as exc_info:
+        transport.send("hygiene-probe", "ping")
+
+    message = str(exc_info.value)
+    assert "injected connection failure" not in message
+    assert "withheld" in message
