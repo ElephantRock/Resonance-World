@@ -64,7 +64,11 @@ def test_manifest_units_and_programs() -> None:
     for unit in manifest["units"]:
         program = unit["private_program"]
         assert len(program) == 5 and set(program) <= {"A", "B"}
-        assert unit["control_fresh"] != unit["control_neutral"]
+        # Independent uniform chance capsules MAY legitimately coincide
+        # (p = 1/32 per pair); only shape validity is asserted.
+        for key in ("control_fresh", "control_neutral"):
+            capsule = unit[key]
+            assert len(capsule) == 5 and set(capsule) <= {"A", "B"}
         assert len(unit["source_tasks"]) == 2
         assert set(unit["holdouts"]) == {"wave1", "wave2"}
 
