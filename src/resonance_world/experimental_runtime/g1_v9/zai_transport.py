@@ -391,6 +391,10 @@ class DirectZaiQualificationTransport(ZaiQualificationTransport):
     The explicit constructor call opts into live sends. All attempts are
     durably reserved before HTTP, including unknown outcomes. Recreating
     this transport against the same custody directory never resets the cap.
+
+    ``campaign_id`` and ``send_cap`` parametrize follow-up campaigns
+    (e.g. the G1 v9 A/B pilot) on the same pinned endpoint and model;
+    each campaign id keeps its own durable balance.
     """
 
     def __init__(
@@ -399,6 +403,8 @@ class DirectZaiQualificationTransport(ZaiQualificationTransport):
         ledger_base_dir: str | Path,
         credential_provider: Callable[[], str],
         http_post: Callable[[str, str, dict[str, Any], float], tuple[int, str]] | None = None,
+        campaign_id: str | None = None,
+        send_cap: int = 8,
     ) -> None:
         from .send_ledger import PersistentSendLedger, qualification_ledger_path
 
@@ -409,15 +415,15 @@ class DirectZaiQualificationTransport(ZaiQualificationTransport):
 
         # Independent of the mutable Git commit; stable for this single
         # probe campaign. Never select a new ID to replenish spent attempts.
-        probe_id = hashlib.sha256(
+        probe_id = campaign_id or hashlib.sha256(
             f"{SCIENCE_ANCHOR_DIGEST}:zai:glm-5.3:qualification-probe-v1".encode()
         ).hexdigest()
         self._ledger = PersistentSendLedger(
             qualification_ledger_path(custody, probe_id),
-            send_cap=8,
+            send_cap=send_cap,
             authorization_id=probe_id,
         )
-        self._record = _DirectProbeConfig()
+        self._record = _DirectProbeConfig(send_cap=send_cap)
         self._credential_provider = credential_provider
         self._http_post = http_post if http_post is not None else self._urllib_post
 
