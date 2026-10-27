@@ -133,8 +133,19 @@ def test_invalid_round_does_not_vacuously_end_interaction(tmp_path: Path) -> Non
 
     if os.name == "nt":
         pytest.skip("POSIX-only _run_dir validator")
-    from scripts.run_c3r_g1_interactive_fidelity_live import run_c2_group
+    from scripts.run_c3r_g1_interactive_fidelity_live import (
+        _manifest,
+        _run_dir,
+        run_c2_group,
+    )
 
+    run_id = "fidelity-invalid-round"
+    root = _run_dir(tmp_path, run_id)
+    root.mkdir(mode=0o700, parents=True, exist_ok=True)
+    manifest = _manifest(run_id, 3)
+    (root / "manifest.json").write_text(
+        json.dumps(manifest, indent=2, sort_keys=True), encoding="utf-8"
+    )
     workspace = tmp_path / "workspace"
     workspace.mkdir(mode=0o700)
     os.chmod(workspace, 0o700)
