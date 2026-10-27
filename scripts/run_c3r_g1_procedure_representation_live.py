@@ -268,7 +268,7 @@ def main() -> int:
         parser.error("send sessions require --representation --wave --half")
     summary = run_send(
         workspace, args.run_id, args.representation, args.wave, args.half,
-        args.api_key,
+        args.api_key, args.workers,
     )
     print(json.dumps(
         {k: v for k, v in summary.items() if k != "rows"}, indent=2
