@@ -40,6 +40,8 @@ jobs:
         with:
           python-version: "3.12"
       - name: Freeze manifest (deterministic programs and holdouts)
+        env:
+          PYTHONPATH: "src:scripts"
         run: |
           python scripts/run_c3r_g1_procedure_representation_live.py \
             --workspace "$RUNNER_TEMP/repr-workspace" \
