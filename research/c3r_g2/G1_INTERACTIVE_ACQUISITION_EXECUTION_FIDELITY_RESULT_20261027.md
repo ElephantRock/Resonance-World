@@ -1,9 +1,13 @@
-# G1 interactive acquisition & execution fidelity — RESULT (2026-10-27)
+# G1 interactive acquisition & execution fidelity — RESULT (2026-10-27) — REV1 (send accounting corrected per owner review)
 
 **Run:** GitHub Actions `40391144622` — 10/10 jobs succeeded.
-**Campaign:** 72 model sends total (C1: 8, C2: 17 across 8 units/bounded-3-rounds,
-C3: 16, C4: 16 — round-level consumption; C2 under-ran its 24 budget because
-of an apparatus defect disclosed in §4).
+**Campaign:** **52 model sends total** (C1: 8; C2: 12 across 4 group jobs ×
+2 units, bounded 3 rounds — under its 24-send budget because early-pass
+units exited after round 1 and the vacuous-break defect ended two malformed
+rounds after one send each; C3: 16; C4: 16). Reconciled 2026-10-26 against
+the nine published session summaries in
+`evidence_interactive_fidelity/SEND_RECONCILIATION.md`; an earlier draft of
+this document claimed 72 — withdrawn as a drafting error.
 **Preregistration:** `G1_INTERACTIVE_ACQUISITION_EXECUTION_FIDELITY_PROSPECTIVE_
 20261026.md` (frozen before dispatch; amendment A1: bracket step4 redefined
 pre-dispatch after local unambiguity verification caught a no-op collision).

@@ -12,15 +12,16 @@ preregistration and all sends are unchanged):**
    5 unscored invalid_format = 16/16 prescribed; "100%" applies to evaluable
    responses only (11/16 = 68.75% of planned raw sends produced a valid
    evaluable answer).
-3. **Send accounting CORRECTED:** the authoritative per-session `sends`
-   values in `evidence_interactive_fidelity/SEND_RECONCILIATION.md` sum to
-   **52** (C1 8 + C2 12 + C3 16 + C4 16), under the preregistered cap of 64.
-   REV0/REV1's "72 sends / C2: 17" is withdrawn as a drafting error; no run
-   violated the cap and no sends were hidden.
-4. **C2 re-characterized:** the revise prompt omitted the grammar and the
-   corrected examples, and a vacuous-break defect ended two malformed rounds
-   after one send each. C2's 2/8 is therefore **apparatus-impaired**, not
-   conclusive evidence against feedback-based learning.
+3. **Send accounting (restored):** this campaign consumed **72 physical
+   sends** (induction 8 + wave1 32 + wave2 32; per-arm: induction 8, then
+   learned/raw/fresh/neutral 16 each). An interim revision erroneously
+   attributed the interactive-fidelity campaign's 52 sends to this
+   document; that figure belongs to
+   `G1_INTERACTIVE_ACQUISITION_EXECUTION_FIDELITY_RESULT_20261027.md` and is
+   corrected there. This campaign's own evidence (SlotJournal write-once
+   files and per-session summaries in run artifacts `40357785223`) supports
+   72. The C2 apparatus defects noted in the interactive-fidelity result
+   belong to that campaign, not this one.
 
 Status: run `40357785223` — all 10 jobs succeeded. **52/64 cap consumed**
 (52 physical sends = one per decision slot). Exploratory pilot;
