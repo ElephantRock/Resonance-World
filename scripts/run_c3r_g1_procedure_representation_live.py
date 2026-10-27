@@ -256,6 +256,7 @@ def main() -> int:
     parser.add_argument("--wave", choices=WAVES)
     parser.add_argument("--half", choices=("a", "b"))
     parser.add_argument("--api-key", default=os.environ.get("C3R_ZAI_API_KEY", ""))
+    parser.add_argument("--workers", type=int, default=2)
     args = parser.parse_args()
     workspace = args.workspace
     workspace.mkdir(parents=True, exist_ok=True)
