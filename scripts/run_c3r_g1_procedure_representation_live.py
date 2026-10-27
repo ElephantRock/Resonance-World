@@ -156,71 +156,71 @@ def run_send(
     port_guard = _PortGuard()
     rows: list[dict[str, object]] = []
 
+    input_index = {"a": 0, "b": 1}[half]
     for position, program in enumerate(programs):
-        for input_index in (0, 1):
-            slot = indices[position * 2 + input_index]
-            task = holdout_task(
-                program["family"], program["program"], wave, input_index
-            )
-            prompt = representation_prompt(
-                representation, program["family"], program["program"], task
-            )
-            port_guard.acquire()
-            started = time.monotonic()
-            try:
-                completion = ZaiStandardModelPort(
-                    api_key=api_key,
-                    model_id=MODEL,
-                    ledger=PhysicalSendLedger(1),
-                    enabled=True,
-                    route="coding",
-                    reasoning_effort=EFFORT,
-                    max_tokens=MAX_TOKENS,
-                ).complete_prompt(prompt)
-                answer = completion.output.strip()
-                finish = completion.finish_reason
-            except Exception as exc:
-                port_guard.release()
-                rows.append({
-                    "slot": slot,
-                    "program_id": program["program_id"],
-                    "representation": representation,
-                    "wave": wave,
-                    "input_index": input_index,
-                    "status": "provider_error",
-                    "failure_class": type(exc).__name__[:40],
-                    "answer": None,
-                    "correct": None,
-                    "latency_ms": round((time.monotonic() - started) * 1000, 1),
-                })
-                print(
-                    f"[reps] {representation}/{wave}/{half} "
-                    f"{program['program_id']}#{input_index}: "
-                    f"provider_error ({type(exc).__name__})",
-                    flush=True,
-                )
-                continue
+        slot = indices[position]
+        task = holdout_task(
+            program["family"], program["program"], wave, input_index
+        )
+        prompt = representation_prompt(
+            representation, program["family"], program["program"], task
+        )
+        port_guard.acquire()
+        started = time.monotonic()
+        try:
+            completion = ZaiStandardModelPort(
+                api_key=api_key,
+                model_id=MODEL,
+                ledger=PhysicalSendLedger(1),
+                enabled=True,
+                route="coding",
+                reasoning_effort=EFFORT,
+                max_tokens=MAX_TOKENS,
+            ).complete_prompt(prompt)
+            answer = completion.output.strip()
+            finish = completion.finish_reason
+        except Exception as exc:
             port_guard.release()
-            truth = _execute(program["family"], task, program["program"])
-            correct = (answer == truth) if (finish == "stop" and answer) else None
             rows.append({
                 "slot": slot,
                 "program_id": program["program_id"],
                 "representation": representation,
                 "wave": wave,
                 "input_index": input_index,
-                "status": "evaluated" if correct is not None else "unscored",
-                "answer": answer,
-                "truth": truth,
-                "correct": correct,
+                "status": "provider_error",
+                "failure_class": type(exc).__name__[:40],
+                "answer": None,
+                "correct": None,
                 "latency_ms": round((time.monotonic() - started) * 1000, 1),
             })
             print(
                 f"[reps] {representation}/{wave}/{half} "
                 f"{program['program_id']}#{input_index}: "
-                f"answer={answer!r} correct={correct}",
+                f"provider_error ({type(exc).__name__})",
                 flush=True,
             )
+            continue
+        port_guard.release()
+        truth = _execute(program["family"], task, program["program"])
+        correct = (answer == truth) if (finish == "stop" and answer) else None
+        rows.append({
+            "slot": slot,
+            "program_id": program["program_id"],
+            "representation": representation,
+            "wave": wave,
+            "input_index": input_index,
+            "status": "evaluated" if correct is not None else "unscored",
+            "answer": answer,
+            "truth": truth,
+            "correct": correct,
+            "latency_ms": round((time.monotonic() - started) * 1000, 1),
+        })
+        print(
+            f"[reps] {representation}/{wave}/{half} "
+            f"{program['program_id']}#{input_index}: "
+            f"answer={answer!r} correct={correct}",
+            flush=True,
+        )
 
     evaluated = [row for row in rows if row["correct"] is not None]
     summary = {
