@@ -182,7 +182,23 @@ def test_raw_prompt_contains_examples_not_capsule() -> None:
         assert json.dumps(task, sort_keys=True)[1:-1] in prompt
 
 
+
+
 # -- session flows (POSIX private-workspace validator; CI ubuntu) -------------
+
+
+class _FakePort:
+    model_id = "glm-5.3"
+
+    def __init__(self, answer: str):
+        self._answer = answer
+
+    def complete_prompt(self, prompt: str):
+        from resonance_world.c3r_g1_model_boundary import ModelChoiceCompletion
+
+        return ModelChoiceCompletion(
+            output=self._answer, model_id="glm-5.3", finish_reason="stop"
+        )
 
 
 @pytest.mark.skipif(os.name == "nt", reason="POSIX-only _run_dir validator")
@@ -198,71 +214,30 @@ def test_session_flows_c1_c2_execute(tmp_path: Path) -> None:
     workspace.mkdir(mode=0o700)
     os.chmod(workspace, 0o700)
 
-    class FakePort:
-        model_id = "glm-5.3"
-
-        def __init__(self, answer: str):
-            self._answer = answer
-
-        def complete_prompt(self, prompt: str):
-            from resonance_world.c3r_g1_model_boundary import (
-                ModelChoiceCompletion,
-            )
-
-            if prompt.startswith("Infer an unknown FIXED"):
-                # A wrong first proposal on every unit.
-                return ModelChoiceCompletion(
-                    output="BBBBA", model_id="glm-5.3", finish_reason="stop"
-                )
-            if "did NOT reproduce" in prompt:
-                # The revision round answers the corrected proposal.
-                return ModelChoiceCompletion(
-                    output="ABAAB", model_id="glm-5.3", finish_reason="stop"
-                )
-            # Execution prompts.
-            return ModelChoiceCompletion(
-                output="9rq_rll", model_id="glm-5.3", finish_reason="stop"
-            )
-
-    calls = {"n": 0}
-
-    def factory():
-        calls["n"] += 1
-        return FakePort("ABABB")
-
     summary_c1 = run_c1(
         workspace, run_id, "key", workers=2, feedback_rounds=3,
-        port_factory=lambda: FakePort("BBBBA"),
+        port_factory=lambda: _FakePort("BBBBA"),
     )
     assert summary_c1["sends"] == 8
     assert len(summary_c1["rows"]) == 8
 
     summary_c2 = run_c2_group(
         workspace, run_id, 0, "key", workers=1, feedback_rounds=3,
-        port_factory=lambda: FakePort("ABAAB"),
+        port_factory=lambda: _FakePort("ABAAB"),
     )
     assert summary_c2["sends"] <= 6
     for row in summary_c2["rows"]:
         assert row["rounds_used"] >= 1
         assert row["capsule"] is not None
 
-    summary_c3_w1 = run_execute(
-        workspace, run_id, "C3", "wave1", "key", workers=2,
-        port_factory=lambda: FakePort("9rq_rll"),
-    )
-    assert summary_c3_w1["sends"] == 8
-    summary_c4_w1 = run_execute(
-        workspace, run_id, "C4", "wave1", "key", workers=2,
-        port_factory=lambda: FakePort("9rq_rll"),
-    )
-    assert summary_c4_w1["sends"] == 8
-    summary_c3_w2 = run_execute(
-        workspace, run_id, "C3", "wave2", "key", workers=2,
-        port_factory=lambda: FakePort("9rq_rll"),
-    )
-    summary_c4_w2 = run_execute(
-        workspace, run_id, "C4", "wave2", "key", workers=2,
-        port_factory=lambda: FakePort("9rq_rll"),
-    )
-    for summary in (summary_c3_w2, summary_c4_w2):
-        assert summary["sends"] == 8
+    for wave in ("wave1", "wave2"):
+        summary_c3 = run_execute(
+            workspace, run_id, "C3", wave, "key", workers=2,
+            port_factory=lambda: _FakePort("9rq_rll"),
+        )
+        assert summary_c3["sends"] == 8
+        summary_c4 = run_execute(
+            workspace, run_id, "C4", wave, "key", workers=2,
+            port_factory=lambda: _FakePort("9rq_rll"),
+        )
+        assert summary_c4["sends"] == 8
