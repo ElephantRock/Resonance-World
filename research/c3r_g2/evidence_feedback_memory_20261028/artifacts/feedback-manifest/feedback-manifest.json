@@ -1,0 +1,716 @@
+{
+  "campaign_slots": 80,
+  "max_tokens": 4096,
+  "model": "glm-5.3",
+  "plan": [
+    {
+      "eval": [
+        {
+          "input": "10100000",
+          "input_index": 0,
+          "truth": "001000001"
+        },
+        {
+          "input": "11001000",
+          "input_index": 1,
+          "truth": "111000104"
+        },
+        {
+          "input": "10110011",
+          "input_index": 2,
+          "truth": "001110014"
+        },
+        {
+          "input": "01001000",
+          "input_index": 3,
+          "truth": "110000103"
+        }
+      ],
+      "evidence": [
+        {
+          "input": "01010010",
+          "output": "110010014"
+        },
+        {
+          "input": "01110011",
+          "output": "010110014"
+        },
+        {
+          "input": "01101101",
+          "output": "010101104"
+        }
+      ],
+      "family": "binary",
+      "probes": [
+        "01100011",
+        "00001001",
+        "00110110"
+      ],
+      "program_code": "BAAAB",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "eval": [
+        {
+          "input": "01001001",
+          "input_index": 0,
+          "truth": "410110100"
+        },
+        {
+          "input": "00011010",
+          "input_index": 1,
+          "truth": "400101110"
+        },
+        {
+          "input": "10101101",
+          "input_index": 2,
+          "truth": "410010011"
+        },
+        {
+          "input": "11101001",
+          "input_index": 3,
+          "truth": "410110001"
+        }
+      ],
+      "evidence": [
+        {
+          "input": "11000100",
+          "output": "411011000"
+        },
+        {
+          "input": "10101111",
+          "output": "310000011"
+        },
+        {
+          "input": "11011011",
+          "output": "100100000"
+        }
+      ],
+      "family": "binary",
+      "probes": [
+        "10111110",
+        "01101100",
+        "01000010"
+      ],
+      "program_code": "AABBA",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "eval": [
+        {
+          "input": "lbcizhkp",
+          "input_index": 0,
+          "truth": "igxfazjn8"
+        },
+        {
+          "input": "cxduxuno",
+          "input_index": 1,
+          "truth": "lsvsbvam6"
+        },
+        {
+          "input": "pingziwz",
+          "input_index": 2,
+          "truth": "uexglgnx6"
+        },
+        {
+          "input": "txanqeki",
+          "input_index": 3,
+          "truth": "ilocyvrg8"
+        }
+      ],
+      "evidence": [
+        {
+          "input": "psvqoplq",
+          "output": "jomntqno6"
+        },
+        {
+          "input": "zpsgdick",
+          "output": "aebgqnxi8"
+        },
+        {
+          "input": "dnrurujo",
+          "output": "hspsplbm6"
+        }
+      ],
+      "family": "alpha",
+      "probes": [
+        "lonsqtzs",
+        "mftofdmf",
+        "ungbiusu"
+      ],
+      "program_code": "BBABB",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "eval": [
+        {
+          "input": "xebieltl",
+          "input_index": 0,
+          "truth": "jcgrjvcz6"
+        },
+        {
+          "input": "ijvfojyc",
+          "input_index": 1,
+          "truth": "hmdwaght7"
+        },
+        {
+          "input": "yjukvlxm",
+          "input_index": 2,
+          "truth": "jtivkwhs8"
+        },
+        {
+          "input": "dugblepf",
+          "input_index": 3,
+          "truth": "cjzndbse8"
+        }
+      ],
+      "evidence": [
+        {
+          "input": "euqindnb",
+          "output": "blglzcso7"
+        },
+        {
+          "input": "slksqsrf",
+          "output": "qoqpdqji6"
+        },
+        {
+          "input": "cuarfzim",
+          "output": "xdpgkasy8"
+        }
+      ],
+      "family": "alpha",
+      "probes": [
+        "jppdtfsk",
+        "fxbjxrkd",
+        "wanhqgec"
+      ],
+      "program_code": "ABBAB",
+      "program_id": "prog-alpha-01"
+    }
+  ],
+  "programs": [
+    {
+      "family": "binary",
+      "program": "BAAAB",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "family": "binary",
+      "program": "AABBA",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "family": "alpha",
+      "program": "BBABB",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "family": "alpha",
+      "program": "ABBAB",
+      "program_id": "prog-alpha-01"
+    }
+  ],
+  "reasoning_effort": "high",
+  "route": "coding",
+  "run_id": "fb-40684468956",
+  "schema": "c3r-g1-feedback-memory-v0.1",
+  "scientific_acceptance": false,
+  "slots": [
+    {
+      "index": 0,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 1,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 2,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 3,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 4,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 5,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 6,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 7,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 8,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 9,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 10,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 11,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 12,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 13,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 14,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 15,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 16,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 17,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 18,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 19,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 20,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 21,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 22,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 23,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 24,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 25,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 26,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 27,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 28,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 29,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 30,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 31,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "learned",
+      "index": 32,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "learned",
+      "index": 33,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "learned",
+      "index": 34,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "learned",
+      "index": 35,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "learned",
+      "index": 36,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "learned",
+      "index": 37,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "learned",
+      "index": 38,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "learned",
+      "index": 39,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "learned",
+      "index": 40,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "learned",
+      "index": 41,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "learned",
+      "index": 42,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "learned",
+      "index": 43,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "learned",
+      "index": 44,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "learned",
+      "index": 45,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "learned",
+      "index": 46,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "learned",
+      "index": 47,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "raw",
+      "index": 48,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "raw",
+      "index": 49,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "raw",
+      "index": 50,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "raw",
+      "index": 51,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "raw",
+      "index": 52,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "raw",
+      "index": 53,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "raw",
+      "index": 54,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "raw",
+      "index": 55,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "raw",
+      "index": 56,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "raw",
+      "index": 57,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "raw",
+      "index": 58,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "raw",
+      "index": 59,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "raw",
+      "index": 60,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "raw",
+      "index": 61,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "raw",
+      "index": 62,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "raw",
+      "index": 63,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 64,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 65,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 66,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 67,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 68,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 69,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 70,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 71,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 72,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 73,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 74,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 75,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 76,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 77,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 78,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 79,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    }
+  ]
+}

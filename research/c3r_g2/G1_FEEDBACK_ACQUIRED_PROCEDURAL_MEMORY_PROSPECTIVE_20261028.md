@@ -126,3 +126,26 @@ procedure arm — the three owner-specified arms only), no re-scoring of
 earlier campaigns, no use of the two reserved Probe sends, no G2
 transition before this chain passes its gate, no rescue rounds if the
 gate fails.
+
+## Amendment A1 (2026-10-28, pre-data, documented before any scientific send)
+
+First dispatch (run 40684468956) consumed 8 learning sends (2 per
+program: draft + empty-guard retry) that ALL returned
+`finish_reason=length` with empty output at the registered High/4096
+budget — GLM-5.3's always-on reasoning exhausted the generation budget
+before producing any draft (the documented hazard in the transport
+module). No capsule, no data: zero scientific content was collected.
+
+Operational fix (repeatable P0 blocker, contract rule 2):
+- Learning-loop sends (draft/apply/revise) use max_tokens **16384**
+  (the transport's calibrated default); the three execution arms stay
+  at the frozen **4096**.
+- The 80-send cap is unchanged: the 8 wasted sends count against it.
+  Re-learning is launched with `--slot-offset 2`, bounding the recovery
+  to 6 sends per program (worst case 8 + 24 + 16 + 16 + 16 = 80).
+- The failed exec-learned job of run 40684468956 consumed zero sends
+  (artifact-merge defect, fixed: `merge-multiple: true`).
+
+This amendment changes an apparatus parameter before any data exists;
+it is not a response to the gate and does not alter the arms, tasks,
+thresholds or the cap.

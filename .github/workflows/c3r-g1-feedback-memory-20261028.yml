@@ -4,7 +4,17 @@ on:
   push:
     branches:
       - research/c3r-g1-feedback-memory-20261028
-  workflow_dispatch: {}
+  workflow_dispatch:
+    inputs:
+      learn_slot_offset:
+        description: "Slot offset for learn sessions (A1 recovery: 2)"
+        required: false
+        default: "0"
+      skip_controls:
+        description: "Skip exec-control (raw/fresh already dispatched)"
+        required: false
+        default: false
+        type: boolean
 
 permissions:
   contents: read
@@ -82,7 +92,7 @@ jobs:
         with:
           name: feedback-manifest
           path: ${{ runner.temp }}/fb-workspace/
-      - name: Feedback learning loop (<= 8 sends, High/4096)
+      - name: Feedback learning loop (<= 8 sends, High, learning budget 16384)
         env:
           PYTHONPATH: "src:scripts"
         run: |
@@ -91,7 +101,8 @@ jobs:
             --workspace "$RUNNER_TEMP/fb-workspace" \
             --run-id "fb-${{ github.run_id }}" \
             --session learn \
-            --program ${{ matrix.program }}
+            --program ${{ matrix.program }} \
+            --slot-offset ${{ inputs.learn_slot_offset || '0' }}
       - uses: actions/upload-artifact@v4
         with:
           name: feedback-learn-${{ matrix.program }}
@@ -106,7 +117,7 @@ jobs:
           retention-days: 90
 
   exec-control:
-    if: ${{ github.event_name == 'workflow_dispatch' }}
+    if: ${{ github.event_name == 'workflow_dispatch' && !inputs.skip_controls }}
     needs: [offline-tests, manifest]
     runs-on: ubuntu-latest
     timeout-minutes: 30
@@ -169,11 +180,12 @@ jobs:
         with:
           name: feedback-manifest
           path: ${{ runner.temp }}/fb-workspace/
-      - name: Download all stored capsules
+      - name: Download all stored capsules (merged into workspace root)
         uses: actions/download-artifact@v4
         with:
           pattern: feedback-capsule-*
           path: ${{ runner.temp }}/fb-workspace/
+          merge-multiple: true
       - name: Learned execution arm (16 sends, High/4096)
         env:
           PYTHONPATH: "src:scripts"

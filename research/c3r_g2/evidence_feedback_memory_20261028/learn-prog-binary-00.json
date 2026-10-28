@@ -1,0 +1,33 @@
+{
+  "aborted": null,
+  "budget_exhausted": false,
+  "capsule": null,
+  "capsule_format_ok": false,
+  "events": [
+    {
+      "answer": "",
+      "finish_reason": "length",
+      "guard": false,
+      "latency_ms": 98821.9,
+      "role": "draft0",
+      "slot": 0,
+      "status": "empty_answer"
+    },
+    {
+      "answer": "",
+      "finish_reason": "length",
+      "guard": true,
+      "latency_ms": 97955.9,
+      "role": "draft0",
+      "slot": 1,
+      "status": "empty_answer"
+    }
+  ],
+  "family": "binary",
+  "program_code": "BAAAB",
+  "program_id": "prog-binary-00",
+  "schema": "c3r-g1-feedback-memory-v0.1",
+  "sends_used": 2,
+  "validated": false,
+  "validation_round": null
+}

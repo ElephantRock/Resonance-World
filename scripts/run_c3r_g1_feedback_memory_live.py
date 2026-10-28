@@ -46,6 +46,15 @@ SCHEMA = "c3r-g1-feedback-memory-v0.1"
 MODEL = "glm-5.3"
 EFFORT = "high"
 MAX_TOKENS = 4096
+# Amendment A1 (2026-10-28, pre-data): GLM-5.3's always-on reasoning at
+# High effort exhausted the 4096 budget BEFORE any final answer on all
+# eight first-attempt draft sends (finish_reason=length, empty output,
+# ~99 s each - see evidence_feedback_memory_20261028/learn-firstattempt-*).
+# Learning-loop sends (draft/apply/revise) use the transport default
+# 16384; execution arms stay at the frozen 4096. Total campaign cap 80
+# is unchanged: the 8 wasted sends count against it (slot-offset
+# recovery bounds re-learning to 6 sends per program).
+LEARN_MAX_TOKENS = 16384
 ROUTE = "coding"
 CAMPAIGN_SLOTS = 80
 LEARNING_BLOCK = 8
@@ -312,6 +321,7 @@ def run_manifest(workspace: Path, run_id: str) -> dict[str, object]:
         "model": MODEL,
         "reasoning_effort": EFFORT,
         "max_tokens": MAX_TOKENS,
+        "max_tokens_learning": LEARN_MAX_TOKENS,
         "route": ROUTE,
         "programs": feedback_programs(),
         "plan": campaign_plan(),
@@ -351,7 +361,7 @@ def _load_manifest(workspace: Path) -> dict[str, object]:
     return manifest
 
 
-def _dispatch(api_key: str, prompt: str):
+def _dispatch(api_key: str, prompt: str, max_tokens: int = MAX_TOKENS):
     return ZaiStandardModelPort(
         api_key=api_key,
         model_id=MODEL,
@@ -359,7 +369,7 @@ def _dispatch(api_key: str, prompt: str):
         enabled=True,
         route=ROUTE,
         reasoning_effort=EFFORT,
-        max_tokens=MAX_TOKENS,
+        max_tokens=max_tokens,
     ).complete_prompt(prompt)
 
 
@@ -372,8 +382,12 @@ class _LearningBudgetExhausted(RuntimeError):
 
 
 def run_learn(workspace: Path, run_id: str, program_id: str,
-              api_key: str) -> dict[str, object]:
-    """The feedback learning loop for ONE program (<= 8 sends)."""
+              api_key: str, slot_offset: int = 0) -> dict[str, object]:
+    """The feedback learning loop for ONE program (<= 8 sends).
+
+    ``slot_offset`` reserves the program's block from base+offset (used
+    by the A1 recovery so re-learning cannot exceed the frozen cap).
+    """
 
     manifest = _load_manifest(workspace)
     ledger = FeedbackLedger(workspace / "feedback-ledger", run_id)
@@ -385,7 +399,7 @@ def run_learn(workspace: Path, run_id: str, program_id: str,
     family: str = plan["family"]
     code: str = plan["program_code"]
 
-    base = _program_position(program_id) * LEARNING_BLOCK
+    base = _program_position(program_id) * LEARNING_BLOCK + slot_offset
     cursor = {"next": base}
     events: list[dict[str, object]] = []
 
@@ -407,7 +421,7 @@ def run_learn(workspace: Path, run_id: str, program_id: str,
             text = prompt + (EMPTY_GUARD_SUFFIX if guard else "")
             started = time.monotonic()
             try:
-                completion = _dispatch(api_key, text)
+                completion = _dispatch(api_key, text, LEARN_MAX_TOKENS)
             except Exception as exc:
                 events.append({
                     "role": role, "slot": slot, "guard": guard,
@@ -711,6 +725,8 @@ def main() -> int:
                         choices=("manifest", "learn", "exec", "report"))
     parser.add_argument("--program")
     parser.add_argument("--arm", choices=("learned", "raw", "fresh"))
+    parser.add_argument("--slot-offset", type=int, default=0,
+                        help="learn-session slot offset (A1 recovery)")
     parser.add_argument("--api-key", default=os.environ.get("C3R_ZAI_API_KEY", ""))
     args = parser.parse_args()
     workspace = args.workspace
@@ -727,7 +743,8 @@ def main() -> int:
     if args.session == "learn":
         if not args.program:
             parser.error("learn sessions require --program")
-        run_learn(workspace, args.run_id, args.program, args.api_key)
+        run_learn(workspace, args.run_id, args.program, args.api_key,
+                  args.slot_offset)
         return 0
     if not args.arm:
         parser.error("exec sessions require --arm")

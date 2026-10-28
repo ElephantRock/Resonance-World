@@ -214,13 +214,18 @@ class _FakeCompletion:
 
 class _FakePort:
     behavior = None
+    calls: list[dict] = []  # (prompt, max_tokens) per dispatch
 
     def __init__(self, **kwargs) -> None:
-        pass
+        self.kwargs = kwargs
 
     def complete_prompt(self, prompt: str) -> _FakeCompletion:
         behavior = type(self).behavior
         assert behavior is not None, "fake behavior not configured"
+        type(self).calls.append({
+            "prompt": prompt,
+            "max_tokens": self.kwargs.get("max_tokens"),
+        })
         return behavior(prompt)
 
 
@@ -228,8 +233,10 @@ class _FakePort:
 def fake_port(monkeypatch):
     monkeypatch.setattr(feedback, "ZaiStandardModelPort", _FakePort)
     _FakePort.behavior = None
+    _FakePort.calls = []
     yield _FakePort
     _FakePort.behavior = None
+    _FakePort.calls = []
 
 
 def _input_truth_index() -> dict[str, str]:
@@ -305,6 +312,27 @@ def test_learn_validates_round_one(fake_port, tmp_path: Path) -> None:
     assert outcome["capsule"] == GOOD_CAPSULE
     assert outcome["capsule_format_ok"] is True
     assert outcome["aborted"] is None
+    # Amendment A1: learning-loop sends use the raised budget
+    assert [call["max_tokens"] for call in _FakePort.calls] == [
+        feedback.LEARN_MAX_TOKENS, feedback.LEARN_MAX_TOKENS,
+    ]
+    assert feedback.LEARN_MAX_TOKENS == 16384
+
+
+def test_learn_slot_offset_reserves_from_offset(
+    fake_port, tmp_path: Path
+) -> None:
+    feedback.run_manifest(tmp_path, "run-offset")
+    _FakePort.behavior = _make_loop_behavior("good")
+    outcome = feedback.run_learn(
+        tmp_path, "run-offset", "prog-alpha-00", "test-key", slot_offset=2
+    )
+    assert outcome["validated"] is True
+    slots = [event["slot"] for event in outcome["events"]]
+    base = feedback._program_position("prog-alpha-00") * 8
+    assert slots == [base + 2, base + 3]
+    ledger = feedback.FeedbackLedger(tmp_path / "feedback-ledger", "run-offset")
+    assert ledger.consumed == 2
 
 
 def test_learn_validates_after_revision(fake_port, tmp_path: Path) -> None:
@@ -433,6 +461,8 @@ def test_exec_learned_uses_capsule_verbatim(fake_port, tmp_path: Path) -> None:
     for prompt in seen_prompts:
         assert GOOD_CAPSULE in prompt
         assert "in=" not in prompt
+    # execution arms stay at the frozen 4096 budget (Amendment A1)
+    assert {call["max_tokens"] for call in _FakePort.calls} == {4096}
 
 
 def test_exec_learned_no_capsule_fails_without_sends(
