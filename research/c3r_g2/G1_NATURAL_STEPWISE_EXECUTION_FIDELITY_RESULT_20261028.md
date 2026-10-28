@@ -34,9 +34,13 @@ both arms is a wrong final value — not a format/execution breakdown.
 
 ## 2) Paired discordance (same task, both arms)
 
-16 paired comparisons: **13 both-correct, 2 B-only, 1 A-only, 0 with any
-unparseable step.** Paired B−A = **+1** (B-only: rotate-01/wave2,
-rotate-03/wave2; A-only: rotate-03/wave1).
+16 paired comparisons: **12 both-correct, 2 B-only, 1 A-only, 1
+both-failed; 0 with any unparseable step.** Paired B−A = **+1** (B-only:
+rotate-01/wave2, rotate-03/wave2; A-only: rotate-00/wave1; both-failed:
+rotate-03/wave1). *[Correction 2026-10-28, owner decision: the pair
+table originally read "13 both-correct" — re-derivation from the session
+evidence gives 12 both-correct + 1 both-failed. The report JSON's
+discordant counts (2/1) and the verdict were already correct.]*
 
 - digits family: **8/8 in both arms** — perfect under both granularities.
 - rotate family: A 5/8, B 6/8.
