@@ -66,9 +66,12 @@ interpretation reads per member-task. The design guarantees
 scenarios) and equal proposal slots across arms. Compilation cost is
 reported separately and attributed to D.
 
-**Abstention contract:** when the compiler abstains (support/margin),
-D members use the pre-declared neutral procedure; the fallback is
-counted in the taxonomy and the outcome stays in the ITT denominator.
+**Abstention contract (v3, corrected):** when the compiler abstains
+(support/margin), D members use the pre-declared neutral procedure.
+`abstention_fallback` is an OPERATIONAL EVENT flag, distinct from
+outcome correctness: if the fallback path yields the correct answer it
+is graded CORRECT with the flag retained. Transport failures and
+invalid/unparseable outputs remain ITT failures in the denominator.
 No post-hoc re-compilation, no threshold change after outcomes.
 
 ## 3. Offline causal qualification — what was proven (noninferential)
@@ -101,10 +104,21 @@ actual behavior — that is what the campaign measures.
 - **SESOI = +5 percentage points** — adopted provisionally as a
   CONVENTIONAL decision threshold (not a derived economic-importance
   bound); immutable after confirmatory freeze.
-- **α = 0.05 (one-sided primary), Holm** across the confirmatory family
-  in the fixed order: (1) D − C primary, (2) D − D_MINUS, (3) D − B.
-  Test: exact paired permutation on organization-level means with a
-  bootstrap CI over organizations.
+- **α = 0.05 (one-sided primary), FIXED-ORDER HIERARCHICAL
+  GATEKEEPING (v3, replaces Holm)** — the causal ordering is
+  pre-declared and testing proceeds in the fixed sequence (1) D − C,
+  (2) D − D_MINUS, (3) D − B; a claim is tested ONLY if the previous
+  claim passed at one-sided α = .05. (Holm ranks realized p-values and
+  was therefore corrected per owner review.) Test: exact paired
+  permutation on organization-level means with a bootstrap CI over
+  organizations.
+- **Confirmatory success gate is JOINT (v3):** D − C must be positive
+  AND statistically significant AND its pooled point estimate ≥ +5pp.
+  Statistical significance alone is insufficient; a significant but
+  sub-material estimate does not pass. Power calibration must simulate
+  this FULL gate (not significance-only at a true +5pp effect);
+  claiming the TRUE effect exceeds +5pp is a stronger claim requiring
+  a different test and larger N.
 - **Missing/transport policy:** ITT — every transport failure,
   unparseable response and abstention fallback stays as a failure in
   the denominator; analyzable yield reported per arm.
@@ -168,7 +182,45 @@ operate under the same mixture declaration.
   establish institutional regeneration across generations (separate
   G3 study, separately gated).
 
-## 6. Request-class qualification probe (AUTHORIZED — exactly 2 sends)
+## 7. Developmental variance-calibration stage (owner GO 2026-10-28 night; confirmatory NO-GO)
+
+One limited NON-INFERENTIAL stage to estimate the organization-level
+variance of the primary D−C difference, the response-validity rate and
+the real cost, BEFORE any confirmatory N is fixed:
+
+| item | value (owner-fixed) |
+|---|---|
+| organizations | 12 independent (4 per environment class) |
+| arms | C and D only |
+| holdout tasks | 8 per organization |
+| members | 2 fresh per organization, isolated session per arm |
+| send cap | exactly 384 (12 × 8 × 2 × 2), O_EXCL ledger |
+| registered cost bounds | send cap 384; per-request max_tokens 4096 (theoretical completion ceiling 1,572,864 tokens); financial exposure = the existing Coding-Plan subscription (no incremental per-token cash cost) — if the owner declares a hard money cap instead, NOTHING is sent until it is registered |
+| use | variance estimation, validity rate, cost accounting ONLY |
+| inference | non-confirmatory; no mechanism promotion |
+| reuse | developmental organizations and records are COMPLETELY EXCLUDED from the confirmatory sample |
+
+**Analysis of the calibration (declared in advance):** report the
+org-level mean paired D−C per class and pooled; the SD estimate with
+its uncertainty; response-validity rates per arm and class; cost
+totals. Conservative variance guidance is mandatory: the confirmatory
+N is derived from a CONSERVATIVE (upper) variance bound with class
+sensitivity analysis — never from the optimistic point estimate alone.
+If the implied N is impractical: NO SESOI reduction, NO mixture
+change, NO rescue — the investment's viability is re-evaluated by the
+owner.
+
+**Freeze conditions for the confirmatory stage (after calibration):**
+N from powered simulation of the JOINT gate (§4.1) under conservative
+variance; stratified analysis design; observed validity-yield floor;
+documented cost. Mixture parameters, seeds, task-allocation rules and
+arm-order balancing are frozen WITHOUT reference to which choices
+favored D in the developmental data. Developmental orgs/records are
+never reused. The full A/B/C/D/D_MINUS campaign and any Pattern
+Register promotion remain NO-GO until the owner separately approves
+the frozen confirmatory protocol.
+
+## 6. Request-class qualification probe (EXECUTED 2026-10-28 — 2/2 sends, both classes completed)
 
 Frozen mini-protocol (separate document:
 `G2_REQUEST_CLASS_PROBE_PROTOCOL_20261028.md`): one C-class
