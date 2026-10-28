@@ -1,0 +1,75 @@
+{
+  "arm": "b",
+  "itt_successes": 1,
+  "program_id": "prog-rotate-02",
+  "rows": [
+    {
+      "arm": "b",
+      "correct": true,
+      "failure_class": null,
+      "family": "rotate",
+      "final_state": "jil_oa9",
+      "input": "aujilo",
+      "itt_success": true,
+      "program_id": "prog-rotate-02",
+      "sends": 5,
+      "slots": [
+        46,
+        47,
+        48,
+        49,
+        50
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "jiloau",
+          "finish_reason": "stop",
+          "latency_ms": 3162.5,
+          "slot": 46,
+          "status": "sent_ok",
+          "step": 1
+        },
+        {
+          "answer": "jil_oau_",
+          "finish_reason": "stop",
+          "latency_ms": 6266.3,
+          "slot": 47,
+          "status": "sent_ok",
+          "step": 2
+        },
+        {
+          "answer": "jil_oa",
+          "finish_reason": "stop",
+          "latency_ms": 2897.7,
+          "slot": 48,
+          "status": "sent_ok",
+          "step": 3
+        },
+        {
+          "answer": "jil_oa",
+          "finish_reason": "stop",
+          "latency_ms": 4276.1,
+          "slot": 49,
+          "status": "sent_ok",
+          "step": 4
+        },
+        {
+          "answer": "jil_oa9",
+          "finish_reason": "stop",
+          "latency_ms": 2472.9,
+          "slot": 50,
+          "status": "sent_ok",
+          "step": 5
+        }
+      ],
+      "truth": "jil_oa9",
+      "wave": "wave1"
+    }
+  ],
+  "schema": "c3r-g1-stepwise-execution-v0.1",
+  "sends": 5,
+  "session": "b-wave1-prog-rotate-02",
+  "tasks": 1,
+  "wave": "wave1"
+}

@@ -1,0 +1,75 @@
+{
+  "arm": "b",
+  "itt_successes": 0,
+  "program_id": "prog-rotate-00",
+  "rows": [
+    {
+      "arm": "b",
+      "correct": false,
+      "failure_class": null,
+      "family": "rotate",
+      "final_state": "be_oko9",
+      "input": "okeboo",
+      "itt_success": false,
+      "program_id": "prog-rotate-00",
+      "sends": 5,
+      "slots": [
+        36,
+        37,
+        38,
+        39,
+        40
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "eboook",
+          "finish_reason": "stop",
+          "latency_ms": 7278.5,
+          "slot": 36,
+          "status": "sent_ok",
+          "step": 1
+        },
+        {
+          "answer": "ebo_ok_",
+          "finish_reason": "stop",
+          "latency_ms": 4896.2,
+          "slot": 37,
+          "status": "sent_ok",
+          "step": 2
+        },
+        {
+          "answer": "ebo_ok",
+          "finish_reason": "stop",
+          "latency_ms": 2755.4,
+          "slot": 38,
+          "status": "sent_ok",
+          "step": 3
+        },
+        {
+          "answer": "be_oko",
+          "finish_reason": "stop",
+          "latency_ms": 5383.7,
+          "slot": 39,
+          "status": "sent_ok",
+          "step": 4
+        },
+        {
+          "answer": "be_oko9",
+          "finish_reason": "stop",
+          "latency_ms": 2185.6,
+          "slot": 40,
+          "status": "sent_ok",
+          "step": 5
+        }
+      ],
+      "truth": "be_ooo9",
+      "wave": "wave1"
+    }
+  ],
+  "schema": "c3r-g1-stepwise-execution-v0.1",
+  "sends": 5,
+  "session": "b-wave1-prog-rotate-00",
+  "tasks": 1,
+  "wave": "wave1"
+}

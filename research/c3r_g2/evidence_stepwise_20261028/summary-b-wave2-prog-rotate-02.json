@@ -1,0 +1,75 @@
+{
+  "arm": "b",
+  "itt_successes": 1,
+  "program_id": "prog-rotate-02",
+  "rows": [
+    {
+      "arm": "b",
+      "correct": true,
+      "failure_class": null,
+      "family": "rotate",
+      "final_state": "bxp_co9",
+      "input": "obbxpc",
+      "itt_success": true,
+      "program_id": "prog-rotate-02",
+      "sends": 5,
+      "slots": [
+        86,
+        87,
+        88,
+        89,
+        90
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "bxpcob",
+          "finish_reason": "stop",
+          "latency_ms": 2314.5,
+          "slot": 86,
+          "status": "sent_ok",
+          "step": 1
+        },
+        {
+          "answer": "bxp_cob_",
+          "finish_reason": "stop",
+          "latency_ms": 3038.5,
+          "slot": 87,
+          "status": "sent_ok",
+          "step": 2
+        },
+        {
+          "answer": "bxp_co",
+          "finish_reason": "stop",
+          "latency_ms": 6372.6,
+          "slot": 88,
+          "status": "sent_ok",
+          "step": 3
+        },
+        {
+          "answer": "bxp_co",
+          "finish_reason": "stop",
+          "latency_ms": 3251.5,
+          "slot": 89,
+          "status": "sent_ok",
+          "step": 4
+        },
+        {
+          "answer": "bxp_co9",
+          "finish_reason": "stop",
+          "latency_ms": 2168.4,
+          "slot": 90,
+          "status": "sent_ok",
+          "step": 5
+        }
+      ],
+      "truth": "bxp_co9",
+      "wave": "wave2"
+    }
+  ],
+  "schema": "c3r-g1-stepwise-execution-v0.1",
+  "sends": 5,
+  "session": "b-wave2-prog-rotate-02",
+  "tasks": 1,
+  "wave": "wave2"
+}

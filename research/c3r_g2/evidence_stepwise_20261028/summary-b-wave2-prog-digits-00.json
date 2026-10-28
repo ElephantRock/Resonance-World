@@ -1,0 +1,75 @@
+{
+  "arm": "b",
+  "itt_successes": 1,
+  "program_id": "prog-digits-00",
+  "rows": [
+    {
+      "arm": "b",
+      "correct": true,
+      "failure_class": null,
+      "family": "digits",
+      "final_state": "892",
+      "input": "0296",
+      "itt_success": true,
+      "program_id": "prog-digits-00",
+      "sends": 5,
+      "slots": [
+        56,
+        57,
+        58,
+        59,
+        60
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "0926",
+          "finish_reason": "stop",
+          "latency_ms": 2402.7,
+          "slot": 56,
+          "status": "sent_ok",
+          "step": 1
+        },
+        {
+          "answer": "09",
+          "finish_reason": "stop",
+          "latency_ms": 2625.0,
+          "slot": 57,
+          "status": "sent_ok",
+          "step": 2
+        },
+        {
+          "answer": "98",
+          "finish_reason": "stop",
+          "latency_ms": 2715.9,
+          "slot": 58,
+          "status": "sent_ok",
+          "step": 3
+        },
+        {
+          "answer": "89",
+          "finish_reason": "stop",
+          "latency_ms": 2238.9,
+          "slot": 59,
+          "status": "sent_ok",
+          "step": 4
+        },
+        {
+          "answer": "892",
+          "finish_reason": "stop",
+          "latency_ms": 2735.1,
+          "slot": 60,
+          "status": "sent_ok",
+          "step": 5
+        }
+      ],
+      "truth": "892",
+      "wave": "wave2"
+    }
+  ],
+  "schema": "c3r-g1-stepwise-execution-v0.1",
+  "sends": 5,
+  "session": "b-wave2-prog-digits-00",
+  "tasks": 1,
+  "wave": "wave2"
+}

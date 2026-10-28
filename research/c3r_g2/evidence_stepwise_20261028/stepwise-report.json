@@ -1,0 +1,17 @@
+{
+  "a_itt_successes": 13,
+  "b_itt_successes": 14,
+  "b_step_failure_positions": {},
+  "campaign": "g1-natural-stepwise-execution-fidelity-20261028",
+  "criterion_b_at_least_14_of_16": true,
+  "criterion_paired_diff_at_least_3": false,
+  "discordant_a_only": 1,
+  "discordant_b_only": 2,
+  "paired_b_minus_a": 1,
+  "schema": "c3r-g1-stepwise-execution-v0.1",
+  "scientific_acceptance": false,
+  "send_cap": 96,
+  "sends_total": 96,
+  "tasks": 16,
+  "verdict": "predeclared success criterion NOT MET"
+}

@@ -1,0 +1,75 @@
+{
+  "arm": "b",
+  "itt_successes": 0,
+  "program_id": "prog-rotate-03",
+  "rows": [
+    {
+      "arm": "b",
+      "correct": false,
+      "failure_class": null,
+      "family": "rotate",
+      "final_state": "9_gsi_p",
+      "input": "gispew",
+      "itt_success": false,
+      "program_id": "prog-rotate-03",
+      "sends": 5,
+      "slots": [
+        51,
+        52,
+        53,
+        54,
+        55
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "ewgisp",
+          "finish_reason": "stop",
+          "latency_ms": 2825.3,
+          "slot": 51,
+          "status": "sent_ok",
+          "step": 1
+        },
+        {
+          "answer": "ewg_isp_",
+          "finish_reason": "stop",
+          "latency_ms": 4413.2,
+          "slot": 52,
+          "status": "sent_ok",
+          "step": 2
+        },
+        {
+          "answer": "g_isp_",
+          "finish_reason": "stop",
+          "latency_ms": 5498.3,
+          "slot": 53,
+          "status": "sent_ok",
+          "step": 3
+        },
+        {
+          "answer": "_gsi_p",
+          "finish_reason": "stop",
+          "latency_ms": 4454.6,
+          "slot": 54,
+          "status": "sent_ok",
+          "step": 4
+        },
+        {
+          "answer": "9_gsi_p",
+          "finish_reason": "stop",
+          "latency_ms": 2162.6,
+          "slot": 55,
+          "status": "sent_ok",
+          "step": 5
+        }
+      ],
+      "truth": "9gwi_ps",
+      "wave": "wave1"
+    }
+  ],
+  "schema": "c3r-g1-stepwise-execution-v0.1",
+  "sends": 5,
+  "session": "b-wave1-prog-rotate-03",
+  "tasks": 1,
+  "wave": "wave1"
+}

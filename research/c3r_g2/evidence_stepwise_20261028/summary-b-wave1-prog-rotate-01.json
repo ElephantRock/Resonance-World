@@ -1,0 +1,75 @@
+{
+  "arm": "b",
+  "itt_successes": 1,
+  "program_id": "prog-rotate-01",
+  "rows": [
+    {
+      "arm": "b",
+      "correct": true,
+      "failure_class": null,
+      "family": "rotate",
+      "final_state": "9oeo--z",
+      "input": "ozhoeo",
+      "itt_success": true,
+      "program_id": "prog-rotate-01",
+      "sends": 5,
+      "slots": [
+        41,
+        42,
+        43,
+        44,
+        45
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "eoozho",
+          "finish_reason": "stop",
+          "latency_ms": 6824.1,
+          "slot": 41,
+          "status": "sent_ok",
+          "step": 1
+        },
+        {
+          "answer": "eo-oz-ho-",
+          "finish_reason": "stop",
+          "latency_ms": 19264.8,
+          "slot": 42,
+          "status": "sent_ok",
+          "step": 2
+        },
+        {
+          "answer": "eo-oz-",
+          "finish_reason": "stop",
+          "latency_ms": 2891.1,
+          "slot": 43,
+          "status": "sent_ok",
+          "step": 3
+        },
+        {
+          "answer": "oeo--z",
+          "finish_reason": "stop",
+          "latency_ms": 5261.8,
+          "slot": 44,
+          "status": "sent_ok",
+          "step": 4
+        },
+        {
+          "answer": "9oeo--z",
+          "finish_reason": "stop",
+          "latency_ms": 2929.7,
+          "slot": 45,
+          "status": "sent_ok",
+          "step": 5
+        }
+      ],
+      "truth": "9oeo--z",
+      "wave": "wave1"
+    }
+  ],
+  "schema": "c3r-g1-stepwise-execution-v0.1",
+  "sends": 5,
+  "session": "b-wave1-prog-rotate-01",
+  "tasks": 1,
+  "wave": "wave1"
+}

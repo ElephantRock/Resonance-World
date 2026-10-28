@@ -1,0 +1,212 @@
+{
+  "arm": "a",
+  "itt_successes": 6,
+  "program_id": null,
+  "rows": [
+    {
+      "arm": "a",
+      "correct": true,
+      "family": "digits",
+      "input": "0296",
+      "itt_success": true,
+      "program_id": "prog-digits-00",
+      "sends": 1,
+      "slots": [
+        8
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "892",
+          "finish_reason": "stop",
+          "latency_ms": 5868.0,
+          "slot": 8,
+          "status": "sent_ok",
+          "step": null
+        }
+      ],
+      "truth": "892",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "correct": true,
+      "family": "digits",
+      "input": "4789",
+      "itt_success": true,
+      "program_id": "prog-digits-01",
+      "sends": 1,
+      "slots": [
+        9
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "295",
+          "finish_reason": "stop",
+          "latency_ms": 5756.7,
+          "slot": 9,
+          "status": "sent_ok",
+          "step": null
+        }
+      ],
+      "truth": "295",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "correct": true,
+      "family": "digits",
+      "input": "8054",
+      "itt_success": true,
+      "program_id": "prog-digits-02",
+      "sends": 1,
+      "slots": [
+        10
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "293",
+          "finish_reason": "stop",
+          "latency_ms": 6585.2,
+          "slot": 10,
+          "status": "sent_ok",
+          "step": null
+        }
+      ],
+      "truth": "293",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "correct": true,
+      "family": "digits",
+      "input": "2940",
+      "itt_success": true,
+      "program_id": "prog-digits-03",
+      "sends": 1,
+      "slots": [
+        11
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "312",
+          "finish_reason": "stop",
+          "latency_ms": 5541.9,
+          "slot": 11,
+          "status": "sent_ok",
+          "step": null
+        }
+      ],
+      "truth": "312",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "correct": true,
+      "family": "rotate",
+      "input": "qylqxl",
+      "itt_success": true,
+      "program_id": "prog-rotate-00",
+      "sends": 1,
+      "slots": [
+        12
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "ql_xql9",
+          "finish_reason": "stop",
+          "latency_ms": 9098.0,
+          "slot": 12,
+          "status": "sent_ok",
+          "step": null
+        }
+      ],
+      "truth": "ql_xql9",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "correct": false,
+      "family": "rotate",
+      "input": "envgbd",
+      "itt_success": false,
+      "program_id": "prog-rotate-01",
+      "sends": 1,
+      "slots": [
+        13
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "9db-en",
+          "finish_reason": "stop",
+          "latency_ms": 8028.9,
+          "slot": 13,
+          "status": "sent_ok",
+          "step": null
+        }
+      ],
+      "truth": "9dbe--n",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "correct": true,
+      "family": "rotate",
+      "input": "obbxpc",
+      "itt_success": true,
+      "program_id": "prog-rotate-02",
+      "sends": 1,
+      "slots": [
+        14
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "bxp_co9",
+          "finish_reason": "stop",
+          "latency_ms": 6870.4,
+          "slot": 14,
+          "status": "sent_ok",
+          "step": null
+        }
+      ],
+      "truth": "bxp_co9",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "correct": false,
+      "family": "rotate",
+      "input": "prpcre",
+      "itt_success": false,
+      "program_id": "prog-rotate-03",
+      "sends": 1,
+      "slots": [
+        15
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "9_ppr_c",
+          "finish_reason": "stop",
+          "latency_ms": 9274.9,
+          "slot": 15,
+          "status": "sent_ok",
+          "step": null
+        }
+      ],
+      "truth": "9per_cp",
+      "wave": "wave2"
+    }
+  ],
+  "schema": "c3r-g1-stepwise-execution-v0.1",
+  "sends": 8,
+  "session": "a-wave2",
+  "tasks": 8,
+  "wave": "wave2"
+}

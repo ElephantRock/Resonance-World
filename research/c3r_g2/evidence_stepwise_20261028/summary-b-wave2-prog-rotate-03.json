@@ -1,0 +1,75 @@
+{
+  "arm": "b",
+  "itt_successes": 1,
+  "program_id": "prog-rotate-03",
+  "rows": [
+    {
+      "arm": "b",
+      "correct": true,
+      "failure_class": null,
+      "family": "rotate",
+      "final_state": "9per_cp",
+      "input": "prpcre",
+      "itt_success": true,
+      "program_id": "prog-rotate-03",
+      "sends": 5,
+      "slots": [
+        91,
+        92,
+        93,
+        94,
+        95
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "reprpc",
+          "finish_reason": "stop",
+          "latency_ms": 5568.0,
+          "slot": 91,
+          "status": "sent_ok",
+          "step": 1
+        },
+        {
+          "answer": "rep_rpc",
+          "finish_reason": "stop",
+          "latency_ms": 21578.8,
+          "slot": 92,
+          "status": "sent_ok",
+          "step": 2
+        },
+        {
+          "answer": "ep_rpc",
+          "finish_reason": "stop",
+          "latency_ms": 2645.6,
+          "slot": 93,
+          "status": "sent_ok",
+          "step": 3
+        },
+        {
+          "answer": "per_cp",
+          "finish_reason": "stop",
+          "latency_ms": 6922.3,
+          "slot": 94,
+          "status": "sent_ok",
+          "step": 4
+        },
+        {
+          "answer": "9per_cp",
+          "finish_reason": "stop",
+          "latency_ms": 4593.5,
+          "slot": 95,
+          "status": "sent_ok",
+          "step": 5
+        }
+      ],
+      "truth": "9per_cp",
+      "wave": "wave2"
+    }
+  ],
+  "schema": "c3r-g1-stepwise-execution-v0.1",
+  "sends": 5,
+  "session": "b-wave2-prog-rotate-03",
+  "tasks": 1,
+  "wave": "wave2"
+}

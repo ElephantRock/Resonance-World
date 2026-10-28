@@ -1,0 +1,968 @@
+{
+  "campaign_slots": 96,
+  "max_tokens": 4096,
+  "model": "glm-5.3",
+  "programs": [
+    {
+      "family": "digits",
+      "program": "AABBB",
+      "program_id": "prog-digits-00"
+    },
+    {
+      "family": "digits",
+      "program": "AAAAA",
+      "program_id": "prog-digits-01"
+    },
+    {
+      "family": "digits",
+      "program": "ABBAA",
+      "program_id": "prog-digits-02"
+    },
+    {
+      "family": "digits",
+      "program": "AABAB",
+      "program_id": "prog-digits-03"
+    },
+    {
+      "family": "rotate",
+      "program": "ABAAA",
+      "program_id": "prog-rotate-00"
+    },
+    {
+      "family": "rotate",
+      "program": "BAAAB",
+      "program_id": "prog-rotate-01"
+    },
+    {
+      "family": "rotate",
+      "program": "ABABA",
+      "program_id": "prog-rotate-02"
+    },
+    {
+      "family": "rotate",
+      "program": "BBBAB",
+      "program_id": "prog-rotate-03"
+    }
+  ],
+  "reasoning_effort": "high",
+  "route": "coding",
+  "run_id": "stepwise-40652718082",
+  "schema": "c3r-g1-stepwise-execution-v0.1",
+  "scientific_acceptance": false,
+  "slots": [
+    {
+      "arm": "a",
+      "index": 0,
+      "program_id": "prog-digits-00",
+      "step": null,
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 1,
+      "program_id": "prog-digits-01",
+      "step": null,
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 2,
+      "program_id": "prog-digits-02",
+      "step": null,
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 3,
+      "program_id": "prog-digits-03",
+      "step": null,
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 4,
+      "program_id": "prog-rotate-00",
+      "step": null,
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 5,
+      "program_id": "prog-rotate-01",
+      "step": null,
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 6,
+      "program_id": "prog-rotate-02",
+      "step": null,
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 7,
+      "program_id": "prog-rotate-03",
+      "step": null,
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 8,
+      "program_id": "prog-digits-00",
+      "step": null,
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 9,
+      "program_id": "prog-digits-01",
+      "step": null,
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 10,
+      "program_id": "prog-digits-02",
+      "step": null,
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 11,
+      "program_id": "prog-digits-03",
+      "step": null,
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 12,
+      "program_id": "prog-rotate-00",
+      "step": null,
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 13,
+      "program_id": "prog-rotate-01",
+      "step": null,
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 14,
+      "program_id": "prog-rotate-02",
+      "step": null,
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 15,
+      "program_id": "prog-rotate-03",
+      "step": null,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 16,
+      "program_id": "prog-digits-00",
+      "step": 0,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 17,
+      "program_id": "prog-digits-00",
+      "step": 1,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 18,
+      "program_id": "prog-digits-00",
+      "step": 2,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 19,
+      "program_id": "prog-digits-00",
+      "step": 3,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 20,
+      "program_id": "prog-digits-00",
+      "step": 4,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 21,
+      "program_id": "prog-digits-01",
+      "step": 0,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 22,
+      "program_id": "prog-digits-01",
+      "step": 1,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 23,
+      "program_id": "prog-digits-01",
+      "step": 2,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 24,
+      "program_id": "prog-digits-01",
+      "step": 3,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 25,
+      "program_id": "prog-digits-01",
+      "step": 4,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 26,
+      "program_id": "prog-digits-02",
+      "step": 0,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 27,
+      "program_id": "prog-digits-02",
+      "step": 1,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 28,
+      "program_id": "prog-digits-02",
+      "step": 2,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 29,
+      "program_id": "prog-digits-02",
+      "step": 3,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 30,
+      "program_id": "prog-digits-02",
+      "step": 4,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 31,
+      "program_id": "prog-digits-03",
+      "step": 0,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 32,
+      "program_id": "prog-digits-03",
+      "step": 1,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 33,
+      "program_id": "prog-digits-03",
+      "step": 2,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 34,
+      "program_id": "prog-digits-03",
+      "step": 3,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 35,
+      "program_id": "prog-digits-03",
+      "step": 4,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 36,
+      "program_id": "prog-rotate-00",
+      "step": 0,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 37,
+      "program_id": "prog-rotate-00",
+      "step": 1,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 38,
+      "program_id": "prog-rotate-00",
+      "step": 2,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 39,
+      "program_id": "prog-rotate-00",
+      "step": 3,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 40,
+      "program_id": "prog-rotate-00",
+      "step": 4,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 41,
+      "program_id": "prog-rotate-01",
+      "step": 0,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 42,
+      "program_id": "prog-rotate-01",
+      "step": 1,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 43,
+      "program_id": "prog-rotate-01",
+      "step": 2,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 44,
+      "program_id": "prog-rotate-01",
+      "step": 3,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 45,
+      "program_id": "prog-rotate-01",
+      "step": 4,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 46,
+      "program_id": "prog-rotate-02",
+      "step": 0,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 47,
+      "program_id": "prog-rotate-02",
+      "step": 1,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 48,
+      "program_id": "prog-rotate-02",
+      "step": 2,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 49,
+      "program_id": "prog-rotate-02",
+      "step": 3,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 50,
+      "program_id": "prog-rotate-02",
+      "step": 4,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 51,
+      "program_id": "prog-rotate-03",
+      "step": 0,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 52,
+      "program_id": "prog-rotate-03",
+      "step": 1,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 53,
+      "program_id": "prog-rotate-03",
+      "step": 2,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 54,
+      "program_id": "prog-rotate-03",
+      "step": 3,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 55,
+      "program_id": "prog-rotate-03",
+      "step": 4,
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 56,
+      "program_id": "prog-digits-00",
+      "step": 0,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 57,
+      "program_id": "prog-digits-00",
+      "step": 1,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 58,
+      "program_id": "prog-digits-00",
+      "step": 2,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 59,
+      "program_id": "prog-digits-00",
+      "step": 3,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 60,
+      "program_id": "prog-digits-00",
+      "step": 4,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 61,
+      "program_id": "prog-digits-01",
+      "step": 0,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 62,
+      "program_id": "prog-digits-01",
+      "step": 1,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 63,
+      "program_id": "prog-digits-01",
+      "step": 2,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 64,
+      "program_id": "prog-digits-01",
+      "step": 3,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 65,
+      "program_id": "prog-digits-01",
+      "step": 4,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 66,
+      "program_id": "prog-digits-02",
+      "step": 0,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 67,
+      "program_id": "prog-digits-02",
+      "step": 1,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 68,
+      "program_id": "prog-digits-02",
+      "step": 2,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 69,
+      "program_id": "prog-digits-02",
+      "step": 3,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 70,
+      "program_id": "prog-digits-02",
+      "step": 4,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 71,
+      "program_id": "prog-digits-03",
+      "step": 0,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 72,
+      "program_id": "prog-digits-03",
+      "step": 1,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 73,
+      "program_id": "prog-digits-03",
+      "step": 2,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 74,
+      "program_id": "prog-digits-03",
+      "step": 3,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 75,
+      "program_id": "prog-digits-03",
+      "step": 4,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 76,
+      "program_id": "prog-rotate-00",
+      "step": 0,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 77,
+      "program_id": "prog-rotate-00",
+      "step": 1,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 78,
+      "program_id": "prog-rotate-00",
+      "step": 2,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 79,
+      "program_id": "prog-rotate-00",
+      "step": 3,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 80,
+      "program_id": "prog-rotate-00",
+      "step": 4,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 81,
+      "program_id": "prog-rotate-01",
+      "step": 0,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 82,
+      "program_id": "prog-rotate-01",
+      "step": 1,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 83,
+      "program_id": "prog-rotate-01",
+      "step": 2,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 84,
+      "program_id": "prog-rotate-01",
+      "step": 3,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 85,
+      "program_id": "prog-rotate-01",
+      "step": 4,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 86,
+      "program_id": "prog-rotate-02",
+      "step": 0,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 87,
+      "program_id": "prog-rotate-02",
+      "step": 1,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 88,
+      "program_id": "prog-rotate-02",
+      "step": 2,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 89,
+      "program_id": "prog-rotate-02",
+      "step": 3,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 90,
+      "program_id": "prog-rotate-02",
+      "step": 4,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 91,
+      "program_id": "prog-rotate-03",
+      "step": 0,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 92,
+      "program_id": "prog-rotate-03",
+      "step": 1,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 93,
+      "program_id": "prog-rotate-03",
+      "step": 2,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 94,
+      "program_id": "prog-rotate-03",
+      "step": 3,
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 95,
+      "program_id": "prog-rotate-03",
+      "step": 4,
+      "wave": "wave2"
+    }
+  ],
+  "tasks": [
+    {
+      "family": "digits",
+      "input": "6905",
+      "program_code": "AABBB",
+      "program_id": "prog-digits-00",
+      "steps": [
+        "Step 1: swap the two middle digits.",
+        "Step 2: keep only the first two digits.",
+        "Step 3: replace each digit d with (d+9) mod 10.",
+        "Step 4: arrange the digits in ascending order.",
+        "Step 5: append the digit count to the result."
+      ],
+      "truth": "592",
+      "wave": "wave1"
+    },
+    {
+      "family": "digits",
+      "input": "0296",
+      "program_code": "AABBB",
+      "program_id": "prog-digits-00",
+      "steps": [
+        "Step 1: swap the two middle digits.",
+        "Step 2: keep only the first two digits.",
+        "Step 3: replace each digit d with (d+9) mod 10.",
+        "Step 4: arrange the digits in ascending order.",
+        "Step 5: append the digit count to the result."
+      ],
+      "truth": "892",
+      "wave": "wave2"
+    },
+    {
+      "family": "digits",
+      "input": "8926",
+      "program_code": "AAAAA",
+      "program_id": "prog-digits-01",
+      "steps": [
+        "Step 1: swap the two middle digits.",
+        "Step 2: keep only the first two digits.",
+        "Step 3: replace each digit d with (d+1) mod 10.",
+        "Step 4: arrange the digits in descending order.",
+        "Step 5: prefix the result with the digit count."
+      ],
+      "truth": "293",
+      "wave": "wave1"
+    },
+    {
+      "family": "digits",
+      "input": "4789",
+      "program_code": "AAAAA",
+      "program_id": "prog-digits-01",
+      "steps": [
+        "Step 1: swap the two middle digits.",
+        "Step 2: keep only the first two digits.",
+        "Step 3: replace each digit d with (d+1) mod 10.",
+        "Step 4: arrange the digits in descending order.",
+        "Step 5: prefix the result with the digit count."
+      ],
+      "truth": "295",
+      "wave": "wave2"
+    },
+    {
+      "family": "digits",
+      "input": "4079",
+      "program_code": "ABBAA",
+      "program_id": "prog-digits-02",
+      "steps": [
+        "Step 1: swap the two middle digits.",
+        "Step 2: keep only the last two digits.",
+        "Step 3: replace each digit d with (d+9) mod 10.",
+        "Step 4: arrange the digits in descending order.",
+        "Step 5: prefix the result with the digit count."
+      ],
+      "truth": "298",
+      "wave": "wave1"
+    },
+    {
+      "family": "digits",
+      "input": "8054",
+      "program_code": "ABBAA",
+      "program_id": "prog-digits-02",
+      "steps": [
+        "Step 1: swap the two middle digits.",
+        "Step 2: keep only the last two digits.",
+        "Step 3: replace each digit d with (d+9) mod 10.",
+        "Step 4: arrange the digits in descending order.",
+        "Step 5: prefix the result with the digit count."
+      ],
+      "truth": "293",
+      "wave": "wave2"
+    },
+    {
+      "family": "digits",
+      "input": "4509",
+      "program_code": "AABAB",
+      "program_id": "prog-digits-03",
+      "steps": [
+        "Step 1: swap the two middle digits.",
+        "Step 2: keep only the first two digits.",
+        "Step 3: replace each digit d with (d+9) mod 10.",
+        "Step 4: arrange the digits in descending order.",
+        "Step 5: append the digit count to the result."
+      ],
+      "truth": "932",
+      "wave": "wave1"
+    },
+    {
+      "family": "digits",
+      "input": "2940",
+      "program_code": "AABAB",
+      "program_id": "prog-digits-03",
+      "steps": [
+        "Step 1: swap the two middle digits.",
+        "Step 2: keep only the first two digits.",
+        "Step 3: replace each digit d with (d+9) mod 10.",
+        "Step 4: arrange the digits in descending order.",
+        "Step 5: append the digit count to the result."
+      ],
+      "truth": "312",
+      "wave": "wave2"
+    },
+    {
+      "family": "rotate",
+      "input": "okeboo",
+      "program_code": "ABAAA",
+      "program_id": "prog-rotate-00",
+      "steps": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "be_ooo9",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "qylqxl",
+      "program_code": "ABAAA",
+      "program_id": "prog-rotate-00",
+      "steps": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "ql_xql9",
+      "wave": "wave2"
+    },
+    {
+      "family": "rotate",
+      "input": "ozhoeo",
+      "program_code": "BAAAB",
+      "program_id": "prog-rotate-01",
+      "steps": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '-' after every second character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9oeo--z",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "envgbd",
+      "program_code": "BAAAB",
+      "program_id": "prog-rotate-01",
+      "steps": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '-' after every second character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9dbe--n",
+      "wave": "wave2"
+    },
+    {
+      "family": "rotate",
+      "input": "aujilo",
+      "program_code": "ABABA",
+      "program_id": "prog-rotate-02",
+      "steps": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: leave the character order unchanged.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "jil_oa9",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "obbxpc",
+      "program_code": "ABABA",
+      "program_id": "prog-rotate-02",
+      "steps": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: leave the character order unchanged.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "bxp_co9",
+      "wave": "wave2"
+    },
+    {
+      "family": "rotate",
+      "input": "gispew",
+      "program_code": "BBBAB",
+      "program_id": "prog-rotate-03",
+      "steps": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the last 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9gwi_ps",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "prpcre",
+      "program_code": "BBBAB",
+      "program_id": "prog-rotate-03",
+      "steps": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the last 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9per_cp",
+      "wave": "wave2"
+    }
+  ]
+}

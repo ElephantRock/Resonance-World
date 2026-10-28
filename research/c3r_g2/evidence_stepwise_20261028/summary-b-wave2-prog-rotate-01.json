@@ -1,0 +1,75 @@
+{
+  "arm": "b",
+  "itt_successes": 1,
+  "program_id": "prog-rotate-01",
+  "rows": [
+    {
+      "arm": "b",
+      "correct": true,
+      "failure_class": null,
+      "family": "rotate",
+      "final_state": "9dbe--n",
+      "input": "envgbd",
+      "itt_success": true,
+      "program_id": "prog-rotate-01",
+      "sends": 5,
+      "slots": [
+        81,
+        82,
+        83,
+        84,
+        85
+      ],
+      "status": "evaluated",
+      "steps": [
+        {
+          "answer": "bdenvg",
+          "finish_reason": "stop",
+          "latency_ms": 13399.0,
+          "slot": 81,
+          "status": "sent_ok",
+          "step": 1
+        },
+        {
+          "answer": "bd-en-vg-",
+          "finish_reason": "stop",
+          "latency_ms": 4069.4,
+          "slot": 82,
+          "status": "sent_ok",
+          "step": 2
+        },
+        {
+          "answer": "bd-en-",
+          "finish_reason": "stop",
+          "latency_ms": 2622.2,
+          "slot": 83,
+          "status": "sent_ok",
+          "step": 3
+        },
+        {
+          "answer": "dbe--n",
+          "finish_reason": "stop",
+          "latency_ms": 8059.0,
+          "slot": 84,
+          "status": "sent_ok",
+          "step": 4
+        },
+        {
+          "answer": "9dbe--n",
+          "finish_reason": "stop",
+          "latency_ms": 1825.8,
+          "slot": 85,
+          "status": "sent_ok",
+          "step": 5
+        }
+      ],
+      "truth": "9dbe--n",
+      "wave": "wave2"
+    }
+  ],
+  "schema": "c3r-g1-stepwise-execution-v0.1",
+  "sends": 5,
+  "session": "b-wave2-prog-rotate-01",
+  "tasks": 1,
+  "wave": "wave2"
+}
