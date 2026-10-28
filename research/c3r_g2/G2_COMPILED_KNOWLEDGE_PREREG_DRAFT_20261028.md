@@ -1,11 +1,11 @@
-# G2 compiled organizational knowledge vs competent raw-evidence organization — PREREGISTRATION DRAFT (valid for freezing; NOT frozen)
+# G2 compiled organizational knowledge vs competent raw-evidence organization — PREREGISTRATION DRAFT v2 (valid for freezing; NOT frozen)
 
-Status: **DRAFT v1, prepared for the owner's freeze decision.** Zero
-sends have occurred; nothing is dispatched by this document. Built
-under the conditional GO of 2026-10-28 (offline causal qualification
-only) and qualified by the offline harness in
-`src/resonance_world/c3r_g2_causal_qualification.py` (report:
+Status: **DRAFT v2 — owner review 2026-10-28 (evening) corrections
+adopted.** Zero scientific sends have occurred; nothing is dispatched
+by this document. Offline causal qualification passed
+(`src/resonance_world/c3r_g2_causal_qualification.py`,
 `evidence_g2_qualification_20261028/qualification_report.json`).
+Confirmatory freeze is NO-GO pending the statistical calibration below.
 
 ## 0. Corrections adopted from the owner's review (binding on this draft)
 
@@ -25,20 +25,29 @@ only) and qualified by the offline harness in
    (offline, both directions) that the harness measures divergence
    rather than building it.
 
-## 1. Research question and estimand
+## 1. Research question, treatment identity and estimand
 
-> Under a fixed model, matched total work budgets, identical admitted
-> evaluator-graded evidence for C and D, and fresh members who never
-> participated in development, does executing a compile-ONCE
-> organization-owned workflow procedure improve held-out task success
-> over competent per-task reinterpretation of the same evidence by the
-> same members?
+> Under a fixed model, an explicitly costed resource regime, identical
+> admitted evaluator-graded evidence for C and D, and fresh members who
+> never participated in development: what is the organization-level
+> effect of **compile-once reusable knowledge** versus **bounded
+> repeated raw-evidence interpretation** on held-out task success?
+
+**Treatment identity (v2, explicit):** the contrast is an ARCHITECTURAL
+one — compile-once knowledge reused at zero marginal evidence cost,
+versus per-task bounded reinterpretation of raw records under a
+per-task read budget. It measures the value of compilation and reuse
+UNDER THE REGISTERED CONSTRAINTS. It is NOT a claim of pure epistemic
+superiority under matched per-decision information: at the single
+decision, D's information is the compiled summary and C's is a K-record
+sample; total record reads and proposal slots are budgeted and reported
+(their accounting is part of the treatment, not a nuisance).
 
 **Primary estimand:** Δ_Organization = Y(D) − Y(C), paired within
-organization on that organization's holdout tasks, intention-to-treat.
-**Secondary (Holm-corrected family):** D − B (learning component),
-D − D_MINUS (procedure-removal attribution). **Context:** D − A
-(usefulness baseline), reported descriptive only.
+organization on that organization's holdout tasks, intention-to-treat,
+pooled over the frozen environment mixture (§4.3).
+**Secondary (Holm family):** D − B (learning component), D − D_MINUS
+(procedure-removal attribution). **Descriptive:** D − A.
 
 ## 2. Arms (evidence and mechanism contracts)
 
@@ -81,46 +90,77 @@ attributes it to the procedure via D_MINUS; it does not fabricate one.
 This qualifies the DESIGN. It says nothing about the live model's
 actual behavior — that is what the campaign measures.
 
-## 4. Statistical contract (governance fields — proposed values, freeze decides)
+## 4. Statistical contract (governance fields — v2, owner decisions 2026-10-28 adopted)
 
-- **Experimental unit:** the ORGANIZATION (its own admitted corpus,
-  roster of fresh members, and disjoint holdout tasks). Tasks within an
-  organization are correlated and never counted as independent units.
-- **Design:** paired within organization (D vs C on identical tasks),
-  organizations independent across the sample.
-- **N (proposed, conventional pending owner decision):** 24
-  organizations; minimum analyzable 18 (yield floor from transport
-  taxonomy); expected paired discordance to be estimated from a
-  bounded noninferential pilot on the live stack before freeze if the
-  owner requires it, else fixed at the qualification-derived
-  assumption with sensitivity analysis.
-- **SESOI / materiality (decision point for the owner):** proposed
-  Δ_D−C ≥ +5 percentage points, classified CONVENTIONAL (worksheet
-  rule 8: no mission-economics derivation exists yet). The owner may
-  set the threshold from mission value before freezing; it may not be
-  changed after unblinding.
-- **Test:** cluster-aware paired analysis at organization level
-  (exact paired permutation on organization-level means as primary;
-  bootstrap CI over organizations); alpha 0.05 one-sided for the
-  primary, Holm family for the three confirmatory contrasts.
+### 4.1 Unit, family and decision values
+
+- **Experimental unit:** the ORGANIZATION (own admitted corpus, fresh
+  roster, disjoint holdout). Tasks within an organization are
+  correlated and never counted as independent units. The design pairs
+  D and C within organization on identical holdout tasks.
+- **SESOI = +5 percentage points** — adopted provisionally as a
+  CONVENTIONAL decision threshold (not a derived economic-importance
+  bound); immutable after confirmatory freeze.
+- **α = 0.05 (one-sided primary), Holm** across the confirmatory family
+  in the fixed order: (1) D − C primary, (2) D − D_MINUS, (3) D − B.
+  Test: exact paired permutation on organization-level means with a
+  bootstrap CI over organizations.
 - **Missing/transport policy:** ITT — every transport failure,
   unparseable response and abstention fallback stays as a failure in
-  the denominator; analyzable-yield reported per arm.
+  the denominator; analyzable yield reported per arm.
 - **Stopping rule:** fixed N, single look, no interim analyses, no
   threshold adjustment, no rescue redesign.
-- **Replication:** a fresh-cohort independent replication is required
-  before any promotion beyond discovery-supported (per
-  mechanism-governance; this node is posthoc_motivated → proposed).
+- **Replication:** fresh-cohort independent replication required before
+  any promotion beyond discovery_supported (this node is
+  posthoc_motivated → proposed under mechanism-governance).
 
-## 5. Termination and pivot rules (owner-adopted)
+### 4.2 Power calibration at the organization level (why N=24 is exploratory only)
 
+Testing Δ = +5pp at organization level requires the organization-level
+SD of paired differences, which the six DETERMINISTIC qualification
+scenarios cannot supply. Normal-approximation illustration (one-sided
+α=.05, 80% power; N ≈ (z_α+z_β)²·σ²/Δ² with (1.645+0.816)² ≈ 6.18):
+
+| org-level SD of D−C | required N | detectable Δ at N=24 (80%) |
+|---|---:|---:|
+| 0.05 | 7 | ≈ 3.6 pp |
+| 0.10 | 25 | ≈ 5.1 pp |
+| 0.15 | 56 | ≈ 7.8 pp |
+| 0.20 | 99 | ≈ 10.4 pp |
+
+**N = 24 is retained as an EXPLORATORY planning reference only.** The
+confirmatory N is fixed ONLY after an organization-level variance
+estimate exists (developmental stage or owner-supplied prior), as
+N_confirmatory = max(24, powered N at the frozen Δ and SD), declared
+before any confirmatory execution. Minimum analyzable 18 remains
+provisional pending yield calibration. No post-hoc inflation, no
+post-hoc threshold change.
+
+### 4.3 Frozen environment mixture (prevents S2-only selection)
+
+Organizations are drawn from a PRE-DECLARED mixture mirroring the
+qualification taxonomy — one third unambiguous (S1-like), one third
+noisy-majority (S2-like), one third task-conditional (S3-like) — with
+class parameters (noise ratio, variant prevalence, support sizes)
+declared at confirmatory freeze and sampled by frozen seed. Environments
+are NEVER selected after observing which class favors D. The primary
+analysis pools over the mixture; class-stratified results are
+secondary. The request-class probe (§6) and any developmental stage
+operate under the same mixture declaration.
+
+## 5. Termination, attribution and pivot rules (owner-adopted; v2 corrected)
+
+- **Removal-attribution rule (corrected per owner review):** a D win
+  that DISAPPEARS under D_MINUS (with all else held fixed) SUPPORTS
+  attributing the effect to the procedure. A D win that PERSISTS after
+  the procedure is removed casts doubt on the attribution — some other
+  component would be carrying the effect, and the result is reported
+  as such rather than as a procedure effect.
 - If Δ_D−C fails the frozen gate: **no redesigned procedure, no
   serial rescue.** The program pivots to the H1–H4-supported
   alternative — raw structured history as the persistent knowledge
   channel — and tests ITS institutional properties in a separate
   study.
-- A D win that disappears under D_MINUS is reported as a harness
-  artifact, not an organization effect.
 - Claims boundary: a gated D win supports "compiled organizational
   knowledge has value under the registered resource constraints" — it
   does NOT establish self-learning by the organization (the compiler
@@ -128,12 +168,17 @@ actual behavior — that is what the campaign measures.
   establish institutional regeneration across generations (separate
   G3 study, separately gated).
 
-## 6. Live-campaign prerequisites (each its own gate, none authorized now)
+## 6. Request-class qualification probe (AUTHORIZED — exactly 2 sends)
 
-1. Freeze this prereg (owner decision, including SESOI and N).
-2. Request-class qualification probe on the live stack, bounded and
-   campaign-gating (the v2-acquisition pattern): one C-class
-   interpretation request and one D-class execution request must
-   complete within the registered operating point before any dispatch.
-3. Frozen send cap with an O_EXCL ledger; CI-gated dispatch;
-   Research-First contract; the two reserved Probe sends untouched.
+Frozen mini-protocol (separate document:
+`G2_REQUEST_CLASS_PROBE_PROTOCOL_20261028.md`): one C-class
+interpretation request and one D-class procedure-execution request on
+the registered model settings, under an INDEPENDENT PERMANENT cap of
+exactly two sends (dedicated 2-slot O_EXCL ledger; the two reserved
+Probe sends remain untouched). Per send: latency, token usage,
+finish reason, parseability and cost are recorded. **Interpretation
+rules (owner-fixed):** success of both requests is NOT statistical
+proof of stability and does NOT launch anything — it only permits
+completing the statistical freeze (§4.2/§4.3); failure of either class
+halts the campaign path. The full scientific campaign remains NO-GO
+until separately authorized.

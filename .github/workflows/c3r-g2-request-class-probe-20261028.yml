@@ -1,0 +1,64 @@
+name: C3R G2 Request-Class Qualification Probe 20261028
+
+on:
+  push:
+    branches:
+      - research/program-realignment-20261028
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c3r-g2-request-class-probe-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Offline G2 qualification and probe tests (no network)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e . && python -m pip install pytest
+          python -m py_compile src/resonance_world/c3r_g2_causal_qualification.py scripts/run_c3r_g2_request_class_probe.py
+          python -m pytest tests/test_c3r_g2_causal_qualification.py tests/test_c3r_g2_request_class_probe.py tests/test_c3r_g2_probe.py -q
+
+  probe:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: offline-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Workspace and permanent 2-send ledger (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/g2probe-workspace/g2-probe-ledger"
+          chmod 700 "$RUNNER_TEMP/g2probe-workspace/g2-probe-ledger"
+      - name: Request-class probe (exactly 2 sends, frozen protocol)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g2_request_class_probe.py \
+            --workspace "$RUNNER_TEMP/g2probe-workspace" \
+            --run-id "g2probe-${{ github.run_id }}"
+      - name: Upload probe report (even on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: g2-request-class-probe
+          path: ${{ runner.temp }}/g2probe-workspace/g2-request-class-probe.json
+          if-no-files-found: warn
+          retention-days: 90
