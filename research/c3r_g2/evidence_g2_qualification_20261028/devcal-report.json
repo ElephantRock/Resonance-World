@@ -1,0 +1,121 @@
+{
+  "abstention_flag_cells_D": 0,
+  "by_class": {
+    "noisy_majority": {
+      "mean": 0.390625,
+      "n_orgs": 4,
+      "sd": 0.09375
+    },
+    "task_conditional": {
+      "mean": -0.390625,
+      "n_orgs": 4,
+      "sd": 0.09375
+    },
+    "unambiguous": {
+      "mean": 0.0,
+      "n_orgs": 4,
+      "sd": 0.0
+    }
+  },
+  "campaign": "g2-developmental-calibration-20261028",
+  "conservative_n_inputs": {
+    "n_at_sd_point": 287,
+    "n_at_sd_upper_bound": 690,
+    "note": "inputs for the freeze decision only; joint-gate power simulation happens at freeze"
+  },
+  "cost": {
+    "completion_token_ceiling": 1572864,
+    "completion_tokens": {
+      "C": 205377,
+      "D": 19697
+    },
+    "latency_ms_totals": {
+      "C": 5085500.3,
+      "D": 656508.3
+    }
+  },
+  "noninferential": true,
+  "org_mean_paired_diffs": [
+    {
+      "class": "unambiguous",
+      "diff": 0.0,
+      "org": 0
+    },
+    {
+      "class": "unambiguous",
+      "diff": 0.0,
+      "org": 1
+    },
+    {
+      "class": "unambiguous",
+      "diff": 0.0,
+      "org": 2
+    },
+    {
+      "class": "unambiguous",
+      "diff": 0.0,
+      "org": 3
+    },
+    {
+      "class": "noisy_majority",
+      "diff": 0.5,
+      "org": 4
+    },
+    {
+      "class": "noisy_majority",
+      "diff": 0.4375,
+      "org": 5
+    },
+    {
+      "class": "noisy_majority",
+      "diff": 0.3125,
+      "org": 6
+    },
+    {
+      "class": "noisy_majority",
+      "diff": 0.3125,
+      "org": 7
+    },
+    {
+      "class": "task_conditional",
+      "diff": -0.3125,
+      "org": 8
+    },
+    {
+      "class": "task_conditional",
+      "diff": -0.5,
+      "org": 9
+    },
+    {
+      "class": "task_conditional",
+      "diff": -0.3125,
+      "org": 10
+    },
+    {
+      "class": "task_conditional",
+      "diff": -0.4375,
+      "org": 11
+    }
+  ],
+  "pooled": {
+    "mean_diff": 0.0,
+    "sd_point": 0.34024556639954245,
+    "sd_upper_bound_chi2_df11": 0.5278745416561261
+  },
+  "schema": "c3r-g2-developmental-calibration-v0.1",
+  "scientific_acceptance": false,
+  "send_cap": 384,
+  "sends_total": 384,
+  "validity": {
+    "C": {
+      "cells": 192,
+      "parseable": 175,
+      "rate": 0.9114583333333334
+    },
+    "D": {
+      "cells": 192,
+      "parseable": 192,
+      "rate": 1.0
+    }
+  }
+}
