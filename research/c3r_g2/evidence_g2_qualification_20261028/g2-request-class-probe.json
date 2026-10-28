@@ -1,0 +1,38 @@
+{
+  "both_classes_completed": true,
+  "effort": "high",
+  "interpretation": "both request classes technically usable at the registered operating point; statistical freeze may proceed; NOTHING is launched",
+  "max_tokens": 4096,
+  "model": "glm-5.3",
+  "permanent_send_cap": 2,
+  "protocol": "G2_REQUEST_CLASS_PROBE_PROTOCOL_20261028",
+  "route": "coding",
+  "rows": [
+    {
+      "answer": "212",
+      "classification": "completed_parseable",
+      "completion_tokens_reported": 1026,
+      "correct_informational": true,
+      "finish_reason": "stop",
+      "latency_ms": 25506.1,
+      "prompt_tokens_reported": 241,
+      "request_class": "c_class_interpretation",
+      "slot": 0
+    },
+    {
+      "answer": "212",
+      "classification": "completed_parseable",
+      "completion_tokens_reported": 94,
+      "correct_informational": true,
+      "finish_reason": "stop",
+      "latency_ms": 3221.6,
+      "prompt_tokens_reported": 65,
+      "request_class": "d_class_execution",
+      "slot": 1
+    }
+  ],
+  "run_id": "g2probe-40730089071",
+  "schema": "c3r-g2-request-class-probe-v0.1",
+  "sends": 2,
+  "timeout_seconds": 300.0
+}
