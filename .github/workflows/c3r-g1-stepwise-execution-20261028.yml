@@ -1,0 +1,149 @@
+name: C3R G1 Stepwise Execution Fidelity 20261028
+
+on:
+  push:
+    branches:
+      - research/c3r-g1-stepwise-execution-20261028
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c3r-g1-stepwise-execution-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Offline stepwise apparatus tests (no network)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e . && python -m pip install pytest
+          python -m py_compile scripts/run_c3r_g1_stepwise_execution_live.py
+          python -m pytest tests/test_c3r_g1_stepwise_execution_live.py -q
+
+  manifest:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: offline-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Freeze manifest (programs, corrected steps, inputs, truths, 96 slots)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_stepwise_execution_live.py \
+            --workspace "$RUNNER_TEMP/stepwise-workspace" \
+            --run-id "stepwise-${{ github.run_id }}" \
+            --session manifest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stepwise-manifest
+          path: ${{ runner.temp }}/stepwise-workspace/stepwise-manifest.json
+          if-no-files-found: error
+          retention-days: 90
+
+  send-a:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, manifest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        wave: ["wave1", "wave2"]
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Workspace and session ledger (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/stepwise-workspace/stepwise-ledger"
+          chmod 700 "$RUNNER_TEMP/stepwise-workspace/stepwise-ledger"
+      - name: Download frozen manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: stepwise-manifest
+          path: ${{ runner.temp }}/stepwise-workspace/
+      - name: Arm A single-shot session (8 sends, High/4096)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_stepwise_execution_live.py \
+            --workspace "$RUNNER_TEMP/stepwise-workspace" \
+            --run-id "stepwise-${{ github.run_id }}" \
+            --session send \
+            --arm a \
+            --wave ${{ matrix.wave }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stepwise-summary-a-${{ matrix.wave }}
+          path: ${{ runner.temp }}/stepwise-workspace/summary-a-*.json
+          if-no-files-found: error
+          retention-days: 90
+
+  send-b:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, manifest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        wave: ["wave1", "wave2"]
+        program: ["prog-digits-00", "prog-digits-01", "prog-digits-02",
+                  "prog-digits-03", "prog-rotate-00", "prog-rotate-01",
+                  "prog-rotate-02", "prog-rotate-03"]
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Workspace and session ledger (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/stepwise-workspace/stepwise-ledger"
+          chmod 700 "$RUNNER_TEMP/stepwise-workspace/stepwise-ledger"
+      - name: Download frozen manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: stepwise-manifest
+          path: ${{ runner.temp }}/stepwise-workspace/
+      - name: Arm B stepwise session (5 sends, High/4096)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_stepwise_execution_live.py \
+            --workspace "$RUNNER_TEMP/stepwise-workspace" \
+            --run-id "stepwise-${{ github.run_id }}" \
+            --session send \
+            --arm b \
+            --wave ${{ matrix.wave }} \
+            --program ${{ matrix.program }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stepwise-summary-b-${{ matrix.wave }}-${{ matrix.program }}
+          path: ${{ runner.temp }}/stepwise-workspace/summary-b-*.json
+          if-no-files-found: error
+          retention-days: 90
