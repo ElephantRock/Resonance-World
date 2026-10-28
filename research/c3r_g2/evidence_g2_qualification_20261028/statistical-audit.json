@@ -1,0 +1,240 @@
+{
+  "band_cells_used": 20,
+  "band_measured_G_means": [
+    0.05,
+    0.725,
+    0.05,
+    -0.05,
+    0.175,
+    0.55,
+    0.4,
+    0.35,
+    0.575,
+    0.2,
+    0.45,
+    0.55,
+    0.425,
+    0.125,
+    0.45,
+    0.4,
+    0.275,
+    0.25,
+    0.55,
+    0.55
+  ],
+  "band_measured_NV_means_idealized": [
+    0.175,
+    0.237,
+    -0.062,
+    0.025,
+    -0.1,
+    0.013,
+    0.1,
+    0.025,
+    0.062,
+    0.1,
+    0.075,
+    0.037,
+    0.05,
+    0.0,
+    0.013,
+    -0.15,
+    0.0,
+    0.0,
+    0.0,
+    0.0
+  ],
+  "c_failure_semantics": {
+    "applied": "once, cell-level: exhausted C cells score 0",
+    "itt_effect_on_NV": "RAISES observed NV by ~ fail*p_c (~ +7.2pp at p_c=0.80)"
+  },
+  "cost_at_cap": {
+    "c_execution_hours": 6.12,
+    "completion_tokens_ceiling": 10240000,
+    "completion_tokens_expected": 1061632,
+    "d_execution_hours": 1.57,
+    "sends_total": 2496,
+    "summed_execution_hours": 7.7,
+    "wall_clock_hours_at_4_parallel_jobs": 2.03
+  },
+  "full_gate_table": [
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": -0.1,
+      "sends": null,
+      "sigma_org": 0.5
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": -0.1,
+      "sends": null,
+      "sigma_org": 0.5
+    },
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": -0.1,
+      "sends": null,
+      "sigma_org": 1.0
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": -0.1,
+      "sends": null,
+      "sigma_org": 1.0
+    },
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": -0.1,
+      "sends": null,
+      "sigma_org": 2.0
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": -0.1,
+      "sends": null,
+      "sigma_org": 2.0
+    },
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.0,
+      "sends": null,
+      "sigma_org": 0.5
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.0,
+      "sends": null,
+      "sigma_org": 0.5
+    },
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.0,
+      "sends": null,
+      "sigma_org": 1.0
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.0,
+      "sends": null,
+      "sigma_org": 1.0
+    },
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.0,
+      "sends": null,
+      "sigma_org": 2.0
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.0,
+      "sends": null,
+      "sigma_org": 2.0
+    },
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.1,
+      "sends": null,
+      "sigma_org": 0.5
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.1,
+      "sends": null,
+      "sigma_org": 0.5
+    },
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.1,
+      "sends": null,
+      "sigma_org": 1.0
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.1,
+      "sends": null,
+      "sigma_org": 1.0
+    },
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.1,
+      "sends": null,
+      "sigma_org": 2.0
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.1,
+      "sends": null,
+      "sigma_org": 2.0
+    },
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.2,
+      "sends": null,
+      "sigma_org": 0.5
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.2,
+      "sends": null,
+      "sigma_org": 0.5
+    },
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.2,
+      "sends": null,
+      "sigma_org": 1.0
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.2,
+      "sends": null,
+      "sigma_org": 1.0
+    },
+    {
+      "correlation": "shared_org_effect",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.2,
+      "sends": null,
+      "sigma_org": 2.0
+    },
+    {
+      "correlation": "independent_arms",
+      "min_n_full_gate_80pct": null,
+      "nv_decision_offset": 0.2,
+      "sends": null,
+      "sigma_org": 2.0
+    }
+  ],
+  "gate": "hierarchical: NV=D_VAR-C (ITT) first, then G=D_VAR-D_CTX; each: positive AND z>1.645 AND estimate>=SESOI",
+  "max_orgs": 52,
+  "model": "joint stratified: per org = uniform band-cell draw + environment draw from the cell's measured cross-seed G/NV distributions + logit org effect + 16 bounded Bernoulli cells per arm; C output failures applied once at cell level",
+  "nv_offset_semantics": "scenario offset ADDED to the idealized cell-level D_VAR-C; the live NV is unknown - offsets span the decision-quality family consistent with live evidence",
+  "replicates_scan": 800,
+  "schema": "c3r-g2-statistical-audit-v0.1",
+  "seed": 20261030,
+  "send_cap": 2500,
+  "verdict": "CLOSE LIVE LINE",
+  "verdict_rule": "eligible iff min-N <= 52 at BOTH correlations and all sigma, under NV decision offsets {+10,+20}pp on the measured band environment distributions (hypothesis and distribution unchanged; no favorable narrowing)"
+}
