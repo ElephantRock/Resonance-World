@@ -50,13 +50,15 @@ ambiguity, not by model execution limits.
   (`ProviderTransportRejected` after 561 ms — a fast transport
   rejection; no retry, per protocol). Among **evaluated** responses the
   precise arm is **15/15 (100%)**.
-- Decision-relevant nuance, stated plainly: the frozen ITT rule keeps
-  that infrastructure failure in the denominator (no exception taken
-  here), and both thresholds were met with exactly zero slack — the
-  verdict's margin rests on one transport event. Had that send been
-  answered wrong, B would be 14/16 and the criterion would NOT be met.
-  The registered verdict stands as computed; this paragraph exists so
-  the reader knows the margin.
+- Decision-relevant nuance, corrected per owner review (2026-10-28): the
+  frozen ITT rule already counts the transport failure in the
+  denominator — B is 15/16 **with** it. Had that send been answered
+  correctly, B would be 16/16; had it been answered wrong, B would
+  remain 15/16. The zero margin is real but lies in the fifteen
+  successes: losing any ONE of them to a wrong value drops B to 14/16
+  and the criterion would not be met. The registered verdict stands as
+  computed; this paragraph exists so the reader knows where the margin
+  sits.
 
 ## 4) Implications
 
