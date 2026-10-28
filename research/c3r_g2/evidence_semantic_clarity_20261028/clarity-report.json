@@ -1,0 +1,20 @@
+{
+  "a_itt_ambiguous": 11,
+  "b_itt_precise": 15,
+  "campaign": "g1-semantic-clarity-instructions-20261028",
+  "criterion_b_at_least_15_of_16": true,
+  "criterion_paired_diff_at_least_4": true,
+  "paired_b_minus_a": 4,
+  "paired_table": {
+    "a_only": 1,
+    "b_only": 5,
+    "both_correct": 10,
+    "both_failed": 0
+  },
+  "schema": "c3r-g1-semantic-clarity-v0.1",
+  "scientific_acceptance": false,
+  "send_cap": 32,
+  "sends_total": 32,
+  "tasks": 16,
+  "verdict": "predeclared success criterion MET: specification ambiguity is the dominant residual cause"
+}

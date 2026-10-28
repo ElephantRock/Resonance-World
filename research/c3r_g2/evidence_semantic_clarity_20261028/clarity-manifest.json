@@ -1,0 +1,628 @@
+{
+  "campaign_slots": 32,
+  "max_tokens": 4096,
+  "model": "glm-5.3",
+  "programs": [
+    {
+      "family": "rotate",
+      "program": "ABAAA",
+      "program_id": "prog-rotate-00"
+    },
+    {
+      "family": "rotate",
+      "program": "BAAAB",
+      "program_id": "prog-rotate-01"
+    },
+    {
+      "family": "rotate",
+      "program": "ABABA",
+      "program_id": "prog-rotate-02"
+    },
+    {
+      "family": "rotate",
+      "program": "BBBAB",
+      "program_id": "prog-rotate-03"
+    }
+  ],
+  "reasoning_effort": "high",
+  "route": "coding",
+  "run_id": "clarity-40669477667",
+  "schema": "c3r-g1-semantic-clarity-v0.1",
+  "scientific_acceptance": false,
+  "slots": [
+    {
+      "arm": "a",
+      "index": 0,
+      "input_index": 0,
+      "program_id": "prog-rotate-00",
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 1,
+      "input_index": 1,
+      "program_id": "prog-rotate-00",
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 2,
+      "input_index": 0,
+      "program_id": "prog-rotate-01",
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 3,
+      "input_index": 1,
+      "program_id": "prog-rotate-01",
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 4,
+      "input_index": 0,
+      "program_id": "prog-rotate-02",
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 5,
+      "input_index": 1,
+      "program_id": "prog-rotate-02",
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 6,
+      "input_index": 0,
+      "program_id": "prog-rotate-03",
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 7,
+      "input_index": 1,
+      "program_id": "prog-rotate-03",
+      "wave": "wave1"
+    },
+    {
+      "arm": "a",
+      "index": 8,
+      "input_index": 0,
+      "program_id": "prog-rotate-00",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 9,
+      "input_index": 1,
+      "program_id": "prog-rotate-00",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 10,
+      "input_index": 0,
+      "program_id": "prog-rotate-01",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 11,
+      "input_index": 1,
+      "program_id": "prog-rotate-01",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 12,
+      "input_index": 0,
+      "program_id": "prog-rotate-02",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 13,
+      "input_index": 1,
+      "program_id": "prog-rotate-02",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 14,
+      "input_index": 0,
+      "program_id": "prog-rotate-03",
+      "wave": "wave2"
+    },
+    {
+      "arm": "a",
+      "index": 15,
+      "input_index": 1,
+      "program_id": "prog-rotate-03",
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 16,
+      "input_index": 0,
+      "program_id": "prog-rotate-00",
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 17,
+      "input_index": 1,
+      "program_id": "prog-rotate-00",
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 18,
+      "input_index": 0,
+      "program_id": "prog-rotate-01",
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 19,
+      "input_index": 1,
+      "program_id": "prog-rotate-01",
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 20,
+      "input_index": 0,
+      "program_id": "prog-rotate-02",
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 21,
+      "input_index": 1,
+      "program_id": "prog-rotate-02",
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 22,
+      "input_index": 0,
+      "program_id": "prog-rotate-03",
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 23,
+      "input_index": 1,
+      "program_id": "prog-rotate-03",
+      "wave": "wave1"
+    },
+    {
+      "arm": "b",
+      "index": 24,
+      "input_index": 0,
+      "program_id": "prog-rotate-00",
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 25,
+      "input_index": 1,
+      "program_id": "prog-rotate-00",
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 26,
+      "input_index": 0,
+      "program_id": "prog-rotate-01",
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 27,
+      "input_index": 1,
+      "program_id": "prog-rotate-01",
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 28,
+      "input_index": 0,
+      "program_id": "prog-rotate-02",
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 29,
+      "input_index": 1,
+      "program_id": "prog-rotate-02",
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 30,
+      "input_index": 0,
+      "program_id": "prog-rotate-03",
+      "wave": "wave2"
+    },
+    {
+      "arm": "b",
+      "index": 31,
+      "input_index": 1,
+      "program_id": "prog-rotate-03",
+      "wave": "wave2"
+    }
+  ],
+  "tasks": [
+    {
+      "family": "rotate",
+      "input": "jfdneh",
+      "input_index": 0,
+      "program_code": "ABAAA",
+      "program_id": "prog-rotate-00",
+      "steps_ambiguous": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: append '9' to the end."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "nd_ejh9",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "nmtkyt",
+      "input_index": 1,
+      "program_code": "ABAAA",
+      "program_id": "prog-rotate-00",
+      "steps_ambiguous": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: append '9' to the end."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "kt_ynt9",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "fcenqd",
+      "input_index": 0,
+      "program_code": "ABAAA",
+      "program_id": "prog-rotate-00",
+      "steps_ambiguous": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: append '9' to the end."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "ne_qfd9",
+      "wave": "wave2"
+    },
+    {
+      "family": "rotate",
+      "input": "vcnfgt",
+      "input_index": 1,
+      "program_code": "ABAAA",
+      "program_id": "prog-rotate-00",
+      "steps_ambiguous": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: append '9' to the end."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "fn_gvt9",
+      "wave": "wave2"
+    },
+    {
+      "family": "rotate",
+      "input": "bfqdgd",
+      "input_index": 0,
+      "program_code": "BAAAB",
+      "program_id": "prog-rotate-01",
+      "steps_ambiguous": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '-' after every second character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '-' between consecutive pairs of two characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9dgb--f",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "wjdpqj",
+      "input_index": 1,
+      "program_code": "BAAAB",
+      "program_id": "prog-rotate-01",
+      "steps_ambiguous": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '-' after every second character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '-' between consecutive pairs of two characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9jqw--j",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "jfauis",
+      "input_index": 0,
+      "program_code": "BAAAB",
+      "program_id": "prog-rotate-01",
+      "steps_ambiguous": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '-' after every second character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '-' between consecutive pairs of two characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9sij--f",
+      "wave": "wave2"
+    },
+    {
+      "family": "rotate",
+      "input": "berwgl",
+      "input_index": 1,
+      "program_code": "BAAAB",
+      "program_id": "prog-rotate-01",
+      "steps_ambiguous": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '-' after every second character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '-' between consecutive pairs of two characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9lgb--e",
+      "wave": "wave2"
+    },
+    {
+      "family": "rotate",
+      "input": "ubiwlq",
+      "input_index": 0,
+      "program_code": "ABABA",
+      "program_id": "prog-rotate-02",
+      "steps_ambiguous": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: leave the character order unchanged.",
+        "Step 5: append '9' to the end."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: leave the character order unchanged.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "iwl_qu9",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "neukow",
+      "input_index": 1,
+      "program_code": "ABABA",
+      "program_id": "prog-rotate-02",
+      "steps_ambiguous": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: leave the character order unchanged.",
+        "Step 5: append '9' to the end."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: leave the character order unchanged.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "uko_wn9",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "njntny",
+      "input_index": 0,
+      "program_code": "ABABA",
+      "program_id": "prog-rotate-02",
+      "steps_ambiguous": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: leave the character order unchanged.",
+        "Step 5: append '9' to the end."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: leave the character order unchanged.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "ntn_yn9",
+      "wave": "wave2"
+    },
+    {
+      "family": "rotate",
+      "input": "baasoy",
+      "input_index": 1,
+      "program_code": "ABABA",
+      "program_id": "prog-rotate-02",
+      "steps_ambiguous": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: leave the character order unchanged.",
+        "Step 5: append '9' to the end."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string left by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the first 6 characters.",
+        "Step 4: leave the character order unchanged.",
+        "Step 5: append '9' to the end."
+      ],
+      "truth": "aso_yb9",
+      "wave": "wave2"
+    },
+    {
+      "family": "rotate",
+      "input": "jikdgv",
+      "input_index": 0,
+      "program_code": "BBBAB",
+      "program_id": "prog-rotate-03",
+      "steps_ambiguous": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the last 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the last 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9jvi_dk",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "znpnrj",
+      "input_index": 1,
+      "program_code": "BBBAB",
+      "program_id": "prog-rotate-03",
+      "steps_ambiguous": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the last 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the last 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9zjn_np",
+      "wave": "wave1"
+    },
+    {
+      "family": "rotate",
+      "input": "hqwvaa",
+      "input_index": 0,
+      "program_code": "BBBAB",
+      "program_id": "prog-rotate-03",
+      "steps_ambiguous": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the last 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the last 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9haq_vw",
+      "wave": "wave2"
+    },
+    {
+      "family": "rotate",
+      "input": "wbuvar",
+      "input_index": 1,
+      "program_code": "BBBAB",
+      "program_id": "prog-rotate-03",
+      "steps_ambiguous": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '_' after every third character.",
+        "Step 3: keep the last 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "steps_precise": [
+        "Step 1: rotate the string right by 2 characters.",
+        "Step 2: insert '_' between consecutive groups of three characters, with no separator at the end of the string.",
+        "Step 3: keep the last 6 characters.",
+        "Step 4: swap every adjacent character pair.",
+        "Step 5: prepend '9' to the beginning."
+      ],
+      "truth": "9wrb_vu",
+      "wave": "wave2"
+    }
+  ]
+}
