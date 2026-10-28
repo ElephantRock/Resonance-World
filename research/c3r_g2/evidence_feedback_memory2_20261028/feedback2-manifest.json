@@ -1,0 +1,813 @@
+{
+  "campaign_slots": 96,
+  "max_tokens_exec": 4096,
+  "max_tokens_induction": 16384,
+  "model": "glm-5.3",
+  "plan": [
+    {
+      "eval": [
+        {
+          "input": "00110010",
+          "input_index": 0,
+          "truth": "611101110"
+        },
+        {
+          "input": "10100111",
+          "input_index": 1,
+          "truth": "201000010"
+        },
+        {
+          "input": "01101011",
+          "input_index": 2,
+          "truth": "200100100"
+        },
+        {
+          "input": "00011011",
+          "input_index": 3,
+          "truth": "510100111"
+        }
+      ],
+      "evidence": [
+        {
+          "input": "11101100",
+          "output": "200011000"
+        },
+        {
+          "input": "11011010",
+          "output": "410101001"
+        },
+        {
+          "input": "10000001",
+          "output": "501110011"
+        }
+      ],
+      "family": "binary",
+      "probes": [
+        "11100111",
+        "10001100",
+        "11101011"
+      ],
+      "program_code": "AABAA",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "eval": [
+        {
+          "input": "00000101",
+          "input_index": 0,
+          "truth": "100001013"
+        },
+        {
+          "input": "01100000",
+          "input_index": 1,
+          "truth": "101100003"
+        },
+        {
+          "input": "10111101",
+          "input_index": 2,
+          "truth": "011011015"
+        },
+        {
+          "input": "10001101",
+          "input_index": 3,
+          "truth": "000011013"
+        }
+      ],
+      "evidence": [
+        {
+          "input": "01011000",
+          "output": "010100002"
+        },
+        {
+          "input": "00010100",
+          "output": "110000013"
+        },
+        {
+          "input": "11001001",
+          "output": "000111003"
+        }
+      ],
+      "family": "binary",
+      "probes": [
+        "10100100",
+        "01101111",
+        "10000101"
+      ],
+      "program_code": "BABAB",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "eval": [
+        {
+          "input": "lrvpggyc",
+          "input_index": 0,
+          "truth": "raiientx7"
+        },
+        {
+          "input": "kfvfsdxr",
+          "input_index": 1,
+          "truth": "hzfutmhx7"
+        },
+        {
+          "input": "hugjmnsp",
+          "input_index": 2,
+          "truth": "luporjwi8"
+        },
+        {
+          "input": "jpwhywai",
+          "input_index": 3,
+          "truth": "jcyaklry7"
+        }
+      ],
+      "evidence": [
+        {
+          "input": "fdyvmyzb",
+          "output": "xbaodhfa7"
+        },
+        {
+          "input": "bqhubicw",
+          "output": "wekdydsj7"
+        },
+        {
+          "input": "itdyqlkw",
+          "output": "amnsykvf8"
+        }
+      ],
+      "family": "alpha",
+      "probes": [
+        "bixayaac",
+        "qjdqkubg",
+        "ywchucgl"
+      ],
+      "program_code": "AABBB",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "eval": [
+        {
+          "input": "qtjxowfg",
+          "input_index": 0,
+          "truth": "qyhzlvsi8"
+        },
+        {
+          "input": "pwmjsfke",
+          "input_index": 1,
+          "truth": "uhmloyrg8"
+        },
+        {
+          "input": "nohxdahf",
+          "input_index": 2,
+          "truth": "fcjzjqph7"
+        },
+        {
+          "input": "dskuqswv",
+          "input_index": 3,
+          "truth": "suywmufx7"
+        }
+      ],
+      "evidence": [
+        {
+          "input": "noyhobca",
+          "output": "qdejaqpc7"
+        },
+        {
+          "input": "mfronpzi",
+          "output": "prbqthok8"
+        },
+        {
+          "input": "vfrsrjfj",
+          "output": "tlhuthxl5"
+        }
+      ],
+      "family": "alpha",
+      "probes": [
+        "wpmvquen",
+        "chdtsikm",
+        "xystczmi"
+      ],
+      "program_code": "BAAAB",
+      "program_id": "prog-alpha-01"
+    }
+  ],
+  "programs": [
+    {
+      "family": "binary",
+      "program": "AABAA",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "family": "binary",
+      "program": "BABAB",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "family": "alpha",
+      "program": "AABBB",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "family": "alpha",
+      "program": "BAAAB",
+      "program_id": "prog-alpha-01"
+    }
+  ],
+  "qualification": {
+    "evidence": [
+      {
+        "input": "11010110",
+        "output": "101101004"
+      },
+      {
+        "input": "10000100",
+        "output": "100100013"
+      },
+      {
+        "input": "00100011",
+        "output": "011000114"
+      }
+    ],
+    "family": "binary",
+    "probe": "00101000",
+    "probe_truth": "000010113",
+    "program_code": "BBBBB",
+    "program_id": "prog-binary-qual",
+    "raw_input": "10110110",
+    "raw_truth": "101101116"
+  },
+  "reasoning_effort": "high",
+  "route": "coding",
+  "run_id": "fb2-40705158773",
+  "schema": "c3r-g1-feedback-memory2-v0.1",
+  "scientific_acceptance": false,
+  "slots": [
+    {
+      "index": 0,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 1,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 2,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 3,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 4,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 5,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 6,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 7,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 8,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 9,
+      "kind": "learning",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "index": 10,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 11,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 12,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 13,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 14,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 15,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 16,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 17,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 18,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 19,
+      "kind": "learning",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "index": 20,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 21,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 22,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 23,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 24,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 25,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 26,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 27,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 28,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 29,
+      "kind": "learning",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "index": 30,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 31,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 32,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 33,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 34,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 35,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 36,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 37,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 38,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 39,
+      "kind": "learning",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "learned",
+      "index": 40,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "learned",
+      "index": 41,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "learned",
+      "index": 42,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "learned",
+      "index": 43,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "learned",
+      "index": 44,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "learned",
+      "index": 45,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "learned",
+      "index": 46,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "learned",
+      "index": 47,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "learned",
+      "index": 48,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "learned",
+      "index": 49,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "learned",
+      "index": 50,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "learned",
+      "index": 51,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "learned",
+      "index": 52,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "learned",
+      "index": 53,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "learned",
+      "index": 54,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "learned",
+      "index": 55,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "raw",
+      "index": 56,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "raw",
+      "index": 57,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "raw",
+      "index": 58,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "raw",
+      "index": 59,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "raw",
+      "index": 60,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "raw",
+      "index": 61,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "raw",
+      "index": 62,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "raw",
+      "index": 63,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "raw",
+      "index": 64,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "raw",
+      "index": 65,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "raw",
+      "index": 66,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "raw",
+      "index": 67,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "raw",
+      "index": 68,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "raw",
+      "index": 69,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "raw",
+      "index": 70,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "raw",
+      "index": 71,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 72,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 73,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 74,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 75,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 76,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 77,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 78,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 79,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-binary-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 80,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 81,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 82,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 83,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-00"
+    },
+    {
+      "arm": "fresh",
+      "index": 84,
+      "input_index": 0,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 85,
+      "input_index": 1,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 86,
+      "input_index": 2,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "arm": "fresh",
+      "index": 87,
+      "input_index": 3,
+      "kind": "exec",
+      "program_id": "prog-alpha-01"
+    },
+    {
+      "index": 88,
+      "kind": "qualification"
+    },
+    {
+      "index": 89,
+      "kind": "qualification"
+    },
+    {
+      "index": 90,
+      "kind": "qualification"
+    },
+    {
+      "index": 91,
+      "kind": "qualification"
+    },
+    {
+      "index": 92,
+      "kind": "qualification"
+    },
+    {
+      "index": 93,
+      "kind": "qualification"
+    },
+    {
+      "index": 94,
+      "kind": "qualification"
+    },
+    {
+      "index": 95,
+      "kind": "qualification"
+    }
+  ],
+  "timeout_seconds": 300.0
+}

@@ -1,0 +1,11 @@
+{
+  "campaign": "g1-feedback-memory-v2-20261028",
+  "qualification": {
+    "failure": "transport:ProviderTransportRejected",
+    "qualified": false,
+    "sends_used": 1
+  },
+  "schema": "c3r-g1-feedback-memory2-v0.1",
+  "scientific_acceptance": false,
+  "verdict": "OPERATING POINT CLOSED: qualification failed at 300 s / 16384 - no full campaign was dispatched"
+}
