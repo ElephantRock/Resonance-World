@@ -1,0 +1,76 @@
+{
+  "class_deltas": {
+    "noisy_majority": 0.3906,
+    "task_conditional": -0.3906,
+    "unambiguous": 0.0
+  },
+  "class_sds": {
+    "noisy_majority": 0.0938,
+    "task_conditional": 0.0938,
+    "unambiguous": 0.0
+  },
+  "exploratory": true,
+  "interaction_theta_noisy_minus_conditional": 0.7812,
+  "interaction_theta_pp": 78.12,
+  "itt_decomposition": [
+    {
+      "c_correct": 64,
+      "c_length_failures": 0,
+      "c_parseable": 64,
+      "c_transport": 0,
+      "class": "unambiguous",
+      "d_correct": 64,
+      "decision_only_diff_on_parseable": 0,
+      "decision_only_diff_pp": 0.0,
+      "diff_if_length_were_correct": 0,
+      "diff_if_length_were_correct_pp": 0.0,
+      "itt_diff": 0,
+      "itt_diff_pp": 0.0
+    },
+    {
+      "c_correct": 39,
+      "c_length_failures": 13,
+      "c_parseable": 51,
+      "c_transport": 0,
+      "class": "noisy_majority",
+      "d_correct": 64,
+      "decision_only_diff_on_parseable": 12,
+      "decision_only_diff_pp": 18.75,
+      "diff_if_length_were_correct": 12,
+      "diff_if_length_were_correct_pp": 18.75,
+      "itt_diff": 25,
+      "itt_diff_pp": 39.06
+    },
+    {
+      "c_correct": 56,
+      "c_length_failures": 4,
+      "c_parseable": 60,
+      "c_transport": 0,
+      "class": "task_conditional",
+      "d_correct": 31,
+      "decision_only_diff_on_parseable": -25,
+      "decision_only_diff_pp": -39.06,
+      "diff_if_length_were_correct": -29,
+      "diff_if_length_were_correct_pp": -45.31,
+      "itt_diff": -25,
+      "itt_diff_pp": -39.06
+    }
+  ],
+  "naive_pooled_se_pp": 9.82,
+  "noninferential": true,
+  "pooled_sd_banned_for_final_n": true,
+  "power_guidance": {
+    "interaction_theta_se_at_4_per_class": 0.06629126073623882,
+    "n_orgs_per_class_for_stratified_mean": {
+      "true_effect_10pp": 1,
+      "true_effect_15pp": 1,
+      "true_effect_20pp": 1
+    },
+    "note_interaction": "theta power depends on the NEW design's environment parameter distributions, not on these class-fixed SDs; the class-fixed sign is pre-programmed by the compiler's granularity and must not be re-confirmed expensively",
+    "rule": "assume true effect ABOVE the +5pp decision threshold; powering at exactly +5pp gives ~50% gate passage"
+  },
+  "schema": "c3r-g2-calibration-exploratory-interaction-v0.1",
+  "scientific_acceptance": false,
+  "source_run": 40740553836,
+  "stratified_se_pp": 2.21
+}
