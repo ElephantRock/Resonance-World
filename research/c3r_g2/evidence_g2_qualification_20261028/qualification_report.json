@@ -1,0 +1,550 @@
+﻿{
+  "no_provider_calls": true,
+  "noninferential": true,
+  "scenarios": [
+    {
+      "abstention_fallback_cells": 0,
+      "arms": {
+        "A": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 22,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 26
+        },
+        "B": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 48
+        },
+        "C": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 288
+          },
+          "correct": 48,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 0
+        },
+        "D": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 16,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 48,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 0
+        },
+        "D_MINUS": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 48
+        }
+      },
+      "budget_parity": {
+        "c_reads_minus_d_compile": 272,
+        "c_total_record_reads": 288,
+        "d_compile_reads": 16,
+        "proposal_slots_equal": true
+      },
+      "compile_stats": {
+        "ctx-s1": {
+          "support": 12,
+          "wins_('add', 'multiply')": 0,
+          "wins_('multiply', 'add')": 12
+        }
+      },
+      "compiled": {
+        "ctx-s1": [
+          "multiply",
+          "add"
+        ]
+      },
+      "description": "100%-consistent winners; C and D must tie by evidence clarity (NOT by algorithm identity)",
+      "noninferential": true,
+      "paired_counts": {
+        "d_minus_b_correct": 48,
+        "d_minus_c_correct": 0
+      },
+      "scenario": "S1_unambiguous_tie_control"
+    },
+    {
+      "abstention_fallback_cells": 0,
+      "arms": {
+        "A": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 25,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 23
+        },
+        "B": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 48
+        },
+        "C": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 288
+          },
+          "correct": 30,
+          "fallbacks": 17,
+          "transport_error": 0,
+          "wrong": 18
+        },
+        "D": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 20,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 48,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 0
+        },
+        "D_MINUS": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 48
+        }
+      },
+      "budget_parity": {
+        "c_reads_minus_d_compile": 268,
+        "c_total_record_reads": 288,
+        "d_compile_reads": 20,
+        "proposal_slots_equal": true
+      },
+      "compile_stats": {
+        "ctx-s2": {
+          "support": 20,
+          "wins_('add', 'multiply')": 7,
+          "wins_('multiply', 'add')": 13
+        }
+      },
+      "compiled": {
+        "ctx-s2": [
+          "multiply",
+          "add"
+        ]
+      },
+      "description": "65/35 support; bounded per-member samples err on some tasks; full-corpus compilation is correct -> D must exceed C",
+      "noninferential": true,
+      "paired_counts": {
+        "d_minus_b_correct": 48,
+        "d_minus_c_correct": 18
+      },
+      "scenario": "S2_noisy_majority_compilation_wins"
+    },
+    {
+      "abstention_fallback_cells": 0,
+      "arms": {
+        "A": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 23,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 25
+        },
+        "B": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 24,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 24
+        },
+        "C": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 288
+          },
+          "correct": 46,
+          "fallbacks": 6,
+          "transport_error": 0,
+          "wrong": 2
+        },
+        "D": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 30,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 24,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 24
+        },
+        "D_MINUS": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 24,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 24
+        }
+      },
+      "budget_parity": {
+        "c_reads_minus_d_compile": 258,
+        "c_total_record_reads": 288,
+        "d_compile_reads": 30,
+        "proposal_slots_equal": true
+      },
+      "compile_stats": {
+        "ctx-s3": {
+          "support": 30,
+          "wins_('add', 'multiply')": 14,
+          "wins_('multiply', 'add')": 16
+        }
+      },
+      "compiled": {
+        "ctx-s3": [
+          "multiply",
+          "add"
+        ]
+      },
+      "description": "global per-context majority is wrong for the 'special' variant; the compiler's contract is context-granular while raw readers see variant tags -> C must exceed D",
+      "noninferential": true,
+      "paired_counts": {
+        "d_minus_b_correct": 0,
+        "d_minus_c_correct": -22
+      },
+      "scenario": "S3_task_conditional_interpretation_wins"
+    },
+    {
+      "abstention_fallback_cells": 48,
+      "arms": {
+        "A": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 25,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 23
+        },
+        "B": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 48
+        },
+        "C": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 288
+          },
+          "correct": 48,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 0
+        },
+        "D": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 8,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 48,
+          "transport_error": 0,
+          "wrong": 48
+        },
+        "D_MINUS": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 48
+        }
+      },
+      "budget_parity": {
+        "c_reads_minus_d_compile": 280,
+        "c_total_record_reads": 288,
+        "d_compile_reads": 8,
+        "proposal_slots_equal": true
+      },
+      "compile_stats": {
+        "ctx-s4": {
+          "support": 5,
+          "wins_('add', 'multiply')": 0,
+          "wins_('multiply', 'add')": 5
+        }
+      },
+      "compiled": {
+        "ctx-s4": null
+      },
+      "description": "support 5 < floor 8 -> compiler abstains; D falls back to the neutral default and the taxonomy must record the abstention",
+      "noninferential": true,
+      "paired_counts": {
+        "d_minus_b_correct": 0,
+        "d_minus_c_correct": -48
+      },
+      "scenario": "S4_insufficient_support_abstention"
+    },
+    {
+      "abstention_fallback_cells": 0,
+      "arms": {
+        "A": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 22,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 26
+        },
+        "B": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 48
+        },
+        "C": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 288
+          },
+          "correct": 48,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 0
+        },
+        "D": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 16,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 48
+        },
+        "D_MINUS": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 48
+        }
+      },
+      "budget_parity": {
+        "c_reads_minus_d_compile": 272,
+        "c_total_record_reads": 288,
+        "d_compile_reads": 16,
+        "proposal_slots_equal": true
+      },
+      "compile_stats": {
+        "ctx-s1": {
+          "support": 12,
+          "wins_('add', 'multiply')": 0,
+          "wins_('multiply', 'add')": 12
+        }
+      },
+      "compiled": {
+        "ctx-s1": [
+          "multiply",
+          "add"
+        ]
+      },
+      "description": "S1 corpus with a deliberately flipped injected procedure: D outcomes must flip vs S1 - the mechanism is live, not decorative",
+      "noninferential": true,
+      "paired_counts": {
+        "d_minus_b_correct": 0,
+        "d_minus_c_correct": -48
+      },
+      "scenario": "S5_corrupted_procedure_liveness"
+    },
+    {
+      "abstention_fallback_cells": 0,
+      "arms": {
+        "A": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 25,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 23
+        },
+        "B": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 48
+        },
+        "C": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 288
+          },
+          "correct": 28,
+          "fallbacks": 17,
+          "transport_error": 2,
+          "wrong": 18
+        },
+        "D": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 20,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 46,
+          "fallbacks": 0,
+          "transport_error": 2,
+          "wrong": 0
+        },
+        "D_MINUS": {
+          "attempts": 48,
+          "budget": {
+            "compile_cost": 0,
+            "proposal_slots": 48,
+            "record_reads": 0
+          },
+          "correct": 0,
+          "fallbacks": 0,
+          "transport_error": 0,
+          "wrong": 48
+        }
+      },
+      "budget_parity": {
+        "c_reads_minus_d_compile": 268,
+        "c_total_record_reads": 288,
+        "d_compile_reads": 20,
+        "proposal_slots_equal": true
+      },
+      "compile_stats": {
+        "ctx-s2": {
+          "support": 20,
+          "wins_('add', 'multiply')": 7,
+          "wins_('multiply', 'add')": 13
+        }
+      },
+      "compiled": {
+        "ctx-s2": [
+          "multiply",
+          "add"
+        ]
+      },
+      "description": "S2 corpus with injected transport failures on specific member/task cells; classified as transport_error and preserved in the denominator",
+      "noninferential": true,
+      "paired_counts": {
+        "d_minus_b_correct": 46,
+        "d_minus_c_correct": 18
+      },
+      "scenario": "S6_transport_failure_taxonomy"
+    }
+  ],
+  "schema": "c3r-g2-causal-qualification-v0.1"
+}

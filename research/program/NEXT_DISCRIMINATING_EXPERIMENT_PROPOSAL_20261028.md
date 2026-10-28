@@ -1,5 +1,26 @@
 # C. Next Discriminating Experiment — Proposal (UNFROZEN draft for owner approval)
 
+> **CORRECTIONS v2 (owner review, 2026-10-28 evening — binding):**
+> 1. Identical admitted evidence is required between C and D ONLY; A
+>    and B are structurally different controls and do not receive the
+>    corpus. §2 below is read accordingly.
+> 2. The blanket "all requests execution-style" claim is WITHDRAWN.
+>    C's per-task interpretation requests are heavier than D's
+>    execution requests; request-class stability is a qualification
+>    obligation per class. Corrected stability record: **127/128**
+>    evaluable responses across the stepwise and semantic-clarity
+>    campaigns (one transport failure), and **420/420 in G1 v9 is
+>    send-accounting completeness, not response success**.
+> 3. The old fixture's C ≡ D tie is a property of its
+>    trivially-extractable sufficient statistic, not a scientific
+>    result. The qualified design and its both-direction divergence
+>    controls now live in
+>    `src/resonance_world/c3r_g2_causal_qualification.py` and the
+>    freeze-ready draft
+>    `research/c3r_g2/G2_COMPILED_KNOWLEDGE_PREREG_DRAFT_20261028.md`.
+>    GO scope: offline causal qualification ONLY; live dispatch is
+>    NO-GO until separately approved.
+
 Status: **PROPOSAL ONLY — not frozen, not dispatched, zero sends.**
 Prepared under the Research Program Realignment directive (2026-10-28).
 This document proposes ONE experiment whose primary difference between
