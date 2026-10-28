@@ -1,0 +1,192 @@
+name: C3R G1 Feedback-Acquired Procedural Memory 20261028
+
+on:
+  push:
+    branches:
+      - research/c3r-g1-feedback-memory-20261028
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c3r-g1-feedback-memory-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Offline feedback-memory apparatus tests (no network)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e . && python -m pip install pytest
+          python -m py_compile scripts/c3r_g1_feedback_families.py scripts/run_c3r_g1_feedback_memory_live.py
+          python -m pytest tests/test_c3r_g1_feedback_memory_live.py -q
+
+  manifest:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: offline-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Freeze manifest (programs, evidence, probes, eval truths, 80 slots)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_feedback_memory_live.py \
+            --workspace "$RUNNER_TEMP/fb-workspace" \
+            --run-id "fb-${{ github.run_id }}" \
+            --session manifest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: feedback-manifest
+          path: ${{ runner.temp }}/fb-workspace/feedback-manifest.json
+          if-no-files-found: error
+          retention-days: 90
+
+  learn:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, manifest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        program: ["prog-binary-00", "prog-binary-01", "prog-alpha-00", "prog-alpha-01"]
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Workspace and session ledger (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/fb-workspace/feedback-ledger"
+          chmod 700 "$RUNNER_TEMP/fb-workspace/feedback-ledger"
+      - name: Download frozen manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: feedback-manifest
+          path: ${{ runner.temp }}/fb-workspace/
+      - name: Feedback learning loop (<= 8 sends, High/4096)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_feedback_memory_live.py \
+            --workspace "$RUNNER_TEMP/fb-workspace" \
+            --run-id "fb-${{ github.run_id }}" \
+            --session learn \
+            --program ${{ matrix.program }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: feedback-learn-${{ matrix.program }}
+          path: ${{ runner.temp }}/fb-workspace/learn-*.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: feedback-capsule-${{ matrix.program }}
+          path: ${{ runner.temp }}/fb-workspace/capsule-*.json
+          if-no-files-found: error
+          retention-days: 90
+
+  exec-control:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, manifest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    strategy:
+      fail-fast: false
+      max-parallel: 2
+      matrix:
+        arm: ["raw", "fresh"]
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Workspace and session ledger (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/fb-workspace/feedback-ledger"
+          chmod 700 "$RUNNER_TEMP/fb-workspace/feedback-ledger"
+      - name: Download frozen manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: feedback-manifest
+          path: ${{ runner.temp }}/fb-workspace/
+      - name: Execution arm (16 sends, High/4096)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_feedback_memory_live.py \
+            --workspace "$RUNNER_TEMP/fb-workspace" \
+            --run-id "fb-${{ github.run_id }}" \
+            --session exec \
+            --arm ${{ matrix.arm }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: feedback-summary-${{ matrix.arm }}
+          path: ${{ runner.temp }}/fb-workspace/summary-*.json
+          if-no-files-found: error
+          retention-days: 90
+
+  exec-learned:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, manifest, learn]
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Workspace and session ledger (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/fb-workspace/feedback-ledger"
+          chmod 700 "$RUNNER_TEMP/fb-workspace/feedback-ledger"
+      - name: Download frozen manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: feedback-manifest
+          path: ${{ runner.temp }}/fb-workspace/
+      - name: Download all stored capsules
+        uses: actions/download-artifact@v4
+        with:
+          pattern: feedback-capsule-*
+          path: ${{ runner.temp }}/fb-workspace/
+      - name: Learned execution arm (16 sends, High/4096)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_feedback_memory_live.py \
+            --workspace "$RUNNER_TEMP/fb-workspace" \
+            --run-id "fb-${{ github.run_id }}" \
+            --session exec \
+            --arm learned
+      - uses: actions/upload-artifact@v4
+        with:
+          name: feedback-summary-learned
+          path: ${{ runner.temp }}/fb-workspace/summary-learned.json
+          if-no-files-found: error
+          retention-days: 90
