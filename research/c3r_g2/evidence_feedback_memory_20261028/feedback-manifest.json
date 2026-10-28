@@ -1,6 +1,7 @@
 {
   "campaign_slots": 80,
   "max_tokens": 4096,
+  "max_tokens_learning": 16384,
   "model": "glm-5.3",
   "plan": [
     {
@@ -212,7 +213,7 @@
   ],
   "reasoning_effort": "high",
   "route": "coding",
-  "run_id": "fb-40684468956",
+  "run_id": "fb-40686295703",
   "schema": "c3r-g1-feedback-memory-v0.1",
   "scientific_acceptance": false,
   "slots": [

@@ -1,0 +1,96 @@
+{
+  "campaign": "g1-feedback-acquired-procedural-memory-20261028",
+  "execution": {
+    "fresh": {
+      "itt_successes": 0,
+      "sends": 16,
+      "taxonomy": {
+        "correct": 0,
+        "no_capsule": 0,
+        "transport": 0,
+        "unparseable": 6,
+        "wrong_value": 10
+      }
+    },
+    "learned": {
+      "itt_successes": 0,
+      "sends": 0,
+      "taxonomy": {
+        "correct": 0,
+        "no_capsule": 16,
+        "transport": 0,
+        "unparseable": 0,
+        "wrong_value": 0
+      }
+    },
+    "raw": {
+      "itt_successes": 2,
+      "sends": 16,
+      "taxonomy": {
+        "correct": 2,
+        "no_capsule": 0,
+        "transport": 0,
+        "unparseable": 14,
+        "wrong_value": 0
+      }
+    }
+  },
+  "fresh_itt": 0,
+  "gate_g1_repeatable_value": false,
+  "gate_g2_beats_rederivation": false,
+  "learned_itt": 0,
+  "learning": {
+    "budget_exhausted": 0,
+    "capsule_format_ok": 0,
+    "learning_sends": 4,
+    "per_program": [
+      {
+        "capsule_format_ok": false,
+        "program_id": "prog-binary-00",
+        "sends_used": 1,
+        "validated": false,
+        "validation_round": null
+      },
+      {
+        "capsule_format_ok": false,
+        "program_id": "prog-binary-01",
+        "sends_used": 1,
+        "validated": false,
+        "validation_round": null
+      },
+      {
+        "capsule_format_ok": false,
+        "program_id": "prog-alpha-00",
+        "sends_used": 1,
+        "validated": false,
+        "validation_round": null
+      },
+      {
+        "capsule_format_ok": false,
+        "program_id": "prog-alpha-01",
+        "sends_used": 1,
+        "validated": false,
+        "validation_round": null
+      }
+    ],
+    "programs": 4,
+    "transport_aborted": 4,
+    "validated": 0
+  },
+  "paired_learned_vs_fresh": {
+    "both": 0,
+    "neither": 16,
+    "x_only": 0,
+    "y_only": 0
+  },
+  "paired_learned_vs_raw": {
+    "both": 0,
+    "neither": 14,
+    "x_only": 0,
+    "y_only": 2
+  },
+  "raw_itt": 2,
+  "schema": "c3r-g1-feedback-memory-v0.1",
+  "scientific_acceptance": false,
+  "verdict": "GATE FAILED: the line closes \u2014 no rescue rounds, no threshold adjustment"
+}

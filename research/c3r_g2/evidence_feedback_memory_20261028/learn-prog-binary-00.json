@@ -1,33 +1,25 @@
 {
-  "aborted": null,
+  "aborted": "ProviderTransportRejected",
   "budget_exhausted": false,
   "capsule": null,
   "capsule_format_ok": false,
   "events": [
     {
-      "answer": "",
-      "finish_reason": "length",
+      "answer": null,
+      "failure_class": "ProviderTransportRejected",
+      "finish_reason": null,
       "guard": false,
-      "latency_ms": 98821.9,
+      "latency_ms": 180226.7,
       "role": "draft0",
-      "slot": 0,
-      "status": "empty_answer"
-    },
-    {
-      "answer": "",
-      "finish_reason": "length",
-      "guard": true,
-      "latency_ms": 97955.9,
-      "role": "draft0",
-      "slot": 1,
-      "status": "empty_answer"
+      "slot": 2,
+      "status": "transport_error"
     }
   ],
   "family": "binary",
   "program_code": "BAAAB",
   "program_id": "prog-binary-00",
   "schema": "c3r-g1-feedback-memory-v0.1",
-  "sends_used": 2,
+  "sends_used": 1,
   "validated": false,
   "validation_round": null
 }
