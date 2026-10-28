@@ -1,0 +1,373 @@
+{
+  "N_grid": [
+    12,
+    256,
+    4
+  ],
+  "design_facts": {
+    "band_seed_change_decomposition": {
+      "negative+positive+tie": 1,
+      "negative+tie": 1,
+      "positive": 10,
+      "positive+tie": 8
+    },
+    "cells_where_D_VAR_beats_D_CTX_but_loses_to_C": [
+      {
+        "alpha": 0.65,
+        "beta": 0.15,
+        "gamma": 0.0,
+        "mean_d_var_vs_c": -0.1,
+        "mean_g": 0.175
+      },
+      {
+        "alpha": 0.65,
+        "beta": 0.3,
+        "gamma": 0.4,
+        "mean_d_var_vs_c": -0.113,
+        "mean_g": 0.45
+      },
+      {
+        "alpha": 0.65,
+        "beta": 0.5,
+        "gamma": 0.0,
+        "mean_d_var_vs_c": -0.1,
+        "mean_g": 0.2
+      },
+      {
+        "alpha": 0.75,
+        "beta": 0.3,
+        "gamma": 0.4,
+        "mean_d_var_vs_c": -0.1,
+        "mean_g": 0.25
+      },
+      {
+        "alpha": 0.75,
+        "beta": 0.5,
+        "gamma": 0.4,
+        "mean_d_var_vs_c": -0.1,
+        "mean_g": 0.2
+      },
+      {
+        "alpha": 0.85,
+        "beta": 0.3,
+        "gamma": 0.2,
+        "mean_d_var_vs_c": -0.15,
+        "mean_g": 0.4
+      },
+      {
+        "alpha": 0.85,
+        "beta": 0.5,
+        "gamma": 0.4,
+        "mean_d_var_vs_c": -0.2,
+        "mean_g": 0.2
+      },
+      {
+        "alpha": 1.0,
+        "beta": 0.15,
+        "gamma": 0.4,
+        "mean_d_var_vs_c": -0.2,
+        "mean_g": 0.375
+      },
+      {
+        "alpha": 1.0,
+        "beta": 0.5,
+        "gamma": 0.0,
+        "mean_d_var_vs_c": -0.1,
+        "mean_g": 0.4
+      },
+      {
+        "alpha": 1.0,
+        "beta": 0.5,
+        "gamma": 0.4,
+        "mean_d_var_vs_c": -0.1,
+        "mean_g": 0.3
+      }
+    ],
+    "note": "V1/V2 are grader-path sensitivity probes (oracle swap, corruption), not proof that the compiler derives correct knowledge from evidence; live developmental evidence (D_CTX 64/64 in the noisy class) is exploratory support for compiler correctness, recorded separately."
+  },
+  "frozen_seed": 20261029,
+  "gate": "positive AND one-sided z>1.645 AND estimate>=SESOI",
+  "joint_gate_table": [
+    {
+      "N_joint_gate_80pct": 56,
+      "N_significance_only_approx": 55.7,
+      "sd": 0.3,
+      "sends_at_N_joint": 2688,
+      "sesoi_G": 0.05,
+      "true_G": 0.1
+    },
+    {
+      "N_joint_gate_80pct": 28,
+      "N_significance_only_approx": 24.7,
+      "sd": 0.3,
+      "sends_at_N_joint": 1344,
+      "sesoi_G": 0.05,
+      "true_G": 0.15
+    },
+    {
+      "N_joint_gate_80pct": 16,
+      "N_significance_only_approx": 13.9,
+      "sd": 0.3,
+      "sends_at_N_joint": 768,
+      "sesoi_G": 0.05,
+      "true_G": 0.2
+    },
+    {
+      "N_joint_gate_80pct": 12,
+      "N_significance_only_approx": 6.2,
+      "sd": 0.3,
+      "sends_at_N_joint": 576,
+      "sesoi_G": 0.05,
+      "true_G": 0.3
+    },
+    {
+      "N_joint_gate_80pct": 128,
+      "N_significance_only_approx": 125.2,
+      "sd": 0.45,
+      "sends_at_N_joint": 6144,
+      "sesoi_G": 0.05,
+      "true_G": 0.1
+    },
+    {
+      "N_joint_gate_80pct": 60,
+      "N_significance_only_approx": 55.7,
+      "sd": 0.45,
+      "sends_at_N_joint": 2880,
+      "sesoi_G": 0.05,
+      "true_G": 0.15
+    },
+    {
+      "N_joint_gate_80pct": 36,
+      "N_significance_only_approx": 31.3,
+      "sd": 0.45,
+      "sends_at_N_joint": 1728,
+      "sesoi_G": 0.05,
+      "true_G": 0.2
+    },
+    {
+      "N_joint_gate_80pct": 16,
+      "N_significance_only_approx": 13.9,
+      "sd": 0.45,
+      "sends_at_N_joint": 768,
+      "sesoi_G": 0.05,
+      "true_G": 0.3
+    },
+    {
+      "N_joint_gate_80pct": 208,
+      "N_significance_only_approx": 205.2,
+      "sd": 0.576,
+      "sends_at_N_joint": 9984,
+      "sesoi_G": 0.05,
+      "true_G": 0.1
+    },
+    {
+      "N_joint_gate_80pct": 96,
+      "N_significance_only_approx": 91.2,
+      "sd": 0.576,
+      "sends_at_N_joint": 4608,
+      "sesoi_G": 0.05,
+      "true_G": 0.15
+    },
+    {
+      "N_joint_gate_80pct": 52,
+      "N_significance_only_approx": 51.3,
+      "sd": 0.576,
+      "sends_at_N_joint": 2496,
+      "sesoi_G": 0.05,
+      "true_G": 0.2
+    },
+    {
+      "N_joint_gate_80pct": 24,
+      "N_significance_only_approx": 22.8,
+      "sd": 0.576,
+      "sends_at_N_joint": 1152,
+      "sesoi_G": 0.05,
+      "true_G": 0.3
+    },
+    {
+      "N_joint_gate_80pct": null,
+      "N_significance_only_approx": 303.1,
+      "sd": 0.7,
+      "sends_at_N_joint": null,
+      "sesoi_G": 0.05,
+      "true_G": 0.1
+    },
+    {
+      "N_joint_gate_80pct": 132,
+      "N_significance_only_approx": 134.7,
+      "sd": 0.7,
+      "sends_at_N_joint": 6336,
+      "sesoi_G": 0.05,
+      "true_G": 0.15
+    },
+    {
+      "N_joint_gate_80pct": 76,
+      "N_significance_only_approx": 75.8,
+      "sd": 0.7,
+      "sends_at_N_joint": 3648,
+      "sesoi_G": 0.05,
+      "true_G": 0.2
+    },
+    {
+      "N_joint_gate_80pct": 36,
+      "N_significance_only_approx": 33.7,
+      "sd": 0.7,
+      "sends_at_N_joint": 1728,
+      "sesoi_G": 0.05,
+      "true_G": 0.3
+    },
+    {
+      "N_joint_gate_80pct": null,
+      "N_significance_only_approx": 55.7,
+      "sd": 0.3,
+      "sends_at_N_joint": null,
+      "sesoi_G": 0.1,
+      "true_G": 0.1
+    },
+    {
+      "N_joint_gate_80pct": 32,
+      "N_significance_only_approx": 24.7,
+      "sd": 0.3,
+      "sends_at_N_joint": 1536,
+      "sesoi_G": 0.1,
+      "true_G": 0.15
+    },
+    {
+      "N_joint_gate_80pct": 16,
+      "N_significance_only_approx": 13.9,
+      "sd": 0.3,
+      "sends_at_N_joint": 768,
+      "sesoi_G": 0.1,
+      "true_G": 0.2
+    },
+    {
+      "N_joint_gate_80pct": 12,
+      "N_significance_only_approx": 6.2,
+      "sd": 0.3,
+      "sends_at_N_joint": 576,
+      "sesoi_G": 0.1,
+      "true_G": 0.3
+    },
+    {
+      "N_joint_gate_80pct": null,
+      "N_significance_only_approx": 125.2,
+      "sd": 0.45,
+      "sends_at_N_joint": null,
+      "sesoi_G": 0.1,
+      "true_G": 0.1
+    },
+    {
+      "N_joint_gate_80pct": 60,
+      "N_significance_only_approx": 55.7,
+      "sd": 0.45,
+      "sends_at_N_joint": 2880,
+      "sesoi_G": 0.1,
+      "true_G": 0.15
+    },
+    {
+      "N_joint_gate_80pct": 32,
+      "N_significance_only_approx": 31.3,
+      "sd": 0.45,
+      "sends_at_N_joint": 1536,
+      "sesoi_G": 0.1,
+      "true_G": 0.2
+    },
+    {
+      "N_joint_gate_80pct": 16,
+      "N_significance_only_approx": 13.9,
+      "sd": 0.45,
+      "sends_at_N_joint": 768,
+      "sesoi_G": 0.1,
+      "true_G": 0.3
+    },
+    {
+      "N_joint_gate_80pct": null,
+      "N_significance_only_approx": 205.2,
+      "sd": 0.576,
+      "sends_at_N_joint": null,
+      "sesoi_G": 0.1,
+      "true_G": 0.1
+    },
+    {
+      "N_joint_gate_80pct": 96,
+      "N_significance_only_approx": 91.2,
+      "sd": 0.576,
+      "sends_at_N_joint": 4608,
+      "sesoi_G": 0.1,
+      "true_G": 0.15
+    },
+    {
+      "N_joint_gate_80pct": 52,
+      "N_significance_only_approx": 51.3,
+      "sd": 0.576,
+      "sends_at_N_joint": 2496,
+      "sesoi_G": 0.1,
+      "true_G": 0.2
+    },
+    {
+      "N_joint_gate_80pct": 24,
+      "N_significance_only_approx": 22.8,
+      "sd": 0.576,
+      "sends_at_N_joint": 1152,
+      "sesoi_G": 0.1,
+      "true_G": 0.3
+    },
+    {
+      "N_joint_gate_80pct": null,
+      "N_significance_only_approx": 303.1,
+      "sd": 0.7,
+      "sends_at_N_joint": null,
+      "sesoi_G": 0.1,
+      "true_G": 0.1
+    },
+    {
+      "N_joint_gate_80pct": 144,
+      "N_significance_only_approx": 134.7,
+      "sd": 0.7,
+      "sends_at_N_joint": 6912,
+      "sesoi_G": 0.1,
+      "true_G": 0.15
+    },
+    {
+      "N_joint_gate_80pct": 80,
+      "N_significance_only_approx": 75.8,
+      "sd": 0.7,
+      "sends_at_N_joint": 3840,
+      "sesoi_G": 0.1,
+      "true_G": 0.2
+    },
+    {
+      "N_joint_gate_80pct": 36,
+      "N_significance_only_approx": 33.7,
+      "sd": 0.7,
+      "sends_at_N_joint": 1728,
+      "sesoi_G": 0.1,
+      "true_G": 0.3
+    }
+  ],
+  "model": "org-level paired G ~ Normal(true_G, SD); between-org variance only; repeated tasks never independent units",
+  "net_value_condition_sensitivity": [
+    {
+      "c_fail_rate": 0.0,
+      "pass_prob_at_N60_sd0.45": 0.823,
+      "true_D_VAR_minus_C": 0.15
+    },
+    {
+      "c_fail_rate": 0.0,
+      "pass_prob_at_N60_sd0.45": 0.998,
+      "true_D_VAR_minus_C": 0.25
+    },
+    {
+      "c_fail_rate": 0.09,
+      "pass_prob_at_N60_sd0.45": 0.358,
+      "true_D_VAR_minus_C": 0.15
+    },
+    {
+      "c_fail_rate": 0.09,
+      "pass_prob_at_N60_sd0.45": 0.902,
+      "true_D_VAR_minus_C": 0.25
+    }
+  ],
+  "replicates": 4000,
+  "schema": "c3r-g2-joint-gate-power-v0.1"
+}
