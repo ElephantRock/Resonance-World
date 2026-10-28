@@ -1,9 +1,28 @@
-# G2 interaction protocol — DRAFT (unfrozen; analysis & design phase only)
+# G2 interaction protocol — DRAFT v2 (unfrozen; analysis & design phase only)
 
-Status: **DRAFT — design document, zero sends, no live GO requested.**
-Owner decision (2026-10-29): option (b), the mechanism × environment-
-structure interaction, with a binding constraint: **the class label
-alone must not determine the outcome direction before execution.**
+Status: **DRAFT v2 — owner corrections (2026-10-29) adopted; zero
+sends; no live GO requested.** The immediate authorized step is ONE
+deterministic offline no-forced-sign check.
+
+## 0. v2 corrections (binding)
+
+1. **γ is renamed TAG MASKING RATE** (the probability a record's
+   variant tag is masked/uninformative). It is NOT "diagnosticity";
+   γ = 0.4 still leaves ~60% of tags visible on average.
+2. **γ = 0.4 does not mean information absence, and β = 0 does NOT
+   guarantee G = 0** in finite corpora — granularity-splitting can
+   weaken per-variant support and overfit noise (possible G < 0).
+   These are HYPOTHESES the no-forced-sign check must MEASURE, not
+   structural facts to assert.
+3. **Grid arithmetic:** the full grid is 5 (α) × 4 (β) × 3 (γ) =
+   **60 combinations**, not 20; any subsample must declare its draw
+   method and independent replication; one point per combination is
+   not a variance estimate. Cross-seed replication is mandatory.
+4. **Accounting correction:** in a 960-send design the split is
+   **320 C + 640 D-class** (320 D_CTX + 320 D_VAR), not 480/480;
+   probe-average token projection ≈ **328K completion tokens for C**
+   and ≈ **60K for both D arms combined**; re-estimated at contract
+   freeze.
 
 ## 1) The independent hypothesis
 
@@ -29,10 +48,11 @@ continuous parameters (frozen grid/distribution at freeze time):
 - **β — deviation rate** ∈ [0.0, 0.5]: the fraction of tasks whose
   correct plan deviates from the context-majority plan (task-
   conditional structure). β = 0 recovers the consistent world.
-- **γ — tag diagnosticity** ∈ [0.0, 0.4]: the probability the
-  distinguishing tag is masked/uninformative in a record. γ = 0: the
-  variant signal is fully readable (detail is THERE to be used);
-  γ high: the signal is genuinely absent (NOBODY can condition on it).
+- **γ — tag masking rate** ∈ {0.0, 0.2, 0.4}: the probability the
+  variant tag is masked in a record (masked records cannot be used by
+  ANY variant-conditioning agent — C's sampling or the D_VAR compiler
+  alike; D_CTX pools them regardless). γ = 0.4 still leaves ~60%
+  visible.
 
 Parameter values are drawn per organization by frozen seed from a
 declared grid — no class labels, no post-hoc selection.

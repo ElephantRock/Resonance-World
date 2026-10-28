@@ -1,0 +1,1138 @@
+{
+  "apparatus_causal_valid": true,
+  "band_g_sd_upper": 0.5755432216610669,
+  "band_seed_dependent_cells": "10/20",
+  "beta0_g_values": {
+    "alpha=0.55,gamma=0.0": -0.4,
+    "alpha=0.55,gamma=0.2": -0.2,
+    "alpha=0.55,gamma=0.4": 0.0,
+    "alpha=0.65,gamma=0.0": -0.2,
+    "alpha=0.65,gamma=0.2": 0.0,
+    "alpha=0.65,gamma=0.4": 0.0,
+    "alpha=0.75,gamma=0.0": -0.2,
+    "alpha=0.75,gamma=0.2": 0.0,
+    "alpha=0.75,gamma=0.4": 0.0,
+    "alpha=0.85,gamma=0.0": 0.0,
+    "alpha=0.85,gamma=0.2": 0.0,
+    "alpha=0.85,gamma=0.4": 0.0,
+    "alpha=1.0,gamma=0.0": 0.0,
+    "alpha=1.0,gamma=0.2": 0.0,
+    "alpha=1.0,gamma=0.4": 0.0
+  },
+  "cells": [
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.55,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "positive"
+      ],
+      "g_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": 0.425,
+      "mean_d_var": 0.025,
+      "mean_g": -0.4,
+      "sd_g": 0.5477225575051661,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.55,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": 0.25,
+      "mean_d_var": 0.05,
+      "mean_g": -0.2,
+      "sd_g": 0.4472135954999579,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.55,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.4,
+      "mean_d_var": -0.4,
+      "mean_g": 0.0,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.55,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "positive"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": 0.125,
+      "mean_d_var": 0.175,
+      "mean_g": 0.05,
+      "sd_g": 0.06846531968814576,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.55,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.4875,
+      "mean_d_var": 0.2375,
+      "mean_g": 0.725,
+      "sd_g": 0.33541019662496846,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.55,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": 0.2,
+      "mean_d_var": 0.0,
+      "mean_g": -0.2,
+      "sd_g": 0.3811987670494227,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.55,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.1125,
+      "mean_d_var": -0.0625,
+      "mean_g": 0.05,
+      "sd_g": 0.11180339887498948,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.55,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "positive",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": 0.075,
+      "mean_d_var": 0.025,
+      "mean_g": -0.05,
+      "sd_g": 0.11180339887498948,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.55,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.2,
+      "mean_d_var": 0.0,
+      "mean_g": 0.2,
+      "sd_g": 0.32596012026013244,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.55,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "positive"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.15,
+      "mean_d_var": -0.05,
+      "mean_g": 0.1,
+      "sd_g": 0.22360679774997896,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.55,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.2375,
+      "mean_d_var": 0.1625,
+      "mean_g": 0.4,
+      "sd_g": 0.22360679774997896,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.55,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.15,
+      "mean_d_var": -0.05,
+      "mean_g": 0.1,
+      "sd_g": 0.22360679774997896,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.65,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": 0.2375,
+      "mean_d_var": 0.0375,
+      "mean_g": -0.2,
+      "sd_g": 0.4472135954999579,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.65,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": 0.1125,
+      "mean_d_var": 0.1125,
+      "mean_g": 0.0,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.65,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": 0.15,
+      "mean_d_var": 0.15,
+      "mean_g": 0.0,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.65,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.275,
+      "mean_d_var": -0.1,
+      "mean_g": 0.175,
+      "sd_g": 0.3913118960624632,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.65,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.5375,
+      "mean_d_var": 0.0125,
+      "mean_g": 0.55,
+      "sd_g": 0.4472135954999579,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.65,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.225,
+      "mean_d_var": 0.0,
+      "mean_g": 0.225,
+      "sd_g": 0.36869703009381566,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.65,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "positive"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.3,
+      "mean_d_var": 0.1,
+      "mean_g": 0.4,
+      "sd_g": 0.33541019662496846,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.65,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "positive"
+      ],
+      "g_signs_across_seeds": [
+        "negative",
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.325,
+      "mean_d_var": 0.025,
+      "mean_g": 0.35,
+      "sd_g": 0.5755432216610669,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.65,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.5625,
+      "mean_d_var": -0.1125,
+      "mean_g": 0.45,
+      "sd_g": 0.4107919181288746,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.65,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.3,
+      "mean_d_var": -0.1,
+      "mean_g": 0.2,
+      "sd_g": 0.27386127875258304,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.65,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.275,
+      "mean_d_var": 0.125,
+      "mean_g": 0.4,
+      "sd_g": 0.22360679774997896,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.65,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.3375,
+      "mean_d_var": -0.0375,
+      "mean_g": 0.3,
+      "sd_g": 0.27386127875258304,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.75,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": 0.2125,
+      "mean_d_var": 0.0125,
+      "mean_g": -0.2,
+      "sd_g": 0.4472135954999579,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.75,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": 0.0,
+      "mean_d_var": 0.0,
+      "mean_g": 0.0,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.75,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": 0.0,
+      "mean_d_var": 0.0,
+      "mean_g": 0.0,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.75,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.5125,
+      "mean_d_var": 0.0625,
+      "mean_g": 0.575,
+      "sd_g": 0.4107919181288746,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.75,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.1,
+      "mean_d_var": 0.1,
+      "mean_g": 0.2,
+      "sd_g": 0.3811987670494227,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.75,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.475,
+      "mean_d_var": 0.075,
+      "mean_g": 0.55,
+      "sd_g": 0.4472135954999579,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.75,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "positive"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.375,
+      "mean_d_var": 0.075,
+      "mean_g": 0.45,
+      "sd_g": 0.27386127875258304,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.75,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.5125,
+      "mean_d_var": 0.0375,
+      "mean_g": 0.55,
+      "sd_g": 0.27386127875258304,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.75,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.35,
+      "mean_d_var": -0.1,
+      "mean_g": 0.25,
+      "sd_g": 0.30618621784789724,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.75,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.5,
+      "mean_d_var": 0.0,
+      "mean_g": 0.5,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.75,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.4,
+      "mean_d_var": 0.0,
+      "mean_g": 0.4,
+      "sd_g": 0.22360679774997896,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.75,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.3,
+      "mean_d_var": -0.1,
+      "mean_g": 0.2,
+      "sd_g": 0.27386127875258304,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.85,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": 0.025,
+      "mean_d_var": 0.025,
+      "mean_g": 0.0,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.85,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": 0.0625,
+      "mean_d_var": 0.0625,
+      "mean_g": 0.0,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 0.85,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": 0.0,
+      "mean_d_var": 0.0,
+      "mean_g": 0.0,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.85,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.375,
+      "mean_d_var": 0.05,
+      "mean_g": 0.425,
+      "sd_g": 0.4107919181288746,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.85,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.125,
+      "mean_d_var": 0.0,
+      "mean_g": 0.125,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.85,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.4,
+      "mean_d_var": -0.025,
+      "mean_g": 0.375,
+      "sd_g": 0.4592793267718459,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.85,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.4375,
+      "mean_d_var": 0.0125,
+      "mean_g": 0.45,
+      "sd_g": 0.27386127875258304,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.85,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.55,
+      "mean_d_var": -0.15,
+      "mean_g": 0.4,
+      "sd_g": 0.33541019662496846,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.85,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.45,
+      "mean_d_var": 0.0,
+      "mean_g": 0.45,
+      "sd_g": 0.27386127875258304,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.85,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.4625,
+      "mean_d_var": 0.0375,
+      "mean_g": 0.5,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.85,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.5,
+      "mean_d_var": 0.0,
+      "mean_g": 0.5,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 0.85,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "negative",
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.4,
+      "mean_d_var": -0.2,
+      "mean_g": 0.2,
+      "sd_g": 0.4472135954999579,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 1.0,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": 0.0,
+      "mean_d_var": 0.0,
+      "mean_g": 0.0,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 1.0,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": 0.0,
+      "mean_d_var": 0.0,
+      "mean_g": 0.0,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": "G~0 (hypothesis; may be negative via support splitting)",
+      "alpha": 1.0,
+      "beta": 0.0,
+      "d_ctx_signs_across_seeds": [
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": 0.0,
+      "mean_d_var": 0.0,
+      "mean_g": 0.0,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": "G>0 (rule-predicted)",
+      "alpha": 1.0,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.275,
+      "mean_d_var": 0.0,
+      "mean_g": 0.275,
+      "sd_g": 0.33541019662496846,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 1.0,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.25,
+      "mean_d_var": 0.0,
+      "mean_g": 0.25,
+      "sd_g": 0.3535533905932738,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 1.0,
+      "beta": 0.15,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.575,
+      "mean_d_var": -0.2,
+      "mean_g": 0.375,
+      "sd_g": 0.4592793267718459,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": "G>0 (rule-predicted)",
+      "alpha": 1.0,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.55,
+      "mean_d_var": 0.0,
+      "mean_g": 0.55,
+      "sd_g": 0.27386127875258304,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 1.0,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.55,
+      "mean_d_var": 0.0,
+      "mean_g": 0.55,
+      "sd_g": 0.27386127875258304,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 1.0,
+      "beta": 0.3,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.45,
+      "mean_d_var": -0.05,
+      "mean_g": 0.4,
+      "sd_g": 0.33541019662496846,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": "G>0 (rule-predicted)",
+      "alpha": 1.0,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.0,
+      "mean_d_ctx": -0.5,
+      "mean_d_var": -0.1,
+      "mean_g": 0.4,
+      "sd_g": 0.22360679774997896,
+      "seed_dependent_winner": true
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 1.0,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative"
+      ],
+      "g_signs_across_seeds": [
+        "positive"
+      ],
+      "gamma": 0.2,
+      "mean_d_ctx": -0.5,
+      "mean_d_var": 0.0,
+      "mean_g": 0.5,
+      "sd_g": 0.0,
+      "seed_dependent_winner": false
+    },
+    {
+      "a_priori_rule": null,
+      "alpha": 1.0,
+      "beta": 0.5,
+      "d_ctx_signs_across_seeds": [
+        "negative",
+        "tie"
+      ],
+      "g_signs_across_seeds": [
+        "positive",
+        "tie"
+      ],
+      "gamma": 0.4,
+      "mean_d_ctx": -0.4,
+      "mean_d_var": -0.1,
+      "mean_g": 0.3,
+      "sd_g": 0.27386127875258304,
+      "seed_dependent_winner": true
+    }
+  ],
+  "frozen_spec": {
+    "analysis_band": "beta in {0.15,0.30} x gamma in {0.0,0.2}",
+    "corpus": 20,
+    "grid": "5x4x3=60 cells",
+    "k_sample": 6,
+    "members": 2,
+    "seeds_per_cell": 5,
+    "tasks": 8,
+    "tau": 0.05
+  },
+  "generator_non_definitive": true,
+  "schema": "c3r-g2-no-forced-sign-v0.1",
+  "sign_map_summary": {
+    "cells_with_D_CTX_beats_C": 10,
+    "cells_with_G_positive": 41,
+    "cells_with_G_tie_or_negative": 19
+  },
+  "validity_probes": {
+    "V1_oracle_granularity_mean_d_var_gamma0": 1.0,
+    "V1_oracle_granularity_mean_d_var_gamma04": 1.0,
+    "V1_valid": true,
+    "V2_corrupted_ctx_mean": 0.0,
+    "V2_valid": true
+  },
+  "verdict": "CHECK PASSED: apparatus causally valid AND generator not outcome-determinative in the analysis band - proceed to confirmatory prereg preparation (no live launch)"
+}
