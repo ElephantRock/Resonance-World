@@ -25,6 +25,19 @@ CODES = tuple("".join(bits) for bits in itertools.product("AB", repeat=5))
 FAMILIES = ("binary", "alpha")
 
 _SEED_DOMAIN = "g1-feedback-acquisition-v1"
+# v2 (operational rehabilitation, owner conditional GO 2026-10-28):
+# new program codes and new inputs; same frozen families and evaluator.
+_SEED_DOMAIN_V2 = "g1-feedback-acquisition-v2"
+
+
+def _derive_code(seed_domain: str, family: str, position: int) -> str:
+    return "".join(
+        "A" if (hashlib.sha256(
+            f"{seed_domain}:{family}:{position}".encode()
+        ).digest()[byte] >> bit) & 1
+        else "B"
+        for byte, bit in ((0, 0), (0, 2), (0, 4), (0, 6), (1, 0))
+    )
 
 
 def _is_code(value: object) -> bool:
@@ -96,24 +109,57 @@ def program_id(family: str, position: int) -> str:
 
 
 def all_programs() -> list[dict[str, str]]:
-    """The 4 frozen programs (2 per family), derived deterministically."""
+    """The 4 frozen v1 programs (2 per family), derived deterministically."""
 
     programs = []
     for family in FAMILIES:
         for position in range(2):
-            code = "".join(
-                "A" if (hashlib.sha256(
-                    f"{_SEED_DOMAIN}:{family}:{position}".encode()
-                ).digest()[byte] >> bit) & 1
-                else "B"
-                for byte, bit in ((0, 0), (0, 2), (0, 4), (0, 6), (1, 0))
-            )
+            programs.append({
+                "program_id": program_id(family, position),
+                "family": family,
+                "program": _derive_code(_SEED_DOMAIN, family, position),
+            })
+    return programs
+
+
+def all_programs_v2() -> list[dict[str, str]]:
+    """The 4 frozen v2 programs (2 per family) — the rehabilitation units."""
+
+    programs = []
+    for family in FAMILIES:
+        for position in range(2):
+            code = _derive_code(_SEED_DOMAIN_V2, family, position)
+            if code == _derive_code(_SEED_DOMAIN, family, position):
+                raise RuntimeError(
+                    f"v2 code collides with v1 for {family}/{position}"
+                )
             programs.append({
                 "program_id": program_id(family, position),
                 "family": family,
                 "program": code,
             })
     return programs
+
+
+def qualification_program() -> dict[str, str]:
+    """The dedicated v2 qualification unit (never evaluated in the campaign).
+
+    The code is chosen deterministically (scanning positions downward
+    from 99) so it differs from every v1 and v2 campaign code.
+    """
+
+    taken = {
+        p["program"] for p in all_programs() + all_programs_v2()
+    }
+    for position in range(99, 0, -1):
+        code = _derive_code(_SEED_DOMAIN_V2, "binary", position)
+        if code not in taken:
+            return {
+                "program_id": "prog-binary-qual",
+                "family": "binary",
+                "program": code,
+            }
+    raise RuntimeError("no distinct qualification code available")
 
 
 def sample_alphabet(family: str) -> str:
@@ -134,18 +180,22 @@ def is_unambiguous(family: str, value: str) -> bool:
 
 
 def derive_input(family: str, program_id_value: str, role: str,
-                 index: int, exclude: frozenset[str] = frozenset()) -> str:
+                 index: int, exclude: frozenset[str] = frozenset(),
+                 version: int = 1) -> str:
     """Deterministic fresh unambiguous input for a given role.
 
-    Roles: evidence / probe / eval. Retry-by-index until unambiguous AND
-    not colliding with any input in ``exclude`` (the caller accumulates
-    the other roles' inputs of the same program, so evaluation inputs
-    can never coincide with evidence or probe inputs — no contamination).
+    Roles: evidence / probe / eval / qual. Retry-by-index until
+    unambiguous AND not colliding with any input in ``exclude`` (the
+    caller accumulates the other roles' inputs of the same program, so
+    evaluation inputs can never coincide with evidence or probe inputs
+    — no contamination). ``version`` selects the seed domain (2 = the
+    rehabilitation units; v2 inputs are disjoint from v1 by seed).
     """
 
+    domain = _SEED_DOMAIN if version == 1 else f"{_SEED_DOMAIN_V2}"
     for attempt in range(2000):
         digest = hashlib.sha256(
-            f"{_SEED_DOMAIN}:input:{program_id_value}:{role}:{index}"
+            f"{domain}:input:{program_id_value}:{role}:{index}"
             f":{attempt}".encode()
         ).digest()
         rng = random.Random(digest)

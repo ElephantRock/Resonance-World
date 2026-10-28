@@ -1,0 +1,265 @@
+name: C3R G1 Feedback Memory v2 Operational Rehabilitation 20261028
+
+on:
+  push:
+    branches:
+      - research/c3r-g1-feedback-memory2-20261028
+  workflow_dispatch: {}
+
+permissions:
+  contents: read
+
+concurrency:
+  group: c3r-g1-feedback-memory2-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Offline v2 apparatus tests (no network)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e . && python -m pip install pytest
+          python -m py_compile scripts/c3r_g1_feedback_families.py scripts/run_c3r_g1_feedback_memory2_live.py
+          python -m pytest tests/test_c3r_g1_feedback_memory2_live.py tests/test_c3r_g1_feedback_memory_live.py -q
+
+  manifest:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: offline-tests
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Freeze v2 manifest (units, evidence, probes, qual plan, 96 slots)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_feedback_memory2_live.py \
+            --workspace "$RUNNER_TEMP/fb2-workspace" \
+            --run-id "fb2-${{ github.run_id }}" \
+            --session manifest
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fb2-manifest
+          path: ${{ runner.temp }}/fb2-workspace/feedback2-manifest.json
+          if-no-files-found: error
+          retention-days: 90
+
+  qualification:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, manifest]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Workspace and ledger (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/fb2-workspace/feedback2-ledger"
+          chmod 700 "$RUNNER_TEMP/fb2-workspace/feedback2-ledger"
+      - name: Download frozen manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: fb2-manifest
+          path: ${{ runner.temp }}/fb2-workspace/
+      - name: Qualification gate (<= 6 sends, 16384/300s)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_feedback_memory2_live.py \
+            --workspace "$RUNNER_TEMP/fb2-workspace" \
+            --run-id "fb2-${{ github.run_id }}" \
+            --session qualify
+      - name: Upload qualification outcome (even on failure)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: fb2-qualification
+          path: ${{ runner.temp }}/fb2-workspace/qualification.json
+          if-no-files-found: warn
+          retention-days: 90
+
+  learn:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, manifest, qualification]
+    runs-on: ubuntu-latest
+    timeout-minutes: 75
+    strategy:
+      fail-fast: false
+      max-parallel: 4
+      matrix:
+        program: ["prog-binary-00", "prog-binary-01", "prog-alpha-00", "prog-alpha-01"]
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Workspace and ledger (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/fb2-workspace/feedback2-ledger"
+          chmod 700 "$RUNNER_TEMP/fb2-workspace/feedback2-ledger"
+      - name: Download frozen manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: fb2-manifest
+          path: ${{ runner.temp }}/fb2-workspace/
+      - name: Feedback learning loop (<= 10 sends, 16384/300s)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_feedback_memory2_live.py \
+            --workspace "$RUNNER_TEMP/fb2-workspace" \
+            --run-id "fb2-${{ github.run_id }}" \
+            --session learn \
+            --program ${{ matrix.program }}
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fb2-learn-${{ matrix.program }}
+          path: ${{ runner.temp }}/fb2-workspace/learn-*.json
+          if-no-files-found: error
+          retention-days: 90
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fb2-capsule-${{ matrix.program }}
+          path: ${{ runner.temp }}/fb2-workspace/capsule-*.json
+          if-no-files-found: error
+          retention-days: 90
+
+  exec-raw:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, manifest, qualification]
+    runs-on: ubuntu-latest
+    timeout-minutes: 100
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Workspace and ledger (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/fb2-workspace/feedback2-ledger"
+          chmod 700 "$RUNNER_TEMP/fb2-workspace/feedback2-ledger"
+      - name: Download frozen manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: fb2-manifest
+          path: ${{ runner.temp }}/fb2-workspace/
+      - name: Raw execution arm (16 sends, 16384/300s)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_feedback_memory2_live.py \
+            --workspace "$RUNNER_TEMP/fb2-workspace" \
+            --run-id "fb2-${{ github.run_id }}" \
+            --session exec \
+            --arm raw
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fb2-summary-raw
+          path: ${{ runner.temp }}/fb2-workspace/summary-raw.json
+          if-no-files-found: error
+          retention-days: 90
+
+  exec-fresh:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, manifest, qualification]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Workspace and ledger (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/fb2-workspace/feedback2-ledger"
+          chmod 700 "$RUNNER_TEMP/fb2-workspace/feedback2-ledger"
+      - name: Download frozen manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: fb2-manifest
+          path: ${{ runner.temp }}/fb2-workspace/
+      - name: Fresh execution arm (16 sends, 4096/300s)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_feedback_memory2_live.py \
+            --workspace "$RUNNER_TEMP/fb2-workspace" \
+            --run-id "fb2-${{ github.run_id }}" \
+            --session exec \
+            --arm fresh
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fb2-summary-fresh
+          path: ${{ runner.temp }}/fb2-workspace/summary-fresh.json
+          if-no-files-found: error
+          retention-days: 90
+
+  exec-learned:
+    if: ${{ github.event_name == 'workflow_dispatch' }}
+    needs: [offline-tests, manifest, qualification, learn]
+    runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      C3R_ZAI_API_KEY: ${{ secrets.ZAI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Workspace and ledger (0700)
+        run: |
+          mkdir -p -m 700 "$RUNNER_TEMP/fb2-workspace/feedback2-ledger"
+          chmod 700 "$RUNNER_TEMP/fb2-workspace/feedback2-ledger"
+      - name: Download frozen manifest
+        uses: actions/download-artifact@v4
+        with:
+          name: fb2-manifest
+          path: ${{ runner.temp }}/fb2-workspace/
+      - name: Download all stored capsules (merged)
+        uses: actions/download-artifact@v4
+        with:
+          pattern: fb2-capsule-*
+          path: ${{ runner.temp }}/fb2-workspace/
+          merge-multiple: true
+      - name: Learned execution arm (16 sends, 4096/300s)
+        env:
+          PYTHONPATH: "src:scripts"
+        run: |
+          python -m pip install -e .
+          python scripts/run_c3r_g1_feedback_memory2_live.py \
+            --workspace "$RUNNER_TEMP/fb2-workspace" \
+            --run-id "fb2-${{ github.run_id }}" \
+            --session exec \
+            --arm learned
+      - uses: actions/upload-artifact@v4
+        with:
+          name: fb2-summary-learned
+          path: ${{ runner.temp }}/fb2-workspace/summary-learned.json
+          if-no-files-found: error
+          retention-days: 90
