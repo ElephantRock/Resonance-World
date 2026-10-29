@@ -1,0 +1,6315 @@
+{
+  "chains": 135,
+  "chains_detail": [
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 10,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 0,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 10,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 1,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 10,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 2,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 10,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 3,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 10,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 4,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 50,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 0,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 50,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 1,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 50,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 2,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 50,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 3,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 50,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 4,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 0,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 1,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 2,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 3,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 4,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 10,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 0,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 7
+      },
+      "delta_resilience_gens2_5": -0.25,
+      "final_pool_sizes": {
+        "curated": 9,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          0.5,
+          0.5,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          0.5,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 1,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 4
+      },
+      "delta_resilience_gens2_5": -0.125,
+      "final_pool_sizes": {
+        "curated": 9,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 2,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 4
+      },
+      "delta_resilience_gens2_5": -0.125,
+      "final_pool_sizes": {
+        "curated": 9,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 3,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 10,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 4,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 16
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 46,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 0,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 10
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 47,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 1,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 16
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 46,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 2,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 15
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 44,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 3,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 8
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 47,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 4,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 50
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 121,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 0,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 41
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 126,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 1,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 36
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 129,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 2,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 35
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 129,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 3,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 39
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 128,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 4,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 7
+      },
+      "delta_resilience_gens2_5": -0.25,
+      "final_pool_sizes": {
+        "curated": 5,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 0,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 10
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 7,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          0.5,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          0.5,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 1,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 9
+      },
+      "delta_resilience_gens2_5": -0.375,
+      "final_pool_sizes": {
+        "curated": 6,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          0.5,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          0.5,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 2,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 10
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 8,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          0.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          0.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          0.5,
+          0.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 3,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 8
+      },
+      "delta_resilience_gens2_5": -0.25,
+      "final_pool_sizes": {
+        "curated": 8,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 4,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 23
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 41,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 0,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 16
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 44,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          0.0,
+          0.5,
+          0.5,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          0.0,
+          0.5,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 1,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 35
+      },
+      "delta_resilience_gens2_5": -0.125,
+      "final_pool_sizes": {
+        "curated": 50,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 2,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 50,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 3,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 19
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 45,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 4,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 37
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 127,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 0,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 76
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 110,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 1,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 31
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 123,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          0.0,
+          0.5,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          0.0,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          1.0,
+          0.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 2,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 87
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 108,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 3,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 45
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 124,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 4,
+      "staleness": 0.0
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 5
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 8,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          1.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 0,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 8
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 9,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          0.5,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 1,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 5
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 7,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 2,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 10,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 3,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 6
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 8,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 4,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 20
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 45,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 0,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 30
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 40,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 1,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 25
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 40,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 2,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 40
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 35,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.0,
+          0.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 3,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 30
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 35,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 4,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 56
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 84,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 0,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 42
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 126,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 1,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 2,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 3,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 0
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 4,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 3
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 10,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 0,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 6
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 7,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 1,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 4
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 9,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          0.5
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          0.5
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 2,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 6
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 8,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 3,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 3
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 9,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          0.5,
+          0.5,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 4,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 8
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 47,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 0,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 38
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 31,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 1,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 17
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 45,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 2,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 11
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 47,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 3,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 29
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 43,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 4,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 27
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 131,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 0,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 55
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 135,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 1,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 109
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 92,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 2,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 97
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 103,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 3,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 107
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 123,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 4,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 9
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 6,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.0,
+          0.0
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 0,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 5
+      },
+      "delta_resilience_gens2_5": -0.125,
+      "final_pool_sizes": {
+        "curated": 7,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 1,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 12
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 4,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          0.5,
+          1.0,
+          1.0,
+          0.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 2,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 8
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 9,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          0.5,
+          0.0,
+          0.5
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.0,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          0.5,
+          0.0,
+          0.5
+        ],
+        "UNCURATED": [
+          0.5,
+          0.5,
+          1.0,
+          0.0,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 3,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 10
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 6,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          0.5,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          0.5,
+          0.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 4,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 39
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 44,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          1.0,
+          0.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          1.0,
+          0.0,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          1.0,
+          1.0,
+          0.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 0,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 9
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 46,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 1,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 12
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 47,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 2,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 26
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 35,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.0,
+          0.0,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 3,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 47
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 38,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          0.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          0.5,
+          0.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 4,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 112
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 84,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.5
+        ]
+      },
+      "saturation": 12,
+      "seed": 0,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 40
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 102,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          0.5,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.0
+        ],
+        "RESET": [
+          0.5,
+          0.5,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          0.5,
+          1.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 1,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 120
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 88,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          0.5
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 2,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 106
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 91,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 3,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 111
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 4,
+      "staleness": 0.15
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 6
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 7,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 0,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 4
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 10,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 1,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 7
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 9,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.0,
+          1.0,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 2,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 10
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 7,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          0.5,
+          0.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 3,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 12
+      },
+      "delta_resilience_gens2_5": 0.375,
+      "final_pool_sizes": {
+        "curated": 4,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          1.0,
+          0.5,
+          0.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 4,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 35
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 40,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.0,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 0,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 30
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 35,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 1,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 40
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 45,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 2,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 30
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 35,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 3,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 40
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 25,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 4,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 98
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 112,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.0,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 0,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 140
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 70,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.0,
+          0.0,
+          0.5,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 1,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 42
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 126,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 2,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 112
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 70,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 3,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.0,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 56
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 126,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 4,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 6
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 7,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          1.0,
+          0.5,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 0,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 4
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 9,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          0.5,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          0.5,
+          0.5,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 1,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 11
+      },
+      "delta_resilience_gens2_5": 0.375,
+      "final_pool_sizes": {
+        "curated": 4,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          0.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          0.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 2,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 11
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 5,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          0.5,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 3,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 11
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 5,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.0,
+          0.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 4,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 45
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 32,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.0,
+          0.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 0,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 40
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 31,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.0,
+          0.5,
+          0.5,
+          0.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 1,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 53
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 13,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          0.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 2,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 43
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 36,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 3,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 19
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 46,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 4,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 115
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.0,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 0,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 91
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 123,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.0,
+          0.0,
+          0.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 1,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 159
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 70,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          1.0,
+          0.0,
+          0.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 2,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 180
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 68,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          0.5,
+          0.0,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 3,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.1,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 87
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 127,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 4,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 9
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 8,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          0.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          0.0,
+          1.0,
+          0.5,
+          0.5
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 0,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 7
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 8,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          0.5
+        ],
+        "FROZEN": [
+          1.0,
+          0.0,
+          0.5,
+          0.5,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          0.0,
+          1.0,
+          0.5
+        ],
+        "UNCURATED": [
+          1.0,
+          0.0,
+          0.0,
+          1.0,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 1,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 6
+      },
+      "delta_resilience_gens2_5": 0.25,
+      "final_pool_sizes": {
+        "curated": 7,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          0.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.0,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          0.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          0.0,
+          0.5,
+          0.5,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 2,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 7
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 8,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.0,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 1,
+      "seed": 3,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 10
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 6,
+        "uncurated": 10
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          0.5,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          1.0,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          0.5,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          0.5,
+          0.5,
+          1.0,
+          0.5
+        ]
+      },
+      "saturation": 1,
+      "seed": 4,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 27
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 36,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 0,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 51
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 19,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.0,
+          0.0,
+          0.5,
+          1.0
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 1,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 33
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 37,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.0,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 2,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 63
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 28,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.0,
+          0.5,
+          1.0,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          0.5,
+          1.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 3,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 24
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 40,
+        "uncurated": 50
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 4,
+      "seed": 4,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 52
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          0.5,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          0.5,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 0,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 68
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 140,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.5,
+          0.5,
+          0.5,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 1,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 112
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 82,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 2,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 135
+      },
+      "delta_resilience_gens2_5": 0.0,
+      "final_pool_sizes": {
+        "curated": 110,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          1.0,
+          1.0,
+          0.0,
+          0.0,
+          0.5
+        ],
+        "RESET": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "UNCURATED": [
+          1.0,
+          0.5,
+          1.0,
+          1.0,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 3,
+      "staleness": 0.35
+    },
+    {
+      "contradiction": 0.25,
+      "curation_cost": {
+        "policy_passes": 5,
+        "retired_records": 99
+      },
+      "delta_resilience_gens2_5": 0.125,
+      "final_pool_sizes": {
+        "curated": 125,
+        "uncurated": 140
+      },
+      "per_generation": {
+        "CURATED": [
+          0.5,
+          1.0,
+          1.0,
+          1.0,
+          1.0
+        ],
+        "FROZEN": [
+          0.5,
+          0.0,
+          0.5,
+          0.0,
+          0.5
+        ],
+        "RESET": [
+          0.5,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ],
+        "UNCURATED": [
+          0.5,
+          1.0,
+          1.0,
+          0.5,
+          1.0
+        ]
+      },
+      "saturation": 12,
+      "seed": 4,
+      "staleness": 0.35
+    }
+  ],
+  "class_counts": {
+    "curation_harms": 2,
+    "curation_wins": 6,
+    "tie": 19
+  },
+  "combo_rows": [
+    {
+      "classification": "tie",
+      "contradiction": 0.0,
+      "mean_delta": 0.0,
+      "saturation": 1,
+      "sd": 0.0,
+      "staleness": 0.0
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.0,
+      "mean_delta": 0.0,
+      "saturation": 4,
+      "sd": 0.0,
+      "staleness": 0.0
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.0,
+      "mean_delta": 0.0,
+      "saturation": 12,
+      "sd": 0.0,
+      "staleness": 0.0
+    },
+    {
+      "classification": "curation_harms",
+      "contradiction": 0.1,
+      "mean_delta": -0.1,
+      "saturation": 1,
+      "sd": 0.1046,
+      "staleness": 0.0
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.1,
+      "mean_delta": 0.0,
+      "saturation": 4,
+      "sd": 0.0,
+      "staleness": 0.0
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.1,
+      "mean_delta": 0.0,
+      "saturation": 12,
+      "sd": 0.0,
+      "staleness": 0.0
+    },
+    {
+      "classification": "curation_harms",
+      "contradiction": 0.25,
+      "mean_delta": -0.125,
+      "saturation": 1,
+      "sd": 0.2339,
+      "staleness": 0.0
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.25,
+      "mean_delta": -0.025,
+      "saturation": 4,
+      "sd": 0.0559,
+      "staleness": 0.0
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.25,
+      "mean_delta": 0.025,
+      "saturation": 12,
+      "sd": 0.0559,
+      "staleness": 0.0
+    },
+    {
+      "classification": "curation_wins",
+      "contradiction": 0.0,
+      "mean_delta": 0.175,
+      "saturation": 1,
+      "sd": 0.1118,
+      "staleness": 0.15
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.0,
+      "mean_delta": 0.0,
+      "saturation": 4,
+      "sd": 0.0,
+      "staleness": 0.15
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.0,
+      "mean_delta": 0.0,
+      "saturation": 12,
+      "sd": 0.0,
+      "staleness": 0.15
+    },
+    {
+      "classification": "curation_wins",
+      "contradiction": 0.1,
+      "mean_delta": 0.2,
+      "saturation": 1,
+      "sd": 0.0685,
+      "staleness": 0.15
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.1,
+      "mean_delta": 0.0,
+      "saturation": 4,
+      "sd": 0.0,
+      "staleness": 0.15
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.1,
+      "mean_delta": 0.0,
+      "saturation": 12,
+      "sd": 0.0,
+      "staleness": 0.15
+    },
+    {
+      "classification": "curation_wins",
+      "contradiction": 0.25,
+      "mean_delta": 0.1,
+      "saturation": 1,
+      "sd": 0.163,
+      "staleness": 0.15
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.25,
+      "mean_delta": 0.05,
+      "saturation": 4,
+      "sd": 0.1118,
+      "staleness": 0.15
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.25,
+      "mean_delta": 0.025,
+      "saturation": 12,
+      "sd": 0.0559,
+      "staleness": 0.15
+    },
+    {
+      "classification": "curation_wins",
+      "contradiction": 0.0,
+      "mean_delta": 0.225,
+      "saturation": 1,
+      "sd": 0.1369,
+      "staleness": 0.35
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.0,
+      "mean_delta": 0.0,
+      "saturation": 4,
+      "sd": 0.0,
+      "staleness": 0.35
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.0,
+      "mean_delta": 0.0,
+      "saturation": 12,
+      "sd": 0.0,
+      "staleness": 0.35
+    },
+    {
+      "classification": "curation_wins",
+      "contradiction": 0.1,
+      "mean_delta": 0.225,
+      "saturation": 1,
+      "sd": 0.1046,
+      "staleness": 0.35
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.1,
+      "mean_delta": 0.0,
+      "saturation": 4,
+      "sd": 0.0,
+      "staleness": 0.35
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.1,
+      "mean_delta": 0.0,
+      "saturation": 12,
+      "sd": 0.0,
+      "staleness": 0.35
+    },
+    {
+      "classification": "curation_wins",
+      "contradiction": 0.25,
+      "mean_delta": 0.15,
+      "saturation": 1,
+      "sd": 0.1046,
+      "staleness": 0.35
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.25,
+      "mean_delta": 0.025,
+      "saturation": 4,
+      "sd": 0.0559,
+      "staleness": 0.35
+    },
+    {
+      "classification": "tie",
+      "contradiction": 0.25,
+      "mean_delta": 0.05,
+      "saturation": 12,
+      "sd": 0.0685,
+      "staleness": 0.35
+    }
+  ],
+  "evaluator_validity": {
+    "corruption_all_wrong": true,
+    "oracle_all_correct": true,
+    "valid": true
+  },
+  "generations": 5,
+  "grid": "3x3x3=27",
+  "no_forced_sign": true,
+  "retrieval_budget": 6,
+  "schema": "imrc-qualification-v0.1",
+  "seeds": 5,
+  "verdict": "QUALIFICATION PASSED: evaluator valid AND curation wins/harms/ties all occur without forced signs - proceed to owner review of the resilience map (no freeze, no sends)"
+}

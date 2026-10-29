@@ -58,29 +58,65 @@ measured and accounted.
 Each stressor has a registered intensity schedule; the design
 measures capability decay curves per arm, not a single endpoint.
 
-## 4. Arm skeleton
+## 4. Arm skeleton (v2 — causal-fairness correction, owner-mandated 2026-10-29)
 
-| arm | history policy | role |
+**Fairness rule (binding before any check): CURATED and UNCURATED
+share the SAME structured store schema, the SAME base retrieval
+engine (registered: 6 most-recent eligible records of the task's
+context), the SAME retrieval budget (6 records) and the SAME evidence
+admission opportunities. The ONLY primary difference is the
+registered CURATION POLICY — which records are superseded or retired
+from the ELIGIBLE pool (stale-regime retirement and contradiction
+supersession), with its processing cost accounted.** If a wider
+bundle (curation + ranking changes) is ever tested, its effect is
+named a BUNDLE effect and never attributed to curation alone. (This
+also respects H6/H7: retrieval selectivity is NOT assumed helpful —
+it is held identical across arms.)
+
+| arm | eligible pool | role |
 |---|---|---|
-| CURATED | growing structured history + registered curation rules (admission support floors, supersession/provenance on contradiction, relevance-and-recency retrieval ranking under the fixed budget) | treatment |
-| UNCURATED | growing structured history, same admission机会, no curation — append-only, budget-spent-on-most-recent or fixed-order retrieval (registered) | primary comparator |
-| RESET | no carry-over between generations, same member quality/budgets | control (H3/H4 replication anchor) |
-| FROZEN-SNAPSHOT | history frozen at generation 0 | control (retention without accumulation) |
+| CURATED | append-only store + registered curation policy (below) | treatment |
+| UNCURATED | append-only store, no curation | primary comparator |
+| RESET | current generation's records only (no cross-generation carry) | control anchor (H3/H4) |
+| FROZEN-SNAPSHOT | store frozen after generation 1 | control (retention w/o accumulation) |
 
-Curation is ONE mechanism family in this design (admission +
-supersession + ranking under a fixed budget); rule-repair and
-self-modification are explicitly OUT (that is institutional
-regeneration, a later, wider claim).
+**Registered curation policy (ONE family; deterministic; cost = retired
+records + policy passes, reported):**
+- **C1 regime retirement (staleness):** per context, when a
+  generation's admitted majority plan differs from the cumulative
+  majority of all older records, a regime change is declared and all
+  older-regime records for that context are retired from the eligible
+  pool.
+- **C2 supersession (contradiction):** within the current regime, per
+  context, when the success-count ratio between the top two plans is
+  ≥ 3:1, records of the dominated plan are retired.
 
-## 5. No-forced-sign preconditions (preparation only; must pass before any freeze)
+Contradiction arises ONLY from real noisy or stale observations
+(wrong-plan successes; obsolete-regime records) — the independent
+evaluator never emits forged records; adversarial-input testing is a
+separate TRUST study, out of scope.
 
-A deterministic idealized model over (staleness rate, contradiction
-fraction, history-size/retrieval-budget ratio) must show all three:
-curation HELPS (high staleness/contradiction), curation HARMs
-(over-pruning discards rare-but-crucial records at low stress), and
-TIES (benign regimes). Sign-preservation unit tests on every
-transformed quantity (ERRATUM discipline). Evaluator validity:
-oracle/corruption swaps must move measured outcomes exactly.
+## 5. Frozen qualification grid (owner-fixed, 2026-10-29)
+
+| stressor | low | mid | high |
+|---|---|---|---|
+| truth staleness (change prob per context per generation transition) | 0 | 0.15 | 0.35 |
+| evidence contradiction (wrong-plan-success fraction of admissions) | 0% | 10% | 25% |
+| history saturation (eligible records ÷ 6-record budget) | 1× | 4× | 12× |
+
+27 combinations × 5 independent seeds = **135 deterministic
+organization chains**; 5 operational generations each; complete member
+replacement between generations; fixed 6-record retrieval budget.
+Seeds from a NEW domain disjoint from all H and G2 fixtures. Values
+qualify the APPARATUS — they are not confirmatory thresholds. Results
+reported generation-by-generation. The grid is frozen; no re-tuning
+after seeing results (one attempt, no-rescue).
+
+**Pass conditions (no-forced-sign + evaluator validity):** the
+deterministic check must exhibit curation WINNING, HARMING, and TYING
+across the grid without the truth generator forcing any; evaluator
+validity via oracle/corruption swaps must hold. Failure closes the
+design with zero sends.
 
 ## 6. Early-closure conditions (pre-declared)
 
